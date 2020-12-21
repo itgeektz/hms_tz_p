@@ -1,0 +1,27 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2020-12-13 00:29:11.507372",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "modified": "2020-12-16 16:27:12.706622",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "NHIF Items in ERPNext",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "query": "SELECT 'Appointment Type' AS dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, icd.parent AS \"Item:Link/Item:200\"\r\n            FROM `tabItem Customer Detail` icd\r\n            INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0\r\n            INNER JOIN `tabAppointment Type` m ON icd.parent = m.out_patient_consulting_charge_item\r\n            WHERE icd.customer_name = 'NHIF'\r\n            GROUP BY dt, m.name, icd.ref_code , icd.parent\r\n            UNION ALL\r\n            SELECT 'Appointment Type' AS dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, icd.parent AS \"Item:Link/Item:200\"\r\n            FROM `tabItem Customer Detail` icd\r\n            INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0\r\n            INNER JOIN `tabAppointment Type` m ON icd.parent = m.inpatient_visit_charge_item\r\n            WHERE icd.customer_name = 'NHIF'\r\n            GROUP BY dt, m.name, icd.ref_code , icd.parent\r\n            UNION ALL\r\n            SELECT 'Clinical Procedure Template' AS dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, icd.parent AS \"Item:Link/Item:200\"\r\n            FROM `tabItem Customer Detail` icd\r\n            INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0\r\n            INNER JOIN `tabClinical Procedure Template` m ON icd.parent = m.item\r\n            WHERE icd.customer_name = 'NHIF'\r\n            GROUP BY dt, m.name, icd.ref_code , icd.parent\r\n            UNION ALL\r\n            SELECT 'Therapy Type' AS dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, icd.parent AS \"Item:Link/Item:200\"\r\n            FROM `tabItem Customer Detail` icd\r\n            INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0\r\n            INNER JOIN `tabTherapy Type` m ON icd.parent = m.item\r\n            WHERE icd.customer_name = 'NHIF'\r\n            GROUP BY dt, m.name, icd.ref_code , icd.parent\r\n            UNION ALL\r\n            SELECT 'Medication' AS dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, icd.parent AS \"Item:Link/Item:200\"\r\n            FROM `tabItem Customer Detail` icd\r\n            INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0\r\n            INNER JOIN `tabMedication` m ON icd.parent = m.item\r\n            WHERE icd.customer_name = 'NHIF'\r\n            GROUP BY dt, m.name, icd.ref_code , icd.parent\r\n            UNION ALL\r\n            SELECT 'Lab Test Template' AS dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, icd.parent AS \"Item:Link/Item:200\"\r\n            FROM `tabItem Customer Detail` icd\r\n            INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0\r\n            INNER JOIN `tabLab Test Template` m ON icd.parent = m.item\r\n            WHERE icd.customer_name = 'NHIF'\r\n            GROUP BY dt, m.name, icd.ref_code , icd.parent\r\n            UNION ALL\r\n            SELECT 'Radiology Examination Template' AS dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, icd.parent AS \"Item:Link/Item:200\"\r\n            FROM `tabItem Customer Detail` icd\r\n            INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0\r\n            INNER JOIN `tabRadiology Examination Template` m ON icd.parent = m.item\r\n            WHERE icd.customer_name = 'NHIF'\r\n            GROUP BY dt, m.name, icd.ref_code , icd.parent\r\n            UNION ALL\r\n            SELECT 'Healthcare Service Unit Type' AS dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, icd.parent AS \"Item:Link/Item:200\"\r\n            FROM `tabItem Customer Detail` icd\r\n            INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0\r\n            INNER JOIN `tabHealthcare Service Unit Type` m ON icd.parent = m.item\r\n            WHERE icd.customer_name = 'NHIF'\r\n            GROUP BY dt, m.name, icd.ref_code , icd.parent",
+ "ref_doctype": "NHIF Excluded Services",
+ "report_name": "NHIF Items in ERPNext",
+ "report_type": "Query Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ]
+}

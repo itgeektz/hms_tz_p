@@ -1,0 +1,133 @@
+{
+ "actions": [],
+ "autoname": "field:company",
+ "creation": "2020-11-10 16:52:35.894771",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "username",
+  "password",
+  "column_break_4",
+  "facility_code",
+  "enable",
+  "section_break_5",
+  "nhifservice_url",
+  "nhifservice_token",
+  "nhifservice_expiry",
+  "column_break_9",
+  "claimsserver_url",
+  "claimsserver_token",
+  "claimsserver_expiry"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "username",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "User Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "password",
+   "fieldtype": "Password",
+   "label": "Password",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "enable",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Enable NHIF API"
+  },
+  {
+   "fieldname": "section_break_5",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "nhifservice_url",
+   "fieldtype": "Data",
+   "label": "NHIF Service URL",
+   "reqd": 1
+  },
+  {
+   "fieldname": "nhifservice_token",
+   "fieldtype": "Small Text",
+   "label": "NHIF Service Token",
+   "read_only": 1
+  },
+  {
+   "fieldname": "nhifservice_expiry",
+   "fieldtype": "Datetime",
+   "label": "NHIF Service Token Expiry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_9",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "claimsserver_url",
+   "fieldtype": "Data",
+   "label": "Claims Server URL",
+   "reqd": 1
+  },
+  {
+   "fieldname": "claimsserver_token",
+   "fieldtype": "Small Text",
+   "label": "Claims Server Token",
+   "read_only": 1
+  },
+  {
+   "fieldname": "claimsserver_expiry",
+   "fieldtype": "Datetime",
+   "label": "Claims Server Token Expiry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "facility_code",
+   "fieldtype": "Data",
+   "label": "Facility Code",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2020-12-11 14:23:18.477389",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "Company NHIF Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

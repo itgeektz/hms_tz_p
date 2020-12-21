@@ -1,0 +1,190 @@
+{
+ "actions": [],
+ "autoname": "NPP-.YY.-.MM.-.DD.-.#####",
+ "creation": "2020-12-11 02:57:54.637826",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "facilitycode",
+  "log_name",
+  "time_stamp",
+  "section_break_3",
+  "itemcode",
+  "pricecode",
+  "levelpricecode",
+  "olditemcode",
+  "itemtypeid",
+  "itemname",
+  "strength",
+  "dosage",
+  "packageid",
+  "column_break_12",
+  "schemeid",
+  "facilitylevelcode",
+  "unitprice",
+  "isrestricted",
+  "maximumquantity",
+  "availableinlevels",
+  "practitionerqualifications",
+  "isactive"
+ ],
+ "fields": [
+  {
+   "fieldname": "itemcode",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "ItemCode"
+  },
+  {
+   "fieldname": "pricecode",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "PriceCode"
+  },
+  {
+   "fieldname": "levelpricecode",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "LevelPriceCode"
+  },
+  {
+   "fieldname": "olditemcode",
+   "fieldtype": "Data",
+   "label": "OldItemCode"
+  },
+  {
+   "fieldname": "itemtypeid",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "ItemTypeID"
+  },
+  {
+   "fieldname": "itemname",
+   "fieldtype": "Small Text",
+   "in_standard_filter": 1,
+   "label": "ItemName"
+  },
+  {
+   "fieldname": "strength",
+   "fieldtype": "Data",
+   "label": "Strength"
+  },
+  {
+   "fieldname": "dosage",
+   "fieldtype": "Data",
+   "label": "Dosage"
+  },
+  {
+   "fieldname": "packageid",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "PackageID"
+  },
+  {
+   "fieldname": "schemeid",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "SchemeID"
+  },
+  {
+   "fieldname": "facilitylevelcode",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "FacilityLevelCode"
+  },
+  {
+   "fieldname": "unitprice",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "UnitPrice"
+  },
+  {
+   "fieldname": "isrestricted",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "IsRestricted"
+  },
+  {
+   "fieldname": "maximumquantity",
+   "fieldtype": "Data",
+   "label": "MaximumQuantity"
+  },
+  {
+   "fieldname": "availableinlevels",
+   "fieldtype": "Data",
+   "label": "AvailableInLevels"
+  },
+  {
+   "fieldname": "practitionerqualifications",
+   "fieldtype": "Data",
+   "label": "PractitionerQualifications"
+  },
+  {
+   "fieldname": "isactive",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "IsActive"
+  },
+  {
+   "fieldname": "time_stamp",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Time Stamp"
+  },
+  {
+   "fieldname": "facilitycode",
+   "fieldtype": "Data",
+   "label": "FacilityCode"
+  },
+  {
+   "fieldname": "section_break_3",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_12",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "log_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Log Name",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2020-12-12 00:28:19.653591",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "NHIF Price Package",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "itemname",
+ "track_changes": 1
+}

@@ -1,0 +1,27 @@
+{
+ "add_total_row": 1,
+ "columns": [],
+ "creation": "2020-12-12 16:17:44.623502",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "modified": "2020-12-13 00:36:48.098851",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "NHIF Price Package Analysis",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "query": "SELECT schemeid, itemcode, min(facilitylevelcode), max(facilitylevelcode), min(unitprice), max(unitprice), count(*) from `tabNHIF Price Package`\ngroup by schemeid, itemcode\nhaving count(*) > 1 and min(unitprice) != max(unitprice)",
+ "ref_doctype": "NHIF Price Package",
+ "report_name": "NHIF Price Package Analysis",
+ "report_type": "Query Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ]
+}

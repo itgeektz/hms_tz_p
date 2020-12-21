@@ -1,0 +1,97 @@
+{
+ "actions": [],
+ "autoname": "NXS-.YY.-.MM.-.DD.-.#####",
+ "creation": "2020-12-11 03:17:37.800235",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "facilitycode",
+  "log_name",
+  "time_stamp",
+  "section_break_3",
+  "itemcode",
+  "schemeid",
+  "schemename",
+  "excludedforproducts"
+ ],
+ "fields": [
+  {
+   "fieldname": "facilitycode",
+   "fieldtype": "Data",
+   "label": "FacilityCode"
+  },
+  {
+   "fieldname": "time_stamp",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Time Stamp"
+  },
+  {
+   "fieldname": "section_break_3",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "itemcode",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "ItemCode"
+  },
+  {
+   "fieldname": "schemeid",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "SchemeID"
+  },
+  {
+   "fieldname": "schemename",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "SchemeName"
+  },
+  {
+   "fieldname": "excludedforproducts",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "ExcludedForProducts"
+  },
+  {
+   "fieldname": "log_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Log Name",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2020-12-12 00:23:39.356434",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "NHIF Excluded Services",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "itemcode",
+ "track_changes": 1
+}

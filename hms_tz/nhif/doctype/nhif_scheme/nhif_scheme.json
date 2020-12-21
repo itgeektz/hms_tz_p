@@ -1,0 +1,58 @@
+{
+ "actions": [],
+ "autoname": "field:scheme_id",
+ "creation": "2020-11-12 04:02:03.595430",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "scheme_id",
+  "scheme_name",
+  "healthcare_insurance_coverage_plan"
+ ],
+ "fields": [
+  {
+   "fieldname": "scheme_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Scheme ID",
+   "unique": 1
+  },
+  {
+   "fieldname": "scheme_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Scheme Name"
+  },
+  {
+   "fieldname": "healthcare_insurance_coverage_plan",
+   "fieldtype": "Link",
+   "label": "Healthcare Insurance Coverage Plan",
+   "options": "Healthcare Insurance Coverage Plan"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2020-11-13 14:40:50.826616",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "NHIF Scheme",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
