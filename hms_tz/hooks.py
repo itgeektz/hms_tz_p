@@ -381,7 +381,10 @@ doc_events = {
 	"Healthcare Service Order": {
 		"before_insert": "hms_tz.nhif.api.service_order.set_missing_values"
 	},
-}
+    "Sales Invoice": {
+		"on_submit": "csf_tz.nhif.api.sales_invoice.create_healthcare_docs",
+    },
+}   
 
 # Scheduled Tasks
 # ---------------
