@@ -310,7 +310,7 @@ def create_delivery_note(patient_encounter_doc):
     
 @frappe.whitelist()
 def get_chronic_diagnosis(patient):
-    chronic_diagnosis = frappe.get_all("Codification Table", 
+    data = frappe.get_all("Codification Table", 
         filters = {
             "parent" : patient,
             "parenttype" : "Patient",
@@ -318,4 +318,17 @@ def get_chronic_diagnosis(patient):
         },
         fields = ["medical_code","code","description"]
     )
-    return chronic_diagnosis
+    return data
+
+
+@frappe.whitelist()
+def get_chronic_medications(patient):
+    data = frappe.get_all("Chronic Medications", 
+        filters = {
+            "parent" : patient,
+            "parenttype" : "Patient",
+            "parentfield" : "chronic_medications"
+        },
+        fields = ["*"]
+    )
+    return data

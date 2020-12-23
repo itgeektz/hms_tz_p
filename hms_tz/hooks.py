@@ -174,7 +174,9 @@ fixtures = [
 		"Sales Invoice-total_insurance_claim_amount",
 		"Patient-codification_table",
 		"Patient-chronic_section",
-		"Patient Encounter-get_chronic_diagnosis"
+		"Patient Encounter-get_chronic_diagnosis",
+		"Patient-chronic_medications",
+		"Patient Encounter-get_chronic_medications",
 	)]]},
 	{"doctype":"Property Setter", "filters": [["name", "in", (
 		"Healthcare Insurance Subscription-main-search_fields",
