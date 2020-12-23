@@ -22,6 +22,38 @@ frappe.ui.form.on('Patient Encounter', {
     patient_encounter_final_diagnosis: function(frm) {
 		set_medical_code(frm)
     },
+    get_chronic_diagnosis: function(frm) {
+        frappe.call({
+            method: 'hms_tz.nhif.api.patient_encounter.get_chronic_diagnosis',
+            args: {
+                'patient': frm.doc.patient,
+            },
+            callback: function (data) {
+                if (data.message) {
+                    console.log(data.message);
+                    data.message.forEach(element => {
+                        const row_idx = frm.doc.patient_encounter_preliminary_diagnosis.findIndex(x => x.medical_code === element.medical_code)
+                        if (row_idx === -1) {
+                            let row = frappe.model.add_child(frm.doc, "Codification Table", "patient_encounter_preliminary_diagnosis")
+                            row.medical_code = element.medical_code;
+                            row.code = element.code;
+                            row.description = element.description;
+                            frappe.show_alert({
+                                message:__(`Medical Code '${element.medical_code}' added successfully`),
+                                indicator:'green'
+                            }, 5);
+                        } else {
+                            frappe.show_alert({
+                                message:__(`Medical Code '${element.medical_code}' already exists`),
+                                indicator:'red'
+                            }, 5);
+                        }
+                    })
+                    refresh_field('patient_encounter_preliminary_diagnosis')
+                }
+            }
+        });
+    },
 
 });
 
