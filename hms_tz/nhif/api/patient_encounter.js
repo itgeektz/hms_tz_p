@@ -23,6 +23,9 @@ frappe.ui.form.on('Patient Encounter', {
 		set_medical_code(frm)
     },
     get_chronic_diagnosis: function(frm) {
+        if (frm.doc.docstatus == 1) {
+            return
+        }
         frappe.call({
             method: 'hms_tz.nhif.api.patient_encounter.get_chronic_diagnosis',
             args: {
@@ -30,6 +33,13 @@ frappe.ui.form.on('Patient Encounter', {
             },
             callback: function (data) {
                 if (data.message) {
+                    if (data.message.length == 0) {
+                        frappe.show_alert({
+                            message:__(`There is no Chronic Diagnosis`),
+                            indicator:'red'
+                        }, 5);
+                        return
+                    }
                     data.message.forEach(element => {
                         const row_idx = frm.doc.patient_encounter_preliminary_diagnosis.findIndex(x => x.medical_code === element.medical_code)
                         if (row_idx === -1) {
@@ -54,6 +64,9 @@ frappe.ui.form.on('Patient Encounter', {
         });
     },
     get_chronic_medications: function(frm) {
+        if (frm.doc.docstatus == 1) {
+            return
+        }
         frappe.call({
             method: 'hms_tz.nhif.api.patient_encounter.get_chronic_medications',
             args: {
@@ -61,6 +74,13 @@ frappe.ui.form.on('Patient Encounter', {
             },
             callback: function (data) {
                 if (data.message) {
+                    if (data.message.length == 0) {
+                        frappe.show_alert({
+                            message:__(`There is no Chronic Medications`),
+                            indicator:'red'
+                        }, 5);
+                        return
+                    }
                     data.message.forEach(element => {
                         const row_idx = frm.doc.drug_prescription.findIndex(x => x.drug_code === element.drug_code)
                         if (row_idx === -1) {
@@ -103,6 +123,9 @@ frappe.ui.form.on('Patient Encounter', {
         });
     },
     copy_from_preliminary_diagnosis: function(frm) {
+        if (frm.doc.docstatus == 1) {
+            return
+        }
         frm.doc.patient_encounter_preliminary_diagnosis.forEach(element => {
             const row_idx = frm.doc.patient_encounter_final_diagnosis.findIndex(x => x.medical_code === element.medical_code)
             if (row_idx === -1) {
