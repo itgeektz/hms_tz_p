@@ -22,6 +22,131 @@ frappe.ui.form.on('Patient Encounter', {
     patient_encounter_final_diagnosis: function(frm) {
 		set_medical_code(frm)
     },
+    get_chronic_diagnosis: function(frm) {
+        if (frm.doc.docstatus == 1) {
+            return
+        }
+        frappe.call({
+            method: 'hms_tz.nhif.api.patient_encounter.get_chronic_diagnosis',
+            args: {
+                'patient': frm.doc.patient,
+            },
+            callback: function (data) {
+                if (data.message) {
+                    if (data.message.length == 0) {
+                        frappe.show_alert({
+                            message:__(`There is no Chronic Diagnosis`),
+                            indicator:'red'
+                        }, 5);
+                        return
+                    }
+                    data.message.forEach(element => {
+                        const row_idx = frm.doc.patient_encounter_preliminary_diagnosis.findIndex(x => x.medical_code === element.medical_code)
+                        if (row_idx === -1) {
+                            let row = frappe.model.add_child(frm.doc, "Codification Table", "patient_encounter_preliminary_diagnosis")
+                            row.medical_code = element.medical_code;
+                            row.code = element.code;
+                            row.description = element.description;
+                            frappe.show_alert({
+                                message:__(`Medical Code '${element.medical_code}' added successfully`),
+                                indicator:'green'
+                            }, 5);
+                        } else {
+                            frappe.show_alert({
+                                message:__(`Medical Code '${element.medical_code}' already exists`),
+                                indicator:'red'
+                            }, 5);
+                        }
+                    })
+                    refresh_field('patient_encounter_preliminary_diagnosis')
+                }
+            }
+        });
+    },
+    get_chronic_medications: function(frm) {
+        if (frm.doc.docstatus == 1) {
+            return
+        }
+        frappe.call({
+            method: 'hms_tz.nhif.api.patient_encounter.get_chronic_medications',
+            args: {
+                'patient': frm.doc.patient,
+            },
+            callback: function (data) {
+                if (data.message) {
+                    if (data.message.length == 0) {
+                        frappe.show_alert({
+                            message:__(`There is no Chronic Medications`),
+                            indicator:'red'
+                        }, 5);
+                        return
+                    }
+                    data.message.forEach(element => {
+                        const row_idx = frm.doc.drug_prescription.findIndex(x => x.drug_code === element.drug_code)
+                        if (row_idx === -1) {
+                            let row = frappe.model.add_child(frm.doc, "Drug Prescription", "drug_prescription")
+                            row.drug_code = element.drug_code;
+                            row.drug_name = element.drug_name;
+                            row.dosage = element.dosage;
+                            row.period = element.period;
+                            row.dosage_form = element.dosage_form;
+                            row.comment = element.comment;
+                            row.usage_interval = element.usage_interval;
+                            row.interval = element.interval;
+                            row.interval_uom = element.interval_uom;
+                            row.update_schedule = element.update_schedule;
+                            row.intent = element.intent;
+                            row.quantity = element.quantity;
+                            row.sequence = element.sequence;
+                            row.expected_date = element.expected_date;
+                            row.as_needed = element.as_needed;
+                            row.patient_instruction = element.patient_instruction;
+                            row.replaces = element.replaces;
+                            row.priority = element.priority;
+                            row.occurrence = element.occurrence;
+                            row.occurence_period = element.occurence_period;
+                            row.note = element.note;
+                            frappe.show_alert({
+                                message:__(`Drug '${element.drug_code}' added successfully`),
+                                indicator:'green'
+                            }, 5);
+                        } else {
+                            frappe.show_alert({
+                                message:__(`Drug '${element.drug_code}' already exists`),
+                                indicator:'red'
+                            }, 5);
+                        }
+                    })
+                    refresh_field('drug_prescription')
+                }
+            }
+        });
+    },
+    copy_from_preliminary_diagnosis: function(frm) {
+        if (frm.doc.docstatus == 1) {
+            return
+        }
+        frm.doc.patient_encounter_preliminary_diagnosis.forEach(element => {
+            const row_idx = frm.doc.patient_encounter_final_diagnosis.findIndex(x => x.medical_code === element.medical_code)
+            if (row_idx === -1) {
+                let row = frappe.model.add_child(frm.doc, "Codification Table", "patient_encounter_final_diagnosis")
+                row.medical_code = element.medical_code;
+                row.code = element.code;
+                row.description = element.description;
+                frappe.show_alert({
+                    message:__(`Medical Code '${element.medical_code}' added successfully`),
+                    indicator:'green'
+                }, 5);
+            } else {
+                frappe.show_alert({
+                    message:__(`Medical Code '${element.medical_code}' already exists`),
+                    indicator:'red'
+                }, 5);
+            }
+        })
+        refresh_field('patient_encounter_final_diagnosis')
+        
+    },
 
 });
 

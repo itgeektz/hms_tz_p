@@ -172,6 +172,12 @@ fixtures = [
 		"Sales Invoice-patient_payable_amount",
 		"Sales Invoice-ref_practitioner",
 		"Sales Invoice-total_insurance_claim_amount",
+		"Patient-codification_table",
+		"Patient-chronic_section",
+		"Patient Encounter-get_chronic_diagnosis",
+		"Patient-chronic_medications",
+		"Patient Encounter-get_chronic_medications",
+		"Patient Encounter-copy_from_preliminary_diagnosis",
 	)]]},
 	{"doctype":"Property Setter", "filters": [["name", "in", (
 		"Healthcare Insurance Subscription-main-search_fields",
@@ -392,7 +398,7 @@ doc_events = {
 		"before_insert": "hms_tz.nhif.api.service_order.set_missing_values"
 	},
     "Sales Invoice": {
-		"on_submit": "csf_tz.nhif.api.sales_invoice.create_healthcare_docs",
+		"on_submit": "hms_tz.nhif.api.sales_invoice.create_healthcare_docs",
     },
 }   
 

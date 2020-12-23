@@ -306,3 +306,29 @@ def create_delivery_note(patient_encounter_doc):
     if doc.get('name'):
             frappe.msgprint(_('Delivery Note {0} created successfully.').format(
                 frappe.bold(doc.name)))
+
+    
+@frappe.whitelist()
+def get_chronic_diagnosis(patient):
+    data = frappe.get_all("Codification Table", 
+        filters = {
+            "parent" : patient,
+            "parenttype" : "Patient",
+            "parentfield" : "codification_table"
+        },
+        fields = ["medical_code","code","description"]
+    )
+    return data
+
+
+@frappe.whitelist()
+def get_chronic_medications(patient):
+    data = frappe.get_all("Chronic Medications", 
+        filters = {
+            "parent" : patient,
+            "parenttype" : "Patient",
+            "parentfield" : "chronic_medications"
+        },
+        fields = ["*"]
+    )
+    return data
