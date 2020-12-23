@@ -9,7 +9,7 @@ frappe.ui.form.on('Patient Appointment', {
     },
     refresh: function (frm) {
         frm.trigger("update_primary_action")
-        if (!frm.doc.invoiced && frm.doc.patient && frm.doc.mode_of_payment && !frm.doc.insurance_subscription) {
+        if (!frm.doc.invoiced && frm.doc.patient && frm.doc.mode_of_payment && !frm.doc.insurance_subscription && frm.doc.status != "Cancelled") {
             frm.add_custom_button(__('Create Sales Invoice'), function () {
                 if (frm.is_dirty()) {
                     frm.save();
