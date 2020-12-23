@@ -177,6 +177,7 @@ fixtures = [
 		"Patient Encounter-get_chronic_diagnosis",
 		"Patient-chronic_medications",
 		"Patient Encounter-get_chronic_medications",
+		"Patient Encounter-copy_from_preliminary_diagnosis",
 	)]]},
 	{"doctype":"Property Setter", "filters": [["name", "in", (
 		"Healthcare Insurance Subscription-main-search_fields",
