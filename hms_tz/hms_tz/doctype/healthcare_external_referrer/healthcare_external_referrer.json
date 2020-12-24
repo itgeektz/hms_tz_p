@@ -1,0 +1,73 @@
+{
+ "actions": [],
+ "autoname": "field:practitioner_name",
+ "creation": "2020-12-24 17:18:51.454021",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "practitioner_name",
+  "mobile_no"
+ ],
+ "fields": [
+  {
+   "fieldname": "practitioner_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Practitioner Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "mobile_no",
+   "fieldtype": "Data",
+   "label": "Mobile No"
+  }
+ ],
+ "links": [],
+ "modified": "2020-12-24 17:22:20.880682",
+ "modified_by": "Administrator",
+ "module": "Hms Tz",
+ "name": "Healthcare External Referrer",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Healthcare Receptionist",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Healthcare Head Receptionist",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
