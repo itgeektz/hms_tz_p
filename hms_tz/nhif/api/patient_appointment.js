@@ -30,9 +30,7 @@ frappe.ui.form.on('Patient Appointment', {
         frm.trigger("mandatory_fields")
     },
     source: function (frm) {
-        if (frm.source == "External Referral") {
-            frm.trigger("toggle_reqd_referral_no")
-        }
+        frm.trigger("toggle_reqd_referral_no")
     },
     insurance_subscription: function (frm) {
         frm.trigger("mandatory_fields")
