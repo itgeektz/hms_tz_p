@@ -30,7 +30,9 @@ frappe.ui.form.on('Patient Appointment', {
         frm.trigger("mandatory_fields")
     },
     source: function (frm) {
-        frm.trigger("toggle_reqd_referral_no")
+        if (frm.source == "External Referral") {
+            frm.trigger("toggle_reqd_referral_no")
+        }
     },
     insurance_subscription: function (frm) {
         frm.trigger("mandatory_fields")
@@ -94,6 +96,7 @@ frappe.ui.form.on('Patient Appointment', {
                 frm.toggle_reqd("referral_no", false);
             }
         } else {
+            frm.toggle_reqd("referral_no", false);
             frm.toggle_enable(['referral_no'], false)
         }
     },
