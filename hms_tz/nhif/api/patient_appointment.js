@@ -29,8 +29,21 @@ frappe.ui.form.on('Patient Appointment', {
         }
         frm.trigger("mandatory_fields")
     },
+    referring_practitioner: function (frm) {
+        frm.set_value("healthcare_referrer", frm.doc.referring_practitioner)
+    },
     source: function (frm) {
         frm.trigger("toggle_reqd_referral_no")
+        frm.set_value("referring_practitioner", "")
+        frm.set_value("healthcare_referrer_type", "")
+        frm.set_value("healthcare_referrer", "")
+        if (frm.doc.source == "Referral") {
+            frm.set_value("healthcare_referrer_type", "Healthcare Practitioner")
+        } else if (frm.doc.source == "External Referral") {
+            frm.set_value("healthcare_referrer_type", "Healthcare External Referrer")
+            frm.toggle_reqd("referring_practitioner", false);
+            frm.toggle_enable("referring_practitioner", false);
+        }
     },
     insurance_subscription: function (frm) {
         frm.trigger("mandatory_fields")
@@ -93,8 +106,13 @@ frappe.ui.form.on('Patient Appointment', {
             } else {
                 frm.toggle_reqd("referral_no", false);
             }
+            frm.toggle_display(['healthcare_referrer'], true)
+            frm.toggle_reqd(['healthcare_referrer'], true)
         } else {
+            frm.toggle_reqd("referral_no", false);
             frm.toggle_enable(['referral_no'], false)
+            frm.toggle_display(['healthcare_referrer'], false)
+            frm.toggle_reqd(['healthcare_referrer'], false)
         }
     },
     get_insurance_amount: function (frm) {

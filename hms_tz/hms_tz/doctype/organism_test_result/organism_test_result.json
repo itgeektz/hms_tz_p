@@ -1,0 +1,46 @@
+{
+ "actions": [],
+ "beta": 1,
+ "creation": "2019-09-06 16:37:59.698996",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "organism",
+  "colony_population",
+  "colony_uom"
+ ],
+ "fields": [
+  {
+   "fieldname": "organism",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Organism",
+   "options": "Organism",
+   "reqd": 1
+  },
+  {
+   "fieldname": "colony_population",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Colony Population"
+  },
+  {
+   "fieldname": "colony_uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Colony UOM",
+   "options": "Lab Test UOM"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2020-12-24 10:25:55.285623",
+ "modified_by": "Administrator",
+ "module": "Hms Tz",
+ "name": "Organism Test Result",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}
