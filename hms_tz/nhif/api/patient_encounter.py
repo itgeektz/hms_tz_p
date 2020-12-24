@@ -295,7 +295,7 @@ def create_delivery_note(patient_encounter_doc):
         posting_time = nowtime(),
         set_warehouse = warehouse,
         company = patient_encounter_doc.company,
-        customer = frappe.get_value("Patient", patient_encounter_doc.patient, "customer"),
+        customer = frappe.get_value("Healthcare Insurance Company", insurance_company, "customer"),
         currency = frappe.get_value("Company", patient_encounter_doc.company, "default_currency"),
         items = items,
         reference_doctype = patient_encounter_doc.doctype,
