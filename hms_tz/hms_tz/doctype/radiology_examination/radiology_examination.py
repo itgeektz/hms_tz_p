@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from erpnext.healthcare.utils import manage_healthcare_doc_cancel
+from hms_tz.hms_tz.utils import manage_healthcare_doc_cancel
 from frappe.utils import cstr
 
 
@@ -104,7 +104,7 @@ def create_radiology_examination(appointment):
 
 def make_insurance_claim(doc):
 	if doc.insurance_subscription:
-		from erpnext.healthcare.utils import create_insurance_claim
+		from hms_tz.hms_tz.utils import create_insurance_claim
 		billing_item, = frappe.get_cached_value('Radiology Examination Template', doc.radiology_examination_template, ['item'])
 		insurance_claim, claim_status = create_insurance_claim(doc, 'Radiology Examination Template', doc.radiology_examination_template, 1, billing_item)
 		if insurance_claim:

@@ -8,8 +8,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, nowdate, nowtime, cstr, to_timedelta
 import datetime
-from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_account
-from erpnext.healthcare.doctype.lab_test.lab_test import create_sample_doc
+from hms_tz.hms_tz.doctype.healthcare_settings.healthcare_settings import get_account
+from hms_tz.hms_tz.doctype.lab_test.lab_test import create_sample_doc
 from erpnext.stock.stock_ledger import get_previous_sle
 from erpnext.stock.get_item_details import get_item_details
 from frappe.model.mapper import get_mapped_doc
@@ -352,7 +352,7 @@ def insert_clinical_procedure_to_medical_record(doc):
 
 def make_insurance_claim(doc):
 	if doc.insurance_subscription:
-		from erpnext.healthcare.utils import create_insurance_claim
+		from hms_tz.hms_tz.utils import create_insurance_claim
 		billing_item, = frappe.get_cached_value('Clinical Procedure Template', doc.procedure_template, ['item'])
 		insurance_claim, claim_status = create_insurance_claim(doc, 'Clinical Procedure Template', doc.procedure_template, 1, billing_item)
 		if insurance_claim:

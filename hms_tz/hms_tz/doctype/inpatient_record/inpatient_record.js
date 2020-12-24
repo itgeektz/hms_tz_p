@@ -224,7 +224,7 @@ let transfer_patient_dialog = function(frm) {
 
 	dialog.fields_dict['leave_from'].get_query = function(){
 		return {
-			query : 'erpnext.healthcare.doctype.inpatient_record.inpatient_record.get_leave_from',
+			query : 'hms_tz.hms_tz.doctype.inpatient_record.inpatient_record.get_leave_from',
 			filters: {docname:frm.doc.name}
 		};
 	};

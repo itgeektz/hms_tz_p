@@ -7,7 +7,7 @@ import frappe
 import unittest
 from frappe.utils import now_datetime, today
 from frappe.utils.make_random import get_random
-from erpnext.healthcare.doctype.inpatient_record.inpatient_record import admit_patient, discharge_patient, schedule_discharge
+from hms_tz.hms_tz.doctype.inpatient_record.inpatient_record import admit_patient, discharge_patient, schedule_discharge
 
 class TestInpatientRecord(unittest.TestCase):
 	def test_admit_and_discharge(self):

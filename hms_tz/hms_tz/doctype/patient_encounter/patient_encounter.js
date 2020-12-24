@@ -189,7 +189,7 @@ frappe.ui.form.on('Patient Encounter', {
 	set_patient_info: function(frm) {
 		if (frm.doc.patient) {
 			frappe.call({
-				method: 'erpnext.healthcare.doctype.patient.patient.get_patient_detail',
+				method: 'hms_tz.hms_tz.doctype.patient.patient.get_patient_detail',
 				args: {
 					patient: frm.doc.patient
 				},
@@ -258,7 +258,7 @@ var schedule_inpatient = function(frm) {
 				admission_instruction: dialog.get_value('admission_instruction')
 			}
 			frappe.call({
-				method: 'erpnext.healthcare.doctype.inpatient_record.inpatient_record.schedule_inpatient',
+				method: 'hms_tz.hms_tz.doctype.inpatient_record.inpatient_record.schedule_inpatient',
 				args: {
 					args: args
 				},
@@ -316,7 +316,7 @@ var schedule_discharge = function(frm) {
 				discharge_note: dialog.get_value('discharge_note')
 			}
 			frappe.call ({
-				method: 'erpnext.healthcare.doctype.inpatient_record.inpatient_record.schedule_discharge',
+				method: 'hms_tz.hms_tz.doctype.inpatient_record.inpatient_record.schedule_discharge',
 				args: {args},
 				callback: function(data) {
 					if(!data.exc){
@@ -444,7 +444,7 @@ let set_source_referring_practitioner = function (frm) {
 };
 var show_patient_vital_charts = function(patient, frm, btn_show_id, pts, title) {
 	frappe.call({
-		method: "erpnext.healthcare.utils.get_patient_vitals",
+		method: "hms_tz.hms_tz.utils.get_patient_vitals",
 		args:{
 			patient: patient
 		},
@@ -565,7 +565,7 @@ var refer_practitioner = function(frm) {
 				referring_reason: dialog.get_value('referring_reason')
 			}
 			frappe.call ({
-				method: 'erpnext.healthcare.doctype.patient_encounter.patient_encounter.create_patient_referral',
+				method: 'hms_tz.hms_tz.doctype.patient_encounter.patient_encounter.create_patient_referral',
 				args: {args},
 				callback: function(data) {
 					if(!data.exc){

@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import frappe
 import unittest
 from frappe.utils import nowdate, add_days
-from erpnext.healthcare.doctype.patient_appointment.test_patient_appointment import create_healthcare_docs, create_appointment, create_healthcare_service_items
+from hms_tz.hms_tz.doctype.patient_appointment.test_patient_appointment import create_healthcare_docs, create_appointment, create_healthcare_service_items
 
 test_dependencies = ["Company"]
 

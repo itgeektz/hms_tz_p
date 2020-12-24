@@ -6,9 +6,9 @@ from __future__ import unicode_literals
 import frappe
 import unittest
 from frappe.utils import getdate
-from erpnext.healthcare.doctype.therapy_type.test_therapy_type import create_therapy_type
-from erpnext.healthcare.doctype.therapy_plan.therapy_plan import make_therapy_session
-from erpnext.healthcare.doctype.patient_appointment.test_patient_appointment import create_healthcare_docs, create_patient
+from hms_tz.hms_tz.doctype.therapy_type.test_therapy_type import create_therapy_type
+from hms_tz.hms_tz.doctype.therapy_plan.therapy_plan import make_therapy_session
+from hms_tz.hms_tz.doctype.patient_appointment.test_patient_appointment import create_healthcare_docs, create_patient
 
 class TestTherapyPlan(unittest.TestCase):
 	def test_creation_on_encounter_submission(self):

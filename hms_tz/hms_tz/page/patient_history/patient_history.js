@@ -50,7 +50,7 @@ frappe.pages['patient_history'].on_page_load = function(wrapper) {
 			if(doctype && docname){
 				let exclude = ["patient", "patient_name", "patient_sex", "encounter_date", "diagnosis", "symptoms"];
 				frappe.call({
-					method: "erpnext.healthcare.utils.render_doc_as_html",
+					method: "hms_tz.hms_tz.utils.render_doc_as_html",
 					args:{
 						doctype: doctype,
 						docname: docname,
@@ -85,7 +85,7 @@ frappe.pages['patient_history'].on_page_load = function(wrapper) {
 
 var get_documents = function(patient, me){
 	frappe.call({
-		"method": "erpnext.healthcare.page.patient_history.patient_history.get_feed",
+		"method": "hms_tz.hms_tz.page.patient_history.patient_history.get_feed",
 		args: {
 			name: patient,
 			start: me.start,
@@ -184,7 +184,7 @@ var add_date_separator = function(data) {
 
 var show_patient_info = function(patient, me){
 	frappe.call({
-		"method": "erpnext.healthcare.doctype.patient.patient.get_patient_detail",
+		"method": "hms_tz.hms_tz.doctype.patient.patient.get_patient_detail",
 		args: {
 			patient: patient
 		},
@@ -221,7 +221,7 @@ var show_patient_info = function(patient, me){
 
 var show_patient_vital_charts = function(patient, me, btn_show_id, pts, title) {
 	frappe.call({
-		method: "erpnext.healthcare.utils.get_patient_vitals",
+		method: "hms_tz.hms_tz.utils.get_patient_vitals",
 		args:{
 			patient: patient
 		},

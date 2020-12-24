@@ -56,7 +56,7 @@ let change_medication_code = function(doc) {
 
 			if (values) {
 				frappe.call({
-					'method': 'erpnext.healthcare.doctype.medication.medication.change_item_code_from_medication',
+					'method': 'hms_tz.hms_tz.doctype.medication.medication.change_item_code_from_medication',
 					'args': {item_code: values.item_code, doc: doc},
 					callback: function () {
 						cur_frm.reload_doc();

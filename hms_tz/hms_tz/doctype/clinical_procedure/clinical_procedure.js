@@ -173,7 +173,7 @@ frappe.ui.form.on('Clinical Procedure', {
 	patient: function(frm) {
 		if (frm.doc.patient) {
 			frappe.call({
-				'method': 'erpnext.healthcare.doctype.patient.patient.get_patient_detail',
+				'method': 'hms_tz.hms_tz.doctype.patient.patient.get_patient_detail',
 				args: {
 					patient: frm.doc.patient
 				},
@@ -311,7 +311,7 @@ frappe.ui.form.on('Clinical Procedure', {
 
 	set_procedure_consumables: function(frm) {
 		frappe.call({
-			method: 'erpnext.healthcare.doctype.clinical_procedure.clinical_procedure.get_procedure_consumables',
+			method: 'hms_tz.hms_tz.doctype.clinical_procedure.clinical_procedure.get_procedure_consumables',
 			args: {
 				procedure_template: frm.doc.procedure_template
 			},
@@ -380,7 +380,7 @@ frappe.ui.form.on('Clinical Procedure Item', {
 				'warehouse': frm.doc.warehouse
 			};
 			return frappe.call({
-				method: 'erpnext.healthcare.doctype.clinical_procedure_template.clinical_procedure_template.get_item_details',
+				method: 'hms_tz.hms_tz.doctype.clinical_procedure_template.clinical_procedure_template.get_item_details',
 				args: {args: args},
 				callback: function(r) {
 					if (r.message) {

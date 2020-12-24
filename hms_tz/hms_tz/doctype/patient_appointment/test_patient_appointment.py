@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import unittest
 import frappe
 from frappe import _
-from erpnext.healthcare.doctype.patient_appointment.patient_appointment import update_status, make_encounter
+from hms_tz.hms_tz.doctype.patient_appointment.patient_appointment import update_status, make_encounter
 from frappe.utils import nowdate, add_days
 from frappe.utils.make_random import get_random
 
@@ -83,7 +83,7 @@ class TestPatientAppointment(unittest.TestCase):
 		overlap_service_unit_type = create_overlap_service_unit_type()
 		service_unit = create_service_unit(service_unit_type)
 		overlap_service_unit = create_overlap_service_unit(overlap_service_unit_type)
-		from erpnext.healthcare.doctype.patient_appointment.patient_appointment import Maximumcapacityerror, Overlappingerror
+		from hms_tz.hms_tz.doctype.patient_appointment.patient_appointment import Maximumcapacityerror, Overlappingerror
 		for y in range(2, 5):
 			try:
 				patient_2 = create_patient_n(y)

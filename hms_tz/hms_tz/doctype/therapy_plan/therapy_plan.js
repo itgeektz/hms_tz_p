@@ -33,7 +33,7 @@ frappe.ui.form.on('Therapy Plan', {
 			frm.add_custom_button(__('Therapy Session'), function() {
 				frappe.prompt(fields, data => {
 					frappe.call({
-						method: 'erpnext.healthcare.doctype.therapy_plan.therapy_plan.make_therapy_session',
+						method: 'hms_tz.hms_tz.doctype.therapy_plan.therapy_plan.make_therapy_session',
 						args: {
 							therapy_plan: frm.doc.name,
 							patient: frm.doc.patient,

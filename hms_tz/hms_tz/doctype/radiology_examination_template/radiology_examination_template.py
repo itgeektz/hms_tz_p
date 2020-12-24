@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
-from erpnext.healthcare.utils import create_item_from_doc, update_item_from_doc, on_trash_doc_having_item_reference
+from hms_tz.hms_tz.utils import create_item_from_doc, update_item_from_doc, on_trash_doc_having_item_reference
 
 class RadiologyExaminationTemplate(Document):
 	def validate(self):

@@ -14,7 +14,7 @@ class HealthcareServiceOrder(Document):
 			self.status = 'Waiting'
 def make_insurance_claim(doc):
 	if doc.insurance_subscription:
-		from erpnext.healthcare.utils import create_insurance_claim
+		from hms_tz.hms_tz.utils import create_insurance_claim
 		insurance_claim, claim_status = create_insurance_claim(doc, doc.order_doctype, doc.order, doc.quantity, doc.billing_item)
 		if insurance_claim:
 			frappe.set_value(doc.doctype, doc.name ,'insurance_claim', insurance_claim)

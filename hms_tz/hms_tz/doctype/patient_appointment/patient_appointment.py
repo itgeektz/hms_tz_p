@@ -12,8 +12,8 @@ from frappe import _
 import datetime
 from frappe.core.doctype.sms_settings.sms_settings import send_sms
 from erpnext.hr.doctype.employee.employee import is_holiday
-from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
-from erpnext.healthcare.utils import check_fee_validity, get_service_item_and_practitioner_charge, manage_fee_validity
+from hms_tz.hms_tz.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
+from hms_tz.hms_tz.utils import check_fee_validity, get_service_item_and_practitioner_charge, manage_fee_validity
 
 class Maximumcapacityerror(frappe.ValidationError): pass
 class Overlappingerror(frappe.ValidationError): pass
@@ -643,7 +643,7 @@ def update_appointment_status():
 
 def make_insurance_claim(doc):
 	if doc.insurance_subscription:
-		from erpnext.healthcare.utils import create_insurance_claim, get_service_item_and_practitioner_charge
+		from hms_tz.hms_tz.utils import create_insurance_claim, get_service_item_and_practitioner_charge
 		billing_item, rate  = get_service_item_and_practitioner_charge(doc)
 		insurance_claim, claim_status = create_insurance_claim(doc, 'Appointment Type', doc.appointment_type, 1, billing_item)
 		if insurance_claim:

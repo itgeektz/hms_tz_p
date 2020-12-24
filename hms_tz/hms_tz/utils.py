@@ -7,9 +7,9 @@ import math
 import frappe
 from frappe import _
 from frappe.utils import time_diff_in_hours, rounded, getdate, nowdate
-from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_income_account
-from erpnext.healthcare.doctype.fee_validity.fee_validity import create_fee_validity
-from erpnext.healthcare.doctype.lab_test.lab_test import create_multiple
+from hms_tz.hms_tz.doctype.healthcare_settings.healthcare_settings import get_income_account
+from hms_tz.hms_tz.doctype.fee_validity.fee_validity import create_fee_validity
+from hms_tz.hms_tz.doctype.lab_test.lab_test import create_multiple
 
 @frappe.whitelist()
 def get_healthcare_services_to_invoice(patient, company):

@@ -216,7 +216,7 @@ frappe.ui.form.on('Radiology Examination', {
 var get_radiology_procedure_prescribed = function(frm){
 	if(frm.doc.patient){
 		frappe.call({
-			method:	'erpnext.healthcare.doctype.radiology_examination.radiology_examination.get_radiology_procedure_prescribed',
+			method:	'hms_tz.hms_tz.doctype.radiology_examination.radiology_examination.get_radiology_procedure_prescribed',
 			args:	{patient: frm.doc.patient},
 			callback: function(r){
 				show_radiology_procedure(frm, r.message);

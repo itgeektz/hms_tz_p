@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import unittest
 import frappe
 from frappe.utils import nowdate
-from erpnext.healthcare.doctype.patient_appointment.test_patient_appointment import create_encounter, create_healthcare_docs, create_appointment
+from hms_tz.hms_tz.doctype.patient_appointment.test_patient_appointment import create_encounter, create_healthcare_docs, create_appointment
 
 class TestPatientMedicalRecord(unittest.TestCase):
 	def setUp(self):

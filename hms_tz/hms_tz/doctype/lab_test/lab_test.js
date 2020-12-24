@@ -68,7 +68,7 @@ frappe.ui.form.on('Lab Test', {
 		if (frm.doc.docstatus === 1 && frm.doc.sms_sent === 0 && frm.doc.status !== 'Rejected' ) {
 			frm.add_custom_button(__('Send SMS'), function () {
 				frappe.call({
-					method: 'erpnext.healthcare.doctype.healthcare_settings.healthcare_settings.get_sms_text',
+					method: 'hms_tz.hms_tz.doctype.healthcare_settings.healthcare_settings.get_sms_text',
 					args: { doc: frm.doc.name },
 					callback: function (r) {
 						if (!r.exc) {
@@ -101,7 +101,7 @@ frappe.ui.form.on('Lab Test', {
 frappe.ui.form.on('Lab Test', 'patient', function (frm) {
 	if (frm.doc.patient) {
 		frappe.call({
-			'method': 'erpnext.healthcare.doctype.patient.patient.get_patient_detail',
+			'method': 'hms_tz.hms_tz.doctype.patient.patient.get_patient_detail',
 			args: { patient: frm.doc.patient },
 			callback: function (data) {
 				var age = null;
@@ -145,7 +145,7 @@ var status_update = function (approve, frm) {
 		status = 'Rejected';
 	}
 	frappe.call({
-		method: 'erpnext.healthcare.doctype.lab_test.lab_test.update_status',
+		method: 'hms_tz.hms_tz.doctype.lab_test.lab_test.update_status',
 		args: { status: status, name: doc.name },
 		callback: function () {
 			cur_frm.reload_doc();
@@ -156,7 +156,7 @@ var status_update = function (approve, frm) {
 var get_lab_test_prescribed = function (frm) {
 	if (frm.doc.patient) {
 		frappe.call({
-			method: 'erpnext.healthcare.doctype.lab_test.lab_test.get_lab_test_prescribed',
+			method: 'hms_tz.hms_tz.doctype.lab_test.lab_test.get_lab_test_prescribed',
 			args: { patient: frm.doc.patient },
 			callback: function (r) {
 				show_lab_tests(frm, r.message);

@@ -52,7 +52,7 @@ var get_insurance_claim = function(frm){
 		}
 		args['posting_date_type'] = frm.doc.posting_date_type
 		frappe.call({
-			'method': 'erpnext.healthcare.doctype.healthcare_insurance_payment_request.healthcare_insurance_payment_request.get_claim_item',
+			'method': 'hms_tz.hms_tz.doctype.healthcare_insurance_payment_request.healthcare_insurance_payment_request.get_claim_item',
 			args:args,
 			callback: function (data) {
 				if(data.message){

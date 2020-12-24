@@ -5,10 +5,10 @@ from __future__ import unicode_literals
 import unittest
 import frappe
 from frappe.utils import getdate, nowtime
-from erpnext.healthcare.doctype.patient_appointment.test_patient_appointment import create_patient
-from erpnext.healthcare.doctype.lab_test.lab_test import create_multiple
-from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
-from erpnext.healthcare.doctype.patient_medical_record.test_patient_medical_record import create_lab_test_template as create_blood_test_template
+from hms_tz.hms_tz.doctype.patient_appointment.test_patient_appointment import create_patient
+from hms_tz.hms_tz.doctype.lab_test.lab_test import create_multiple
+from hms_tz.hms_tz.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
+from hms_tz.hms_tz.doctype.patient_medical_record.test_patient_medical_record import create_lab_test_template as create_blood_test_template
 
 class TestLabTest(unittest.TestCase):
 	def test_lab_test_item(self):

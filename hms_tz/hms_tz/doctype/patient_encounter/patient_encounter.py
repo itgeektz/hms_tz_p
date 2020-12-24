@@ -9,7 +9,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cstr
 from frappe import _
-from erpnext.healthcare.utils import make_healthcare_service_order
+from hms_tz.hms_tz.utils import make_healthcare_service_order
 
 class PatientEncounter(Document):
 	def validate(self):
@@ -277,7 +277,7 @@ def create_patient_referral(args):
 
 def make_insurance_claim(doc):
 	if doc.insurance_subscription:
-		from erpnext.healthcare.utils import create_insurance_claim, get_service_item_and_practitioner_charge
+		from hms_tz.hms_tz.utils import create_insurance_claim, get_service_item_and_practitioner_charge
 		billing_item, rate  = get_service_item_and_practitioner_charge(doc)
 		insurance_claim, claim_status = create_insurance_claim(doc, 'Appointment Type', doc.appointment_type, 1, billing_item)
 		if insurance_claim:

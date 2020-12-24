@@ -11,7 +11,7 @@
  "label": "Total Patients Admitted",
  "modified": "2020-07-22 13:26:20.027788",
  "modified_by": "Administrator",
- "module": "Healthcare",
+ "module": "Hms Tz",
  "name": "Total Patients Admitted",
  "owner": "Administrator",
  "show_percentage_stats": 1,

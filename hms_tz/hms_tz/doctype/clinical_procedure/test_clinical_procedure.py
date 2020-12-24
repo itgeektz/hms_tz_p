@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 import unittest
 import frappe
-from erpnext.healthcare.doctype.patient_appointment.test_patient_appointment import create_healthcare_docs, create_clinical_procedure_template
+from hms_tz.hms_tz.doctype.patient_appointment.test_patient_appointment import create_healthcare_docs, create_clinical_procedure_template
 
 test_dependencies = ['Item']
 
