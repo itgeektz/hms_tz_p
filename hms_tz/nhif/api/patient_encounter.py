@@ -338,7 +338,7 @@ def get_chronic_medications(patient):
 
 
 def validate_totals(doc):
-    if not doc.insurance_company or not doc.insurance_subscription or doc.insurance_company == "NHIF":
+    if not doc.insurance_company or not doc.insurance_subscription or doc.insurance_company == "NHIF" or not doc.daily_limit or doc.daily_limit == 0:
         return
     childs_map = [
         {
@@ -375,6 +375,6 @@ def validate_totals(doc):
             item_code = frappe.get_value(child.get("doctype"), row.get(child.get("item")), "item")
             item_rate = get_item_rate(item_code, doc.company, doc.insurance_subscription, doc.insurance_company)
             doc.current_total += item_rate
-    diff = doc.daily_limit - doc.current_total + doc.previous_total
+    diff = doc.daily_limit - doc.current_total - doc.previous_total
     if doc.current_total + doc.previous_total > doc.daily_limit:
         frappe.throw(_("The total daily limit of {0} for the Insurance Subscription {1} has been exceeded by {2}. Please contact the reception to increase the limit or prescribe the items").fomat(doc.daily_limit, doc.insurance_subscription, diff))
