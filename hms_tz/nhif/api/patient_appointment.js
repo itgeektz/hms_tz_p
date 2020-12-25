@@ -52,7 +52,11 @@ frappe.ui.form.on('Patient Appointment', {
             frm.set_value("mode_of_payment", "")
             frm.trigger('get_insurance_amount')
         } else {
+            frm.set_value("insurance_subscription", "")
             frm.set_value("insurance_company", "")
+            frm.set_value("coverage_plan_name", "")
+            frm.set_value("coverage_plan_card_number", "")
+            frm.set_value("insurance_company_name", "")
             frm.trigger('get_mop_amount')
         }
     },
@@ -66,6 +70,15 @@ frappe.ui.form.on('Patient Appointment', {
             frm.set_value("coverage_plan_card_number", "")
             frm.set_value("insurance_company_name", "")
             frm.trigger('get_mop_amount')
+        }
+    },
+    insurance_company: function (frm) {
+        frm.trigger("get_authorization_num");
+        frm.set_value("authorization_number", "")
+        if (frm.doc.insurance_company == "NHIF") {
+            frm.toggle_reqd("authorization_number", false);
+        } else {
+            frm.toggle_reqd("authorization_number", true);
         }
     },
     practitioner: function (frm) {
@@ -189,6 +202,7 @@ frappe.ui.form.on('Patient Appointment', {
             }, 5);
             return
         }
+        frappe.msgprint(frm.doc.insurance_company + " " + "2nd time")
         if (!frm.doc.insurance_subscription) {
             frappe.msgprint("Select Insurance Subscription to get authorization number")
             return
