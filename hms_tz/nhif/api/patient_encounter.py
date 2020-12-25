@@ -73,7 +73,8 @@ def validate(doc, method):
                 })
                 if maximum_number_of_claims > len(claims_count):
                     frappe.throw(_("Maximum Number of Claims for {0} per year is exceeded").format(row.get(value)))
-            
+    validate_totals(doc)
+
 
 def get_year_end(dt, as_str=False):
     dt = getdate(dt)
@@ -84,43 +85,45 @@ def get_year_end(dt, as_str=False):
 
 @frappe.whitelist()
 def duplicate_encounter(encounter):
-	doc = frappe.get_doc("Patient Encounter", encounter)
-	if not doc.docstatus==1 or doc.encounter_type == 'Final' or doc.duplicate == 1:
-		return
-	encounter_doc = frappe.copy_doc(doc)
-	encounter_dict = encounter_doc.as_dict()
-	child_tables = {
-		"drug_prescription": "previous_drug_prescription",
-		"lab_test_prescription": "previous_lab_prescription",
-		"procedure_prescription": "previous_procedure_prescription",
-		"radiology_procedure_prescription": "previous_radiology_procedure_prescription",
-		"therapies": "previous_therapy_plan_detail",
-		"diet_recommendation": "previous_diet_recommendation"
-	}
+    doc = frappe.get_doc("Patient Encounter", encounter)
+    if not doc.docstatus==1 or doc.encounter_type == 'Final' or doc.duplicate == 1:
+        return
+    encounter_doc = frappe.copy_doc(doc)
+    encounter_dict = encounter_doc.as_dict()
+    child_tables = {
+        "drug_prescription": "previous_drug_prescription",
+        "lab_test_prescription": "previous_lab_prescription",
+        "procedure_prescription": "previous_procedure_prescription",
+        "radiology_procedure_prescription": "previous_radiology_procedure_prescription",
+        "therapies": "previous_therapy_plan_detail",
+        "diet_recommendation": "previous_diet_recommendation"
+    }
 
-	fields_to_clear = ['name', 'owner', 'creation', 'modified', 'modified_by','docstatus', 'amended_from', 'amendment_date', 'parentfield', 'parenttype']
+    fields_to_clear = ['name', 'owner', 'creation', 'modified', 'modified_by','docstatus', 'amended_from', 'amendment_date', 'parentfield', 'parenttype']
 
-	for key ,value in child_tables.items():
-		cur_table = encounter_dict.get(key)
-		if not cur_table:
-			continue
-		for row in cur_table:
-			new_row = row
-			for fieldname in (fields_to_clear):
-				new_row[fieldname] = None
-			encounter_dict[value].append(new_row)
-		encounter_dict[key] = []
-	encounter_dict["duplicate"] = 0
-	encounter_dict["encounter_type"] = "Ongoing"
-	if not encounter_dict.get("reference_encounter"):
-		encounter_dict["reference_encounter"] = doc.name
-	encounter_dict["from_encounter"] = doc.name
-	encounter_doc = frappe.get_doc(encounter_dict)
-	encounter_doc.save()
-	frappe.msgprint(_('Patient Encounter {0} created'.format(encounter_doc.name)))
-	doc.duplicate = 1
-	doc.save()
-	return encounter_doc.name
+    for key ,value in child_tables.items():
+        cur_table = encounter_dict.get(key)
+        if not cur_table:
+            continue
+        for row in cur_table:
+            new_row = row
+            for fieldname in (fields_to_clear):
+                new_row[fieldname] = None
+            encounter_dict[value].append(new_row)
+        encounter_dict[key] = []
+    encounter_dict["duplicate"] = 0
+    encounter_dict["encounter_type"] = "Ongoing"
+    if not encounter_dict.get("reference_encounter"):
+        encounter_dict["reference_encounter"] = doc.name
+    encounter_dict["from_encounter"] = doc.name
+    encounter_dict ["previous_total"] = doc.previous_total + doc.current_total
+    encounter_dict["current_total"] = 0
+    encounter_doc = frappe.get_doc(encounter_dict)
+    encounter_doc.save()
+    frappe.msgprint(_('Patient Encounter {0} created'.format(encounter_doc.name)))
+    doc.duplicate = 1
+    doc.save()
+    return encounter_doc.name
 
 
 def get_warehouse(healthcare_service_unit):
@@ -334,3 +337,46 @@ def get_chronic_medications(patient):
         fields = ["*"]
     )
     return data
+
+
+def validate_totals(doc):
+    if not doc.insurance_company or not doc.insurance_subscription or doc.insurance_company == "NHIF" or not doc.daily_limit or doc.daily_limit == 0:
+        return
+    childs_map = [
+        {
+            "table": "lab_test_prescription",
+            "doctype": "Lab Test Template",
+            "item": "lab_test_code",
+        },
+        {
+            "table": "radiology_procedure_prescription",
+            "doctype": "Radiology Examination Template",
+            "item": "radiology_examination_template",
+        },
+        {
+            "table": "procedure_prescription",
+            "doctype": "Clinical Procedure Template",
+            "item": "procedure",
+        },
+        {
+            "table": "drug_prescription",
+            "doctype": "Medication",
+            "item": "drug_code",
+        },
+        {
+            "table": "therapies",
+            "doctype": "Therapy Type",
+            "item": "therapy_type",
+        }
+    ]
+    doc.current_total = 0
+    for child in childs_map:
+        for row in doc.get(child.get("table")):
+            if row.prescribe:
+                continue
+            item_code = frappe.get_value(child.get("doctype"), row.get(child.get("item")), "item")
+            item_rate = get_item_rate(item_code, doc.company, doc.insurance_subscription, doc.insurance_company)
+            doc.current_total += item_rate
+    diff = doc.daily_limit - doc.current_total - doc.previous_total
+    if doc.current_total + doc.previous_total > doc.daily_limit:
+        frappe.throw(_("The total daily limit of {0} for the Insurance Subscription {1} has been exceeded by {2}. Please contact the reception to increase the limit or prescribe the items").fomat(doc.daily_limit, doc.insurance_subscription, diff))

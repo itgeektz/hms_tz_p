@@ -113,7 +113,7 @@ def get_item_rate(item_code, company, insurance_subscription, insurance_company)
             frappe.throw(_("Please set Price List in Healthcare Insurance Coverage Plan"))
     else:
         price_list_rate = get_item_price(item_code, price_list, company)
-    if price_list_rate == 0:
+    if price_list_rate == (0 or None):
         frappe.throw(_("Please set Price List for item: {0}").format(item_code))
     return price_list_rate
 

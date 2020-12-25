@@ -178,6 +178,10 @@ fixtures = [
 		"Patient-chronic_medications",
 		"Patient Encounter-get_chronic_medications",
 		"Patient Encounter-copy_from_preliminary_diagnosis",
+		"Healthcare Insurance Subscription-daily_limit",
+		"Patient Encounter-current_total",
+		"Patient Encounter-previous_total",
+		"Patient Encounter-daily_limit"
 	)]]},
 	{"doctype":"Property Setter", "filters": [["name", "in", (
 		"Healthcare Insurance Subscription-main-search_fields",
