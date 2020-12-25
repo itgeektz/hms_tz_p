@@ -13,13 +13,13 @@ from hms_tz.nhif.api.healthcare_utils import get_item_rate
 def validate(doc, method):
     insurance_subscription = doc.insurance_subscription
     child_tables = {
-		"drug_prescription": "drug_code",
-		"lab_test_prescription": "lab_test_code",
-		"procedure_prescription": "procedure",
-		"radiology_procedure_prescription": "radiology_examination_template",
-		"therapies": "therapy_type",
-		# "diet_recommendation": "diet_plan" dosent have Healthcare Service Insurance Coverage
-	}
+        "drug_prescription": "drug_code",
+        "lab_test_prescription": "lab_test_code",
+        "procedure_prescription": "procedure",
+        "radiology_procedure_prescription": "radiology_examination_template",
+        "therapies": "therapy_type",
+        # "diet_recommendation": "diet_plan" dosent have Healthcare Service Insurance Coverage
+    }
     warehouse = get_warehouse(doc.healthcare_service_unit)
     for key ,value in child_tables.items():
         table = doc.get(key)
@@ -67,9 +67,9 @@ def validate(doc, method):
                 year_start = get_year_start(nowdate(), True)
                 year_end = get_year_end(nowdate(), True)
                 claims_count = frappe.get_all("Healthcare Insurance Claim", filters={
-                  "service_template": row.get(value),
-                  "insurance_subscription": insurance_subscription,
-                  "claim_posting_date": ["between",year_start,year_end],
+                "service_template": row.get(value),
+                "insurance_subscription": insurance_subscription,
+                "claim_posting_date": ["between",year_start,year_end],
                 })
                 if maximum_number_of_claims > len(claims_count):
                     frappe.throw(_("Maximum Number of Claims for {0} per year is exceeded").format(row.get(value)))
@@ -147,9 +147,11 @@ def get_item_info(medication_name):
 
 def get_stock_availability(item_code, warehouse):
     latest_sle = frappe.db.sql("""select sum(actual_qty) as  actual_qty
+        from `tabStock Ledger Entry` 
 		from `tabStock Ledger Entry` 
-		where item_code = %s and warehouse = %s
-		limit 1""", (item_code, warehouse), as_dict=1)
+        from `tabStock Ledger Entry` 
+        where item_code = %s and warehouse = %s
+        limit 1""", (item_code, warehouse), as_dict=1)
 
     sle_qty = latest_sle[0].actual_qty or 0 if latest_sle else 0
     return sle_qty
@@ -380,3 +382,30 @@ def validate_totals(doc):
     diff = doc.daily_limit - doc.current_total - doc.previous_total
     if doc.current_total + doc.previous_total > doc.daily_limit:
         frappe.throw(_("The total daily limit of {0} for the Insurance Subscription {1} has been exceeded by {2}. Please contact the reception to increase the limit or prescribe the items").fomat(doc.daily_limit, doc.insurance_subscription, diff))
+
+@frappe.whitelist()
+def get_drugs_to_invoice(encounter):
+    encounter = frappe.get_doc('Patient Encounter', encounter)
+    if encounter:
+        patient = frappe.get_doc('Patient', encounter.patient)
+        if patient:
+            if patient.customer:
+                items_to_invoice = []
+                for drug_line in encounter.drug_prescription:
+                    if drug_line.drug_code and drug_line.prescribe:
+                        qty = 1
+                        if frappe.db.get_value('Item', drug_line.drug_code, 'stock_uom') == 'Nos':
+                            qty = drug_line.get_quantity()
+
+                        description = ''
+                        if drug_line.dosage and drug_line.period:
+                            description = _('{0} for {1}').format(drug_line.dosage, drug_line.period)
+
+                        items_to_invoice.append({
+                            'drug_code': drug_line.drug_code,
+                            'quantity': qty,
+                            'description': description
+                        })
+                return items_to_invoice
+            else:
+                validate_customer_created(patient)

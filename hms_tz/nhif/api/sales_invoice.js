@@ -288,7 +288,7 @@ var get_drugs_to_invoice = function(frm) {
 		var encounter = dialog.fields_dict.encounter.input.value;
 		if(encounter && encounter!=selected_encounter){
 			selected_encounter = encounter;
-			var method = "erpnext.healthcare.utils.get_drugs_to_invoice";
+			var method = "hms_tz.nhif.api.patient_encounter.get_drugs_to_invoice";
 			var args = {encounter: encounter};
 			var columns = (["drug_code", "quantity", "description"]);
 			get_healthcare_items(frm, false, $results, $placeholder, method, args, columns);
@@ -305,7 +305,7 @@ var get_drugs_to_invoice = function(frm) {
 	$placeholder = $(`<div class="multiselect-empty-state">
 				<span class="text-center" style="margin-top: -40px;">
 					<i class="fa fa-2x fa-heartbeat text-extra-muted"></i>
-					<p class="text-extra-muted">No Drug Prescription found</p>
+					<p class="text-extra-muted">No Drug Prescription found that are prescribed</p>
 				</span>
 			</div>`);
 	$results.on('click', '.list-item--head :checkbox', (e) => {
