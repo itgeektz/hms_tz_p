@@ -9,6 +9,7 @@ frappe.ui.form.on('Patient Appointment', {
     },
     refresh: function (frm) {
         frm.trigger("update_primary_action")
+        frm.trigger("toggle_reqd_referral_no")
         if (!frm.doc.invoiced && frm.doc.patient && frm.doc.mode_of_payment && !frm.doc.insurance_subscription && frm.doc.status != "Cancelled") {
             frm.add_custom_button(__('Create Sales Invoice'), function () {
                 if (frm.is_dirty()) {
@@ -37,13 +38,6 @@ frappe.ui.form.on('Patient Appointment', {
         frm.set_value("referring_practitioner", "")
         frm.set_value("healthcare_referrer_type", "")
         frm.set_value("healthcare_referrer", "")
-        if (frm.doc.source == "Referral") {
-            frm.set_value("healthcare_referrer_type", "Healthcare Practitioner")
-        } else if (frm.doc.source == "External Referral") {
-            frm.set_value("healthcare_referrer_type", "Healthcare External Referrer")
-            frm.toggle_reqd("referring_practitioner", false);
-            frm.toggle_enable("referring_practitioner", false);
-        }
     },
     insurance_subscription: function (frm) {
         frm.trigger("mandatory_fields")
@@ -73,7 +67,6 @@ frappe.ui.form.on('Patient Appointment', {
         }
     },
     insurance_company: function (frm) {
-        frm.trigger("get_authorization_num");
         frm.set_value("authorization_number", "")
         if (frm.doc.insurance_subscription && frm.doc.insurance_company != "NHIF") {
             frm.toggle_reqd("authorization_number", true);
@@ -113,20 +106,27 @@ frappe.ui.form.on('Patient Appointment', {
         }
     },
     toggle_reqd_referral_no: function (frm) {
+        frm.toggle_display(['healthcare_referrer'], false)
+        frm.toggle_reqd(['healthcare_referrer'], false)
         if (frm.doc.source == "External Referral") {
-            frm.toggle_enable(['referral_no'], true)
             if (frm.doc.insurance_subscription) {
                 frm.toggle_reqd("referral_no", true);
             } else {
                 frm.toggle_reqd("referral_no", false);
             }
+            frm.toggle_enable(['referral_no'], true)
             frm.toggle_display(['healthcare_referrer'], true)
             frm.toggle_reqd(['healthcare_referrer'], true)
+            frm.set_value("healthcare_referrer_type", "Healthcare External Referrer")
+            frm.toggle_reqd("referring_practitioner", false);
+            frm.toggle_enable("referring_practitioner", false);
+        } else if (frm.doc.source == "Referral") {
+            frm.set_value("healthcare_referrer_type", "Healthcare Practitioner")
+            frm.toggle_reqd("referring_practitioner", true);
+            frm.toggle_enable("referring_practitioner", true);
         } else {
             frm.toggle_reqd("referral_no", false);
             frm.toggle_enable(['referral_no'], false)
-            frm.toggle_display(['healthcare_referrer'], false)
-            frm.toggle_reqd(['healthcare_referrer'], false)
         }
     },
     get_insurance_amount: function (frm) {
@@ -203,7 +203,6 @@ frappe.ui.form.on('Patient Appointment', {
             }, 5);
             return
         }
-        frappe.msgprint(frm.doc.insurance_company + " " + "2nd time")
         if (!frm.doc.insurance_subscription) {
             frappe.msgprint("Select Insurance Subscription to get authorization number")
             return

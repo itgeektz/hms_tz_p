@@ -15,6 +15,10 @@ frappe.ui.form.on('Patient Encounter', {
     refresh: function(frm) {
         set_medical_code(frm)
         duplicate(frm)
+        if (frm.doc.source == "External Referral") {
+            frm.set_df_property('referring_practitioner', 'hidden', 1);
+            frm.set_df_property('referring_practitioner', 'reqd', 0);
+        }
     },
     patient_encounter_preliminary_diagnosis: function(frm) {
 		set_medical_code(frm)
