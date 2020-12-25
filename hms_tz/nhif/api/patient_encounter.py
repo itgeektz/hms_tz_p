@@ -299,7 +299,9 @@ def create_delivery_note(patient_encounter_doc):
         currency = frappe.get_value("Company", patient_encounter_doc.company, "default_currency"),
         items = items,
         reference_doctype = patient_encounter_doc.doctype,
-        reference_name = patient_encounter_doc.name
+        reference_name = patient_encounter_doc.name,
+        patient = patient_encounter_doc.patient,
+        patient_name = patient_encounter_doc.patient_name
     ))
     doc.set_missing_values()
     doc.insert(ignore_permissions=True)
