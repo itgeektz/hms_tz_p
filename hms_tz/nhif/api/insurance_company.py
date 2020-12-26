@@ -321,10 +321,11 @@ def process_insurance_coverages():
                 doc.name,
                 doc.naming_series,
                 user,
-                doc.start_date
+                doc.start_date,
+                1
             ))
 
-        frappe.db.sql("DELETE FROM `tabHealthcare Service Insurance Coverage` WHERE healthcare_insurance_coverage_plan = '{0}'".format(plan.name))
+        frappe.db.sql("DELETE FROM `tabHealthcare Service Insurance Coverage` WHERE is_auto_generated = 1 AND healthcare_insurance_coverage_plan = '{0}'".format(plan.name))
 
         frappe.db.sql('''
             INSERT INTO `tabHealthcare Service Insurance Coverage`
@@ -345,7 +346,8 @@ def process_insurance_coverages():
                 `name`, 
                 `naming_series`, 
                 `owner`, 
-                `start_date`
+                `start_date`,
+                `is_auto_generated`
             )
             VALUES {}
         '''.format(', '.join(['%s'] * len(insert_data))), tuple(insert_data))
