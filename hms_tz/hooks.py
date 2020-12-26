@@ -162,6 +162,11 @@ fixtures = [
 		"Vital Signs-image,",
 		"Vital Signs-oxygen_saturation_spo2,",
 		"Vital Signs-rbg,",
+		"Patient-old_hms_registration_no",
+		"Patient Encounter-insurance_coverage_plan",
+		"Patient Encounter-mode_of_payment",
+		"Patient-insurance_card_detail",
+		"Healthcare Service Insurance Coverage-is_auto_generated",
 	)]]},
 	{"doctype":"Property Setter", "filters": [["name", "in", (
 		"Appointment Type-main-sort_field,",
@@ -286,6 +291,11 @@ fixtures = [
 		"Vital Signs-naming_series-default,",
 		"Vital Signs-naming_series-options,",
 		"Patient Encounter-appointment_type-read_only",
+		"Patient-mobile-reqd",
+		"Patient-search_fields",
+		"Practitioner Availability-availability-in_list_view",
+		"Practitioner Availability-practitioner-in_list_view",
+		"Practitioner Availability-to_date-in_list_view",
 	)]]},
 ]
 
@@ -413,6 +423,10 @@ doc_events = {
 		"on_submit": "hms_tz.nhif.api.sales_invoice.create_healthcare_docs",
     },
 }   
+
+# standard_queries = {
+# 	"Healthcare Practitioner": "hms_tz.nhif.api.healthcare_practitioner.get_practitioner_list"
+# }
 
 # Scheduled Tasks
 # ---------------
