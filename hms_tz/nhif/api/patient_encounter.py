@@ -133,14 +133,16 @@ def get_warehouse(healthcare_service_unit):
     return warehouse
 
 
-def get_item_info(medication_name):
+def get_item_info(item_code=None, medication_name=None):
     data = {}
-    item_code = frappe.get_value("Medication", medication_name, "item_code")
+    if not item_code and medication_name:
+        item_code = frappe.get_value("Medication", medication_name, "item_code")
     if item_code:
-        is_stock = frappe.get_value("Item", item_code, "is_stock_item")
+        is_stock, disabled = frappe.get_value("Item", item_code, ["is_stock_item", "disabled"])
         data = {
             "item_code": item_code,
-            "is_stock": is_stock
+            "is_stock": is_stock,
+            "disabled": disabled
         }
     return data
 
@@ -377,6 +379,10 @@ def validate_totals(doc):
             if row.prescribe:
                 continue
             item_code = frappe.get_value(child.get("doctype"), row.get(child.get("item")), "item")
+            # Disabled items allowed to be used in Patient Encounter
+            item_info = get_item_info(item_code = item_code)
+            if item_info.get("disabled"):
+                frappe.throw(_("The item {0} is disabled").format(item_code))
             item_rate = get_item_rate(item_code, doc.company, doc.insurance_subscription, doc.insurance_company)
             doc.current_total += item_rate
     diff = doc.daily_limit - doc.current_total - doc.previous_total
@@ -408,4 +414,4 @@ def get_drugs_to_invoice(encounter):
                         })
                 return items_to_invoice
             else:
-                validate_customer_created(patient)
+                validate_customer_created(patient) # NOTE: This probably won't work, need to fix
