@@ -14,12 +14,13 @@ from hms_tz.nhif.doctype.nhif_product.nhif_product import add_product
 from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
 from frappe.utils import now
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
+from datetime import date
 
 
 
 def validate(doc, method):
     # validate date of birth
-    if now() < doc.dob:
+    if date.today() < doc.dob:
         frappe.throw(_("The date of birth cannot be later than today's date"))
     # Validate mobile mnumber:
     if doc.mobile:
