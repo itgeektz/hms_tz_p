@@ -18,8 +18,19 @@ from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 
 
 def validate(doc, method):
-    if  now() < doc.dob:
+    # validate date of birth
+    if now() < doc.dob:
         frappe.throw(_("The date of birth cannot be later than today's date"))
+    # Validate mobile mnumber:
+    if doc.mobile:
+        mobile_patients_list = frappe.get_all("Patient", 
+            filters = {
+                "mobile" : doc.mobile,
+                "name" : ['!=', doc.name]
+            }
+        )
+        if len(mobile_patients_list) > 0:
+            frappe.msgprint(_("This mobile number is used by another patient"))
 
 
 @frappe.whitelist()
