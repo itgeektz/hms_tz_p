@@ -164,7 +164,7 @@ def make_vital(appointment_doc, method):
 def make_encounter(vital_doc, method):
     source_name = vital_doc.appointment
     target_doc = None
-    appointment_doc = get_mapped_doc('Patient Appointment', source_name, {
+    encounter_doc = get_mapped_doc('Patient Appointment', source_name, {
         'Patient Appointment': {
             'doctype': 'Patient Encounter',
             'field_map': [
@@ -180,9 +180,9 @@ def make_encounter(vital_doc, method):
         }
     }, target_doc, ignore_permissions=True)
 
-    appointment_doc.save(ignore_permissions=True)
+    encounter_doc.save(ignore_permissions=True)
     frappe.msgprint(_('Patient Encounter {0} created'.format(
-        appointment_doc.name)))
+        encounter_doc.name)))
 
 
 
