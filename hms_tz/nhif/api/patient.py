@@ -22,12 +22,16 @@ def validate(doc, method):
     # validate date of birth
     if date.today() < doc.dob:
         frappe.throw(_("The date of birth cannot be later than today's date"))
-    # Validate mobile mnumber:
-    if doc.mobile:
+    validate_mobile_number(doc.name, doc.mobile)
+    
+
+@frappe.whitelist()
+def validate_mobile_number(doc_name, mobile=None):
+    if mobile:
         mobile_patients_list = frappe.get_all("Patient", 
             filters = {
-                "mobile" : doc.mobile,
-                "name" : ['!=', doc.name]
+                "mobile" : mobile,
+                "name" : ['!=', doc_name]
             }
         )
         if len(mobile_patients_list) > 0:

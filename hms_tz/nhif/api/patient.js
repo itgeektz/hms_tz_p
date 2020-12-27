@@ -15,6 +15,15 @@ frappe.ui.form.on('Patient', {
     card_no:function(frm) {
         frm.trigger('get_patinet_info')
     },
+    mobile: function(frm) {
+        frappe.call({
+            method: 'hms_tz.nhif.api.patient.validate_mobile_number',
+            args: {
+                'doc_name': frm.doc.name,
+                'mobile': frm.doc.mobile,
+            }
+        });
+    },
     get_patinet_info: function (frm) {
         frappe.call({
             method: 'hms_tz.nhif.api.patient.get_patinet_info',
