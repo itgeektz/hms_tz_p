@@ -17,7 +17,7 @@ def on_cancel(doc, method):
 
 def set_insurance_card_detail_in_patient(doc):
     his_list = frappe.get_all("Healthcare Insurance Subscription",
-        filtes = {
+        filters = {
           "patient" : doc.patient,
           "docstatus": 1,
         },
