@@ -296,6 +296,13 @@ fixtures = [
 		"Practitioner Availability-availability-in_list_view",
 		"Practitioner Availability-practitioner-in_list_view",
 		"Practitioner Availability-to_date-in_list_view",
+		"Patient Encounter-insurance_subscription-fetch_from",
+		"Inpatient Record-diet_recommendation_section-hidden",
+		"Inpatient Record-rehabilitation_section-hidden",
+		"Inpatient Record-medication_section-hidden",
+		"Inpatient Record-procedures_section-hidden",
+		"Inpatient Record-radiology_orders_section-hidden",
+		"Inpatient Record-investigations_section-hidden",
 	)]]},
 ]
 
