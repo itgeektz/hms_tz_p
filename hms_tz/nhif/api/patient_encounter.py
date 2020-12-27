@@ -390,30 +390,3 @@ def validate_totals(doc):
     diff = doc.daily_limit - doc.current_total - doc.previous_total
     if diff < 0:
         frappe.throw(_("The total daily limit of {0} for the Insurance Subscription {1} has been exceeded by {2}. <br> Please contact the reception to increase the limit or prescribe the items").format(doc.daily_limit, doc.insurance_subscription, diff))
-
-@frappe.whitelist()
-def get_drugs_to_invoice(encounter):
-    encounter = frappe.get_doc('Patient Encounter', encounter)
-    if encounter:
-        patient = frappe.get_doc('Patient', encounter.patient)
-        if patient:
-            if patient.customer:
-                items_to_invoice = []
-                for drug_line in encounter.drug_prescription:
-                    if drug_line.drug_code and drug_line.prescribe:
-                        qty = 1
-                        if frappe.db.get_value('Item', drug_line.drug_code, 'stock_uom') == 'Nos':
-                            qty = drug_line.get_quantity()
-
-                        description = ''
-                        if drug_line.dosage and drug_line.period:
-                            description = _('{0} for {1}').format(drug_line.dosage, drug_line.period)
-
-                        items_to_invoice.append({
-                            'drug_code': drug_line.drug_code,
-                            'quantity': qty,
-                            'description': description
-                        })
-                return items_to_invoice
-            else:
-                validate_customer_created(patient) # NOTE: This probably won't work, need to fix

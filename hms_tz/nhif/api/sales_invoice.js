@@ -288,7 +288,7 @@ var get_drugs_to_invoice = function(frm) {
 		var encounter = dialog.fields_dict.encounter.input.value;
 		if(encounter && encounter!=selected_encounter){
 			selected_encounter = encounter;
-			var method = "hms_tz.nhif.api.patient_encounter.get_drugs_to_invoice";
+			var method = "hms_tz.hms_tz.utils.get_drugs_to_invoice";
 			var args = {encounter: encounter};
 			var columns = (["drug_code", "quantity", "description"]);
 			get_healthcare_items(frm, false, $results, $placeholder, method, args, columns);
