@@ -148,12 +148,10 @@ def get_item_info(item_code=None, medication_name=None):
 
 
 def get_stock_availability(item_code, warehouse):
-    latest_sle = frappe.db.sql("""select sum(actual_qty) as  actual_qty
-        from `tabStock Ledger Entry` 
-		from `tabStock Ledger Entry` 
-        from `tabStock Ledger Entry` 
-        where item_code = %s and warehouse = %s
-        limit 1""", (item_code, warehouse), as_dict=1)
+    latest_sle = frappe.db.sql("""SELECT SUM(actual_qty) AS actual_qty
+        FROM `tabStock Ledger Entry` 
+        WHERE item_code = %s AND warehouse = %s
+        LIMIT 1""", (item_code, warehouse), as_dict=1)
 
     sle_qty = latest_sle[0].actual_qty or 0 if latest_sle else 0
     return sle_qty
