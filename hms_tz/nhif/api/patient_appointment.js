@@ -264,7 +264,7 @@ frappe.ui.form.on('Patient Appointment', {
                         });
                     } else {
                         frappe.call({
-                            method: 'erpnext.healthcare.doctype.patient_appointment.patient_appointment.check_payment_fields_reqd',
+                            method: 'hms_tz.hms_tz.doctype.patient_appointment.patient_appointment.check_payment_fields_reqd',
                             args: { 'patient': frm.doc.patient },
                             callback: function (data) {
                                 if (data.message == true) {

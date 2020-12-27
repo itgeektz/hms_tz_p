@@ -96,7 +96,7 @@ var calc_data_normals = function (data, value) {
 var get_patient_age = function (frm) {
     if (frm.doc.patient) {
         frappe.call({
-            'method': 'erpnext.healthcare.doctype.patient.patient.get_patient_detail',
+            'method': 'hms_tz.hms_tz.doctype.patient.patient.get_patient_detail',
             args: { patient: frm.doc.patient },
             async: false,
             callback: function (data) {

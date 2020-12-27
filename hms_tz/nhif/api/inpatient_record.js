@@ -294,7 +294,7 @@ var validate_stock_item = function(frm, medication_name, qty=1) {
 
 var show_patient_vital_charts = function(patient, frm, btn_show_id, pts, title) {
 frappe.call({
-    method: "erpnext.healthcare.utils.get_patient_vitals",
+    method: "hms_tz.hms_tz.utils.get_patient_vitals",
     args:{
         patient: patient
     },

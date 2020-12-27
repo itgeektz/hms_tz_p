@@ -5,9 +5,9 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from erpnext.healthcare.doctype.patient_appointment.patient_appointment import get_appointment_item, check_is_new_patient
-from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account
-from erpnext.healthcare.utils import check_fee_validity, get_service_item_and_practitioner_charge
+from hms_tz.hms_tz.doctype.patient_appointment.patient_appointment import get_appointment_item, check_is_new_patient
+from hms_tz.hms_tz.doctype.healthcare_settings.healthcare_settings import get_receivable_account
+from hms_tz.hms_tz.utils import check_fee_validity, get_service_item_and_practitioner_charge
 from frappe.utils import getdate
 from frappe.model.mapper import get_mapped_doc
 from hms_tz.nhif.api.token import get_nhifservice_token
