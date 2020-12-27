@@ -167,6 +167,11 @@ fixtures = [
 		"Patient Encounter-mode_of_payment",
 		"Patient-insurance_card_detail",
 		"Healthcare Service Insurance Coverage-is_auto_generated",
+		"Patient Encounter-current_total",
+		"Patient Encounter-previous_total",
+		"Patient Encounter-daily_limit",
+		"Patient Appointment-daily_limit"
+
 	)]]},
 	{"doctype":"Property Setter", "filters": [["name", "in", (
 		"Appointment Type-main-sort_field,",
