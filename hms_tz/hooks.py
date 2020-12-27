@@ -422,6 +422,10 @@ doc_events = {
     "Sales Invoice": {
 		"on_submit": "hms_tz.nhif.api.sales_invoice.create_healthcare_docs",
     },
+	"Healthcare Insurance Subscription": {
+		"on_submit": "hms_tz.nhif.api.insurance_subscription.on_submit",
+		"on_cancel": "hms_tz.nhif.api.insurance_subscription.on_cancel",
+	},
 }   
 
 # standard_queries = {
