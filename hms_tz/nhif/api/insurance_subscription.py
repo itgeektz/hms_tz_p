@@ -28,4 +28,4 @@ def set_insurance_card_detail_in_patient(doc):
         if card.coverage_plan_card_number:
             str_coverage_plan_card_number += card.coverage_plan_card_number + ", "
     
-    frappe.set_value("Patient", doc.Patient, "insurance_card_detail", str_coverage_plan_card_number)
+    frappe.set_value("Patient", doc.patient, "insurance_card_detail", str_coverage_plan_card_number)
