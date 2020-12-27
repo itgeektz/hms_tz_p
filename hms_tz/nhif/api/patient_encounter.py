@@ -382,10 +382,14 @@ def validate_totals(doc):
             if item_info.get("disabled"):
                 frappe.throw(_("The item {0} is disabled").format(item_code))
             item_rate = get_item_rate(item_code, doc.company, doc.insurance_subscription, doc.insurance_company)
-            doc.current_total += item_rate
+            if hasattr(row, 'quantity'):
+                quantity = row.quantity
+            else:
+                quantity = 1
+            doc.current_total += item_rate * quantity
     diff = doc.daily_limit - doc.current_total - doc.previous_total
-    if doc.current_total + doc.previous_total > doc.daily_limit:
-        frappe.throw(_("The total daily limit of {0} for the Insurance Subscription {1} has been exceeded by {2}. Please contact the reception to increase the limit or prescribe the items").fomat(doc.daily_limit, doc.insurance_subscription, diff))
+    if diff < 0:
+        frappe.throw(_("The total daily limit of {0} for the Insurance Subscription {1} has been exceeded by {2}. <br> Please contact the reception to increase the limit or prescribe the items").format(doc.daily_limit, doc.insurance_subscription, diff))
 
 @frappe.whitelist()
 def get_drugs_to_invoice(encounter):
