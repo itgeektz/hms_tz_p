@@ -52,11 +52,8 @@ def validate(doc, method):
                 current_date = add_days(current_date,1)
             
 
-        
-
 def on_trash(doc, method):
     delelte_all_related_practitioner_availability_detail(doc)
-
 
 
 def get_weekday(date):
