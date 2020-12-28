@@ -219,6 +219,7 @@ def create_lab_test(patient_encounter_doc, child_table):
             frappe.msgprint(_('Lab Test {0} created successfully.').format(
                 frappe.bold(doc.name)))
             child.lab_test_created = 1
+            child.lab_test = doc.name
             child.db_update()
 
 
@@ -240,6 +241,7 @@ def create_radiology_examination(patient_encounter_doc, child_table):
             frappe.msgprint(_('Radiology Examination {0} created successfully.').format(
                 frappe.bold(doc.name)))
             child.radiology_examination_created = 1
+            child.lab_test = doc.name
             child.db_update()
 
 
@@ -263,6 +265,7 @@ def create_procedure_prescription(patient_encounter_doc, child_table, insurance_
             frappe.msgprint(_('Clinical Procedure {0} created successfully.').format(
                 frappe.bold(doc.name)))
             child.procedure_created = 1
+            child.lab_test = doc.name
             child.db_update()
 
 
