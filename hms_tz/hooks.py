@@ -441,6 +441,10 @@ doc_events = {
 		"on_submit": "hms_tz.nhif.api.insurance_subscription.on_submit",
 		"on_cancel": "hms_tz.nhif.api.insurance_subscription.on_cancel",
 	},
+	"Practitioner Availability": {
+		"validate": "hms_tz.nhif.api.practitioner_availability.validate",
+		"on_trash": "hms_tz.nhif.api.practitioner_availability.on_trash",
+	},
 }   
 
 # standard_queries = {

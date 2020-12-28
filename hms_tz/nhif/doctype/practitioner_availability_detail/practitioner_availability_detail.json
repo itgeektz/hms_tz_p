@@ -1,0 +1,259 @@
+{
+ "actions": [],
+ "allow_copy": 1,
+ "allow_import": 1,
+ "autoname": "HPAD-.YYYY.-.######",
+ "creation": "2020-12-28 16:19:33.930461",
+ "description": "Practitioner Availability",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "practitioner_availability",
+  "availability_type",
+  "availability",
+  "practitioner",
+  "healthcare_practitioner_name",
+  "from_date",
+  "from_time",
+  "to_date",
+  "to_time",
+  "repeat_this_event",
+  "column_break_10",
+  "present",
+  "appointment_type",
+  "duration",
+  "service_unit",
+  "total_service_unit_capacity",
+  "color",
+  "out_patient_consulting_charge_item",
+  "op_consulting_charge",
+  "inpatient_visit_charge_item",
+  "inpatient_visit_charge"
+ ],
+ "fields": [
+  {
+   "fieldname": "availability_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Availability Type",
+   "options": "Practitioner Availability Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "availability",
+   "fieldtype": "Data",
+   "label": "Availability",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "practitioner",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Healthcare Practitioner",
+   "options": "Healthcare Practitioner",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fetch_from": "practitioner.practitioner_name",
+   "fieldname": "healthcare_practitioner_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Healthcare Practitioner Name",
+   "read_only": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "from_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "from_time",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "From Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "hidden": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "To Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "to_time",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "To Time",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "repeat_this_event",
+   "fieldtype": "Check",
+   "label": "Repeat",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_10",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "present",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Present",
+   "read_only": 1
+  },
+  {
+   "depends_on": "present",
+   "fieldname": "appointment_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Appointment Type",
+   "options": "Appointment Type",
+   "read_only": 1
+  },
+  {
+   "depends_on": "present",
+   "fieldname": "duration",
+   "fieldtype": "Int",
+   "label": "Duration",
+   "read_only": 1
+  },
+  {
+   "depends_on": "present",
+   "fieldname": "service_unit",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Service Unit",
+   "options": "Healthcare Service Unit",
+   "read_only": 1
+  },
+  {
+   "depends_on": "present",
+   "fieldname": "total_service_unit_capacity",
+   "fieldtype": "Int",
+   "label": "Total Service Unit Capacity",
+   "read_only": 1
+  },
+  {
+   "depends_on": "present",
+   "fieldname": "color",
+   "fieldtype": "Color",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Color",
+   "read_only": 1
+  },
+  {
+   "depends_on": "present",
+   "fieldname": "out_patient_consulting_charge_item",
+   "fieldtype": "Link",
+   "label": "Out Patient Consulting Charge Item",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "depends_on": "present",
+   "fieldname": "op_consulting_charge",
+   "fieldtype": "Currency",
+   "label": "OP Consulting Charge",
+   "read_only": 1
+  },
+  {
+   "depends_on": "present",
+   "fieldname": "inpatient_visit_charge_item",
+   "fieldtype": "Link",
+   "label": "Inpatient Visit Charge Item",
+   "options": "Item",
+   "read_only": 1
+  },
+  {
+   "depends_on": "present",
+   "fieldname": "inpatient_visit_charge",
+   "fieldtype": "Currency",
+   "label": "Inpatient Visit Charge",
+   "read_only": 1
+  },
+  {
+   "fieldname": "practitioner_availability",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Practitioner Availability",
+   "options": "Practitioner Availability",
+   "read_only": 1,
+   "reqd": 1
+  }
+ ],
+ "links": [],
+ "modified": "2020-12-28 17:08:35.348474",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "Practitioner Availability Detail",
+ "name_case": "Title Case",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Healthcare Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Physician",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "restrict_to_domain": "Healthcare",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "timeline_field": "practitioner",
+ "track_changes": 1,
+ "track_seen": 1
+}
