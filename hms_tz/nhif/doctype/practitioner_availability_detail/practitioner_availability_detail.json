@@ -70,10 +70,10 @@
   {
    "default": "Today",
    "fieldname": "from_date",
-   "fieldtype": "Date",
+   "fieldtype": "Datetime",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Date",
+   "label": "from Date",
    "read_only": 1
   },
   {
@@ -86,8 +86,7 @@
   },
   {
    "fieldname": "to_date",
-   "fieldtype": "Date",
-   "hidden": 1,
+   "fieldtype": "Datetime",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "To Date",
@@ -206,7 +205,7 @@
   }
  ],
  "links": [],
- "modified": "2020-12-28 17:08:35.348474",
+ "modified": "2020-12-28 20:30:09.599795",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Practitioner Availability Detail",
