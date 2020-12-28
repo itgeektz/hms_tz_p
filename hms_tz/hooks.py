@@ -96,6 +96,8 @@ fixtures = [
 		"Patient Appointment-patient_image2,",
 		"Patient Appointment-ref_vital_signs,",
 		"Patient Appointment-reference_journal_entry,",
+		"Patient Appointment-healthcare_referrer_type",
+		"Patient Appointment-healthcare_referrer",
 		"Patient Appointment-referral_no,",
 		"Patient Encounter Symptom-compliant_duration,",
 		"Patient Encounter Symptom-system,",
@@ -105,6 +107,7 @@ fixtures = [
 		"Patient Encounter-encounter_type,",
 		"Patient Encounter-examination_detail,",
 		"Patient Encounter-from_encounter,",
+		"Patient Encounter-healthcare_referrer",
 		"Patient Encounter-healthcare_service_unit,",
 		"Patient Encounter-image,",
 		"Patient Encounter-patient_encounter_final_diagnosis,",
@@ -170,8 +173,9 @@ fixtures = [
 		"Patient Encounter-current_total",
 		"Patient Encounter-previous_total",
 		"Patient Encounter-daily_limit",
-		"Patient Appointment-daily_limit"
-
+		"Patient Appointment-daily_limit",
+		"Healthcare Practitioner-abbreviation",
+		"Patient Encounter-abbr",
 	)]]},
 	{"doctype":"Property Setter", "filters": [["name", "in", (
 		"Appointment Type-main-sort_field,",
