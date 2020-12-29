@@ -10,6 +10,7 @@ from hms_tz.hms_tz.doctype.healthcare_settings.healthcare_settings import get_in
 from hms_tz.hms_tz.utils import validate_customer_created
 from hms_tz.nhif.api.patient_appointment import get_insurance_amount
 import base64
+import re
 
 
 @frappe.whitelist()
@@ -121,3 +122,7 @@ def get_item_rate(item_code, company, insurance_subscription, insurance_company)
 def to_base64(value):
     data = base64.b64encode(value)
     return str(data)[2:-1]
+
+
+def remove_special_characters(text):
+    return re.sub('[^A-Za-z0-9]+', '', text)

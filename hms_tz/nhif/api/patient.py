@@ -14,15 +14,19 @@ from hms_tz.nhif.doctype.nhif_product.nhif_product import add_product
 from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
 from frappe.utils import nowdate
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
-
+from hms_tz.nhif.api.healthcare_utils import remove_special_characters
+from datetime import date
 
 
 def validate(doc, method):
     # validate date of birth
-    if nowdate() < doc.dob:
+    if date.today() < doc.dob:
         frappe.throw(_("The date of birth cannot be later than today's date"))
+    # replace initial 0 with 255 and remove all the unnecessray characters
+    doc.mobile = remove_special_characters(doc.mobile)
+    if doc.mobile[0] == "0":
+        doc.mobile = "255" + doc.mobile[1:]
     validate_mobile_number(doc.name, doc.mobile)
-    
 
 @frappe.whitelist()
 def validate_mobile_number(doc_name, mobile=None):
@@ -81,4 +85,3 @@ def get_patinet_info(card_no = None):
                 continue
             else:
                 raise e
-
