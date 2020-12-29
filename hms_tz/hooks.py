@@ -176,6 +176,7 @@ fixtures = [
 		"Patient Appointment-daily_limit",
 		"Healthcare Practitioner-abbreviation",
 		"Patient Encounter-abbr",
+		"Healthcare Insurance Subscription-daily_limit",
 	)]]},
 	{"doctype":"Property Setter", "filters": [["name", "in", (
 		"Appointment Type-main-sort_field,",
