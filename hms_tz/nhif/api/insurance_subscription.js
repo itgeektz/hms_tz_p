@@ -6,4 +6,20 @@ frappe.ui.form.on('Healthcare Insurance Subscription', {
 			};
 		});
     },
+    coverage_plan_card_number: function(frm){
+        if (!frm.doc.coverage_plan_card_number) return
+        frappe.call({
+            method: 'hms_tz.nhif.api.insurance_subscription.check_patinet_info',
+            args: {
+                'card_no': frm.doc.coverage_plan_card_number,
+                'patient': frm.doc.patient,
+                'patient_name': frm.doc.patient_name
+            },
+            callback: function (data) {
+                if (data.message && data.message != frm.doc.patient_name) {
+                    frm.set_value("patient_name", data.message);
+                }
+            }
+        });
+    },
 });
