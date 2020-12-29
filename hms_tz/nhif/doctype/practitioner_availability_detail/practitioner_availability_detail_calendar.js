@@ -9,6 +9,7 @@ frappe.views.calendar["Practitioner Availability Detail"] = {
 		"title": "healthcare_practitioner_name",
 		"status": 'availability_type',
 		"color": 'color',
+		"allDay": "allDay",
 	},
 	style_map: {
         Public: 'success',
