@@ -1,13 +1,16 @@
 frappe.ui.form.on('Patient Appointment', {
     setup: function (frm) {
+        set_filters(frm)
     },
     onload: function (frm) {
         frm.trigger("mandatory_fields")
+        set_filters(frm)
     },
     billing_item: function (frm) {
         frm.trigger("get_mop_amount")
     },
     refresh: function (frm) {
+        set_filters(frm)
         frm.trigger("update_primary_action")
         frm.trigger("toggle_reqd_referral_no")
         if (!frm.doc.invoiced && frm.doc.patient && frm.doc.mode_of_payment && !frm.doc.insurance_subscription && frm.doc.status != "Cancelled") {
@@ -298,3 +301,16 @@ frappe.ui.form.on('Patient Appointment', {
         }
     }
 })
+
+
+const set_filters = function(frm) {
+    frm.set_query('insurance_subscription', function () {
+        return {
+            filters: {
+                'is_active': 1,
+                'docstatus': 1,
+                'patient': frm.doc.patient
+            }
+        };
+    });
+}
