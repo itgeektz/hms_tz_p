@@ -8,12 +8,12 @@ frappe.ui.form.on('Patient', {
         frm.trigger('add_get_info_btn')
     },
     add_get_info_btn: function(frm) {
-        frm.add_custom_button(__('Get Patinet Info'), function () {
-            frm.trigger('get_patinet_info')
+        frm.add_custom_button(__('Get Patient Info'), function () {
+            frm.trigger('get_patient_info')
         });
     },
     card_no:function(frm) {
-        frm.trigger('get_patinet_info')
+        frm.trigger('get_patient_info')
     },
     mobile: function(frm) {
         frappe.call({
@@ -24,9 +24,9 @@ frappe.ui.form.on('Patient', {
             }
         });
     },
-    get_patinet_info: function (frm) {
+    get_patient_info: function (frm) {
         frappe.call({
-            method: 'hms_tz.nhif.api.patient.get_patinet_info',
+            method: 'hms_tz.nhif.api.patient.get_patient_info',
             args: {
                 'card_no': frm.doc.card_no,
             },

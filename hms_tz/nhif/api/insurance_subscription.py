@@ -5,7 +5,7 @@
 from __future__ import unicode_literals 
 import frappe
 # from frappe import _
-from hms_tz.nhif.api.patient import get_patinet_info
+from hms_tz.nhif.api.patient import get_patient_info
 
 def on_submit(doc, method):
     set_insurance_card_detail_in_patient(doc)
@@ -32,10 +32,10 @@ def set_insurance_card_detail_in_patient(doc):
 
 
 @frappe.whitelist()
-def check_patinet_info(patient, card_no, patient_name):
+def check_patient_info(patient, card_no, patient_name):
     if not patient or not card_no:
         return
-    patient_info = get_patinet_info(card_no)
+    patient_info = get_patient_info(card_no)
     if patient_name != patient_info.get("FullName"):
         patient_doc = frappe.get_doc("Patient", patient)
         patient_doc.patient_name = patient_info.get("FullName")

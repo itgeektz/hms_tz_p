@@ -42,7 +42,7 @@ def validate_mobile_number(doc_name, mobile=None):
 
 
 @frappe.whitelist()
-def get_patinet_info(card_no = None):
+def get_patient_info(card_no = None):
     if not card_no:
         frappe.msgprint(_("Please set Card No"))
         return

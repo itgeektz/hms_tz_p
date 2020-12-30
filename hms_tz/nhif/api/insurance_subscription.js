@@ -9,7 +9,7 @@ frappe.ui.form.on('Healthcare Insurance Subscription', {
     coverage_plan_card_number: function(frm){
         if (!frm.doc.coverage_plan_card_number) return
         frappe.call({
-            method: 'hms_tz.nhif.api.insurance_subscription.check_patinet_info',
+            method: 'hms_tz.nhif.api.insurance_subscription.check_patient_info',
             args: {
                 'card_no': frm.doc.coverage_plan_card_number,
                 'patient': frm.doc.patient,
