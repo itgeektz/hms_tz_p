@@ -177,7 +177,12 @@ fixtures = [
 		"Healthcare Practitioner-abbreviation",
 		"Patient Encounter-abbr",
 		"Healthcare Insurance Subscription-daily_limit",
-		
+		"Vital Signs-healthcare_practitioner",
+		"Vital Signs-verbal_response",
+		"Vital Signs-motor_response",
+		"Vital Signs-eye_opening",
+		"Vital Signs-glasgow_coma_scale",
+		"Vital Signs-column_break_29",
 	)]]},
 	{"doctype":"Property Setter", "filters": [["name", "in", (
 		"Appointment Type-main-sort_field,",
