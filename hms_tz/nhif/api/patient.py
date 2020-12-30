@@ -26,9 +26,10 @@ def validate(doc, method):
     doc.mobile = remove_special_characters(doc.mobile)
     if doc.mobile[0] == "0":
         doc.mobile = "255" + doc.mobile[1:]
-    doc.next_to_kin_mobile_no = remove_special_characters(doc.next_to_kin_mobile_no)
-    if doc.next_to_kin_mobile_no[0] == "0":
-        doc.next_to_kin_mobile_no = "255" + doc.next_to_kin_mobile_no[1:]
+    if doc.next_to_kin_mobile_no:
+        doc.next_to_kin_mobile_no = remove_special_characters(doc.next_to_kin_mobile_no)
+        if doc.next_to_kin_mobile_no[0] == "0":
+            doc.next_to_kin_mobile_no = "255" + doc.next_to_kin_mobile_no[1:]
     validate_mobile_number(doc.name, doc.mobile)
 
 @frappe.whitelist()
