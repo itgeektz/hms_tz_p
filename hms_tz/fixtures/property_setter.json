@@ -1,6 +1,23 @@
 [
  {
   "default_value": null,
+  "doc_type": "Patient",
+  "docstatus": 0,
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocType",
+  "field_name": null,
+  "modified": "2020-12-29 15:40:31.521105",
+  "name": "Patient-show_preview_popup",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "property": "show_preview_popup",
+  "property_type": "Check",
+  "row_name": null,
+  "value": "1"
+ },
+ {
+  "default_value": null,
   "doc_type": "Inpatient Record",
   "docstatus": 0,
   "doctype": "Property Setter",
@@ -13,6 +30,7 @@
   "parenttype": null,
   "property": "label",
   "property_type": "Data",
+  "row_name": null,
   "value": "Clinical Procedures"
  },
  {
@@ -29,6 +47,7 @@
   "parenttype": null,
   "property": "read_only",
   "property_type": "Check",
+  "row_name": null,
   "value": "1"
  },
  {
@@ -45,6 +64,7 @@
   "parenttype": null,
   "property": "reqd",
   "property_type": "Check",
+  "row_name": null,
   "value": "1"
  },
  {
@@ -61,6 +81,7 @@
   "parenttype": null,
   "property": "search_fields",
   "property_type": "Data",
+  "row_name": null,
   "value": "patient_name,mobile,dob,old_hms_registration_no,insurance_card_detail"
  },
  {
@@ -77,6 +98,7 @@
   "parenttype": null,
   "property": "in_list_view",
   "property_type": "Check",
+  "row_name": null,
   "value": "1"
  },
  {
@@ -93,6 +115,7 @@
   "parenttype": null,
   "property": "in_list_view",
   "property_type": "Check",
+  "row_name": null,
   "value": "1"
  },
  {
@@ -109,6 +132,7 @@
   "parenttype": null,
   "property": "in_list_view",
   "property_type": "Check",
+  "row_name": null,
   "value": "0"
  },
  {
@@ -125,6 +149,7 @@
   "parenttype": null,
   "property": "hidden",
   "property_type": "Check",
+  "row_name": null,
   "value": "1"
  },
  {
@@ -141,6 +166,7 @@
   "parenttype": null,
   "property": "hidden",
   "property_type": "Check",
+  "row_name": null,
   "value": "1"
  },
  {
@@ -157,6 +183,7 @@
   "parenttype": null,
   "property": "hidden",
   "property_type": "Check",
+  "row_name": null,
   "value": "1"
  },
  {
@@ -173,6 +200,7 @@
   "parenttype": null,
   "property": "hidden",
   "property_type": "Check",
+  "row_name": null,
   "value": "1"
  },
  {
@@ -189,6 +217,7 @@
   "parenttype": null,
   "property": "hidden",
   "property_type": "Check",
+  "row_name": null,
   "value": "1"
  },
  {
@@ -205,6 +234,7 @@
   "parenttype": null,
   "property": "hidden",
   "property_type": "Check",
+  "row_name": null,
   "value": "1"
  }
 ]

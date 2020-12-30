@@ -177,6 +177,7 @@ fixtures = [
 		"Healthcare Practitioner-abbreviation",
 		"Patient Encounter-abbr",
 		"Healthcare Insurance Subscription-daily_limit",
+		
 	)]]},
 	{"doctype":"Property Setter", "filters": [["name", "in", (
 		"Appointment Type-main-sort_field,",
@@ -312,6 +313,7 @@ fixtures = [
 		"Inpatient Record-procedures_section-hidden",
 		"Inpatient Record-radiology_orders_section-hidden",
 		"Inpatient Record-investigations_section-hidden",
+		"Patient-show_preview_popup",
 	)]]},
 ]
 
