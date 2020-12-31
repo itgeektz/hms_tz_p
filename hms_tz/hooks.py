@@ -345,20 +345,20 @@ fixtures = [
 
 # include js in doctype views
 doctype_js = {
-	"Patient Appointment": "nhif/api/patient_appointment.js",
-	"Patient": "nhif/api/patient.js",
-	"Sales Invoice" : "nhif/api/sales_invoice.js",
-	"Patient Encounter": "nhif/api/patient_encounter.js",
-	"Lab Test": "nhif/api/lab_test.js",
-	"Healthcare Service Order": "nhif/api/service_order.js",
-	"Healthcare Insurance Company": "nhif/api/insurance_company.js",
-	"Vital Signs": "nhif/api/vital_signs.js",
-	"Inpatient Record": "nhif/api/inpatient_record.js",
-	"Healthcare Insurance Subscription": "nhif/api/insurance_subscription.js",
+    "Patient Appointment": "nhif/api/patient_appointment.js",
+    "Patient": "nhif/api/patient.js",
+    "Sales Invoice": "nhif/api/sales_invoice.js",
+    "Patient Encounter": "nhif/api/patient_encounter.js",
+    "Lab Test": "nhif/api/lab_test.js",
+    "Healthcare Service Order": "nhif/api/service_order.js",
+    "Healthcare Insurance Company": "nhif/api/insurance_company.js",
+    "Vital Signs": "nhif/api/vital_signs.js",
+    "Inpatient Record": "nhif/api/inpatient_record.js",
+    "Healthcare Insurance Subscription": "nhif/api/insurance_subscription.js",
 }
-#csf_tz.nhif.api.patient_appointment
+# csf_tz.nhif.api.patient_appointment
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
-inpatient_record_list_js = {"doctype" : "nhif/api/inpatient_record_list.js"}
+inpatient_record_list_js = {"doctype": "nhif/api/inpatient_record_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
@@ -419,42 +419,51 @@ inpatient_record_list_js = {"doctype" : "nhif/api/inpatient_record_list.js"}
 # Hook on document methods and events
 
 doc_events = {
-	"Patient Appointment": {
-		"validate":[
-			"hms_tz.nhif.api.patient_appointment.make_vital",
-		]
-	},
-	"Vital Signs": {
-		"on_submit":"hms_tz.nhif.api.patient_appointment.make_encounter",
-	},
-	"Patient": {
-		"validate":"hms_tz.nhif.api.patient.validate",
-	},
-	"Healthcare Insurance Claim": {
-		"before_insert":[
-			"hms_tz.nhif.api.insurance_claim.set_patient_encounter",
-			"hms_tz.nhif.api.insurance_claim.set_price",
-		]
-	},
-	"Patient Encounter": {
-		"validate":"hms_tz.nhif.api.patient_encounter.validate",
-		"on_submit":"hms_tz.nhif.api.patient_encounter.on_submit",
-	},
-	"Healthcare Service Order": {
-		"before_insert": "hms_tz.nhif.api.service_order.set_missing_values"
-	},
-    "Sales Invoice": {
-		"on_submit": "hms_tz.nhif.api.sales_invoice.create_healthcare_docs",
+    "Patient Appointment": {
+        "validate": [
+            "hms_tz.nhif.api.patient_appointment.make_vital",
+        ]
     },
-	"Healthcare Insurance Subscription": {
-		"on_submit": "hms_tz.nhif.api.insurance_subscription.on_submit",
-		"on_cancel": "hms_tz.nhif.api.insurance_subscription.on_cancel",
-	},
-	"Practitioner Availability": {
-		"validate": "hms_tz.nhif.api.practitioner_availability.validate",
-		"on_trash": "hms_tz.nhif.api.practitioner_availability.on_trash",
-	},
-}   
+    "Vital Signs": {
+        "on_submit": "hms_tz.nhif.api.patient_appointment.make_encounter",
+    },
+    "Patient": {
+        "validate": "hms_tz.nhif.api.patient.validate",
+    },
+    "Healthcare Insurance Claim": {
+        "before_insert": [
+            "hms_tz.nhif.api.insurance_claim.set_patient_encounter",
+            "hms_tz.nhif.api.insurance_claim.set_price",
+        ]
+    },
+    "Patient Encounter": {
+        "validate": "hms_tz.nhif.api.patient_encounter.validate",
+        "on_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
+    },
+    "Healthcare Service Order": {
+        "before_insert": "hms_tz.nhif.api.service_order.set_missing_values"
+    },
+    "Sales Invoice": {
+        "on_submit": "hms_tz.nhif.api.sales_invoice.create_healthcare_docs",
+    },
+    "Healthcare Insurance Subscription": {
+        "on_submit": "hms_tz.nhif.api.insurance_subscription.on_submit",
+        "on_cancel": "hms_tz.nhif.api.insurance_subscription.on_cancel",
+    },
+    "Practitioner Availability": {
+        "validate": "hms_tz.nhif.api.practitioner_availability.validate",
+        "on_trash": "hms_tz.nhif.api.practitioner_availability.on_trash",
+    },
+    "Lab Test": {
+        "on_submit": "hms_tz.nhif.api.lab_test.on_submit",
+    },
+    "Radiology Examination": {
+        "on_submit": "hms_tz.nhif.api.radiology_examination.on_submit",
+    },
+    "Clinical Procedure": {
+        "on_submit": "hms_tz.nhif.api.clinical_procedure.on_submit",
+    },
+}
 
 # standard_queries = {
 # 	"Healthcare Practitioner": "hms_tz.nhif.api.healthcare_practitioner.get_practitioner_list"
@@ -503,4 +512,3 @@ doc_events = {
 # exempt linked doctypes from being automatically cancelled
 #
 # auto_cancel_exempted_doctypes = ["Auto Repeat"]
-

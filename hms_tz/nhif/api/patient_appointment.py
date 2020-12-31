@@ -20,7 +20,6 @@ from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 
 
-
 @frappe.whitelist()
 def get_insurance_amount(insurance_subscription, billing_item, company, patient, insurance_company):
     price_list = None
@@ -30,11 +29,12 @@ def get_insurance_amount(insurance_subscription, billing_item, company, patient,
         "Healthcare Insurance Coverage Plan", healthcare_insurance_coverage_plan, "price_list")
     if not price_list:
         price_list = frappe.get_value(
-        "Healthcare Insurance Company", insurance_company, "default_price_list")
+            "Healthcare Insurance Company", insurance_company, "default_price_list")
     if not price_list:
         price_list = get_default_price_list(patient)
     if not price_list:
-            frappe.throw(_("Please set Price List in Healthcare Insurance Coverage Plan"))
+        frappe.throw(
+            _("Please set Price List in Healthcare Insurance Coverage Plan"))
     return get_item_price(billing_item, price_list, company)
 
 
@@ -48,7 +48,6 @@ def get_mop_amount(billing_item, mop, company, patient):
             frappe.throw(_("Please set Price List in Mode of Payment"))
     return get_item_price(billing_item, price_list, company)
 
-        
 
 def get_default_price_list(patient):
     price_list = None
@@ -56,10 +55,13 @@ def get_default_price_list(patient):
     if not price_list:
         customer = frappe.get_value("Patient", patient, "customer")
         if customer:
-            price_list = frappe.get_value("Customer", customer, "default_price_list")
+            price_list = frappe.get_value(
+                "Customer", customer, "default_price_list")
     if not price_list:
-        customer_group = frappe.get_value("Customer", customer, "customer_group")
-        frappe.get_cached_value("Customer Group", customer_group, "default_price_list")
+        customer_group = frappe.get_value(
+            "Customer", customer, "customer_group")
+        frappe.get_cached_value(
+            "Customer Group", customer_group, "default_price_list")
     if not price_list:
         if frappe.db.exists("Price List", "Standard Selling"):
             price_list = "Standard Selling"
@@ -70,12 +72,12 @@ def get_item_price(item_code, price_list, company):
     price = 0
     company_currency = frappe.get_value("Company", company, "default_currency")
     item_prices_data = frappe.get_all("Item Price",
-        fields=[
-            "item_code", "price_list_rate", "currency"],
-        filters={
-            'price_list': price_list, 'item_code': item_code, 'currency': company_currency},
-        order_by="valid_from desc"
-    )
+                                      fields=[
+                                          "item_code", "price_list_rate", "currency"],
+                                      filters={
+                                          'price_list': price_list, 'item_code': item_code, 'currency': company_currency},
+                                      order_by="valid_from desc"
+                                      )
     if len(item_prices_data):
         price = item_prices_data[0].price_list_rate
     return price
@@ -185,37 +187,44 @@ def make_encounter(vital_doc, method):
         encounter_doc.name)))
 
 
-
 @frappe.whitelist()
 def get_authorization_num(insurance_subscription, company, appointment_type, referral_no=""):
-    enable_nhif_api = frappe.get_value("Company NHIF Settings", company, "enable")
+    enable_nhif_api = frappe.get_value(
+        "Company NHIF Settings", company, "enable")
     if not enable_nhif_api:
-        frappe.msgprint(_("Company {0} not enabled for NHIF Integration".format(company)))
+        frappe.msgprint(
+            _("Company {0} not enabled for NHIF Integration".format(company)))
         return
-    card_no = frappe.get_value("Healthcare Insurance Subscription", insurance_subscription, "coverage_plan_card_number")
+    card_no = frappe.get_value("Healthcare Insurance Subscription",
+                               insurance_subscription, "coverage_plan_card_number")
     if not card_no:
-        frappe.msgprint(_("Please set Card No in Healthcare Insurance Subscription {0}".format(insurance_subscription)))
+        frappe.msgprint(_("Please set Card No in Healthcare Insurance Subscription {0}".format(
+            insurance_subscription)))
         return
     card_no = "CardNo=" + str(card_no)
-    visit_type_id = "&VisitTypeID=" + frappe.get_value("Appointment Type", appointment_type, "visit_type_id")[:1]
-    referral_no = "&ReferralNo=" + str(referral_no) 
+    visit_type_id = "&VisitTypeID=" + \
+        frappe.get_value("Appointment Type", appointment_type,
+                         "visit_type_id")[:1]
+    referral_no = "&ReferralNo=" + str(referral_no)
     # remarks = "&Remarks=" + ""
     token = get_nhifservice_token(company)
-    
-    nhifservice_url = frappe.get_value("Company NHIF Settings", company, "nhifservice_url")
+
+    nhifservice_url = frappe.get_value(
+        "Company NHIF Settings", company, "nhifservice_url")
     headers = {
-        "Authorization" : "Bearer " + token
+        "Authorization": "Bearer " + token
     }
-    url = str(nhifservice_url) + "/nhifservice/breeze/verification/AuthorizeCard?" + card_no + visit_type_id + referral_no # + remarks
-    r = requests.get(url, headers = headers, timeout=5)
+    url = str(nhifservice_url) + "/nhifservice/breeze/verification/AuthorizeCard?" + \
+        card_no + visit_type_id + referral_no  # + remarks
+    r = requests.get(url, headers=headers, timeout=5)
     r.raise_for_status()
     frappe.logger().debug({"webhook_success": r.text})
     if json.loads(r.text):
         add_log(
-        request_type = "AuthorizeCard", 
-        request_url = url, 
-        request_header = headers, 
-        response_data = json.loads(r.text) 
+            request_type="AuthorizeCard",
+            request_url=url,
+            request_header=headers,
+            response_data=json.loads(r.text)
         )
         card = json.loads(r.text)
         # console(card)
@@ -227,8 +236,29 @@ def get_authorization_num(insurance_subscription, company, appointment_type, ref
         return card
     else:
         add_log(
-        request_type = "AuthorizeCard", 
-        request_url = url, 
-        request_header = headers, 
+            request_type="AuthorizeCard",
+            request_url=url,
+            request_header=headers,
         )
         frappe.throw(json.loads(r.text))
+
+
+@frappe.whitelist()
+def send_vfd(invoice_name):
+    if "vfd_tz" not in frappe.get_installed_apps():
+        frappe.msgprint(_("VFD App Not installed"), alert=True)
+        msg = {
+            "enqueue": False
+        }
+        return msg
+    else:
+        from vfd_tz.api.sales_invoice import enqueue_posting_vfd_invoice
+        enqueue_posting_vfd_invoice(invoice_name)
+        pos_profile_name = frappe.get_value(
+            "Sales Invoice", invoice_name, "pos_profile")
+        pos_profile = frappe.get_doc("POS Profile", pos_profile_name)
+        msg = {
+            "enqueue": True,
+            "pos_rofile": pos_profile
+        }
+        return msg
