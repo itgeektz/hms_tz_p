@@ -1,18 +1,18 @@
 frappe.ui.form.on('Patient Appointment', {
     setup: function (frm) {
-        set_filters(frm)
+        set_filters(frm);
     },
     onload: function (frm) {
-        frm.trigger("mandatory_fields")
-        set_filters(frm)
+        frm.trigger("mandatory_fields");
+        set_filters(frm);
     },
     billing_item: function (frm) {
-        frm.trigger("get_mop_amount")
+        frm.trigger("get_mop_amount");
     },
     refresh: function (frm) {
-        set_filters(frm)
-        frm.trigger("update_primary_action")
-        frm.trigger("toggle_reqd_referral_no")
+        set_filters(frm);
+        frm.trigger("update_primary_action");
+        frm.trigger("toggle_reqd_referral_no");
         if (!frm.doc.invoiced && frm.doc.patient && frm.doc.mode_of_payment && !frm.doc.insurance_subscription && frm.doc.status != "Cancelled") {
             frm.add_custom_button(__('Create Sales Invoice'), function () {
                 if (frm.is_dirty()) {
@@ -25,52 +25,52 @@ frappe.ui.form.on('Patient Appointment', {
                     },
                     callback: function (data) {
                         if (data.message) {
-                            frm.reload_doc()
+                            frm.reload_doc();
                         }
                     }
                 });
             });
         }
-        frm.trigger("mandatory_fields")
+        frm.trigger("mandatory_fields");
     },
     referring_practitioner: function (frm) {
-        frm.set_value("healthcare_referrer", frm.doc.referring_practitioner)
+        frm.set_value("healthcare_referrer", frm.doc.referring_practitioner);
     },
     source: function (frm) {
-        frm.trigger("toggle_reqd_referral_no")
-        frm.set_value("referring_practitioner", "")
-        frm.set_value("healthcare_referrer_type", "")
-        frm.set_value("healthcare_referrer", "")
+        frm.trigger("toggle_reqd_referral_no");
+        frm.set_value("referring_practitioner", "");
+        frm.set_value("healthcare_referrer_type", "");
+        frm.set_value("healthcare_referrer", "");
     },
     insurance_subscription: function (frm) {
-        frm.trigger("mandatory_fields")
-        frm.trigger("update_primary_action")
+        frm.trigger("mandatory_fields");
+        frm.trigger("update_primary_action");
         if (frm.doc.insurance_subscription) {
-            frm.set_value("mode_of_payment", "")
-            frm.trigger('get_insurance_amount')
+            frm.set_value("mode_of_payment", "");
+            frm.trigger('get_insurance_amount');
         } else {
-            frm.set_value("insurance_subscription", "")
-            frm.set_value("insurance_company", "")
-            frm.set_value("coverage_plan_name", "")
-            frm.set_value("coverage_plan_card_number", "")
-            frm.set_value("insurance_company_name", "")
-            frm.trigger('get_mop_amount')
+            frm.set_value("insurance_subscription", "");
+            frm.set_value("insurance_company", "");
+            frm.set_value("coverage_plan_name", "");
+            frm.set_value("coverage_plan_card_number", "");
+            frm.set_value("insurance_company_name", "");
+            frm.trigger('get_mop_amount');
         }
     },
     mode_of_payment: function (frm) {
-        frm.trigger("mandatory_fields")
-        frm.trigger("update_primary_action")
+        frm.trigger("mandatory_fields");
+        frm.trigger("update_primary_action");
         if (frm.doc.mode_of_payment) {
-            frm.set_value("insurance_subscription", "")
-            frm.set_value("insurance_company", "")
-            frm.set_value("coverage_plan_name", "")
-            frm.set_value("coverage_plan_card_number", "")
-            frm.set_value("insurance_company_name", "")
-            frm.trigger('get_mop_amount')
+            frm.set_value("insurance_subscription", "");
+            frm.set_value("insurance_company", "");
+            frm.set_value("coverage_plan_name", "");
+            frm.set_value("coverage_plan_card_number", "");
+            frm.set_value("insurance_company_name", "");
+            frm.trigger('get_mop_amount');
         }
     },
     insurance_company: function (frm) {
-        frm.set_value("authorization_number", "")
+        frm.set_value("authorization_number", "");
         if (frm.doc.insurance_subscription && frm.doc.insurance_company != "NHIF") {
             frm.toggle_reqd("authorization_number", true);
         }
@@ -79,12 +79,12 @@ frappe.ui.form.on('Patient Appointment', {
         }
     },
     practitioner: function (frm) {
-        frm.trigger("get_consulting_charge_item")
-        frm.trigger('get_mop_amount')
+        frm.trigger("get_consulting_charge_item");
+        frm.trigger('get_mop_amount');
     },
     mandatory_fields: function (frm) {
-        frm.trigger("get_consulting_charge_item")
-        frm.trigger("toggle_reqd_referral_no")
+        frm.trigger("get_consulting_charge_item");
+        frm.trigger("toggle_reqd_referral_no");
         if (frm.doc.insurance_subscription) {
             frm.toggle_reqd("mode_of_payment", false);
         }
@@ -98,43 +98,43 @@ frappe.ui.form.on('Patient Appointment', {
             frm.toggle_reqd("insurance_subscription", true);
         }
         if (frm.doc.invoiced && frm.doc.mode_of_payment) {
-            frm.set_value(["insurance_subscription","insurance_company"], "")
+            frm.set_value(["insurance_subscription", "insurance_company"], "");
             frm.toggle_display('insurance_section', false);
-            frm.toggle_enable(['referral_no', 'source', 'mode_of_payment', 'paid_amount'], false)
+            frm.toggle_enable(['referral_no', 'source', 'mode_of_payment', 'paid_amount'], false);
         }
         if (frm.doc.insurance_claim) {
-            frm.set_value(["mode_of_payment", "paid_amount"], "")
+            frm.set_value(["mode_of_payment", "paid_amount"], "");
             frm.toggle_display('section_break_16', false);
-            frm.toggle_enable(['referral_no', 'source', 'insurance_subscription'], false)
+            frm.toggle_enable(['referral_no', 'source', 'insurance_subscription'], false);
         }
     },
     toggle_reqd_referral_no: function (frm) {
-        frm.toggle_display(['healthcare_referrer'], false)
-        frm.toggle_reqd(['healthcare_referrer'], false)
+        frm.toggle_display(['healthcare_referrer'], false);
+        frm.toggle_reqd(['healthcare_referrer'], false);
         if (frm.doc.source == "External Referral") {
             if (frm.doc.insurance_subscription) {
                 frm.toggle_reqd("referral_no", true);
             } else {
                 frm.toggle_reqd("referral_no", false);
             }
-            frm.toggle_enable(['referral_no'], true)
-            frm.toggle_display(['healthcare_referrer'], true)
-            frm.toggle_reqd(['healthcare_referrer'], true)
-            frm.set_value("healthcare_referrer_type", "Healthcare External Referrer")
+            frm.toggle_enable(['referral_no'], true);
+            frm.toggle_display(['healthcare_referrer'], true);
+            frm.toggle_reqd(['healthcare_referrer'], true);
+            frm.set_value("healthcare_referrer_type", "Healthcare External Referrer");
             frm.toggle_reqd("referring_practitioner", false);
             frm.toggle_enable("referring_practitioner", false);
         } else if (frm.doc.source == "Referral") {
-            frm.set_value("healthcare_referrer_type", "Healthcare Practitioner")
+            frm.set_value("healthcare_referrer_type", "Healthcare Practitioner");
             frm.toggle_reqd("referring_practitioner", true);
             frm.toggle_enable("referring_practitioner", true);
         } else {
             frm.toggle_reqd("referral_no", false);
-            frm.toggle_enable(['referral_no'], false)
+            frm.toggle_enable(['referral_no'], false);
         }
     },
     get_insurance_amount: function (frm) {
         if (!frm.doc.insurance_subscription || !frm.doc.billing_item) {
-            return
+            return;
         }
         frappe.call({
             method: 'hms_tz.nhif.api.patient_appointment.get_insurance_amount',
@@ -147,7 +147,7 @@ frappe.ui.form.on('Patient Appointment', {
             },
             callback: function (data) {
                 if (data.message) {
-                    frm.set_value("paid_amount", data.message)
+                    frm.set_value("paid_amount", data.message);
                 }
             }
         });
@@ -172,7 +172,7 @@ frappe.ui.form.on('Patient Appointment', {
     },
     get_consulting_charge_item: function (frm) {
         if (!frm.doc.practitioner) {
-            return
+            return;
         }
         frappe.call({
             method: 'hms_tz.nhif.api.patient_appointment.get_consulting_charge_item',
@@ -182,7 +182,7 @@ frappe.ui.form.on('Patient Appointment', {
             },
             callback: function (data) {
                 if (data.message) {
-                    frm.set_value("billing_item", data.message)
+                    frm.set_value("billing_item", data.message);
                 }
             }
         });
@@ -192,23 +192,23 @@ frappe.ui.form.on('Patient Appointment', {
             setTimeout(() => {
                 frm.toggle_display('mode_of_payment', true);
                 frm.toggle_display('paid_amount', true);
-            }, 100)
+            }, 100);
         }
     },
-    get_authorization_number: function(frm) {
+    get_authorization_number: function (frm) {
         frm.trigger("get_authorization_num");
     },
-    get_authorization_num: function(frm) {
+    get_authorization_num: function (frm) {
         if (frm.doc.insurance_company != "NHIF") {
             frappe.show_alert({
-                message:__("This feature is not applicable for non NHIF insurance"),
-                indicator:'orange'
+                message: __("This feature is not applicable for non NHIF insurance"),
+                indicator: 'orange'
             }, 5);
-            return
+            return;
         }
         if (!frm.doc.insurance_subscription) {
-            frappe.msgprint("Select Insurance Subscription to get authorization number")
-            return
+            frappe.msgprint("Select Insurance Subscription to get authorization number");
+            return;
         }
         frappe.call({
             method: 'hms_tz.nhif.api.patient_appointment.get_authorization_num',
@@ -222,39 +222,39 @@ frappe.ui.form.on('Patient Appointment', {
             callback: function (data) {
                 if (data.message) {
                     const card = data.message;
-                        if (card.AuthorizationStatus == 'ACCEPTED') {
-                            frm.set_value("authorization_number", card.AuthorizationNo)
-                            frm.save();
-                            frappe.show_alert({
-                                message:__("Authorization Number is updated"),
-                                indicator:'green'
-                            }, 5);
-                        } else {
-                            frm.set_value("insurance_subscription", "")
-                            frm.set_value("authorization_number", "")
-                        }
+                    if (card.AuthorizationStatus == 'ACCEPTED') {
+                        frm.set_value("authorization_number", card.AuthorizationNo);
+                        frm.save();
+                        frappe.show_alert({
+                            message: __("Authorization Number is updated"),
+                            indicator: 'green'
+                        }, 5);
+                    } else {
+                        frm.set_value("insurance_subscription", "");
+                        frm.set_value("authorization_number", "");
+                    }
                 }
                 else {
-                    frm.set_value("insurance_subscription", "")
-                    frm.set_value("authorization_number", "")
+                    frm.set_value("insurance_subscription", "");
+                    frm.set_value("authorization_number", "");
                 }
             }
         });
     },
-    invoiced: function(frm) {
-        frm.trigger("mandatory_fields")
+    invoiced: function (frm) {
+        frm.trigger("mandatory_fields");
     },
-    insurance_claim: function(frm) {
-        frm.trigger("mandatory_fields")
+    insurance_claim: function (frm) {
+        frm.trigger("mandatory_fields");
     },
-    update_primary_action: function(frm) {
+    update_primary_action: function (frm) {
         if (frm.is_new()) {
             if (!frm.doc.mode_of_payment && !frm.doc.insurance_subscription) {
                 frm.page.set_primary_action(__('Pending'), () => {
                     frappe.show_alert({
-                        message:__("Please select Insurance Subscription or Mode of Payment"),
-                        indicator:'red'
-                        }, 15);
+                        message: __("Please select Insurance Subscription or Mode of Payment"),
+                        indicator: 'red'
+                    }, 15);
                 });
             }
             else {
@@ -299,11 +299,27 @@ frappe.ui.form.on('Patient Appointment', {
         } else {
             frm.page.set_primary_action(__('Save'), () => frm.save());
         }
-    }
-})
+    },
+    send_vfd: function (frm) {
+        if (!frm.doc.ref_sales_invoice) return;
+        frappe.call({
+            method: 'hms_tz.nhif.api.patient_appointment.send_vfd',
+            args: {
+                invoice_name: frm.doc.ref_sales_invoice,
+            },
+            callback: function (data) {
+                if (data.message) {
+                    if (data.message.enqueue) {
+                        load_print_page(frm.doc.ref_sales_invoice, data.message.pos_rofile);
+                    }
+                }
+            }
+        });
+    },
+});
 
 
-const set_filters = function(frm) {
+const set_filters = function (frm) {
     frm.set_query('insurance_subscription', function () {
         return {
             filters: {
@@ -313,4 +329,26 @@ const set_filters = function(frm) {
             }
         };
     });
-}
+};
+
+const load_print_page = function (invoice_name, pos_profile) {
+    const print_format = pos_profile.print_format_for_online || pos_profile.print_format;
+    const letter_head = pos_profile.letter_head || 0;
+    const url =
+        frappe.urllib.get_base_url() +
+        "/printview?doctype=Sales%20Invoice&name=" +
+        invoice_name +
+        "&trigger_print=1" +
+        "&format=" +
+        print_format +
+        "&no_letterhead=" +
+        letter_head;
+    const printWindow = window.open(url, "Print");
+    printWindow.addEventListener(
+        "load",
+        function () {
+            printWindow.print();
+        },
+        true
+    );
+};
