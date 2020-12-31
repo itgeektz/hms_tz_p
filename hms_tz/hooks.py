@@ -190,8 +190,6 @@ fixtures = [
         "Radiology Examination-ref_docname",
         "Clinical Procedure-ref_doctype",
         "Clinical Procedure-ref_docname",
-        "Medication-ref_doctype",
-        "Medication-ref_docname",
         "Therapy Plan-ref_doctype",
         "Therapy Plan-ref_docname",
     )]]},
@@ -464,6 +462,15 @@ doc_events = {
     "Practitioner Availability": {
         "validate": "hms_tz.nhif.api.practitioner_availability.validate",
         "on_trash": "hms_tz.nhif.api.practitioner_availability.on_trash",
+    },
+    "Lab Test": {
+        "on_submit": "hms_tz.nhif.api.lab_test.on_submit",
+    },
+    "Radiology Examination": {
+        "on_submit": "hms_tz.nhif.api.radiology_examination.on_submit",
+    },
+    "Clinical Procedure": {
+        "on_submit": "hms_tz.nhif.api.clinical_procedure.on_submit",
     },
 }
 

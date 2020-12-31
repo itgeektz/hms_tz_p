@@ -3,12 +3,12 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
-import math
 import frappe
 from frappe import _
 from hms_tz.hms_tz.doctype.healthcare_settings.healthcare_settings import get_income_account
 from hms_tz.hms_tz.utils import validate_customer_created
 from hms_tz.nhif.api.patient_appointment import get_insurance_amount
+from frappe.utils import nowdate, nowtime
 import base64
 import re
 
@@ -142,3 +142,86 @@ def get_app_branch(app):
         return branch
     except Exception:
         return ''
+
+
+def create_delivery_note_from_LRPT(LRPT_doc, patient_encounter_doc):
+    if not patient_encounter_doc.appointment:
+        return
+    insurance_subscription, insurance_company = frappe.get_value(
+        "Patient Appointment", patient_encounter_doc.appointment, ["insurance_subscription", "insurance_company"])
+    if not insurance_subscription:
+        return
+    warehouse = get_warehouse_from_service_unit(
+        patient_encounter_doc.healthcare_service_unit)
+    items = []
+    item = get_item_form_LRPT(LRPT_doc)
+    item_code = item.get("item_code")
+    if not item_code:
+        return
+    is_stock, item_name = frappe.get_value(
+        "Item", item_code, ["is_stock_item", "item_name"])
+    if is_stock:
+        return
+    item_row = frappe.new_doc("Delivery Note Item")
+    item_row.item_code = item_code
+    item_row.item_name = item_name
+    item_row.warehouse = warehouse
+    item_row.qty = item.qty
+    item_row.rate = get_item_rate(
+        item_code, patient_encounter_doc.company, insurance_subscription, insurance_company)
+    item_row.reference_doctype = LRPT_doc.doctype
+    item_row.reference_name = LRPT_doc.name
+    item_row.description = ""
+    items.append(item_row)
+
+    if len(items) == 0:
+        return
+    doc = frappe.get_doc(dict(
+        doctype="Delivery Note",
+        posting_date=nowdate(),
+        posting_time=nowtime(),
+        set_warehouse=warehouse,
+        company=patient_encounter_doc.company,
+        customer=frappe.get_value(
+            "Healthcare Insurance Company", insurance_company, "customer"),
+        currency=frappe.get_value(
+            "Company", patient_encounter_doc.company, "default_currency"),
+        items=items,
+        reference_doctype=LRPT_doc.doctype,
+        reference_name=LRPT_doc.name,
+        patient=patient_encounter_doc.patient,
+        patient_name=patient_encounter_doc.patient_name
+    ))
+    doc.set_missing_values()
+    doc.insert(ignore_permissions=True)
+    if doc.get('name'):
+        frappe.msgprint(_('Delivery Note {0} created successfully.').format(
+            frappe.bold(doc.name)), alert=True)
+
+
+def get_warehouse_from_service_unit(healthcare_service_unit):
+    warehouse = frappe.get_value(
+        "Healthcare Service Unit", healthcare_service_unit, "warehouse")
+    if not warehouse:
+        frappe.throw(_("Warehouse is missing in Healthcare Service Unit"))
+    return warehouse
+
+
+def get_item_form_LRPT(LRPT_doc):
+    item = frappe._dict()
+    if LRPT_doc.doctype == "Lab Test":
+        item.item_code = frappe.get_value(
+            "Lab Test Template", LRPT_doc.template, "item")
+        item.qty = 1
+    elif LRPT_doc.doctype == "Radiology Examination":
+        item.item_code = frappe.get_value(
+            "Radiology Examination Template", LRPT_doc.radiology_examination_template, "item")
+        item.qty = 1
+    elif LRPT_doc.doctype == "Clinical Procedure":
+        item.item_code = frappe.get_value(
+            "Clinical Procedure Template", LRPT_doc.procedure_template, "item")
+        item.qty = 1
+    elif LRPT_doc.doctype == "Therapy Plan":
+        item.item_code = None
+        item.qty = 0
+    return item
