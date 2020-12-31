@@ -208,6 +208,8 @@ def create_lab_test(patient_encounter_doc, child_table):
         doc.template = ltt_doc.name
         doc.practitioner = patient_encounter_doc.practitioner
         doc.source = patient_encounter_doc.source
+        doc.ref_doctype = patient_encounter_doc.doctype
+        doc.ref_docname = patient_encounter_doc.name
 
         for entry in ltt_doc.lab_test_groups:
             doc.append('normal_test_items', {
@@ -235,6 +237,8 @@ def create_radiology_examination(patient_encounter_doc, child_table):
         doc.source = patient_encounter_doc.source
         doc.medical_department = frappe.get_value(
             "Radiology Examination Template", child.radiology_examination_template, "medical_department")
+        doc.ref_doctype = patient_encounter_doc.doctype
+        doc.ref_docname = patient_encounter_doc.name
 
         doc.save(ignore_permissions=True)
         if doc.get('name'):
@@ -259,6 +263,8 @@ def create_procedure_prescription(patient_encounter_doc, child_table, insurance_
         doc.patient_sex = frappe.get_value("Patient", patient_encounter_doc.patient, "sex")
         doc.medical_department = frappe.get_value(
             "Clinical Procedure Template", child.procedure, "medical_department")
+        doc.ref_doctype = patient_encounter_doc.doctype
+        doc.ref_docname = patient_encounter_doc.name
 
         doc.save(ignore_permissions=True)
         if doc.get('name'):
