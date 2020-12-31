@@ -1,6 +1,23 @@
 [
  {
   "default_value": null,
+  "doc_type": "Inpatient Record",
+  "docstatus": 0,
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "naming_series",
+  "modified": "2020-12-18 23:31:10.166739",
+  "name": "Inpatient Record-naming_series-options",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "property": "options",
+  "property_type": "Text",
+  "row_name": null,
+  "value": "HLC-INP-.YYYY.-"
+ },
+ {
+  "default_value": null,
   "doc_type": "Patient Encounter",
   "docstatus": 0,
   "doctype": "Property Setter",
