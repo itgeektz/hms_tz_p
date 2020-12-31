@@ -194,6 +194,7 @@ def create_delivery_note_from_LRPT(LRPT_doc, patient_encounter_doc):
     ))
     doc.set_missing_values()
     doc.insert(ignore_permissions=True)
+    doc.submit(ignore_permissions=True)
     if doc.get('name'):
         frappe.msgprint(_('Delivery Note {0} created successfully.').format(
             frappe.bold(doc.name)), alert=True)
