@@ -20,6 +20,9 @@ from PyPDF2 import PdfFileWriter
 
 
 class NHIFPatientClaim(Document):
+    # def onload(self):
+    #     self.send_nhif_calim()
+
     def validate(self):
         self.patient_encounters = self.get_patient_encounters()
         self.set_claim_values()
@@ -32,6 +35,7 @@ class NHIFPatientClaim(Document):
     def on_submit(self):
         frappe.set_value("Patient Appointment",
                          self.patient_appointment, "nhif_patient_claim", self.name)
+        self.send_nhif_calim()
 
     def set_claim_values(self):
         if not self.folio_id:
@@ -219,6 +223,103 @@ class NHIFPatientClaim(Document):
         for encounter in patient_encounters:
             patient_file_no += encounter.name + " "
         return patient_file_no
+
+    def get_folio_json_data(self):
+        folio_data = frappe._dict()
+        folio_data.entities = []
+        entitie = frappe._dict()
+        entitie.FolioID = self.folio_id
+        entitie.ClaimYear = self.claim_year
+        entitie.ClaimMonth = self.claim_month
+        entitie.FolioNo = self.folio_no
+        # entitie.SerialNo = self.serial_no
+        entitie.CardNo = self.cardno
+        entitie.FirstName = self.first_name
+        entitie.LastName = self.last_name
+        entitie.Gender = self.gender
+        entitie.DateOfBirth = str(self.date_of_birth)
+        # entitie.Age = self.date_of_birth
+        # entitie.TelephoneNo = self.TelephoneNo
+        entitie.PatientFileNo = self.patient_file_no
+        entitie.PatientFile = self.patient_file
+        entitie.AuthorizationNo = self.authorization_no
+        entitie.AttendanceDate = str(self.attendance_date)
+        entitie.PatientTypeCode = self.patient_type_code
+        entitie.DateAdmitted = str(self.date_admitted)
+        entitie.DateDischarged = str(self.date_discharge)
+        entitie.PractitionerNo = self.practitioner_no
+        entitie.CreatedBy = self.created_by
+        entitie.DateCreated = str(self.posting_date)
+        # entitie.LastModifiedBy = self.LastModifiedBy
+        # entitie.LastModified = self.LastModified
+
+        entitie.FolioDiseases = []
+        for disease in self.nhif_patient_claim_disease:
+            FolioDisease = frappe._dict()
+            FolioDisease.FolioDiseaseID = disease.folio_disease_id
+            FolioDisease.DiseaseCode = disease.disease_code
+            FolioDisease.FolioID = disease.folio_id
+            FolioDisease.Remarks = "null"
+            FolioDisease.CreatedBy = disease.created_by
+            FolioDisease.DateCreated = str(disease.date_created)
+            # FolioDisease.LastModifiedBy = disease.LastModifiedBy
+            # FolioDisease.LastModified = disease.LastModified
+            entitie.FolioDiseases.append(FolioDisease)
+
+        entitie.FolioItems = []
+        for item in self.nhif_patient_claim_item:
+            FolioItem = frappe._dict()
+            FolioItem.FolioItemID = item.folio_item_id
+            FolioItem.FolioID = item.folio_id
+            FolioItem.ItemCode = item.item_code
+            FolioItem.ItemQuantity = item.item_quantity
+            FolioItem.UnitPrice = item.unit_price
+            FolioItem.AmountClaime = item.amount_claime
+            FolioItem.ApprovalRefNo = item.approval_ref_no or "Null"
+            FolioItem.CreatedBy = item.created_by
+            FolioItem.DateCreated = str(item.date_created)
+            # FolioItem.LastModifiedBy = item.LastModifiedBy
+            # FolioItem.LastModified = item.LastModified
+            entitie.FolioItems.append(FolioItem)
+
+        folio_data.entities.append(entitie)
+        jsonStr = json.dumps(folio_data)
+        return jsonStr
+
+    def send_nhif_calim(self):
+        json_data = self.get_folio_json_data()
+        token = get_claimsservice_token(self.company)
+        claimsserver_url = frappe.get_value(
+            "Company NHIF Settings", self.company, "claimsserver_url")
+        headers = {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json"
+        }
+        url = str(claimsserver_url) + \
+            "/claimsserver/api/v1/Claims/SubmitFolios"
+        r = requests.post(url, headers=headers, data=json_data, timeout=5)
+        if r.status_code != 200:
+            add_log(
+                request_type="SubmitFolios",
+                request_url=url,
+                request_header=headers,
+                request_body=json_data,
+                response_data=str(r.text) if r.text else str(r),
+                status_code=r.status_code
+            )
+            frappe.throw(str(r.text) if r.text else str(r))
+        else:
+            if json.loads(r.text):
+                add_log(
+                    request_type="SubmitFolios",
+                    request_url=url,
+                    request_header=headers,
+                    request_body=json_data,
+                    response_data=json.loads(r.text),
+                    status_code=r.status_code
+                )
+            frappe.msgprint(
+                _("The claim has been sent successfully"), alert=True)
 
 
 def get_item_refcode(item_code):
