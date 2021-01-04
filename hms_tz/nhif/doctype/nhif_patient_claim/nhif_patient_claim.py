@@ -46,6 +46,7 @@ class NHIFPatientClaim(Document):
         self.claim_year = int(now_datetime().strftime("%Y"))
         self.claim_month = int(now_datetime().strftime("%m"))
         self.folio_no = int(self.name[-9:])
+        self.serial_no = self.folio_no
         self.created_by = frappe.get_value(
             "User", frappe.session.user, "full_name")
         final_patient_encounter = self.get_final_patient_encounter()
@@ -54,14 +55,14 @@ class NHIFPatientClaim(Document):
         if not self.practitioner_no:
             frappe.throw(_("There no TZ MCT Code for Practitioner {0}").format(
                 final_patient_encounter.practitioner))
-        self.date_discharge = final_patient_encounter.encounter_date
-        self.date_admitted = frappe.get_value(
-            "Patient Appointment", self.patient_appointment, "appointment_date")
-        self.attendance_date = frappe.get_value(
-            "Patient Appointment", self.patient_appointment, "appointment_date")
         appointment_type = frappe.get_value(
             "Patient Appointment", self.patient_appointment, "appointment_type")
-        self.patient_type_code = "OUTPATIENT" if appointment_type != "In Patient" else "IN PATIENT"
+        self.date_discharge = final_patient_encounter.encounter_date if appointment_type != "In Patient" else None
+        self.date_admitted = frappe.get_value(
+            "Patient Appointment", self.patient_appointment, "appointment_date") if appointment_type != "In Patient" else None
+        self.attendance_date = frappe.get_value(
+            "Patient Appointment", self.patient_appointment, "appointment_date")
+        self.patient_type_code = "OUT" if appointment_type != "In Patient" else "IN"
         self.patient_file_no = self.get_patient_file_no()
         self.set_patient_claim_disease()
         self.set_patient_claim_item()
@@ -218,10 +219,10 @@ class NHIFPatientClaim(Document):
         return patient_encounter_list[0]
 
     def get_patient_file_no(self):
-        patient_encounters = self.get_patient_encounters()
-        patient_file_no = ""
-        for encounter in patient_encounters:
-            patient_file_no += encounter.name + " "
+        patient_file_no = self.patient
+        # patient_encounters = self.get_patient_encounters()
+        # for encounter in patient_encounters:
+        #     patient_file_no += encounter.name + " "
         return patient_file_no
 
     def get_folio_json_data(self):
@@ -232,7 +233,8 @@ class NHIFPatientClaim(Document):
         entitie.ClaimYear = self.claim_year
         entitie.ClaimMonth = self.claim_month
         entitie.FolioNo = self.folio_no
-        # entitie.SerialNo = self.serial_no
+        entitie.SerialNo = self.serial_no
+        entitie.FacilityCode = self.facility_code
         entitie.CardNo = self.cardno
         entitie.FirstName = self.first_name
         entitie.LastName = self.last_name
@@ -242,6 +244,8 @@ class NHIFPatientClaim(Document):
         # entitie.TelephoneNo = self.TelephoneNo
         entitie.PatientFileNo = self.patient_file_no
         entitie.PatientFile = self.patient_file
+        entitie.ClaimFile = "ClaimFile"
+        entitie.ClinicalNotes = "ClinicalNotes"
         entitie.AuthorizationNo = self.authorization_no
         entitie.AttendanceDate = str(self.attendance_date)
         entitie.PatientTypeCode = self.patient_type_code
@@ -257,9 +261,9 @@ class NHIFPatientClaim(Document):
         for disease in self.nhif_patient_claim_disease:
             FolioDisease = frappe._dict()
             FolioDisease.FolioDiseaseID = disease.folio_disease_id
-            FolioDisease.DiseaseCode = disease.disease_code
+            FolioDisease.DiseaseCode = disease.disease_code[1:]
             FolioDisease.FolioID = disease.folio_id
-            FolioDisease.Remarks = "null"
+            FolioDisease.Remarks = None
             FolioDisease.CreatedBy = disease.created_by
             FolioDisease.DateCreated = str(disease.date_created)
             # FolioDisease.LastModifiedBy = disease.LastModifiedBy
@@ -274,8 +278,8 @@ class NHIFPatientClaim(Document):
             FolioItem.ItemCode = item.item_code
             FolioItem.ItemQuantity = item.item_quantity
             FolioItem.UnitPrice = item.unit_price
-            FolioItem.AmountClaime = item.amount_claime
-            FolioItem.ApprovalRefNo = item.approval_ref_no or "Null"
+            FolioItem.AmountClaimed = item.amount_claime
+            FolioItem.ApprovalRefNo = item.approval_ref_no or None
             FolioItem.CreatedBy = item.created_by
             FolioItem.DateCreated = str(item.date_created)
             # FolioItem.LastModifiedBy = item.LastModifiedBy
