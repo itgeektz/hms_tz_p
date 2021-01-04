@@ -459,7 +459,7 @@ doc_events = {
     },
     "Healthcare Insurance Subscription": {
         "on_submit": "hms_tz.nhif.api.insurance_subscription.on_submit",
-        "on_cancel": "hms_tz.nhif.api.insurance_subscription.on_cancel",
+        "before_cancel": "hms_tz.nhif.api.insurance_subscription.on_cancel",
     },
     "Practitioner Availability": {
         "validate": "hms_tz.nhif.api.practitioner_availability.validate",
