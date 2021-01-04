@@ -190,8 +190,13 @@ def process_prices_list(company):
                         for price in item_price_list:
                             if int(package.isactive) == 1:
                                 if float(price.price_list_rate) != float(package.unitprice):
-                                    frappe.set_value(
-                                        "Item Price", price.name, "price_list_rate", float(package.unitprice))
+                                    # delete Item Price if no package.unitprice or it is 0
+                                    if not float(package.unitprice) or float(package.unitprice) == 0:
+                                        frappe.delete_doc(
+                                            "Item Price", price.name)
+                                    else:
+                                        frappe.set_value(
+                                            "Item Price", price.name, "price_list_rate", float(package.unitprice))
                             else:
                                 frappe.delete_doc("Item Price", price.name)
 

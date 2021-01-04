@@ -13,6 +13,8 @@
   "request_header",
   "column_break_6",
   "user_id",
+  "status_code",
+  "request_section",
   "request_body",
   "section_break_8",
   "response_data"
@@ -59,7 +61,7 @@
   },
   {
    "fieldname": "request_body",
-   "fieldtype": "Small Text",
+   "fieldtype": "Long Text",
    "label": "Request Body",
    "read_only": 1
   },
@@ -78,11 +80,23 @@
    "fieldtype": "Small Text",
    "label": "Request Header",
    "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "request_section",
+   "fieldtype": "Section Break",
+   "label": "Request Body"
+  },
+  {
+   "fieldname": "status_code",
+   "fieldtype": "Data",
+   "label": "Response Status Code",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2020-11-13 15:34:55.149342",
+ "modified": "2021-01-04 01:41:31.503421",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Response Log",
