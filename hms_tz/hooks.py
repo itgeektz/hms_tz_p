@@ -211,6 +211,7 @@ fixtures = [
                 "Lab Test Template-m_max_range",
                 "Lab Test Template-f_min_range",
                 "Lab Test Template-f_max_range",
+                "Appointment Type-visit_type_id",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
