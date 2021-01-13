@@ -171,7 +171,7 @@ def create_delivery_note_from_LRPT(LRPT_doc, patient_encounter_doc):
         item_code, patient_encounter_doc.company, insurance_subscription, insurance_company)
     item_row.reference_doctype = LRPT_doc.doctype
     item_row.reference_name = LRPT_doc.name
-    item_row.description = ""
+    item_row.description = frappe.get_value("Item", item_code, "description")
     items.append(item_row)
 
     if len(items) == 0:
