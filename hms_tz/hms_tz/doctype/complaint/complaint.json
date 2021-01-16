@@ -24,7 +24,7 @@
   }
  ],
  "links": [],
- "modified": "2020-12-24 10:25:32.105671",
+ "modified": "2021-01-11 20:51:32.107648",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Complaint",
@@ -60,5 +60,6 @@
  "search_fields": "complaints",
  "sort_field": "modified",
  "sort_order": "DESC",
- "title_field": "complaints"
+ "title_field": "complaints",
+ "track_changes": 1
 }
