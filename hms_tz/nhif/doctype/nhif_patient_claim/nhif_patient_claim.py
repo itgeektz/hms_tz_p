@@ -301,7 +301,7 @@ class NHIFPatientClaim(Document):
         }
         url = str(claimsserver_url) + \
             "/claimsserver/api/v1/Claims/SubmitFolios"
-        r = requests.post(url, headers=headers, data=json_data, timeout=5)
+        r = requests.post(url, headers=headers, data=json_data, timeout=300)
         if r.status_code != 200:
             add_log(
                 request_type="SubmitFolios",

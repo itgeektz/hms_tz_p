@@ -38,7 +38,7 @@ def get_nhif_price_package(kwargs):
     url = str(claimsserver_url) + \
         "/claimsserver/api/v1/Packages/GetPricePackageWithExcludedServices?FacilityCode=" + \
         str(facility_code)
-    r = requests.get(url, headers=headers, timeout=5)
+    r = requests.get(url, headers=headers, timeout=300)
     if r.status_code != 200:
         add_log(
             request_type="GetCardDetails",
