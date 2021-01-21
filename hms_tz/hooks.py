@@ -99,7 +99,6 @@ fixtures = [
                 "Patient Appointment-healthcare_referrer_type",
                 "Patient Appointment-healthcare_referrer",
                 "Patient Appointment-referral_no",
-                "Patient Encounter Symptom-compliant_duration",
                 "Patient Encounter Symptom-system",
                 "Patient Encounter-blood_group",
                 "Patient Encounter-column_break_31",
@@ -212,6 +211,8 @@ fixtures = [
                 "Lab Test Template-f_min_range",
                 "Lab Test Template-f_max_range",
                 "Appointment Type-visit_type_id",
+                "Patient Encounter Symptom-complaint_comments",
+                "Patient Encounter Symptom-complaint_duration",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
