@@ -213,6 +213,9 @@ fixtures = [
                 "Appointment Type-visit_type_id",
                 "Patient Encounter Symptom-complaint_comments",
                 "Patient Encounter Symptom-complaint_duration",
+                "Patient Encounter-ed_no_of_days",
+                "Patient Encounter-ed_addressed_to",
+                "Patient Encounter-ed_reason_for_absence",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
