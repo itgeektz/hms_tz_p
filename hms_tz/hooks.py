@@ -34,6 +34,8 @@ fixtures = [
                 "Healthcare Insurance Company-facility_code",
                 "Healthcare Insurance Subscription-coverage_plan_card_number",
                 "Healthcare Insurance Subscription-coverage_plan_name",
+                "Patient Encounter-healthcare_practitioner_signature",
+                "Patient Encounter-patient_signature",
                 "Healthcare Practitioner-doctors_signature",
                 "Healthcare Practitioner-title_and_qualification",
                 "Healthcare Practitioner-tz_mct_code",
@@ -216,6 +218,7 @@ fixtures = [
                 "Patient Encounter-ed_no_of_days",
                 "Patient Encounter-ed_addressed_to",
                 "Patient Encounter-ed_reason_for_absence",
+                "Codification Table-mtuha",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
