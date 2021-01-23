@@ -1,0 +1,27 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2021-01-22 22:02:12.362778",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "modified": "2021-01-22 22:24:56.125769",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "NHIF Items and ERPNext items",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "query": "SELECT icd.ref_code as \"NHIF Item Code\", icd.parent AS \"Item:Link/Item:200\", MAX(n.itemname) as \"NHIF Item Name\"\r\n    FROM `tabItem Customer Detail` icd\r\n    INNER JOIN `tabItem` i ON i.name = icd.parent\r\n    LEFT OUTER JOIN `tabNHIF Price Package` n ON icd.ref_code = n.itemcode\r\n    WHERE icd.customer_name = 'NHIF'\r\n    GROUP BY icd.ref_code , icd.parent\r\n",
+ "ref_doctype": "NHIF Price Package",
+ "report_name": "NHIF Items and ERPNext items",
+ "report_type": "Query Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ]
+}
