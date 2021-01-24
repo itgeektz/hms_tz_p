@@ -12,7 +12,7 @@ from frappe import _
 import datetime
 from frappe.core.doctype.sms_settings.sms_settings import send_sms
 from erpnext.hr.doctype.employee.employee import is_holiday
-from hms_tz.hms_tz.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
+from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
 from hms_tz.hms_tz.utils import check_fee_validity, get_service_item_and_practitioner_charge, manage_fee_validity
 
 class Maximumcapacityerror(frappe.ValidationError): pass
