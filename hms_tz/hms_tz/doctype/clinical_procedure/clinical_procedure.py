@@ -8,7 +8,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, nowdate, nowtime, cstr, to_timedelta
 import datetime
-from hms_tz.hms_tz.doctype.healthcare_settings.healthcare_settings import get_account
+from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_account
 from hms_tz.hms_tz.doctype.lab_test.lab_test import create_sample_doc
 from erpnext.stock.stock_ledger import get_previous_sle
 from erpnext.stock.get_item_details import get_item_details
@@ -55,8 +55,10 @@ class ClinicalProcedure(Document):
 
     def on_trash(self):
         delete_pre_post_documents(self)
+
     def on_submit(self):
         make_insurance_claim(self)
+
     def set_status(self):
         if self.docstatus == 0:
             self.status = 'Draft'
@@ -350,11 +352,16 @@ def insert_clinical_procedure_to_medical_record(doc):
     medical_record.reference_owner = doc.owner
     medical_record.save(ignore_permissions=True)
 
+
 def make_insurance_claim(doc):
-	if doc.insurance_subscription:
-		from hms_tz.hms_tz.utils import create_insurance_claim
-		billing_item, = frappe.get_cached_value('Clinical Procedure Template', doc.procedure_template, ['item'])
-		insurance_claim, claim_status = create_insurance_claim(doc, 'Clinical Procedure Template', doc.procedure_template, 1, billing_item)
-		if insurance_claim:
-			frappe.set_value(doc.doctype, doc.name ,'insurance_claim', insurance_claim)
-			frappe.set_value(doc.doctype, doc.name ,'claim_status', claim_status)
+    if doc.insurance_subscription:
+        from hms_tz.hms_tz.utils import create_insurance_claim
+        billing_item, = frappe.get_cached_value(
+            'Clinical Procedure Template', doc.procedure_template, ['item'])
+        insurance_claim, claim_status = create_insurance_claim(
+            doc, 'Clinical Procedure Template', doc.procedure_template, 1, billing_item)
+        if insurance_claim:
+            frappe.set_value(doc.doctype, doc.name,
+                             'insurance_claim', insurance_claim)
+            frappe.set_value(doc.doctype, doc.name,
+                             'claim_status', claim_status)

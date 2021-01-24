@@ -8,7 +8,7 @@ from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from frappe import _
 from frappe.utils import cstr, getdate
-from hms_tz.hms_tz.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
+from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
 
 class TherapySession(Document):
 	def validate(self):
