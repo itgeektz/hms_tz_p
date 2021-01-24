@@ -2,15 +2,15 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Therapy Session', {
-	setup: function(frm) {
+	setup: function (frm) {
 		frm.get_field('exercises').grid.editable_fields = [
-			{fieldname: 'exercise_type', columns: 7},
-			{fieldname: 'counts_target', columns: 1},
-			{fieldname: 'counts_completed', columns: 1},
-			{fieldname: 'assistance_level', columns: 1}
+			{ fieldname: 'exercise_type', columns: 7 },
+			{ fieldname: 'counts_target', columns: 1 },
+			{ fieldname: 'counts_completed', columns: 1 },
+			{ fieldname: 'assistance_level', columns: 1 }
 		];
 
-		frm.set_query('service_unit', function() {
+		frm.set_query('service_unit', function () {
 			return {
 				filters: {
 					'is_group': false,
@@ -19,15 +19,28 @@ frappe.ui.form.on('Therapy Session', {
 				}
 			};
 		});
+
+		frm.set_query('appointment', function () {
+
+			return {
+				filters: {
+					'status': ['in', ['Open', 'Scheduled']]
+				}
+			};
+		});
 	},
 
-	onload: function(frm) {
-		if(frm.doc.source){
+	onload: function (frm) {
+		if (frm.doc.source) {
 			set_source_referring_practitioner(frm)
 		}
 	},
 
-	refresh: function(frm) {
+	refresh: function (frm) {
+		if (frm.doc.therapy_plan) {
+			frm.trigger('filter_therapy_types');
+		}
+
 		if (!frm.doc.__islocal) {
 			frm.dashboard.add_indicator(__('Counts Targeted: {0}', [frm.doc.total_counts_targeted]), 'blue');
 			frm.dashboard.add_indicator(__('Counts Completed: {0}', [frm.doc.total_counts_completed]),
@@ -35,30 +48,34 @@ frappe.ui.form.on('Therapy Session', {
 		}
 
 		if (frm.doc.docstatus === 1) {
-			frm.add_custom_button(__('Patient Assessment'), function() {
+			frm.add_custom_button(__('Patient Assessment'), function () {
 				frappe.model.open_mapped_doc({
 					method: 'hms_tz.hms_tz.doctype.patient_assessment.patient_assessment.create_patient_assessment',
 					frm: frm,
 				})
 			}, 'Create');
 
-			frm.add_custom_button(__('Sales Invoice'), function() {
-				frappe.model.open_mapped_doc({
-					method: 'hms_tz.hms_tz.doctype.therapy_session.therapy_session.invoice_therapy_session',
-					frm: frm,
-				})
-			}, 'Create');
+			frappe.db.get_value('Therapy Plan', { 'name': frm.doc.therapy_plan }, 'therapy_plan_template', (r) => {
+				if (r && !r.therapy_plan_template) {
+					frm.add_custom_button(__('Sales Invoice'), function () {
+						frappe.model.open_mapped_doc({
+							method: 'hms_tz.hms_tz.doctype.therapy_session.therapy_session.invoice_therapy_session',
+							frm: frm,
+						});
+					}, 'Create');
+				}
+			});
 		}
 
-		frm.set_query('referring_practitioner', function() {
-			if(frm.doc.source == 'External Referral'){
+		frm.set_query('referring_practitioner', function () {
+			if (frm.doc.source == 'External Referral') {
 				return {
 					filters: {
 						'healthcare_practitioner_type': 'External'
 					}
 				};
 			}
-			else{
+			else {
 				return {
 					filters: {
 						'healthcare_practitioner_type': 'Internal'
@@ -67,8 +84,31 @@ frappe.ui.form.on('Therapy Session', {
 			}
 		});
 	},
+	therapy_plan: function (frm) {
+		if (frm.doc.therapy_plan) {
+			frm.trigger('filter_therapy_types');
+		}
+	},
 
-	patient: function(frm) {
+	filter_therapy_types: function (frm) {
+		frappe.call({
+			'method': 'frappe.client.get',
+			args: {
+				doctype: 'Therapy Plan',
+				name: frm.doc.therapy_plan
+			},
+			callback: function (data) {
+				let therapy_types = (data.message.therapy_plan_details || []).map(function (d) { return d.therapy_type; });
+				frm.set_query('therapy_type', function () {
+					return {
+						filters: { 'therapy_type': ['in', therapy_types] }
+					};
+				});
+			}
+		});
+	},
+
+	patient: function (frm) {
 		if (frm.doc.patient) {
 			frappe.call({
 				'method': 'hms_tz.hms_tz.doctype.patient.patient.get_patient_detail',
@@ -97,7 +137,7 @@ frappe.ui.form.on('Therapy Session', {
 		}
 	},
 
-	appointment: function(frm) {
+	appointment: function (frm) {
 		if (frm.doc.appointment) {
 			frappe.call({
 				'method': 'frappe.client.get',
@@ -105,9 +145,9 @@ frappe.ui.form.on('Therapy Session', {
 					doctype: 'Patient Appointment',
 					name: frm.doc.appointment
 				},
-				callback: function(data) {
+				callback: function (data) {
 					let values = {
-						'patient':data.message.patient,
+						'patient': data.message.patient,
 						'therapy_type': data.message.therapy_type,
 						'therapy_plan': data.message.therapy_plan,
 						'practitioner': data.message.practitioner,
@@ -116,7 +156,7 @@ frappe.ui.form.on('Therapy Session', {
 						'start_time': data.message.appointment_time,
 						'service_unit': data.message.service_unit,
 						'company': data.message.company,
-						'source' :data.message.source
+						'duration': data.message.duration
 					};
 					frm.set_value(values);
 				}
@@ -136,7 +176,7 @@ frappe.ui.form.on('Therapy Session', {
 		}
 	},
 
-	therapy_type: function(frm) {
+	therapy_type: function (frm) {
 		if (frm.doc.therapy_type) {
 			frappe.call({
 				'method': 'frappe.client.get',
@@ -144,13 +184,13 @@ frappe.ui.form.on('Therapy Session', {
 					doctype: 'Therapy Type',
 					name: frm.doc.therapy_type
 				},
-				callback: function(data) {
+				callback: function (data) {
 					frm.set_value('duration', data.message.default_duration);
 					frm.set_value('rate', data.message.rate);
 					frm.set_value('service_unit', data.message.healthcare_service_unit);
 					frm.set_value('department', data.message.medical_department);
 					frm.doc.exercises = [];
-					$.each(data.message.exercises, function(_i, e) {
+					$.each(data.message.exercises, function (_i, e) {
 						let exercise = frm.add_child('exercises');
 						exercise.exercise_type = e.exercise_type;
 						exercise.difficulty_level = e.difficulty_level;
@@ -163,40 +203,40 @@ frappe.ui.form.on('Therapy Session', {
 		}
 	},
 
-	source: function(frm){
-		if(frm.doc.source){
+	source: function (frm) {
+		if (frm.doc.source) {
 			set_source_referring_practitioner(frm);
 		}
 	}
 });
 
 let set_source_referring_practitioner = function (frm) {
-	if(frm.doc.source == 'Direct'){
+	if (frm.doc.source == 'Direct') {
 		frm.set_value('referring_practitioner', '');
 		frm.set_df_property('referring_practitioner', 'hidden', 1);
 		frm.set_df_property('referring_practitioner', 'reqd', 0);
 	}
-	else if(frm.doc.source == 'External Referral' || frm.doc.source == 'Referral') {
-		if(frm.doc.practitioner){
+	else if (frm.doc.source == 'External Referral' || frm.doc.source == 'Referral') {
+		if (frm.doc.practitioner) {
 			frm.set_df_property('referring_practitioner', 'hidden', 0);
-			if(frm.doc.source == 'External Referral'){
-				frappe.db.get_value('Healthcare Practitioner', frm.doc.practitioner, 'healthcare_practitioner_type', function(r) {
-					if(r && r.healthcare_practitioner_type && r.healthcare_practitioner_type == 'External'){
+			if (frm.doc.source == 'External Referral') {
+				frappe.db.get_value('Healthcare Practitioner', frm.doc.practitioner, 'healthcare_practitioner_type', function (r) {
+					if (r && r.healthcare_practitioner_type && r.healthcare_practitioner_type == 'External') {
 						frm.set_value('referring_practitioner', frm.doc.practitioner);
 					}
-					else{
+					else {
 						frm.set_value('referring_practitioner', '');
 					}
 				});
 				frm.set_df_property('referring_practitioner', 'read_only', 0);
 			}
-			else{
-				frappe.db.get_value('Healthcare Practitioner', frm.doc.practitioner, 'healthcare_practitioner_type', function(r) {
-					if(r && r.healthcare_practitioner_type && r.healthcare_practitioner_type == 'Internal'){
+			else {
+				frappe.db.get_value('Healthcare Practitioner', frm.doc.practitioner, 'healthcare_practitioner_type', function (r) {
+					if (r && r.healthcare_practitioner_type && r.healthcare_practitioner_type == 'Internal') {
 						frm.set_value('referring_practitioner', frm.doc.practitioner);
 						frm.set_df_property('referring_practitioner', 'read_only', 1);
 					}
-					else{
+					else {
 						frm.set_value('referring_practitioner', '');
 						frm.set_df_property('referring_practitioner', 'read_only', 0);
 					}
@@ -204,7 +244,7 @@ let set_source_referring_practitioner = function (frm) {
 			}
 			frm.set_df_property('referring_practitioner', 'reqd', 1);
 		}
-		else{
+		else {
 			frm.set_df_property('referring_practitioner', 'read_only', 0);
 			frm.set_df_property('referring_practitioner', 'hidden', 0);
 			frm.set_df_property('referring_practitioner', 'reqd', 1);
