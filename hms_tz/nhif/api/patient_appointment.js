@@ -153,6 +153,9 @@ frappe.ui.form.on('Patient Appointment', {
         });
     },
     get_mop_amount: function (frm) {
+        if (!frm.doc.mode_of_payment || !frm.doc.billing_item) {
+            return;
+        }
         if (frm.doc.practitioner && !frm.doc.insurance_subscription) {
             frappe.call({
                 method: 'hms_tz.nhif.api.patient_appointment.get_mop_amount',
@@ -171,7 +174,7 @@ frappe.ui.form.on('Patient Appointment', {
         }
     },
     get_consulting_charge_item: function (frm) {
-        if (!frm.doc.practitioner) {
+        if (!frm.doc.practitioner || !frm.doc.appointment_type) {
             return;
         }
         frappe.call({
@@ -332,7 +335,7 @@ const set_filters = function (frm) {
 };
 
 const load_print_page = function (invoice_name, pos_profile) {
-    const print_format = pos_profile.print_format_for_online || pos_profile.print_format;
+    const print_format = pos_profile.print_format || "AV Tax Invoice";
     const letter_head = pos_profile.letter_head || 0;
     const url =
         frappe.urllib.get_base_url() +
