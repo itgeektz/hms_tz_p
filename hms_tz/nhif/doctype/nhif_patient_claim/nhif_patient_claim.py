@@ -20,9 +20,6 @@ from PyPDF2 import PdfFileWriter
 
 
 class NHIFPatientClaim(Document):
-    # def onload(self):
-    #     self.send_nhif_calim()
-
     def validate(self):
         self.patient_encounters = self.get_patient_encounters()
         self.set_claim_values()
@@ -30,12 +27,11 @@ class NHIFPatientClaim(Document):
     def before_submit(self):
         if not self.patient_signature:
             frappe.throw(_("Patient signature is required"))
-        self.patient_file = generate_pdf(self)
-
-    def on_submit(self):
+        if not self.patient_file:
+            self.patient_file = generate_pdf(self)
         frappe.set_value("Patient Appointment",
                          self.patient_appointment, "nhif_patient_claim", self.name)
-        self.send_nhif_calim()
+        self.send_nhif_claim()
 
     def set_claim_values(self):
         if not self.folio_id:
@@ -290,7 +286,7 @@ class NHIFPatientClaim(Document):
         jsonStr = json.dumps(folio_data)
         return jsonStr
 
-    def send_nhif_calim(self):
+    def send_nhif_claim(self):
         json_data = self.get_folio_json_data()
         token = get_claimsservice_token(self.company)
         claimsserver_url = frappe.get_value(

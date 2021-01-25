@@ -18,7 +18,14 @@
   "approval_ref_no",
   "folio_item_id",
   "folio_id",
-  "date_created"
+  "date_created",
+  "section_break_15",
+  "claim_status",
+  "claim_closed",
+  "reference_doctype",
+  "reference_docname",
+  "column_break_18",
+  "claim_status_modification_notes"
  ],
  "fields": [
   {
@@ -119,12 +126,60 @@
    "fieldname": "column_break_8",
    "fieldtype": "Column Break",
    "read_only": 1
+  },
+  {
+   "fieldname": "section_break_15",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "claim_status",
+   "fieldtype": "Select",
+   "label": "Claim Status",
+   "options": "Pending Response\nUnder Negotiation\nApproved\nRejected\nModified",
+   "permlevel": 1,
+   "read_only_depends_on": "eval: !doc.claim_closed"
+  },
+  {
+   "default": "0",
+   "fieldname": "claim_closed",
+   "fieldtype": "Check",
+   "label": "Claim Closed",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "column_break_18",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "claim_status_modification_notes",
+   "fieldtype": "Text",
+   "label": "Claim Status Modification Notes",
+   "permlevel": 1,
+   "read_only_depends_on": "eval: !doc.claim_closed"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "label": "Reference DocType",
+   "options": "DocType",
+   "permlevel": 2
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "reference_docname",
+   "fieldtype": "Dynamic Link",
+   "label": "Reference DocName",
+   "options": "reference_doctype",
+   "permlevel": 2
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2020-12-19 02:13:40.637951",
+ "modified": "2021-01-25 18:02:51.060724",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim Item",
