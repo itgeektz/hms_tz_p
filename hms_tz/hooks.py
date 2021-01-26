@@ -222,6 +222,16 @@ fixtures = [
                 "Sample Collection-section_break_20",
                 "Sample Collection-ref_doctype",
                 "Sample Collection-ref_docname",
+                "Healthcare Practitioner-nhif_physician_qualification",
+                "Vital Signs-patient_progress",
+                "Stock Entry Detail-inpatient_medication_entry_child",
+                "Stock Entry Detail-patient",
+                "Stock Entry-inpatient_medication_entry",
+                "Sales Invoice Item-reference_dn",
+                "Sales Invoice Item-reference_dt",
+                "Sales Invoice-ref_practitioner",
+                "Sales Invoice-patient_name",
+                "Sales Invoice-patient",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -337,6 +347,16 @@ fixtures = [
                 "Inpatient Record-radiology_orders_section-hidden",
                 "Inpatient Record-investigations_section-hidden",
                 "Patient-show_preview_popup",
+                "Patient Encounter-sb_drug_prescription-collapsible_depends_on",
+                "Patient Encounter-rehabilitation_section-collapsible_depends_on",
+                "Patient Encounter-sb_procedures-collapsible_depends_on",
+                "Patient Encounter-radiology_procedures_section-collapsible_depends_on",
+                "Patient Encounter-sb_test_prescription-collapsible_depends_on",
+                "NHIF Patient Claim-naming_series-options",
+                "Healthcare Practitioner-naming_series-options",
+                "Vital Signs-reflexes-hidden",
+                "Vital Signs-abdomen-hidden",
+                "Vital Signs-tongue-hidden",
     )]]},
 ]
 
@@ -460,7 +480,7 @@ doc_events = {
     },
     "Healthcare Service Order": {
         "before_insert": "hms_tz.nhif.api.service_order.set_missing_values",
-        "validate": "hms_tz.nhif.api.service_order.validate"
+        "validate": "hms_tz.nhif.api.service_order.after_save",
     },
     "Sales Invoice": {
         "on_submit": "hms_tz.nhif.api.sales_invoice.create_healthcare_docs",
