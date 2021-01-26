@@ -7,8 +7,9 @@ import frappe
 from frappe import _
 
 
-def validate(doc, method):
-    auto_submit(doc)
+def after_save(doc, method):
+    frappe.msgprint(method)
+    frappe.enqueue("auto_submit", "docname = doc.name")
 
 
 def set_missing_values(doc, method):
@@ -66,6 +67,7 @@ def clear_insurance_details(service_order):
     return True
 
 
-def auto_submit(doc):
-    if doc.status == 0 and doc.order_reference_name:
+def auto_submit(docname):
+    doc = frappe.get_doc("Healthcare Service Order", docname)
+    if doc.docstatus == 0 and doc.order_reference_name:
         doc.submit()
