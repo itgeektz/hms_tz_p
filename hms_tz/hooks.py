@@ -456,7 +456,8 @@ doc_events = {
         "on_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
     },
     "Healthcare Service Order": {
-        "before_insert": "hms_tz.nhif.api.service_order.set_missing_values"
+        "before_insert": "hms_tz.nhif.api.service_order.set_missing_values",
+        "validate": "hms_tz.nhif.api.service_order.validate"
     },
     "Sales Invoice": {
         "on_submit": "hms_tz.nhif.api.sales_invoice.create_healthcare_docs",
