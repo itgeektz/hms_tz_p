@@ -219,6 +219,9 @@ fixtures = [
                 "Patient Encounter-ed_addressed_to",
                 "Patient Encounter-ed_reason_for_absence",
                 "Codification Table-mtuha",
+                "Sample Collection-section_break_20",
+                "Sample Collection-ref_doctype",
+                "Sample Collection-ref_docname",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -456,7 +459,8 @@ doc_events = {
         "on_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
     },
     "Healthcare Service Order": {
-        "before_insert": "hms_tz.nhif.api.service_order.set_missing_values"
+        "before_insert": "hms_tz.nhif.api.service_order.set_missing_values",
+        "validate": "hms_tz.nhif.api.service_order.validate"
     },
     "Sales Invoice": {
         "on_submit": "hms_tz.nhif.api.sales_invoice.create_healthcare_docs",
@@ -471,6 +475,8 @@ doc_events = {
     },
     "Lab Test": {
         "on_submit": "hms_tz.nhif.api.lab_test.on_submit",
+        "after_insert": "hms_tz.nhif.api.lab_test.after_insert",
+        "on_trash": "hms_tz.nhif.api.lab_test.on_trash",
     },
     "Radiology Examination": {
         "on_submit": "hms_tz.nhif.api.radiology_examination.on_submit",

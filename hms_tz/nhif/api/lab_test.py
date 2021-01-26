@@ -52,3 +52,42 @@ def create_delivery_note(doc):
         patient_encounter_doc = frappe.get_doc(
             doc.ref_doctype, doc.ref_docname)
         create_delivery_note_from_LRPT(doc, patient_encounter_doc)
+
+
+def after_insert(doc, methd):
+    create_sample_collection(doc)
+
+
+def on_trash(doc, methd):
+    sample_list = frappe.get_all("Sample Collection", filters={
+        "ref_doctype": doc.doctype,
+        "ref_docname": doc.name,
+    })
+    for item in sample_list:
+        frappe.delete_doc('Sample Collection', item.name)
+
+
+def create_sample_collection(doc):
+    if not doc.template:
+        return
+    template = frappe.get_doc("Lab Test Template", doc.template)
+    if not template.sample_qty or not template.sample:
+        return
+
+    sample_doc = frappe.new_doc("Sample Collection")
+    sample_doc.patient = doc.patient
+    sample_doc.patient_name = doc.patient_name
+    sample_doc.patient_age = doc.patient_age
+    sample_doc.patient_sex = doc.patient_sex
+    sample_doc.company = doc.company
+    sample_doc.sample = template.sample
+    sample_doc.sample_uom = template.sample_uom
+    sample_doc.sample_qty = template.sample_qty
+    sample_doc.sample_details = template.sample_details
+    sample_doc.ref_doctype = doc.doctype
+    sample_doc.ref_docname = doc.name
+
+    sample_doc.flags.ignore_permissions = True
+    sample_doc.insert()
+    frappe.msgprint(_("Sample Collection created {0}").format(
+        sample_doc.name), alert=True)
