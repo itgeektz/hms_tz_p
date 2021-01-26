@@ -136,9 +136,9 @@
    "fieldname": "claim_status",
    "fieldtype": "Select",
    "label": "Claim Status",
-   "options": "Pending Response\nUnder Negotiation\nApproved\nRejected\nModified",
+   "options": "Pending Response\nUnder Negotiation\nApproved\nRejected\nModified\nIgnored",
    "permlevel": 1,
-   "read_only_depends_on": "eval: !doc.claim_closed"
+   "read_only_depends_on": "eval: doc.claim_closed"
   },
   {
    "default": "0",
@@ -179,7 +179,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2021-01-25 18:02:51.060724",
+ "modified": "2021-01-26 18:37:34.787377",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim Item",
