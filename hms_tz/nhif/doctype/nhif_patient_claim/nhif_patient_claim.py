@@ -257,7 +257,7 @@ class NHIFPatientClaim(Document):
         for disease in self.nhif_patient_claim_disease:
             FolioDisease = frappe._dict()
             FolioDisease.FolioDiseaseID = disease.folio_disease_id
-            FolioDisease.DiseaseCode = disease.disease_code[1:]
+            FolioDisease.DiseaseCode = disease.disease_code
             FolioDisease.FolioID = disease.folio_id
             FolioDisease.Remarks = None
             FolioDisease.CreatedBy = disease.created_by
