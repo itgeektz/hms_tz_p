@@ -5,11 +5,13 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
+from frappe.utils.background_jobs import enqueue
 
 
 def after_save(doc, method):
-    frappe.msgprint(method)
-    frappe.enqueue("auto_submit", "docname = doc.name")
+    if doc.docstatus == 0 and doc.order_reference_name:
+        enqueue(method=auto_submit, queue='short',
+                timeout=10000, is_async=True, kwargs=doc.name)
 
 
 def set_missing_values(doc, method):
@@ -67,7 +69,9 @@ def clear_insurance_details(service_order):
     return True
 
 
-def auto_submit(docname):
-    doc = frappe.get_doc("Healthcare Service Order", docname)
+def auto_submit(kwargs):
+    import time
+    time.sleep(5)
+    doc = frappe.get_doc("Healthcare Service Order", kwargs)
     if doc.docstatus == 0 and doc.order_reference_name:
         doc.submit()
