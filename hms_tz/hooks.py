@@ -361,6 +361,11 @@ fixtures = [
                 "Patient Encounter-rehabilitation_section-collapsible",
                 "Patient Encounter-sb_drug_prescription-collapsible",
                 "Patient Encounter-radiology_procedures_section-collapsible",
+                "Patient-surgical_history-in_preview",
+                "Patient-medical_history-in_preview",
+                "Patient-medication-in_preview",
+                "Patient-allergies-in_preview",
+                "Patient-patient_name-in_preview",
     )]]},
 ]
 
