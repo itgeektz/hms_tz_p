@@ -2,7 +2,7 @@
 # Copyright (c) 2020, Aakvatech and contributors
 # For license information, please see license.txt
 
-from __future__ import unicode_literals 
+from __future__ import unicode_literals
 import frappe
 from frappe import _
 from hms_tz.nhif.api.token import get_nhifservice_token
@@ -27,49 +27,56 @@ def validate(doc, method):
     if doc.mobile[0] == "0":
         doc.mobile = "255" + doc.mobile[1:]
     if doc.next_to_kin_mobile_no:
-        doc.next_to_kin_mobile_no = remove_special_characters(doc.next_to_kin_mobile_no)
+        doc.next_to_kin_mobile_no = remove_special_characters(
+            doc.next_to_kin_mobile_no)
         if doc.next_to_kin_mobile_no[0] == "0":
             doc.next_to_kin_mobile_no = "255" + doc.next_to_kin_mobile_no[1:]
     validate_mobile_number(doc.name, doc.mobile)
+    update_patient_history(doc)
+
 
 @frappe.whitelist()
 def validate_mobile_number(doc_name, mobile=None):
     if mobile:
-        mobile_patients_list = frappe.get_all("Patient", 
-            filters = {
-                "mobile" : mobile,
-                "name" : ['!=', doc_name]
-            }
-        )
+        mobile_patients_list = frappe.get_all("Patient",
+                                              filters={
+                                                  "mobile": mobile,
+                                                  "name": ['!=', doc_name]
+                                              }
+                                              )
         if len(mobile_patients_list) > 0:
             frappe.msgprint(_("This mobile number is used by another patient"))
 
 
 @frappe.whitelist()
-def get_patient_info(card_no = None):
+def get_patient_info(card_no=None):
     if not card_no:
         frappe.msgprint(_("Please set Card No"))
         return
-    company = get_default_company() ## TODO: need to be fixed to support pultiple company
+    # TODO: need to be fixed to support pultiple company
+    company = get_default_company()
     token = get_nhifservice_token(company)
-    
-    nhifservice_url = frappe.get_value("Company NHIF Settings", company, "nhifservice_url")
+
+    nhifservice_url = frappe.get_value(
+        "Company NHIF Settings", company, "nhifservice_url")
     headers = {
-        "Authorization" : "Bearer " + token
+        "Authorization": "Bearer " + token
     }
-    url = str(nhifservice_url) + "/nhifservice/breeze/verification/GetCardDetails?CardNo=" + str(card_no)
+    url = str(nhifservice_url) + \
+        "/nhifservice/breeze/verification/GetCardDetails?CardNo=" + \
+        str(card_no)
     for i in range(3):
         try:
-            r = requests.get(url, headers = headers, timeout=5)
+            r = requests.get(url, headers=headers, timeout=5)
             r.raise_for_status()
             frappe.logger().debug({"webhook_success": r.text})
             if json.loads(r.text):
                 add_log(
-					request_type = "GetCardDetails", 
-					request_url = url, 
-					request_header = headers, 
-					response_data = json.loads(r.text) 
-				)
+                    request_type="GetCardDetails",
+                    request_url=url,
+                    request_header=headers,
+                    response_data=json.loads(r.text)
+                )
                 card = json.loads(r.text)
                 frappe.msgprint(_(card["Remarks"]), alert=True)
                 add_scheme(card.get("SchemeID"), card.get("SchemeName"))
@@ -77,10 +84,10 @@ def get_patient_info(card_no = None):
                 return card
             else:
                 add_log(
-					request_type = "GetCardDetails", 
-					request_url = url, 
-					request_header = headers, 
-				)
+                    request_type="GetCardDetails",
+                    request_url=url,
+                    request_header=headers,
+                )
                 frappe.throw(json.loads(r.text))
         except Exception as e:
             frappe.logger().debug({"webhook_error": e, "try": i + 1})
@@ -89,3 +96,23 @@ def get_patient_info(card_no = None):
                 continue
             else:
                 raise e
+
+
+def update_patient_history(doc):
+    company = get_default_company()
+    update_history = frappe.get_value(
+        "Company NHIF Settings", company, "update_patient_history")
+    if not update_history:
+        return
+
+    medical_history = ""
+    for row in doc.codification_table:
+        if row.description:
+            medical_history += row.description + "\n"
+    doc.medical_history = medical_history
+
+    medication = ""
+    for row in doc.chronic_medications:
+        if row.drug_name:
+            medication += row.drug_name + "\n"
+    doc.medication = medication

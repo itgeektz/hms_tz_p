@@ -366,6 +366,8 @@ fixtures = [
                 "Patient-medication-in_preview",
                 "Patient-allergies-in_preview",
                 "Patient-patient_name-in_preview",
+                "Patient-medication-read_only",
+                "Patient-medical_history-read_only",
     )]]},
 ]
 
