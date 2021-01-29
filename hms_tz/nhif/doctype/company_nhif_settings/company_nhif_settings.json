@@ -19,7 +19,9 @@
   "column_break_9",
   "claimsserver_url",
   "claimsserver_token",
-  "claimsserver_expiry"
+  "claimsserver_expiry",
+  "section_break_15",
+  "update_patient_history"
  ],
  "fields": [
   {
@@ -104,11 +106,21 @@
    "fieldtype": "Data",
    "label": "Facility Code",
    "reqd": 1
+  },
+  {
+   "fieldname": "section_break_15",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "update_patient_history",
+   "fieldtype": "Check",
+   "label": "Update Patient history from Chronic records"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2020-12-11 14:23:18.477389",
+ "modified": "2021-01-28 13:59:37.182517",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Company NHIF Settings",
