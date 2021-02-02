@@ -233,6 +233,11 @@ fixtures = [
                 "Sales Invoice-patient_name",
                 "Sales Invoice-patient",
                 "Patient Referral-referred_to_facility",
+                "Clinical Procedure Template-is_not_available_inhouse",
+                "Therapy Plan Template-is_not_available_inhouse",
+                "Medication-is_not_available_inhouse",
+                "Lab Test Template-is_not_available_inhouse",
+                "Radiology Examination Template-is_not_available_inhouse",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
