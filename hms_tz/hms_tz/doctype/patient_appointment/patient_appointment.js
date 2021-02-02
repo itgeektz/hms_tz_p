@@ -352,6 +352,10 @@ let check_and_set_availability = function (frm) {
 		let fd = d.fields_dict;
 
 		d.fields_dict['appointment_date'].df.onchange = () => {
+			if (frappe.datetime.get_today() > d.get_value('appointment_date')) {
+				d.get_primary_btn().attr('disabled', true);
+				frappe.msgprint('Older date or time cannot be selected in this appointment.')
+			}
 			show_slots(d, fd);
 		};
 		d.fields_dict['practitioner'].df.onchange = () => {
@@ -531,7 +535,12 @@ let check_and_set_availability = function (frm) {
 							.html(slot_html);
 
 						// primtary button when clicked
-						$wrapper.on('click', 'button', function() {
+						$wrapper.on('click', 'button', function () {
+							if (frappe.datetime.get_today() > d.get_value('appointment_date')) {
+								d.get_primary_btn().attr('disabled', true);
+								frappe.msgprint('Older date or time cannot be selected in this appointment.')
+								return
+							}
 							let $btn = $(this);
 							$wrapper.find('button').removeClass('btn-primary');
 							$btn.addClass('btn-primary');
