@@ -117,6 +117,8 @@ def invoice_appointment(name):
 
         item = sales_invoice.append('items', {})
         item = get_appointment_item(appointment_doc, item)
+        item.rate = appointment_doc.paid_amount
+        item.amount = appointment_doc.paid_amount
 
         # Add payments if payment details are supplied else proceed to create invoice as Unpaid
         if appointment_doc.mode_of_payment and appointment_doc.paid_amount:
@@ -128,6 +130,8 @@ def invoice_appointment(name):
         sales_invoice.set_missing_values(for_validate=True)
         sales_invoice.flags.ignore_mandatory = True
         sales_invoice.save(ignore_permissions=True)
+        sales_invoice.calculate_taxes_and_totals()
+        frappe.msgprint(str(sales_invoice.taxes))
         sales_invoice.submit()
         frappe.msgprint(_('Sales Invoice {0} created'.format(
             sales_invoice.name)))
