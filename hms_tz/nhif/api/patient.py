@@ -116,3 +116,17 @@ def update_patient_history(doc):
         if row.drug_name:
             medication += row.drug_name + "\n"
     doc.medication = medication
+
+
+@frappe.whitelist()
+def check_card_number(card_no, is_new=None, patient=None):
+    filters = {
+        "card_no": card_no
+    }
+    if not is_new and patient:
+        filters["name"] = ['!=', patient]
+    patients = frappe.get_all("Patient", filters=filters)
+    if len(patients):
+        return patients[0].name
+    else:
+        return "false"
