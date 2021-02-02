@@ -192,6 +192,7 @@ frappe.ui.form.on('Patient Appointment', {
     },
     patient: function (frm) {
         if (frm.doc.patient) {
+            get_previous_appointment(frm);
             setTimeout(() => {
                 frm.toggle_display('mode_of_payment', true);
                 frm.toggle_display('paid_amount', true);
@@ -354,4 +355,22 @@ const load_print_page = function (invoice_name, pos_profile) {
         },
         true
     );
+};
+
+const get_previous_appointment = (frm) => {
+    frappe.call({
+        method: 'hms_tz.nhif.api.patient_appointment.get_previous_appointment',
+        args: {
+            'patient': frm.doc.patient,
+        },
+        callback: function (data) {
+            if (data.message) {
+                const appointment = data.message;
+                frappe.msgprint(` 
+                <p>Last Appointment Date : ${appointment.appointment_date}</p>
+                <p>Last Doctor name : ${appointment.practitioner_name}</p>
+                `);
+            }
+        }
+    });
 };

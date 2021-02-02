@@ -262,3 +262,15 @@ def send_vfd(invoice_name):
             "pos_rofile": pos_profile
         }
         return msg
+
+
+@frappe.whitelist()
+def get_previous_appointment(patient):
+    appointments = frappe.get_all("Patient Appointment", filters={
+        "patient": patient,
+    },
+        fields=["appointment_date", "practitioner_name", "name"],
+        order_by='appointment_date desc',
+    )
+    if len(appointments):
+        return appointments[0]
