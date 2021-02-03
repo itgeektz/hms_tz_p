@@ -125,6 +125,7 @@ def invoice_appointment(name):
             payment.mode_of_payment = appointment_doc.mode_of_payment
             payment.amount = appointment_doc.paid_amount
 
+        sales_invoice.set_taxes()
         sales_invoice.set_missing_values(for_validate=True)
         sales_invoice.flags.ignore_mandatory = True
         sales_invoice.save(ignore_permissions=True)
