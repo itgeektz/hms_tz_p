@@ -63,7 +63,7 @@ def get_healthcare_service_order_to_invoice(patient, company, encounter, service
             if service.order_doctype and service.order:
                 is_not_available_inhouse = frappe.get_value(
                     service.order_doctype, service.order, "is_not_available_inhouse")
-                if not is_not_available_inhouse:
+                if is_not_available_inhouse:
                     continue
             if service.ordered_by:
                 service_item = service.billing_item
