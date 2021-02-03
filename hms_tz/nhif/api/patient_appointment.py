@@ -127,6 +127,7 @@ def invoice_appointment(name):
             payment.mode_of_payment = appointment_doc.mode_of_payment
             payment.amount = appointment_doc.paid_amount
 
+        sales_invoice.set_taxes()
         sales_invoice.set_missing_values(for_validate=True)
         sales_invoice.flags.ignore_mandatory = True
         sales_invoice.save(ignore_permissions=True)
@@ -266,3 +267,15 @@ def send_vfd(invoice_name):
             "pos_rofile": pos_profile
         }
         return msg
+
+
+@frappe.whitelist()
+def get_previous_appointment(patient):
+    appointments = frappe.get_all("Patient Appointment", filters={
+        "patient": patient,
+    },
+        fields=["appointment_date", "practitioner_name", "name"],
+        order_by='appointment_date desc',
+    )
+    if len(appointments):
+        return appointments[0]
