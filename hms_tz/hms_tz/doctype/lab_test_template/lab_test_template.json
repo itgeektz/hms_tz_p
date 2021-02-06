@@ -1,6 +1,5 @@
 {
  "actions": [],
- "allow_copy": 1,
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:lab_test_code",
@@ -350,7 +349,7 @@
   }
  ],
  "links": [],
- "modified": "2020-09-18 18:29:22.170218",
+ "modified": "2021-02-06 17:53:37.123106",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Lab Test Template",
