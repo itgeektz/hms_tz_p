@@ -23,21 +23,28 @@
   {
    "fieldname": "machine_make",
    "fieldtype": "Data",
+   "in_standard_filter": 1,
    "label": "Machine Make"
   },
   {
    "fieldname": "machine_model",
    "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Machine Model"
   },
   {
    "fieldname": "lab_test_name",
    "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Lab Test Name"
   },
   {
    "fieldname": "lab_test",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Lab Test",
    "options": "Lab Test"
   },
@@ -49,7 +56,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-02-06 22:21:31.092351",
+ "modified": "2021-02-07 08:32:20.466379",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Lab Machine Message",

@@ -10,6 +10,7 @@ from frappe.model.document import Document
 class LabMachineMessage(Document):
     def validate(self):
         self.set_missing_fields()
+        self.update_lab_test()
 
     def after_insert(self):
         self.update_lab_test()
