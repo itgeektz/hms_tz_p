@@ -238,6 +238,8 @@ fixtures = [
                 "Medication-is_not_available_inhouse",
                 "Lab Test Template-is_not_available_inhouse",
                 "Radiology Examination Template-is_not_available_inhouse",
+                "Descriptive Test Result-result_component_option",
+                "Descriptive Test Template-result_component",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -373,6 +375,14 @@ fixtures = [
                 "Patient-patient_name-in_preview",
                 "Patient-medication-read_only",
                 "Patient-medical_history-read_only",
+                "Patient-surgical_history-permlevel",
+                "Patient-medical_history-permlevel",
+                "Patient-allergies-permlevel",
+                "Descriptive Test Result-result_value-hidden",
+                "Descriptive Test Result-lab_test_particulars-fetch_from",
+                "Descriptive Test Result-result_value-in_list_view",
+                "Descriptive Test Result-result_value-read_only",
+                "Descriptive Test Result-result_value-fetch_from",
     )]]},
 ]
 

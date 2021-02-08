@@ -1,0 +1,53 @@
+{
+ "actions": [],
+ "autoname": "format:{result_component}-{result_component_option}",
+ "creation": "2021-02-05 11:31:38.004790",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "result_component",
+  "result_component_option"
+ ],
+ "fields": [
+  {
+   "fieldname": "result_component",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Result Component",
+   "options": "Result Component",
+   "reqd": 1
+  },
+  {
+   "fieldname": "result_component_option",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Result Component Option",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2021-02-05 20:01:45.107245",
+ "modified_by": "Administrator",
+ "module": "Hms Tz",
+ "name": "Result Component Option",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
