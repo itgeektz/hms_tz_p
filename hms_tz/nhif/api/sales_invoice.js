@@ -12,15 +12,15 @@ frappe.ui.form.on('Sales Invoice', {
 			frm.set_df_property("patient", "hidden", 0);
 			frm.set_df_property("patient_name", "hidden", 0);
             frm.set_df_property("ref_practitioner", "hidden", 0);
-            frm.remove_custom_button('Healthcare Services', 'Get items from');
-            frm.remove_custom_button('Prescriptions', 'Get items from');
+            frm.remove_custom_button('Healthcare Services', 'Get Items from');
+            frm.remove_custom_button('Prescriptions', 'Get Items from');
 			if (cint(frm.doc.docstatus==0) && cur_frm.page.current_view_name!=="pos" && !frm.doc.is_return) {
 				frm.add_custom_button(__('Healthcare Services'), function() {
 					get_healthcare_services_to_invoice(frm);
-				},"Get items from");
+				},"Get Items from");
 				frm.add_custom_button(__('Prescriptions'), function() {
 					get_drugs_to_invoice(frm);
-				},"Get items from");
+				},"Get Items from");
 			}
 		}
 		else {
