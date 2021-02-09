@@ -43,7 +43,7 @@ def create_lab_test(hso_doc):
     doc.save(ignore_permissions=True)
     if doc.get('name'):
         frappe.msgprint(_('Lab Test {0} created successfully.').format(
-            frappe.bold(doc.name)), alert=True)
+            frappe.bold(doc.name)))
 
 
 def create_radiology_examination(hso_doc):
@@ -61,4 +61,4 @@ def create_radiology_examination(hso_doc):
     doc.save(ignore_permissions=True)
     if doc.get('name'):
         frappe.msgprint(_('Radiology Examination {0} created successfully.').format(
-            frappe.bold(doc.name)), alert=True)
+            frappe.bold(doc.name)))
