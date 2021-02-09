@@ -132,7 +132,6 @@ def invoice_appointment(name):
         sales_invoice.flags.ignore_mandatory = True
         sales_invoice.save(ignore_permissions=True)
         sales_invoice.calculate_taxes_and_totals()
-        frappe.msgprint(str(sales_invoice.taxes))
         sales_invoice.submit()
         frappe.msgprint(_('Sales Invoice {0} created'.format(
             sales_invoice.name)))
