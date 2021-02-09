@@ -187,7 +187,7 @@ def create_normals(template, lab_test):
 	normal.secondary_uom = template.secondary_uom
 	normal.conversion_factor = template.conversion_factor
 	normal.normal_range = template.lab_test_normal_range
-	normal.require_result_value = 1
+	normal.require_result_value = 0
 	normal.allow_blank = 0
 	normal.template = template.name
 
