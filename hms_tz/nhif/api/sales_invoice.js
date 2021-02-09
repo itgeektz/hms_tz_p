@@ -12,15 +12,15 @@ frappe.ui.form.on('Sales Invoice', {
 			frm.set_df_property("patient", "hidden", 0);
 			frm.set_df_property("patient_name", "hidden", 0);
             frm.set_df_property("ref_practitioner", "hidden", 0);
-            frm.remove_custom_button('Healthcare Services', 'Get Items from');
-            frm.remove_custom_button('Prescriptions', 'Get Items from');
+            frm.remove_custom_button('Healthcare Services', 'Get Items From');
+            frm.remove_custom_button('Prescriptions', 'Get Items From');
 			if (cint(frm.doc.docstatus==0) && cur_frm.page.current_view_name!=="pos" && !frm.doc.is_return) {
 				frm.add_custom_button(__('Healthcare Services'), function() {
 					get_healthcare_services_to_invoice(frm);
-				},"Get Items from");
+				},"Get Items From");
 				frm.add_custom_button(__('Prescriptions'), function() {
 					get_drugs_to_invoice(frm);
-				},"Get Items from");
+				},"Get Items From");
 			}
 		}
 		else {
@@ -36,7 +36,7 @@ var get_healthcare_services_to_invoice = function(frm) {
 	var me = this;
 	let selected_patient = '';
 	var dialog = new frappe.ui.Dialog({
-		title: __("Get Items from Healthcare Services"),
+		title: __("Get Items From Healthcare Services"),
 		fields:[
 			{
 				fieldtype: 'Link',
@@ -258,7 +258,7 @@ var get_drugs_to_invoice = function(frm) {
 	var me = this;
 	let selected_encounter = '';
 	var dialog = new frappe.ui.Dialog({
-		title: __("Get Items from Prescriptions"),
+		title: __("Get Items From Prescriptions"),
 		fields:[
 			{ fieldtype: 'Link', options: 'Patient', label: 'Patient', fieldname: "patient", reqd: true },
 			{ fieldtype: 'Link', options: 'Patient Encounter', label: 'Patient Encounter', fieldname: "encounter", reqd: true,
