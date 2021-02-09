@@ -240,6 +240,7 @@ fixtures = [
                 "Radiology Examination Template-is_not_available_inhouse",
                 "Descriptive Test Result-result_component_option",
                 "Descriptive Test Template-result_component",
+                "Patient Encounter-patient_info_section_break",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -383,6 +384,15 @@ fixtures = [
                 "Descriptive Test Result-result_value-in_list_view",
                 "Descriptive Test Result-result_value-read_only",
                 "Descriptive Test Result-result_value-fetch_from",
+                "Patient-medical_history-hidden",
+                "Patient-medication-hidden",
+                "Patient Encounter-medical_department-hidden",
+                "Patient Encounter-company-hidden",
+                "Patient Encounter-patient_sex-hidden",
+                "Patient Encounter-triage-hidden",
+                "Patient Encounter-patient_name-hidden",
+                "Patient Encounter-appointment-hidden",
+                "Delivery Note-items-permlevel",
     )]]},
 ]
 
