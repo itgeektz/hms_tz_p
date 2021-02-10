@@ -277,16 +277,32 @@ def get_insurance_coverage_items():
 
 
 def get_excluded_services(itemcode):
-    excluded_services = ""
+    excluded_services = None
     excluded_services_list = frappe.get_all(
         "NHIF Excluded Services",
         filters={
             "itemcode": itemcode
-        }
+        },
+        fields=["excludedforproducts", "schemeid"]
     )
     if len(excluded_services_list) > 0:
-        excluded_services = excluded_services_list[0].excludedforproducts
+        excluded_services = excluded_services_list[0]
     return excluded_services
+
+
+def get_price_package(itemcode, schemeid):
+    price_package = ""
+    price_package_list = frappe.get_all(
+        "NHIF Price Package",
+        filters={
+            "itemcode": itemcode,
+            "schemeid": schemeid
+        },
+        fields=["maximumquantity", "isrestricted"]
+    )
+    if len(price_package_list) > 0:
+        price_package = price_package_list[0]
+    return price_package
 
 
 def process_insurance_coverages():
@@ -303,9 +319,10 @@ def process_insurance_coverages():
         user = frappe.session.user
         for item in items_list:
             excluded_services = get_excluded_services(item.ref_code)
-            if excluded_services:
-                if plan.name in excluded_services:
+            if excluded_services and excluded_services.excludedforproducts:
+                if plan.name in excluded_services.excludedforproducts:
                     continue
+
             doc = frappe.new_doc("Healthcare Service Insurance Coverage")
             doc.healthcare_service = item.dt
             doc.healthcare_service_template = item.healthcare_service_template
@@ -314,7 +331,21 @@ def process_insurance_coverages():
             doc.end_date = "2099-12-31"
             doc.is_active = 1
             doc.discount = 0
-            doc.maximum_number_of_claims = 0
+
+            maximumquantity = 0
+            isrestricted = 0
+            if excluded_services:
+                price_package = get_price_package(
+                    item.ref_code, excluded_services.schemeid)
+                if price_package:
+                    if price_package.maximumquantity and price_package.maximumquantity != "-1":
+                        maximumquantity = int(price_package.maximumquantity)
+                    if price_package.isrestricted:
+                        isrestricted = int(price_package.isrestricted)
+
+            doc.maximum_number_of_claims = maximumquantity
+            doc.approval_mandatory_for_claim = isrestricted
+            doc.manual_approval_only = isrestricted
             set_new_name(doc)
 
             insert_data.append((
