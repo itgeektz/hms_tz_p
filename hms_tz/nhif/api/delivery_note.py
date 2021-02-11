@@ -11,7 +11,7 @@ def onload(doc, method):
     for item in doc.items:
         if item.last_qty_prescribed:
             frappe.msgprint(
-                _("The item {0} was last prescribed on {1} for {2} {3}").format(item.item_code, item.last_date_prescribed, item.last_qty_prescribed, item.stock_uom))
+                _("The item {0} was last prescribed on {1} for {2} {3}").format(item.item_code, item.last_date_prescribed, item.last_qty_prescribed, item.stock_uom), alert=True)
 
 
 def set_prescribed(doc):
