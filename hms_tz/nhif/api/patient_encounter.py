@@ -40,7 +40,9 @@ def validate(doc, method):
     # hsic => Healthcare Service Insurance Coverage
     hsic_list = frappe.get_all("Healthcare Service Insurance Coverage",
                                fields={"healthcare_service_template",
-                                       "maximum_number_of_claims"},
+                                       "maximum_number_of_claims",
+                                       "approval_mandatory_for_claim"
+                                       },
                                filters={
                                    "is_active": 1,
                                    "healthcare_insurance_coverage_plan": healthcare_insurance_coverage_plan,
@@ -66,10 +68,14 @@ def validate(doc, method):
                 frappe.throw(_("{0} not covered in Healthcare Insurance Coverage Plan").format(
                     row.get(value)))
             else:
+                row.is_restricted = next(i for i in hsic_list if i["healthcare_service_template"] == row.get(
+                    value)).get("approval_mandatory_for_claim")
+
                 maximum_number_of_claims = next(i for i in hsic_list if i["healthcare_service_template"] == row.get(
                     value)).get("maximum_number_of_claims")
                 if maximum_number_of_claims == 0:
                     continue
+
                 year_start = get_year_start(nowdate(), True)
                 year_end = get_year_end(nowdate(), True)
                 claims_count = frappe.get_all("Healthcare Insurance Claim", filters={
@@ -316,7 +322,8 @@ def create_delivery_note(patient_encounter_doc):
         item.reference_doctype = row.doctype
         item.reference_name = row.name
         item.description = row.drug_name + " for " + row.dosage + " for " + \
-            row.period + " with specific notes as follows: " + (row.comment or "No Comments")
+            row.period + " with specific notes as follows: " + \
+            (row.comment or "No Comments")
         items.append(item)
 
     if len(items) == 0:

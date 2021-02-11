@@ -256,6 +256,8 @@ fixtures = [
         "Delivery Note-patient",
         "Delivery Note-healthcare_service_unit",
         "Delivery Note-medical_department",
+        "Drug Prescription-is_restricted",
+        "Delivery Note Item-is_restricted",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
