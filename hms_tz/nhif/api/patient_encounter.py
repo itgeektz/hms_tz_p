@@ -316,7 +316,7 @@ def create_delivery_note(patient_encounter_doc):
         item.reference_doctype = row.doctype
         item.reference_name = row.name
         item.description = row.drug_name + " for " + row.dosage + " for " + \
-            row.period + " with specific notes as follows: " + row.comment
+            row.period + " with specific notes as follows: " + (row.comment or "No Comments")
         items.append(item)
 
     if len(items) == 0:
@@ -340,7 +340,7 @@ def create_delivery_note(patient_encounter_doc):
     doc.set_missing_values()
     doc.insert(ignore_permissions=True)
     if doc.get('name'):
-        frappe.msgprint(_('Delivery Note {0} created successfully.').format(
+        frappe.msgprint(_('Pharmacy Dispensing/Delivery Note {0} created successfully.').format(
             frappe.bold(doc.name)))
 
 
