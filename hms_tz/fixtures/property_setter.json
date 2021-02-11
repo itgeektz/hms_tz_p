@@ -2395,5 +2395,22 @@
   "property_type": "Check",
   "row_name": null,
   "value": "1"
+ },
+ {
+  "default_value": null,
+  "doc_type": "Drug Prescription",
+  "docstatus": 0,
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "comment",
+  "modified": "2021-02-10 20:06:43.561629",
+  "name": "Drug Prescription-comment-fetch_if_empty",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "property": "fetch_if_empty",
+  "property_type": "Check",
+  "row_name": null,
+  "value": "1"
  }
 ]
