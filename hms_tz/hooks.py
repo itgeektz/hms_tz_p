@@ -561,6 +561,7 @@ doc_events = {
     "Delivery Note": {
         "validate": "hms_tz.nhif.api.delivery_note.validate",
         "onload": "hms_tz.nhif.api.delivery_note.onload",
+        "after_insert": "hms_tz.nhif.api.delivery_note.after_insert",
     },
 }
 

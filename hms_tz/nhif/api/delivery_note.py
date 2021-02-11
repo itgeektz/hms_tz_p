@@ -7,6 +7,18 @@ def validate(doc, method):
     set_prescribed(doc)
 
 
+def after_insert(doc, method):
+    set_original_item(doc)
+
+
+def set_original_item(doc):
+    for item in doc.itmes:
+        if item.item_code:
+            item.original_item = item.item_code
+            item.original_stock_uom_qty = item.stock_qty
+    doc.save(ignore_permissions=True)
+
+
 def onload(doc, method):
     for item in doc.items:
         if item.last_qty_prescribed:
