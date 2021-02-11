@@ -558,6 +558,10 @@ doc_events = {
     "Clinical Procedure": {
         "on_submit": "hms_tz.nhif.api.clinical_procedure.on_submit",
     },
+    "Delivery Note": {
+        "validate": "hms_tz.nhif.api.delivery_note.validate",
+        "onload": "hms_tz.nhif.api.delivery_note.onload",
+    },
 }
 
 # standard_queries = {
