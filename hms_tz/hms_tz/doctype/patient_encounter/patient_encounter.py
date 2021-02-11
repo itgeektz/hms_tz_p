@@ -230,7 +230,7 @@ def create_healthcare_service_order(encounter):
 				'source':encounter.source,
 				'referring_practitioner':encounter.referring_practitioner,
 				'insurance_subscription' : encounter.insurance_subscription if encounter.insurance_subscription else '',
-				'order_reference_doctype' : "Therapy Plan",
+				'order_reference_doctype' : "Therapy Plan Detail",
 				'order_reference_name' : therapy.name
 				# 'healthcare_service_unit_type':therapy_type.get_value('healthcare_service_unit_type')
 				}
