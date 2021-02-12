@@ -91,7 +91,7 @@ class NHIFPatientClaim(Document):
                 new_row.folio_disease_id = str(uuid.uuid1())
                 new_row.folio_id = self.folio_id
                 new_row.medical_code = row.medical_code
-                new_row.disease_code = row.code[1:3] + (row.code[3:4] or "0")
+                new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
                 new_row.description = row.description
                 new_row.created_by = frappe.get_value(
                     "User", row.modified_by, "full_name")
