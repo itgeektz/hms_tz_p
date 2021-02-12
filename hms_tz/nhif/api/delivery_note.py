@@ -12,7 +12,7 @@ def after_insert(doc, method):
 
 
 def set_original_item(doc):
-    for item in doc.itmes:
+    for item in doc.items:
         if item.item_code:
             item.original_item = item.item_code
             item.original_stock_uom_qty = item.stock_qty
