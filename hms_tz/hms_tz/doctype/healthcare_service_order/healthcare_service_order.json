@@ -422,6 +422,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "fieldname": "invoiced",
    "fieldtype": "Check",
@@ -519,7 +520,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2020-12-24 10:25:44.426513",
+ "modified": "2021-02-12 13:12:25.729823",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Healthcare Service Order",
