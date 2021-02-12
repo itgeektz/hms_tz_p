@@ -311,15 +311,19 @@ class NHIFPatientClaim(Document):
                 response_data=str(r.text) if r.text else str(r),
                 status_code=r.status_code
             )
-            frappe.throw(str(r.text) if r.text else str(r))
+            if "has already been submitted." in str(r.text):
+                frappe.msgprint(str(r.text) if r.text else str(r))
+            else:
+                frappe.throw(str(r.text) if r.text else str(r))
         else:
-            if json.loads(r.text):
+            frappe.msgprint(str(r.text))
+            if r.text:
                 add_log(
                     request_type="SubmitFolios",
                     request_url=url,
                     request_header=headers,
                     request_body=json_data,
-                    response_data=json.loads(r.text),
+                    response_data=r.text,
                     status_code=r.status_code
                 )
             frappe.msgprint(
