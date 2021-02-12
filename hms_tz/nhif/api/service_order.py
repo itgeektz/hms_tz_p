@@ -76,4 +76,5 @@ def auto_submit(kwargs):
     time.sleep(5)
     doc = frappe.get_doc("Healthcare Service Order", kwargs)
     if doc.docstatus == 0 and doc.order_reference_name:
+        doc.flags.ignore_permissions = True
         doc.submit()
