@@ -41,14 +41,14 @@ def validate(doc, method):
     hsic_list = frappe.get_all("Healthcare Service Insurance Coverage",
                                fields={"healthcare_service_template",
                                        "maximum_number_of_claims",
-                                       "approval_mandatory_for_claim"
-                                       },
+                                       "approval_mandatory_for_claim"},
                                filters={
                                    "is_active": 1,
                                    "healthcare_insurance_coverage_plan": healthcare_insurance_coverage_plan,
                                    "start_date": ["<=", nowdate()],
                                    "end_date": [">=", nowdate()],
-                               }
+                               },
+                               order_by="modified desc"
                                )
 
     items_list = []
@@ -68,14 +68,10 @@ def validate(doc, method):
                 frappe.throw(_("{0} not covered in Healthcare Insurance Coverage Plan").format(
                     row.get(value)))
             else:
-                row.is_restricted = next(i for i in hsic_list if i["healthcare_service_template"] == row.get(
-                    value)).get("approval_mandatory_for_claim")
-
                 maximum_number_of_claims = next(i for i in hsic_list if i["healthcare_service_template"] == row.get(
                     value)).get("maximum_number_of_claims")
                 if maximum_number_of_claims == 0:
                     continue
-
                 year_start = get_year_start(nowdate(), True)
                 year_end = get_year_end(nowdate(), True)
                 claims_count = frappe.get_all("Healthcare Insurance Claim", filters={
@@ -145,7 +141,7 @@ def get_item_info(item_code=None, medication_name=None):
     data = {}
     if not item_code and medication_name:
         item_code = frappe.get_value(
-            "Medication", medication_name, "item_code")
+            "Medication", medication_name, "item")
     if item_code:
         is_stock, disabled = frappe.get_value(
             "Item", item_code, ["is_stock_item", "disabled"])
@@ -169,7 +165,7 @@ def get_stock_availability(item_code, warehouse):
 
 @frappe.whitelist()
 def validate_stock_item(medication_name, qty, warehouse=None, healthcare_service_unit=None):
-    item_info = get_item_info(medication_name)
+    item_info = get_item_info(medication_name = medication_name)
     if not warehouse and not healthcare_service_unit:
         frappe.throw(_("Warehouse is missing"))
     elif not warehouse and healthcare_service_unit:
@@ -317,13 +313,13 @@ def create_delivery_note(patient_encounter_doc):
         item.item_name = item_name
         item.warehouse = warehouse
         item.qty = row.quantity or 1
+        item.medical_code = row.medical_code
         item.rate = get_item_rate(
             item_code, patient_encounter_doc.company, insurance_subscription, insurance_company)
         item.reference_doctype = row.doctype
         item.reference_name = row.name
         item.description = row.drug_name + " for " + row.dosage + " for " + \
-            row.period + " with specific notes as follows: " + \
-            (row.comment or "No Comments")
+            row.period + " with specific notes as follows: " + (row.comment or "No Comments")
         items.append(item)
 
     if len(items) == 0:
