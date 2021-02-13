@@ -15,12 +15,14 @@ def after_save(doc, method):
 
 
 def set_missing_values(doc, method):
-    if doc.order_reference_name and doc.order_reference_name:
+    if doc.order_reference_doctype and doc.order_reference_name:
         prescribe = frappe.get_value(
-            doc.order_reference_name, doc.order_reference_name, "prescribe")
+            doc.order_reference_doctype, doc.order_reference_name, "prescribe")
         if not prescribe:
             return
         doc.prescribed = prescribe
+        if doc.insurance_subscription:
+            doc.invoiced = 1
 
 
 @frappe.whitelist()
@@ -74,4 +76,5 @@ def auto_submit(kwargs):
     time.sleep(5)
     doc = frappe.get_doc("Healthcare Service Order", kwargs)
     if doc.docstatus == 0 and doc.order_reference_name:
+        doc.flags.ignore_permissions = True
         doc.submit()

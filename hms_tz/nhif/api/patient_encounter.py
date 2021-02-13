@@ -40,13 +40,15 @@ def validate(doc, method):
     # hsic => Healthcare Service Insurance Coverage
     hsic_list = frappe.get_all("Healthcare Service Insurance Coverage",
                                fields={"healthcare_service_template",
-                                       "maximum_number_of_claims"},
+                                       "maximum_number_of_claims",
+                                       "approval_mandatory_for_claim"},
                                filters={
                                    "is_active": 1,
                                    "healthcare_insurance_coverage_plan": healthcare_insurance_coverage_plan,
                                    "start_date": ["<=", nowdate()],
                                    "end_date": [">=", nowdate()],
-                               }
+                               },
+                               order_by="modified desc"
                                )
 
     items_list = []
@@ -139,7 +141,7 @@ def get_item_info(item_code=None, medication_name=None):
     data = {}
     if not item_code and medication_name:
         item_code = frappe.get_value(
-            "Medication", medication_name, "item_code")
+            "Medication", medication_name, "item")
     if item_code:
         is_stock, disabled = frappe.get_value(
             "Item", item_code, ["is_stock_item", "disabled"])
@@ -163,7 +165,7 @@ def get_stock_availability(item_code, warehouse):
 
 @frappe.whitelist()
 def validate_stock_item(medication_name, qty, warehouse=None, healthcare_service_unit=None):
-    item_info = get_item_info(medication_name)
+    item_info = get_item_info(medication_name = medication_name)
     if not warehouse and not healthcare_service_unit:
         frappe.throw(_("Warehouse is missing"))
     elif not warehouse and healthcare_service_unit:
@@ -311,6 +313,7 @@ def create_delivery_note(patient_encounter_doc):
         item.item_name = item_name
         item.warehouse = warehouse
         item.qty = row.quantity or 1
+        item.medical_code = row.medical_code
         item.rate = get_item_rate(
             item_code, patient_encounter_doc.company, insurance_subscription, insurance_company)
         item.reference_doctype = row.doctype

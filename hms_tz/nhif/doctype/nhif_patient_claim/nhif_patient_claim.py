@@ -24,6 +24,9 @@ class NHIFPatientClaim(Document):
         self.patient_encounters = self.get_patient_encounters()
         self.set_claim_values()
 
+    def on_trash(self):
+        frappe.set_value("Patient Appointment", self.patient_appointment, "nhif_patient_claim", "")
+
     def before_submit(self):
         if not self.patient_signature:
             frappe.throw(_("Patient signature is required"))
@@ -53,9 +56,9 @@ class NHIFPatientClaim(Document):
                 final_patient_encounter.practitioner))
         appointment_type = frappe.get_value(
             "Patient Appointment", self.patient_appointment, "appointment_type")
-        self.date_discharge = final_patient_encounter.encounter_date if appointment_type != "In Patient" else None
+        self.date_discharge = final_patient_encounter.encounter_date if appointment_type == "In Patient" else None
         self.date_admitted = frappe.get_value(
-            "Patient Appointment", self.patient_appointment, "appointment_date") if appointment_type != "In Patient" else None
+            "Patient Appointment", self.patient_appointment, "appointment_date") if appointment_type == "In Patient" else None
         self.attendance_date = frappe.get_value(
             "Patient Appointment", self.patient_appointment, "appointment_date")
         self.patient_type_code = "OUT" if appointment_type != "In Patient" else "IN"
@@ -88,7 +91,7 @@ class NHIFPatientClaim(Document):
                 new_row.folio_disease_id = str(uuid.uuid1())
                 new_row.folio_id = self.folio_id
                 new_row.medical_code = row.medical_code
-                new_row.disease_code = row.code
+                new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
                 new_row.description = row.description
                 new_row.created_by = frappe.get_value(
                     "User", row.modified_by, "full_name")
@@ -224,36 +227,37 @@ class NHIFPatientClaim(Document):
     def get_folio_json_data(self):
         folio_data = frappe._dict()
         folio_data.entities = []
-        entitie = frappe._dict()
-        entitie.FolioID = self.folio_id
-        entitie.ClaimYear = self.claim_year
-        entitie.ClaimMonth = self.claim_month
-        entitie.FolioNo = self.folio_no
-        entitie.SerialNo = self.serial_no
-        entitie.FacilityCode = self.facility_code
-        entitie.CardNo = self.cardno
-        entitie.FirstName = self.first_name
-        entitie.LastName = self.last_name
-        entitie.Gender = self.gender
-        entitie.DateOfBirth = str(self.date_of_birth)
-        # entitie.Age = self.date_of_birth
-        # entitie.TelephoneNo = self.TelephoneNo
-        entitie.PatientFileNo = self.patient_file_no
-        entitie.PatientFile = self.patient_file
-        entitie.ClaimFile = "ClaimFile"
-        entitie.ClinicalNotes = "ClinicalNotes"
-        entitie.AuthorizationNo = self.authorization_no
-        entitie.AttendanceDate = str(self.attendance_date)
-        entitie.PatientTypeCode = self.patient_type_code
-        entitie.DateAdmitted = str(self.date_admitted)
-        entitie.DateDischarged = str(self.date_discharge)
-        entitie.PractitionerNo = self.practitioner_no
-        entitie.CreatedBy = self.created_by
-        entitie.DateCreated = str(self.posting_date)
-        # entitie.LastModifiedBy = self.LastModifiedBy
-        # entitie.LastModified = self.LastModified
+        entities = frappe._dict()
+        entities.FolioID = self.folio_id
+        entities.ClaimYear = self.claim_year
+        entities.ClaimMonth = self.claim_month
+        entities.FolioNo = self.folio_no
+        entities.SerialNo = self.serial_no
+        entities.FacilityCode = self.facility_code
+        entities.CardNo = self.cardno
+        entities.FirstName = self.first_name
+        entities.LastName = self.last_name
+        entities.Gender = self.gender
+        entities.DateOfBirth = str(self.date_of_birth)
+        # entities.Age = self.date_of_birth
+        # entities.TelephoneNo = self.TelephoneNo
+        entities.PatientFileNo = self.patient_file_no
+        entities.PatientFile = self.patient_file
+        entities.ClaimFile = "ClaimFile"
+        entities.ClinicalNotes = "ClinicalNotes"
+        entities.AuthorizationNo = self.authorization_no
+        entities.AttendanceDate = str(self.attendance_date)
+        entities.PatientTypeCode = self.patient_type_code
+        if self.patient_type_code == "IN":
+            entities.DateAdmitted = str(self.date_admitted)
+            entities.DateDischarged = str(self.date_discharge)
+        entities.PractitionerNo = self.practitioner_no
+        entities.CreatedBy = self.created_by
+        entities.DateCreated = str(self.posting_date)
+        # entities.LastModifiedBy = self.LastModifiedBy
+        # entities.LastModified = self.LastModified
 
-        entitie.FolioDiseases = []
+        entities.FolioDiseases = []
         for disease in self.nhif_patient_claim_disease:
             FolioDisease = frappe._dict()
             FolioDisease.FolioDiseaseID = disease.folio_disease_id
@@ -264,9 +268,9 @@ class NHIFPatientClaim(Document):
             FolioDisease.DateCreated = str(disease.date_created)
             # FolioDisease.LastModifiedBy = disease.LastModifiedBy
             # FolioDisease.LastModified = disease.LastModified
-            entitie.FolioDiseases.append(FolioDisease)
+            entities.FolioDiseases.append(FolioDisease)
 
-        entitie.FolioItems = []
+        entities.FolioItems = []
         for item in self.nhif_patient_claim_item:
             FolioItem = frappe._dict()
             FolioItem.FolioItemID = item.folio_item_id
@@ -280,9 +284,9 @@ class NHIFPatientClaim(Document):
             FolioItem.DateCreated = str(item.date_created)
             # FolioItem.LastModifiedBy = item.LastModifiedBy
             # FolioItem.LastModified = item.LastModified
-            entitie.FolioItems.append(FolioItem)
+            entities.FolioItems.append(FolioItem)
 
-        folio_data.entities.append(entitie)
+        folio_data.entities.append(entities)
         jsonStr = json.dumps(folio_data)
         return jsonStr
 
@@ -307,15 +311,19 @@ class NHIFPatientClaim(Document):
                 response_data=str(r.text) if r.text else str(r),
                 status_code=r.status_code
             )
-            frappe.throw(str(r.text) if r.text else str(r))
+            if "has already been submitted." in str(r.text):
+                frappe.msgprint(str(r.text) if r.text else str(r))
+            else:
+                frappe.throw(str(r.text) if r.text else str(r))
         else:
-            if json.loads(r.text):
+            frappe.msgprint(str(r.text))
+            if r.text:
                 add_log(
                     request_type="SubmitFolios",
                     request_url=url,
                     request_header=headers,
                     request_body=json_data,
-                    response_data=json.loads(r.text),
+                    response_data=r.text,
                     status_code=r.status_code
                 )
             frappe.msgprint(

@@ -256,6 +256,8 @@ fixtures = [
         "Delivery Note-patient",
         "Delivery Note-healthcare_service_unit",
         "Delivery Note-medical_department",
+        "Drug Prescription-is_restricted",
+        "Delivery Note Item-is_restricted",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -557,6 +559,11 @@ doc_events = {
     },
     "Clinical Procedure": {
         "on_submit": "hms_tz.nhif.api.clinical_procedure.on_submit",
+    },
+    "Delivery Note": {
+        "validate": "hms_tz.nhif.api.delivery_note.validate",
+        "onload": "hms_tz.nhif.api.delivery_note.onload",
+        "after_insert": "hms_tz.nhif.api.delivery_note.after_insert",
     },
 }
 
