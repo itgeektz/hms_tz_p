@@ -425,3 +425,12 @@ def validate_totals(doc):
     if diff < 0:
         frappe.throw(_("The total daily limit of {0} for the Insurance Subscription {1} has been exceeded by {2}. <br> Please contact the reception to increase the limit or prescribe the items").format(
             doc.daily_limit, doc.insurance_subscription, diff))
+
+
+@frappe.whitelist()
+def check_is_not_available_inhouse(item, doctype, docname):
+    is_not_available_inhouse = frappe.get_value(
+        doctype, docname, "is_not_available_inhouse")
+    if is_not_available_inhouse:
+        frappe.msgprint(
+            _("NOTE: This healthcare service item,{0} is not available inhouse. Request the patient to get it from another healthcare service provider").format(item))
