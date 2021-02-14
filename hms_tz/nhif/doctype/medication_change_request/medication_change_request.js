@@ -24,7 +24,12 @@ frappe.ui.form.on('Medication Change Request', {
 			};
 		});
 	},
-
+	onload: function (frm) {
+		set_medical_code(frm);
+	},
+	refresh: function (frm) {
+		set_medical_code(frm);
+	},
 	patient_encounter: (frm) => {
 		set_delivery_note(frm);
 		update_childs_tables(frm);
@@ -40,6 +45,11 @@ frappe.ui.form.on('Medication Change Request', {
 	},
 });
 
+frappe.ui.form.on('Codification Table', {
+	patient_encounter_final_diagnosis_add: function (frm) {
+		set_medical_code(frm);
+	},
+});
 
 const set_patient_encounter = (frm) => {
 	if (!frm.doc.delivery_note) return;
@@ -58,6 +68,23 @@ const set_patient_encounter = (frm) => {
 			}
 		}
 	});
+};
+
+const get_final_diagnosis = (frm) => {
+	const diagnosis_list = [];
+	if (frm.doc.patient_encounter_final_diagnosis) {
+		frm.doc.patient_encounter_final_diagnosis.forEach(element => {
+			diagnosis_list.push(element.medical_code);
+		});
+		return diagnosis_list;
+	}
+};
+
+const set_medical_code = (frm) => {
+	const final_diagnosis = get_final_diagnosis(frm);
+	frappe.meta.get_docfield("Drug Prescription", "medical_code", frm.doc.name).options = final_diagnosis;
+	refresh_field("drug_prescription");
+	frm.refresh_fields();
 };
 
 const set_delivery_note = (frm) => {
