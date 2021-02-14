@@ -12,6 +12,7 @@ frappe.ui.form.on('Medication Change Request', {
 			return {
 				filters: {
 					'patient': frm.doc.patient,
+					'docstatus': 1,
 				}
 			};
 		});
@@ -19,7 +20,8 @@ frappe.ui.form.on('Medication Change Request', {
 			return {
 				filters: {
 					'patient': frm.doc.patient,
-					'reference_name': frm.doc.patient_encounter
+					'reference_name': frm.doc.patient_encounter,
+					'docstatus': 0,
 				}
 			};
 		});

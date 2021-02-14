@@ -30,7 +30,8 @@
   {
    "fieldname": "title",
    "fieldtype": "Data",
-   "label": "Title"
+   "label": "Title",
+   "read_only": 1
   },
   {
    "fetch_from": "patient_encounter.appointment",
@@ -149,7 +150,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-02-14 15:06:58.263229",
+ "modified": "2021-02-14 16:25:45.460290",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Medication Change Request",
