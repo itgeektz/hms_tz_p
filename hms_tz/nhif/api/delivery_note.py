@@ -5,6 +5,7 @@ from frappe import _
 
 def validate(doc, method):
     set_prescribed(doc)
+    set_missing_values(doc)
 
 
 def after_insert(doc, method):
@@ -43,3 +44,10 @@ def set_prescribed(doc):
         if len(items_list):
             item.last_qty_prescribed = items_list[0].get("stock_qty")
             item.last_date_prescribed = items_list[0].get("posting_date")
+
+
+def set_missing_values(doc):
+    if doc.reference_doctype and doc.reference_name:
+        if doc.reference_doctype == "Patient Encounter":
+            doc.patient = frappe.get_value(
+                "Patient Encounter", doc.reference_name, "patient")

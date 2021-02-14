@@ -1,0 +1,182 @@
+{
+ "actions": [],
+ "allow_copy": 1,
+ "autoname": "HLC-MCR-.#####",
+ "creation": "2021-02-13 22:35:28.791881",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "patient",
+  "patient_name",
+  "appointment",
+  "column_break_5",
+  "company",
+  "patient_encounter",
+  "delivery_note",
+  "healthcare_practitioner",
+  "practitioner_name",
+  "medical_department",
+  "section_break_12",
+  "patient_encounter_final_diagnosis",
+  "medication_orders_section",
+  "original_pharmacy_prescription",
+  "drug_prescription",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "patient_encounter.appointment",
+   "fieldname": "appointment",
+   "fieldtype": "Link",
+   "label": "Appointment",
+   "options": "Patient Appointment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "patient",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Patient",
+   "options": "Patient",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "patient.patient_name",
+   "fieldname": "patient_name",
+   "fieldtype": "Data",
+   "label": "Patient Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "patient_encounter.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "patient_encounter",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Patient Encounter",
+   "options": "Patient Encounter",
+   "reqd": 1
+  },
+  {
+   "fieldname": "delivery_note",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Delivery Note",
+   "options": "Delivery Note",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "patient_encounter.practitioner",
+   "fieldname": "healthcare_practitioner",
+   "fieldtype": "Link",
+   "label": "Healthcare Practitioner",
+   "options": "Healthcare Practitioner",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "healthcare_practitioner.first_name",
+   "fieldname": "practitioner_name",
+   "fieldtype": "Data",
+   "label": "Practitioner Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "patient_encounter.medical_department",
+   "fieldname": "medical_department",
+   "fieldtype": "Link",
+   "label": "Medical Department",
+   "options": "Medical Department",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_12",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "patient_encounter_final_diagnosis",
+   "fieldtype": "Table",
+   "label": "Final Diagnosis",
+   "options": "Codification Table",
+   "read_only": 1
+  },
+  {
+   "fieldname": "medication_orders_section",
+   "fieldtype": "Section Break",
+   "label": "Medication Orders"
+  },
+  {
+   "fieldname": "original_pharmacy_prescription",
+   "fieldtype": "Table",
+   "label": "Original Pharmacy Prescription",
+   "options": "Drug Prescription",
+   "read_only": 1
+  },
+  {
+   "fieldname": "drug_prescription",
+   "fieldtype": "Table",
+   "label": "Pharmacy Prescription",
+   "options": "Drug Prescription"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Medication Change Request",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2021-02-14 16:25:45.460290",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "Medication Change Request",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "restrict_to_domain": "Healthcare",
+ "search_fields": "patient, healthcare_practitioner, medical_department",
+ "show_name_in_global_search": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "title",
+ "track_changes": 1,
+ "track_seen": 1
+}
