@@ -297,6 +297,7 @@ frappe.ui.form.on('Lab Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.lab_test_code) { return; }
         validate_stock_item(frm, row.lab_test_code);
+        check_is_not_available_inhouse(row.lab_test_code, "Lab Test Template", row.lab_test_code);
     },
     prescribe: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
@@ -318,6 +319,7 @@ frappe.ui.form.on('Radiology Procedure Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.radiology_examination_template) { return; }
         validate_stock_item(frm, row.radiology_examination_template);
+        check_is_not_available_inhouse(row.radiology_examination_template, "Radiology Examination Template", row.radiology_examination_template);
     },
     prescribe: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
@@ -339,6 +341,7 @@ frappe.ui.form.on('Procedure Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.procedure) { return; }
         validate_stock_item(frm, row.procedure);
+        check_is_not_available_inhouse(row.procedure, "Clinical Procedure Template", row.procedure);
     },
     prescribe: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
@@ -360,6 +363,7 @@ frappe.ui.form.on('Drug Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.drug_code) { return; }
         validate_stock_item(frm, row.drug_code, row.quantity);
+        check_is_not_available_inhouse(row.drug_code, "Medication", row.drug_code);
     },
     prescribe: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
@@ -386,6 +390,7 @@ frappe.ui.form.on('Therapy Plan Detail', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.therapy_type) { return; }
         validate_stock_item(frm, row.therapy_type);
+        check_is_not_available_inhouse(row.therapy_type, "Therapy Type", row.therapy_type);
     },
     prescribe: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
@@ -410,6 +415,21 @@ const validate_stock_item = function (frm, medication_name, qty = 1) {
             'medication_name': medication_name,
             'qty': qty,
             'healthcare_service_unit': frm.doc.healthcare_service_unit
+        },
+        callback: function (data) {
+            if (data.message) {
+                // console.log(data.message)
+            }
+        }
+    });
+};
+const check_is_not_available_inhouse = function (item, doctype, docname) {
+    frappe.call({
+        method: 'hms_tz.nhif.api.patient_encounter.check_is_not_available_inhouse',
+        args: {
+            item: item,
+            doctype: doctype,
+            docname: docname,
         },
         callback: function (data) {
             if (data.message) {

@@ -433,4 +433,4 @@ def check_is_not_available_inhouse(item, doctype, docname):
         doctype, docname, "is_not_available_inhouse")
     if is_not_available_inhouse:
         frappe.msgprint(
-            _("NOTE: This healthcare service item,{0} is not available inhouse. Request the patient to get it from another healthcare service provider").format(item))
+            _("NOTE: This healthcare service item, <b>{0}</b>, is not available inhouse and has been marked as prescribe.<br>Request the patient to get it from another healthcare service provider.").format(item))
