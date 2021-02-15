@@ -319,7 +319,7 @@ def create_delivery_note(patient_encounter_doc):
         item.reference_doctype = row.doctype
         item.reference_name = row.name
         item.description = row.drug_name + " for " + row.dosage + " for " + \
-            row.period + " with specific notes as follows: " + (row.comment or "No Comments")
+            row.period + " with " + row.medical_code + " and doctor notes: " + (row.comment or "Take medication as per dosage.")
         items.append(item)
 
     if len(items) == 0:
