@@ -21,8 +21,6 @@ def set_missing_values(doc, method):
         if not prescribe:
             return
         doc.prescribed = prescribe
-        if doc.insurance_subscription:
-            doc.invoiced = 1
 
 
 @frappe.whitelist()
