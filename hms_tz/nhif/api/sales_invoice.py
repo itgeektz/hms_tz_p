@@ -65,6 +65,10 @@ def create_radiology_examination(hso_doc):
     doc.invoiced = 1
 
     doc.save(ignore_permissions=True)
+
+    hso_doc.invoiced = 1
+    hso_doc.save(ignore_permissions=True)
+
     if doc.get('name'):
         frappe.msgprint(_('Radiology Examination {0} created successfully.').format(
             frappe.bold(doc.name)))
