@@ -19,6 +19,8 @@ def set_missing_values(doc, method):
         prescribe = frappe.get_value(
             doc.order_reference_doctype, doc.order_reference_name, "prescribe")
         if not prescribe:
+            if doc.insurance_subscription:
+                doc.invoiced = 1
             return
         doc.prescribed = prescribe
 
