@@ -21,7 +21,10 @@ def set_price(doc, method):
     price_list = None
     price_list_rate = None
     if doc.reference_dt == "Healthcare Service Order":
-        company = frappe.get_value(doc.reference_dt, doc.reference_dn, "company")
+        company, hso_prescribe = frappe.get_value(
+            doc.reference_dt, doc.reference_dn, ["company", "prescribed"])
+        if hso_prescribe:
+            return
     else:
         company = frappe.defaults.get_user_default("Company")
     if  doc.insurance_subscription:
