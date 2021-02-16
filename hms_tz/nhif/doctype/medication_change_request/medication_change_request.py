@@ -6,12 +6,16 @@ from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_service_unit
-
+from hms_tz.hms_tz.doctype.patient_encounter.patient_encounter import get_quantity
 
 class MedicationChangeRequest(Document):
     def validate(self):
         self.title = "{0}/{1}".format(self.patient_encounter,
                                       self.delivery_note)
+        if self.drug_prescription:
+            for drug in self.drug_prescription:
+                if not drug.quantity or drug.quantity == 0:
+                    drug.quantity = get_quantity(drug)
 
     def on_submit(self):
         self.update_encounter()
@@ -92,3 +96,4 @@ def get_patient_encounter_name(delivery_note):
 def get_patient_encounter_doc(patient_encounter):
     doc = frappe.get_doc("Patient Encounter", patient_encounter)
     return doc
+

@@ -53,6 +53,13 @@ frappe.ui.form.on('Codification Table', {
 	},
 });
 
+frappe.ui.form.on('Drug Prescription', {
+	dosage: function (frm, cdt, cdn) {
+		frappe.model.set_value(cdt, cdn, "quantity", "");
+		frm.refresh_field("drug_prescription");
+	},
+});
+
 const set_patient_encounter = (frm) => {
 	if (!frm.doc.delivery_note) return;
 	frappe.call({
@@ -145,4 +152,5 @@ const set_childs_tables = (frm, doc) => {
 	});
 	frm.refresh_field('original_pharmacy_prescription');
 	frm.refresh_field('drug_prescription');
+	frm.save()
 };
