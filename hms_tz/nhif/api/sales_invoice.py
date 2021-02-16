@@ -34,6 +34,9 @@ def create_lab_test(hso_doc):
     doc.template = ltt_doc.name
     doc.practitioner = hso_doc.ordered_by
     doc.source = hso_doc.source
+    doc.ref_doctype = hso_doc.doctype
+    doc.ref_docname = hso_doc.name
+    doc.invoiced = 1
 
     for entry in ltt_doc.lab_test_groups:
         doc.append('normal_test_items', {
@@ -57,6 +60,9 @@ def create_radiology_examination(hso_doc):
     doc.source = hso_doc.source
     doc.medical_department = frappe.get_value(
         "Radiology Examination Template", hso_doc.order, "medical_department")
+    doc.ref_doctype = hso_doc.doctype
+    doc.ref_docname = hso_doc.name
+    doc.invoiced = 1
 
     doc.save(ignore_permissions=True)
     if doc.get('name'):
