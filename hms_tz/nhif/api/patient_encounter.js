@@ -383,6 +383,10 @@ frappe.ui.form.on('Drug Prescription', {
             validate_stock_item(frm, row.drug_code, row.quantity);
         }
     },
+    dosage: function (frm, cdt, cdn) {
+        frappe.model.set_value(cdt, cdn, "quantity", 0);
+        frm.refresh_field("drug_prescription");
+    },
 });
 
 frappe.ui.form.on('Therapy Plan Detail', {
