@@ -172,7 +172,7 @@ def validate_stock_item(medication_name, qty, warehouse=None, healthcare_service
         warehouse = get_warehouse_from_service_unit(healthcare_service_unit)
     if item_info.get("is_stock") and item_info.get("item_code"):
         stock_qty = get_stock_availability(
-            item_info.get("item_code"), warehouse)
+            item_info.get("item_code"), warehouse) or 0
         if float(qty) > float(stock_qty):
             frappe.throw(_("The quantity required for the item {0} is insufficient").format(
                 medication_name))
@@ -224,6 +224,7 @@ def create_lab_test(patient_encounter_doc, child_table):
         doc.source = patient_encounter_doc.source
         doc.ref_doctype = patient_encounter_doc.doctype
         doc.ref_docname = patient_encounter_doc.name
+        doc.invoiced = 1
 
         for entry in ltt_doc.lab_test_groups:
             doc.append('normal_test_items', {
@@ -253,6 +254,7 @@ def create_radiology_examination(patient_encounter_doc, child_table):
             "Radiology Examination Template", child.radiology_examination_template, "medical_department")
         doc.ref_doctype = patient_encounter_doc.doctype
         doc.ref_docname = patient_encounter_doc.name
+        doc.invoiced = 1
 
         doc.save(ignore_permissions=True)
         if doc.get('name'):
@@ -280,6 +282,7 @@ def create_procedure_prescription(patient_encounter_doc, child_table, insurance_
             "Clinical Procedure Template", child.procedure, "medical_department")
         doc.ref_doctype = patient_encounter_doc.doctype
         doc.ref_docname = patient_encounter_doc.name
+        doc.invoiced = 1
 
         doc.save(ignore_permissions=True)
         if doc.get('name'):
