@@ -441,9 +441,13 @@ def check_is_not_available_inhouse(item, doctype, docname):
 
 
 @frappe.whitelist()
-def finalized_encounter(cur_encounter,ref_encounter):
+def finalized_encounter(cur_encounter, ref_encounter=None):
     frappe.set_value("Patient Encounter", cur_encounter,
                      "encounter_type", "Final")
+    if not ref_encounter:
+        frappe.set_value("Patient Encounter", cur_encounter,
+                         "finalized", 1)
+        return
     encounters_list = frappe.get_all("Patient Encounter", filters={
         "docstatus": 1,
         "reference_encounter": ref_encounter
