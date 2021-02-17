@@ -1502,7 +1502,7 @@
   "doctype": "Property Setter",
   "doctype_or_field": "DocField",
   "field_name": "lab_test_comment",
-  "modified": "2020-12-14 16:15:04.468043",
+  "modified": "2021-02-17 16:04:11.877231",
   "name": "Lab Prescription-lab_test_comment-mandatory_depends_on",
   "parent": null,
   "parentfield": null,
@@ -2028,25 +2028,8 @@
   "docstatus": 0,
   "doctype": "Property Setter",
   "doctype_or_field": "DocField",
-  "field_name": "sb_test_prescription",
-  "modified": "2021-01-27 18:33:11.971603",
-  "name": "Patient Encounter-sb_test_prescription-collapsible_depends_on",
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "property": "collapsible_depends_on",
-  "property_type": "Data",
-  "row_name": null,
-  "value": "eval: !(doc.lab_test_prescription.length == 0 && doc.previous_lab_prescription.length == 0)"
- },
- {
-  "default_value": null,
-  "doc_type": "Patient Encounter",
-  "docstatus": 0,
-  "doctype": "Property Setter",
-  "doctype_or_field": "DocField",
   "field_name": "radiology_procedures_section",
-  "modified": "2021-01-27 18:34:04.450864",
+  "modified": "2021-02-17 21:38:06.384182",
   "name": "Patient Encounter-radiology_procedures_section-collapsible_depends_on",
   "parent": null,
   "parentfield": null,
@@ -2054,7 +2037,7 @@
   "property": "collapsible_depends_on",
   "property_type": "Data",
   "row_name": null,
-  "value": "eval: !(doc.radiology_procedure_prescription.length == 0 && doc.previous_radiology_procedure_prescription.length == 0)"
+  "value": "eval: doc.radiology_procedure_prescription && doc.previous_radiology_procedure_prescription && !(doc.radiology_procedure_prescription.length == 0 && doc.previous_radiology_procedure_prescription.length == 0)"
  },
  {
   "default_value": null,
@@ -2063,7 +2046,7 @@
   "doctype": "Property Setter",
   "doctype_or_field": "DocField",
   "field_name": "sb_drug_prescription",
-  "modified": "2021-01-27 18:35:19.331439",
+  "modified": "2021-02-17 21:38:22.234913",
   "name": "Patient Encounter-sb_drug_prescription-collapsible_depends_on",
   "parent": null,
   "parentfield": null,
@@ -2071,7 +2054,7 @@
   "property": "collapsible_depends_on",
   "property_type": "Data",
   "row_name": null,
-  "value": "eval: !(doc.drug_prescription.length == 0 && doc.previous_drug_prescription.length == 0)"
+  "value": "eval: doc.drug_prescription && doc.previous_drug_prescription && !(doc.drug_prescription.length == 0 && doc.previous_drug_prescription.length == 0)"
  },
  {
   "default_value": null,
@@ -2080,7 +2063,7 @@
   "doctype": "Property Setter",
   "doctype_or_field": "DocField",
   "field_name": "sb_procedures",
-  "modified": "2021-01-27 21:47:23.336696",
+  "modified": "2021-02-17 21:38:37.602982",
   "name": "Patient Encounter-sb_procedures-collapsible_depends_on",
   "parent": null,
   "parentfield": null,
@@ -2088,7 +2071,7 @@
   "property": "collapsible_depends_on",
   "property_type": "Data",
   "row_name": null,
-  "value": "eval: !(doc.procedure_prescription.length == 0 && doc.previous_procedure_prescription.length == 0)"
+  "value": "eval: doc.procedure_prescription && doc.previous_procedure_prescription && !(doc.procedure_prescription.length == 0 && doc.previous_procedure_prescription.length == 0)"
  },
  {
   "default_value": null,
@@ -2097,7 +2080,7 @@
   "doctype": "Property Setter",
   "doctype_or_field": "DocField",
   "field_name": "rehabilitation_section",
-  "modified": "2021-01-27 21:47:23.960924",
+  "modified": "2021-02-17 21:38:54.747385",
   "name": "Patient Encounter-rehabilitation_section-collapsible_depends_on",
   "parent": null,
   "parentfield": null,
@@ -2105,7 +2088,7 @@
   "property": "collapsible_depends_on",
   "property_type": "Data",
   "row_name": null,
-  "value": "eval: !(doc.therapies.length == 0 && doc.previous_therapy_plan_detail.length == 0)"
+  "value": "eval: doc.therapies && doc.previous_therapy_plan_detail && !(doc.therapies.length == 0 && doc.previous_therapy_plan_detail.length == 0)"
  },
  {
   "default_value": null,
@@ -2114,7 +2097,7 @@
   "doctype": "Property Setter",
   "doctype_or_field": "DocField",
   "field_name": "diet_recommendation_section",
-  "modified": "2021-01-27 21:47:24.169797",
+  "modified": "2021-02-17 21:37:48.158668",
   "name": "Patient Encounter-diet_recommendation_section-collapsible_depends_on",
   "parent": null,
   "parentfield": null,
@@ -2122,7 +2105,7 @@
   "property": "collapsible_depends_on",
   "property_type": "Data",
   "row_name": null,
-  "value": "eval: (doc.diet_recommendation.length != 0)"
+  "value": "eval: doc.diet_recommendation && doc.diet_recommendation.length != 0"
  },
  {
   "default_value": null,
@@ -2412,5 +2395,22 @@
   "property_type": "Check",
   "row_name": null,
   "value": "1"
+ },
+ {
+  "default_value": null,
+  "doc_type": "Patient Encounter",
+  "docstatus": 0,
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "sb_test_prescription",
+  "modified": "2021-02-17 21:40:04.804258",
+  "name": "Patient Encounter-sb_test_prescription-collapsible_depends_on",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "property": "collapsible_depends_on",
+  "property_type": "Data",
+  "row_name": null,
+  "value": "eval: doc.lab_test_prescription && doc.previous_lab_prescription && !(doc.lab_test_prescription.length == 0 && doc.previous_lab_prescription.length == 0)"
  }
 ]

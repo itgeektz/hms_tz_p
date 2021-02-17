@@ -165,7 +165,7 @@ def get_stock_availability(item_code, warehouse):
 
 @frappe.whitelist()
 def validate_stock_item(medication_name, qty, warehouse=None, healthcare_service_unit=None):
-    item_info = get_item_info(medication_name = medication_name)
+    item_info = get_item_info(medication_name=medication_name)
     if not warehouse and not healthcare_service_unit:
         frappe.throw(_("Warehouse is missing"))
     elif not warehouse and healthcare_service_unit:
@@ -322,7 +322,8 @@ def create_delivery_note(patient_encounter_doc):
         item.reference_doctype = row.doctype
         item.reference_name = row.name
         item.description = row.drug_name + " for " + row.dosage + " for " + \
-            row.period + " with " + row.medical_code + " and doctor notes: " + (row.comment or "Take medication as per dosage.")
+            row.period + " with " + row.medical_code + " and doctor notes: " + \
+            (row.comment or "Take medication as per dosage.")
         items.append(item)
 
     if len(items) == 0:
@@ -437,3 +438,19 @@ def check_is_not_available_inhouse(item, doctype, docname):
     if is_not_available_inhouse:
         frappe.msgprint(
             _("NOTE: This healthcare service item, <b>{0}</b>, is not available inhouse and has been marked as prescribe.<br>Request the patient to get it from another healthcare service provider.").format(item))
+
+
+@frappe.whitelist()
+def finalized_encounter(cur_encounter, ref_encounter=None):
+    frappe.set_value("Patient Encounter", cur_encounter,
+                     "encounter_type", "Final")
+    if not ref_encounter:
+        frappe.set_value("Patient Encounter", cur_encounter,
+                         "finalized", 1)
+        return
+    encounters_list = frappe.get_all("Patient Encounter", filters={
+        "docstatus": 1,
+        "reference_encounter": ref_encounter
+    })
+    for element in encounters_list:
+        frappe.set_value("Patient Encounter", element.name, "finalized", 1)
