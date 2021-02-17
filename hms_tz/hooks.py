@@ -258,7 +258,9 @@ fixtures = [
         "Delivery Note-medical_department",
         "Drug Prescription-is_restricted",
         "Delivery Note Item-is_restricted",
-        "Patient Encounter-finalized"
+        "Patient Encounter-encounter_category",
+        "Patient Encounter-finalized",
+        "Patient-nida_card_number",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -412,7 +414,6 @@ fixtures = [
         "Patient Encounter-appointment-hidden",
         "Delivery Note-items-permlevel",
         "Drug Prescription-comment-fetch_if_empty",
-        "Delivery Note-items-permlevel",
         "Radiology Examination-healthcare_practitioner_name",
     )]]},
 ]
