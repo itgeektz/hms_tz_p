@@ -6,7 +6,9 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "encounter_category"
+  "encounter_category",
+  "encounter_fee",
+  "encounter_fee_item"
  ],
  "fields": [
   {
@@ -14,11 +16,22 @@
    "fieldtype": "Data",
    "label": "Encounter Category",
    "unique": 1
+  },
+  {
+   "fieldname": "encounter_fee",
+   "fieldtype": "Currency",
+   "label": "Encounter Fee"
+  },
+  {
+   "fieldname": "encounter_fee_item",
+   "fieldtype": "Link",
+   "label": "Encounter Fee Item",
+   "options": "Item"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-02-17 22:11:44.809665",
+ "modified": "2021-02-17 22:40:38.423474",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Encounter Category",
@@ -40,6 +53,5 @@
  "quick_entry": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
- "track_changes": 1,
- "track_seen": 1
+ "track_changes": 1
 }
