@@ -267,7 +267,16 @@ var validate_medical_code = function (frm) {
 var add_btn_final = function (frm) {
     if (frm.doc.docstatus == 1 && frm.doc.encounter_type != 'Final') {
         frm.add_custom_button(__('Set as Final'), function () {
-            frm.set_value("encounter_type", 'Final');
+            frappe.call({
+                method: 'hms_tz.nhif.api.patient_encounter.finalized_encounter',
+                args: {
+                    'ref_encounter': frm.doc.reference_encounter,
+                    'cur_encounter': frm.doc.name
+                },
+                callback: (function (data) {
+                    frm.reload_doc();
+                })
+            });
         });
     }
 };
