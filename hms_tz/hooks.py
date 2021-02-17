@@ -415,6 +415,14 @@ fixtures = [
         "Delivery Note-items-permlevel",
         "Drug Prescription-comment-fetch_if_empty",
         "Radiology Examination-healthcare_practitioner_name",
+        "Patient Encounter-diagnosis-permlevel",
+        "Patient Encounter-symptoms-permlevel",
+        "Patient Encounter-sb_symptoms-permlevel",
+        "Patient Encounter-inpatient_status-permlevel",
+        "Patient Encounter-inpatient_record-permlevel",
+        "Patient Encounter-triage-permlevel",
+        "Patient Encounter-patient_vitals-permlevel",
+        "Patient Encounter-patient_vitals_summary_section-permlevel",
     )]]},
 ]
 
