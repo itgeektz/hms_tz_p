@@ -423,6 +423,9 @@ fixtures = [
         "Patient Encounter-triage-permlevel",
         "Patient Encounter-patient_vitals-permlevel",
         "Patient Encounter-patient_vitals_summary_section-permlevel",
+        "Lab Test-lab_test_name-in_list_view",
+        "Lab Test-patient_name-in_list_view",
+        "Patient Encounter-section_break_33-permlevel",
     )]]},
 ]
 
