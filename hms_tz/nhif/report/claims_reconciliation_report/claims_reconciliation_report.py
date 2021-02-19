@@ -67,13 +67,65 @@ def get_columns():
             "options": "",
             "width": 100
         },
+        {
+            "fieldname": "name",
+            "label": _("NHIF Patient Claim"),
+            "fieldtype": "Link",
+            "options": "NHIF Patient Claim",
+            "width": 100
+        },
+        {
+            "fieldname": "patient_appointment",
+            "label": _("Appointment"),
+            "fieldtype": "Link",
+            "options": "Patient Appointment",
+            "width": 100
+        },
+        {
+            "fieldname": "patient",
+            "label": _("Patient"),
+            "fieldtype": "Link",
+            "options": "Patient",
+            "width": 100
+        },
+        {
+            "fieldname": "patient_name",
+            "label": _("Patient Name"),
+            "fieldtype": "Data",
+            "options": "",
+            "width": 100
+        },
+        {
+            "fieldname": "authorization_no",
+            "label": _("Authorization NO"),
+            "fieldtype": "Data",
+            "options": "",
+            "width": 100
+        },
+        {
+            "fieldname": "practitioner_no",
+            "label": _("Practitioner NO"),
+            "fieldtype": "Data",
+            "options": "",
+            "width": 100
+        },
     ]
     return columns
 
 
 def get_data(filters):
+    updated_data = []
     data = get_nhif_data(filters)
-    return data
+    for item in data:
+        item = frappe._dict(item)
+        cleam_list = frappe.get_all("NHIF Patient Claim", filters={"folio_id": item.SubmissionID}, fields=[
+            "name", "patient_appointment", "patient", "patient_name", "posting_date", "authorization_no",
+            "practitioner_no"
+        ])
+        if len(cleam_list) > 0:
+            item.update(cleam_list[0])
+        updated_data.append(item)
+    return updated_data
 
 
 def get_nhif_data(filters):
