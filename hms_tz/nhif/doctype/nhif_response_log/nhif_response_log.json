@@ -90,13 +90,15 @@
   {
    "fieldname": "status_code",
    "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Response Status Code",
    "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-01-04 01:41:31.503421",
+ "modified": "2021-02-19 12:03:13.394248",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Response Log",
