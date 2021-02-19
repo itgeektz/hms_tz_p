@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import nowdate
 from hms_tz.nhif.api.token import get_claimsservice_token
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 import json
@@ -109,5 +108,9 @@ def get_nhif_data(filters):
             )
         if json.loads(r.text):
             frappe.msgprint(
-                _("The claims has been load successfully"), alert=True)
+                _("The claims has been loaded successfully"), alert=True)
             return json.loads(r.text)
+        else:
+            frappe.msgprint(
+                _("No Data"), alert=True)
+            return []
