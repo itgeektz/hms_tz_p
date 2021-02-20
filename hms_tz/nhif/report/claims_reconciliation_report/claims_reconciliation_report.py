@@ -104,7 +104,7 @@ def get_columns():
         },
         {
             "fieldname": "practitioner_no",
-            "label": _("Practitioner NO"),
+            "label": _("Practitioner No"),
             "fieldtype": "Data",
             "options": "",
             "width": 100
@@ -118,12 +118,12 @@ def get_data(filters):
     data = get_nhif_data(filters)
     for item in data:
         item = frappe._dict(item)
-        cleam_list = frappe.get_all("NHIF Patient Claim", filters={"folio_id": item.SubmissionID}, fields=[
+        claim_list = frappe.get_all("NHIF Patient Claim", filters={"folio_id": item.SubmissionID}, fields=[
             "name", "patient_appointment", "patient", "patient_name", "posting_date", "authorization_no",
             "practitioner_no"
         ])
-        if len(cleam_list) > 0:
-            item.update(cleam_list[0])
+        if len(claim_list) > 0:
+            item.update(claim_list[0])
         updated_data.append(item)
     return updated_data
 
