@@ -153,6 +153,38 @@ frappe.ui.form.on('Patient Encounter', {
         refresh_field('patient_encounter_final_diagnosis');
         set_medical_code(frm);
     },
+    create_sales_invoice: function (frm) {
+        if (frm.doc.docstatus != 1 || !frm.doc.encounter_mode_of_payment || !frm.doc.encounter_category || frm.doc.sales_invoice) {
+            return;
+        }
+        frappe.call({
+            method: 'hms_tz.nhif.api.patient_encounter.create_sales_invoice',
+            args: {
+                'encounter': frm.doc.name,
+                'encounter_category': frm.doc.encounter_category,
+                'encounter_mode_of_payment': frm.doc.encounter_mode_of_payment,
+            },
+            callback: function (data) {
+                frm.reload_doc();
+            }
+        });
+    },
+    sent_to_vfd: function (frm) {
+        if (frm.doc.docstatus != 1 || !frm.doc.sales_invoice) return;
+        frappe.call({
+            method: 'hms_tz.nhif.api.patient_appointment.send_vfd',
+            args: {
+                invoice_name: frm.doc.sales_invoice,
+            },
+            callback: function (data) {
+                if (data.message) {
+                    if (data.message.enqueue) {
+                        load_print_page(frm.doc.sales_invoice, data.message.pos_rofile);
+                    }
+                }
+            }
+        });
+    },
 
 });
 
@@ -450,4 +482,26 @@ const check_is_not_available_inhouse = function (item, doctype, docname) {
             }
         }
     });
+};
+
+const load_print_page = function (invoice_name, pos_profile) {
+    const print_format = pos_profile.print_format || "AV Tax Invoice";
+    const letter_head = pos_profile.letter_head || 0;
+    const url =
+        frappe.urllib.get_base_url() +
+        "/printview?doctype=Sales%20Invoice&name=" +
+        invoice_name +
+        "&trigger_print=1" +
+        "&format=" +
+        print_format +
+        "&no_letterhead=" +
+        letter_head;
+    const printWindow = window.open(url, "Print");
+    printWindow.addEventListener(
+        "load",
+        function () {
+            printWindow.print();
+        },
+        true
+    );
 };

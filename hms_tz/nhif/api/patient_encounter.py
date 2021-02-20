@@ -8,6 +8,7 @@ from frappe import _
 from frappe.utils import nowdate, get_year_start, getdate, nowtime
 import datetime
 from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_service_unit
+from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
 
 
 def validate(doc, method):
@@ -456,3 +457,54 @@ def finalized_encounter(cur_encounter, ref_encounter=None):
     })
     for element in encounters_list:
         frappe.set_value("Patient Encounter", element.name, "finalized", 1)
+
+
+@frappe.whitelist()
+def create_sales_invoice(encounter, encounter_category, encounter_mode_of_payment):
+    encounter_doc = frappe.get_doc(
+        "Patient Encounter", encounter)
+    encounter_category = frappe.get_doc(
+        "Encounter Category", encounter_category)
+    if not encounter_category.create_sales_invoice:
+        return
+
+    doc = frappe.new_doc('Sales Invoice')
+    doc.patient = encounter_doc.patient
+    doc.customer = frappe.get_value(
+        'Patient', encounter_doc.patient, 'customer')
+    doc.due_date = getdate()
+    doc.company = encounter_doc.company
+    doc.debit_to = get_receivable_account(
+        encounter_doc.company)
+
+    item = doc.append('items', {})
+    item.item_code = encounter_category.encounter_fee_item
+    item.description = _('Consulting Charges: {0}').format(
+        encounter_doc.practitioner)
+    item.income_account = get_income_account(
+        encounter_doc.practitioner, encounter_doc.company)
+    item.cost_center = frappe.get_cached_value(
+        'Company', encounter_doc.company, 'cost_center')
+    item.qty = 1
+    item.rate = encounter_category.encounter_fee
+    item.reference_dt = 'Patient Encounter'
+    item.reference_dn = encounter_doc.name
+    item.amount = encounter_category.encounter_fee
+
+    doc.is_pos = 1
+    payment = doc.append('payments', {})
+    payment.mode_of_payment = encounter_mode_of_payment
+    payment.amount = encounter_category.encounter_fee
+
+    doc.set_taxes()
+    doc.set_missing_values(for_validate=True)
+    doc.flags.ignore_mandatory = True
+    doc.save(ignore_permissions=True)
+    doc.calculate_taxes_and_totals()
+    doc.submit()
+    frappe.msgprint(_('Sales Invoice {0} created'.format(
+        doc.name)))
+    encounter_doc.sales_invoice = doc.name
+    encounter_doc.db_update()
+
+    return "true"

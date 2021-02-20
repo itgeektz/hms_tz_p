@@ -261,6 +261,10 @@ fixtures = [
         "Patient Encounter-encounter_category",
         "Patient Encounter-finalized",
         "Patient-nida_card_number",
+        "Patient Encounter-encounter_mode_of_payment",
+        "Patient Encounter-create_sales_invoice",
+        "Patient Encounter-sales_invoice",
+        "Patient Encounter-sent_to_vfd",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",

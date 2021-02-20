@@ -8,30 +8,43 @@
  "field_order": [
   "encounter_category",
   "encounter_fee",
-  "encounter_fee_item"
+  "encounter_fee_item",
+  "create_sales_invoice"
  ],
  "fields": [
   {
    "fieldname": "encounter_category",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Encounter Category",
+   "reqd": 1,
    "unique": 1
   },
   {
    "fieldname": "encounter_fee",
    "fieldtype": "Currency",
-   "label": "Encounter Fee"
+   "in_list_view": 1,
+   "label": "Encounter Fee",
+   "reqd": 1
   },
   {
    "fieldname": "encounter_fee_item",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Encounter Fee Item",
-   "options": "Item"
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "create_sales_invoice",
+   "fieldtype": "Check",
+   "label": "Create Sales Invoice"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-02-17 22:40:38.423474",
+ "modified": "2021-02-20 19:56:57.686386",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Encounter Category",
@@ -46,6 +59,29 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Healthcare Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Physician",
    "share": 1,
    "write": 1
   }
