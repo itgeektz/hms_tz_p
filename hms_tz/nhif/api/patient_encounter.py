@@ -24,6 +24,8 @@ def validate(doc, method):
     for key, value in child_tables.items():
         table = doc.get(key)
         for row in table:
+            if not doc.insurance_subscription:
+                row.prescribe = 1
             if not row.get("prescribe"):
                 validate_stock_item(row.get(value), row.get(
                     "quantity") or 1, warehouse)
