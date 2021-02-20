@@ -282,7 +282,7 @@ var add_btn_final = function (frm) {
 };
 
 var duplicate = function (frm) {
-    if (frm.doc.docstatus != 1 || frm.doc.encounter_type == 'Final' || frm.doc.duplicate == 1) {
+    if (frm.doc.docstatus != 1 || frm.doc.encounter_type == 'Final') {
         return;
     }
     frm.add_custom_button(__('Duplicate'), function () {
