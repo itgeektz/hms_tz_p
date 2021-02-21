@@ -7,8 +7,13 @@
  "engine": "InnoDB",
  "field_order": [
   "encounter_category",
+  "default_healthcare_service_unit",
+  "default_healthcare_practitioner",
+  "default_appointment_type",
+  "column_break_3",
   "encounter_fee",
   "encounter_fee_item",
+  "section_break_6",
   "create_sales_invoice"
  ],
  "fields": [
@@ -40,11 +45,37 @@
    "fieldname": "create_sales_invoice",
    "fieldtype": "Check",
    "label": "Create Sales Invoice"
+  },
+  {
+   "fieldname": "default_healthcare_practitioner",
+   "fieldtype": "Link",
+   "label": "Default Healthcare Practitioner",
+   "options": "Healthcare Practitioner"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_6",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "default_appointment_type",
+   "fieldtype": "Link",
+   "label": "Default Appointment Type",
+   "options": "Appointment Type"
+  },
+  {
+   "fieldname": "default_healthcare_service_unit",
+   "fieldtype": "Link",
+   "label": "Default Healthcare Service Unit",
+   "options": "Healthcare Service Unit"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-02-20 19:56:57.686386",
+ "modified": "2021-02-20 20:40:43.300683",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Encounter Category",
