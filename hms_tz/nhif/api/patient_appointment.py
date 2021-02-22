@@ -185,6 +185,7 @@ def make_encounter(vital_doc, method):
             ]
         }
     }, target_doc, ignore_permissions=True)
+    encounter_doc.encounter_category = "Doctor"
 
     encounter_doc.save(ignore_permissions=True)
     frappe.msgprint(_('Patient Encounter {0} created'.format(
