@@ -558,7 +558,9 @@ doc_events = {
         ]
     },
     "Patient Encounter": {
+        "after_insert": "hms_tz.nhif.api.patient_encounter.after_insert",
         "validate": "hms_tz.nhif.api.patient_encounter.validate",
+        "on_trash": "hms_tz.nhif.api.patient_encounter.on_trash",
         "on_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
     },
     "Healthcare Service Order": {
