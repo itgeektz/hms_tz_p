@@ -1,0 +1,30 @@
+[
+ {
+  "dimension_defaults": [],
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Accounting Dimension",
+  "document_type": "Healthcare Practitioner",
+  "fieldname": "healthcare_practitioner",
+  "label": "Healthcare Practitioner",
+  "modified": "2021-02-22 13:49:39.457955",
+  "name": "Healthcare Practitioner",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ },
+ {
+  "dimension_defaults": [],
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Accounting Dimension",
+  "document_type": "Healthcare Service Unit",
+  "fieldname": "healthcare_service_unit",
+  "label": "Healthcare Service Unit",
+  "modified": "2021-02-22 14:00:12.980220",
+  "name": "Healthcare Service Unit",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ }
+]

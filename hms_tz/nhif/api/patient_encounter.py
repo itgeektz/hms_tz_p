@@ -345,7 +345,9 @@ def create_delivery_note(patient_encounter_doc):
         reference_doctype=patient_encounter_doc.doctype,
         reference_name=patient_encounter_doc.name,
         patient=patient_encounter_doc.patient,
-        patient_name=patient_encounter_doc.patient_name
+        patient_name=patient_encounter_doc.patient_name,
+        healthcare_service_unit=patient_encounter_doc.healthcare_service_unit,
+        healthcare_practitioner=patient_encounter_doc.practitioner
     ))
     doc.set_missing_values()
     doc.insert(ignore_permissions=True)
@@ -476,6 +478,8 @@ def create_sales_invoice(encounter, encounter_category, encounter_mode_of_paymen
     doc.company = encounter_doc.company
     doc.debit_to = get_receivable_account(
         encounter_doc.company)
+    doc.healthcare_service_unit = encounter_doc.healthcare_service_unit,
+    doc.healthcare_practitioner = encounter_doc.practitioner
 
     item = doc.append('items', {})
     item.item_code = encounter_category.encounter_fee_item

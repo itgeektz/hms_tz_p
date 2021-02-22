@@ -431,6 +431,10 @@ fixtures = [
         "Lab Test-patient_name-in_list_view",
         "Patient Encounter-section_break_33-permlevel",
     )]]},
+    {"doctype": "Accounting Dimension", "filters": [["name", "in", (
+        "Healthcare Practitioner",
+        "Healthcare Service Unit",
+    )]]},
 ]
 
 # Includes in <head>
