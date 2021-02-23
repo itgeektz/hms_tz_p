@@ -265,6 +265,11 @@ fixtures = [
         "Patient Encounter-create_sales_invoice",
         "Patient Encounter-sales_invoice",
         "Patient Encounter-sent_to_vfd",
+        "Lab Test Template-healthcare_service_unit",
+        "Drug Prescription-healthcare_service_unit",
+        "Patient Encounter-default_healthcare_service_unit",
+        "Radiology Examination Template-healthcare_service_unit",
+        "Clinical Procedure Template-healthcare_service_unit"
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
