@@ -21,6 +21,20 @@ frappe.ui.form.on('Patient Encounter', {
             frm.set_df_property('referring_practitioner', 'reqd', 0);
         }
     },
+    default_healthcare_service_unit: function (frm) {
+        if (frm.doc.default_healthcare_service_unit) {
+            frm.doc.drug_prescription.forEach(row => {
+                if (!row.healthcare_service_unit) {
+                    frappe.model.set_value(
+                        row.doctype,
+                        row.name,
+                        "healthcare_service_unit",
+                        frm.doc.default_healthcare_service_unit
+                    );
+                }
+            });
+        }
+    },
     patient_encounter_preliminary_diagnosis: function (frm) {
         set_medical_code(frm);
     },
