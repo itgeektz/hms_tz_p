@@ -180,17 +180,19 @@ def get_stock_availability(item_code, warehouse):
 @frappe.whitelist()
 def validate_stock_item(medication_name, qty, warehouse=None, healthcare_service_unit=None):
     item_info = get_item_info(medication_name=medication_name)
-    if not warehouse and not healthcare_service_unit:
-        frappe.throw(_("Warehouse is missing"))
-    elif not warehouse and healthcare_service_unit:
+    if healthcare_service_unit:
         warehouse = get_warehouse_from_service_unit(healthcare_service_unit)
+    if not warehouse:
+        frappe.throw(_("Warehouse is missing in healthcare service unit {0}").format(healthcare_service_unit))
     if item_info.get("is_stock") and item_info.get("item_code"):
         stock_qty = get_stock_availability(
             item_info.get("item_code"), warehouse) or 0
         if float(qty) > float(stock_qty):
-            frappe.throw(_("The quantity required for the item {0} is insufficient").format(
-                medication_name))
+            frappe.throw(_("The quantity required for the item {0} is insufficient in {1}/{2}. Available quantity is {3}.").format(
+                medication_name, warehouse, healthcare_service_unit, stock_qty))
             return False
+    frappe.msgprint(_("Available quantity for the item {0} in {1}/{2} is {3}.").format(
+        medication_name, warehouse, healthcare_service_unit, stock_qty), alert=True)
 
     return True
 
