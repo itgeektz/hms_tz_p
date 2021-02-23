@@ -370,7 +370,8 @@ def create_delivery_note(patient_encounter_doc):
         reference_doctype=patient_encounter_doc.doctype,
         reference_name=patient_encounter_doc.name,
         patient=patient_encounter_doc.patient,
-        patient_name=patient_encounter_doc.patient_name
+        patient_name=patient_encounter_doc.patient_name,
+        healthcare_service_unit=patient_encounter_doc.healthcare_service_unit
     ))
     doc.set_missing_values()
     doc.insert(ignore_permissions=True)
