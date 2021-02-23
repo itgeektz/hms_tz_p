@@ -12,6 +12,7 @@ from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import g
 
 
 def validate(doc, method):
+    checkـforـduplicate(doc)
     insurance_subscription = doc.insurance_subscription
     child_tables = {
         "drug_prescription": "drug_code",
@@ -86,6 +87,16 @@ def validate(doc, method):
                     frappe.throw(_("Maximum Number of Claims for {0} per year is exceeded").format(
                         row.get(value)))
     validate_totals(doc)
+
+
+def checkـforـduplicate(doc):
+    items = []
+    for item in doc.drug_prescription:
+        if item.drug_code not in items:
+            items.append(item.drug_code)
+        else:
+            frappe.throw(_("Drug '{0}' is duplicated in line '{1}' in Drug Prescription").format(
+                item.drug_code, item.idx))
 
 
 def get_year_end(dt, as_str=False):

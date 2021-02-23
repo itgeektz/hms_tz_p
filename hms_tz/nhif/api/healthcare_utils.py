@@ -232,3 +232,7 @@ def get_item_form_LRPT(LRPT_doc):
         item.item_code = None
         item.qty = 0
     return item
+
+
+def update_dimensions(doc):
+    pass
