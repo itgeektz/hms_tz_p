@@ -320,10 +320,9 @@ def create_delivery_note(patient_encounter_doc):
         "Patient Appointment", patient_encounter_doc.appointment, ["insurance_subscription", "insurance_company"])
     if not insurance_subscription:
         return
-    warehouse = get_warehouse_from_service_unit(
-        patient_encounter_doc.healthcare_service_unit)
     items = []
     for row in patient_encounter_doc.drug_prescription:
+        warehouse = get_warehouse_from_service_unit(row.healthcare_service_unit)
         if row.prescribe:
             continue
         item_code = frappe.get_value("Medication", row.drug_code, "item_code")
