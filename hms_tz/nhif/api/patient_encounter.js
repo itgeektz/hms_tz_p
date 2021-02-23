@@ -417,7 +417,7 @@ frappe.ui.form.on('Drug Prescription', {
     drug_code: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.drug_code) { return; }
-        validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit);
+        validate_stock_item(frm, row.drug_code, row.quantity, healthcare_service_unit=row.healthcare_service_unit);
         check_is_not_available_inhouse(row.drug_code, "Medication", row.drug_code);
     },
     prescribe: function (frm, cdt, cdn) {
@@ -429,13 +429,13 @@ frappe.ui.form.on('Drug Prescription', {
     quantity: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.drug_code) { return; }
-        validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit);
+        validate_stock_item(frm, row.drug_code, row.quantity, healthcare_service_unit=row.healthcare_service_unit);
     },
     override_subscription: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit);
+            validate_stock_item(frm, row.drug_code, row.quantity, healthcare_service_unit=row.healthcare_service_unit);
         }
     },
     dosage: function (frm, cdt, cdn) {
@@ -468,7 +468,8 @@ frappe.ui.form.on('Therapy Plan Detail', {
 
 
 const validate_stock_item = function (frm, medication_name, qty = 1, healthcare_service_unit = "") {
-    if (healthcare_service_unit = "") {
+    if (healthcare_service_unit == "") {
+        frappe.msgprint(_("Blank healthcare service unit found!"), alert=true)
         healthcare_service_unit = frm.doc.healthcare_service_unit
     }
     frappe.call({

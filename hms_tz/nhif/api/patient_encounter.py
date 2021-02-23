@@ -30,7 +30,7 @@ def validate(doc, method):
                 row.prescribe = 1
             if not row.get("prescribe"):
                 validate_stock_item(row.get(value), row.get(
-                    "quantity") or 1, warehouse)
+                    "quantity") or 1, warehouse, row.get("healthcare_service_unit"))
 
     if not insurance_subscription:
         return
@@ -179,9 +179,12 @@ def get_stock_availability(item_code, warehouse):
 
 @frappe.whitelist()
 def validate_stock_item(medication_name, qty, warehouse=None, healthcare_service_unit=None):
+    # frappe.msgprint(_("{0} warehouse passed. <br> {1} healthcare service unit passed").format(warehouse, healthcare_service_unit), alert=True)
     item_info = get_item_info(medication_name=medication_name)
+    stock_qty = 0
     if healthcare_service_unit:
         warehouse = get_warehouse_from_service_unit(healthcare_service_unit)
+        # frappe.msgprint(_("{0} selected using {1}").format(warehouse, healthcare_service_unit), alert=True)
     if not warehouse:
         frappe.throw(_("Warehouse is missing in healthcare service unit {0}").format(healthcare_service_unit))
     if item_info.get("is_stock") and item_info.get("item_code"):
@@ -191,8 +194,9 @@ def validate_stock_item(medication_name, qty, warehouse=None, healthcare_service
             frappe.throw(_("The quantity required for the item {0} is insufficient in {1}/{2}. Available quantity is {3}.").format(
                 medication_name, warehouse, healthcare_service_unit, stock_qty))
             return False
-    frappe.msgprint(_("Available quantity for the item {0} in {1}/{2} is {3}.").format(
-        medication_name, warehouse, healthcare_service_unit, stock_qty), alert=True)
+    if stock_qty > 0:
+        frappe.msgprint(_("Available quantity for the item {0} in {1}/{2} is {3}.").format(
+            medication_name, warehouse, healthcare_service_unit, stock_qty), alert=True)
 
     return True
 
