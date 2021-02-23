@@ -469,7 +469,6 @@ frappe.ui.form.on('Therapy Plan Detail', {
 
 const validate_stock_item = function (frm, medication_name, qty = 1, healthcare_service_unit = "") {
     if (healthcare_service_unit == "") {
-        frappe.msgprint(_("Blank healthcare service unit found!"), alert=true)
         healthcare_service_unit = frm.doc.healthcare_service_unit
     }
     frappe.call({
