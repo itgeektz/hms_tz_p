@@ -114,7 +114,7 @@ def invoice_appointment(name):
         sales_invoice.company = appointment_doc.company
         sales_invoice.debit_to = get_receivable_account(
             appointment_doc.company)
-        sales_invoice.healthcare_service_unit = appointment_doc.service_unit,
+        sales_invoice.healthcare_service_unit = appointment_doc.service_unit
         sales_invoice.healthcare_practitioner = appointment_doc.practitioner
 
         item = sales_invoice.append('items', {})
