@@ -22,7 +22,6 @@ def validate(doc, method):
         "therapies": "therapy_type",
         # "diet_recommendation": "diet_plan" dosent have Healthcare Service Insurance Coverage
     }
-    warehouse = get_warehouse_from_service_unit(doc.healthcare_service_unit)
     for key, value in child_tables.items():
         table = doc.get(key)
         for row in table:
@@ -30,7 +29,7 @@ def validate(doc, method):
                 row.prescribe = 1
             if not row.get("prescribe"):
                 validate_stock_item(row.get(value), row.get(
-                    "quantity") or 1, warehouse, row.get("healthcare_service_unit"))
+                    "quantity") or 1, healthcare_service_unit = row.get("healthcare_service_unit"))
 
     if not insurance_subscription:
         return
@@ -178,9 +177,13 @@ def get_stock_availability(item_code, warehouse):
 
 
 @frappe.whitelist()
-def validate_stock_item(medication_name, qty, warehouse=None, healthcare_service_unit=None):
+def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_service_unit=None, caller="Unknown"):
     # frappe.msgprint(_("{0} warehouse passed. <br> {1} healthcare service unit passed").format(warehouse, healthcare_service_unit), alert=True)
-    item_info = get_item_info(medication_name=medication_name)
+    frappe.msgprint(_("{0} was the unknown caller.<br>Please let IT Support know this message appearing.").format(caller), alert=True)
+    if caller != "Drug Prescription" and not healthcare_service_unit:
+        # LRPT code stock check goes here
+        return
+    item_info = get_item_info(medication_name=healthcare_service)
     stock_qty = 0
     if healthcare_service_unit:
         warehouse = get_warehouse_from_service_unit(healthcare_service_unit)
@@ -192,12 +195,11 @@ def validate_stock_item(medication_name, qty, warehouse=None, healthcare_service
             item_info.get("item_code"), warehouse) or 0
         if float(qty) > float(stock_qty):
             frappe.throw(_("The quantity required for the item {0} is insufficient in {1}/{2}. Available quantity is {3}.").format(
-                medication_name, warehouse, healthcare_service_unit, stock_qty))
+                healthcare_service, warehouse, healthcare_service_unit, stock_qty))
             return False
     if stock_qty > 0:
         frappe.msgprint(_("Available quantity for the item {0} in {1}/{2} is {3}.").format(
-            medication_name, warehouse, healthcare_service_unit, stock_qty), alert=True)
-
+            healthcare_service, warehouse, healthcare_service_unit, stock_qty), alert=True)
     return True
 
 
