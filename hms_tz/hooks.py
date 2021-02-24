@@ -270,6 +270,11 @@ fixtures = [
         "Patient Encounter-default_healthcare_service_unit",
         "Radiology Examination Template-healthcare_service_unit",
         "Clinical Procedure Template-healthcare_service_unit"
+        "Patient Appointment-payment_reference",
+        "Patient Encounter-create_sales_invoice",
+        "Patient Encounter-sales_invoice",
+        "Patient Encounter-sent_to_vfd",
+        "Patient Encounter-encounter_mode_of_payment",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -435,6 +440,11 @@ fixtures = [
         "Lab Test-lab_test_name-in_list_view",
         "Lab Test-patient_name-in_list_view",
         "Patient Encounter-section_break_33-permlevel",
+        "Patient Encounter-patient-default",
+        "Patient Encounter-appointment_type-default",
+        "Patient Encounter-appointment_type-read_only_depends_on",
+        "Patient Encounter-appointment_type-mandatory_depends_on",
+        "Vital Signs-patient-read_only_depends_on",
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",
@@ -557,7 +567,9 @@ doc_events = {
         ]
     },
     "Patient Encounter": {
+        "after_insert": "hms_tz.nhif.api.patient_encounter.after_insert",
         "validate": "hms_tz.nhif.api.patient_encounter.validate",
+        "on_trash": "hms_tz.nhif.api.patient_encounter.on_trash",
         "on_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
     },
     "Healthcare Service Order": {

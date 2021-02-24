@@ -11,6 +11,24 @@ from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_s
 from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
 
 
+def after_insert(doc, method):
+    doc.sales_invoice = ""
+    doc.save()
+    doc.reload()
+
+def on_trash(doc, method):
+    pmr_list = frappe.get_all("Patient Medical Record",
+                            fields={
+                                "name"
+                            },
+                            filters={
+                                "reference_doctype": "Patient Encounter",
+                                "reference_name": doc.name,
+                            },
+                        )
+    for pmr_doc in pmr_list:
+        frappe.delete_doc("Patient Medical Record", pmr_doc.name, ignore_permissions=True)
+
 def validate(doc, method):
     checkـforـduplicate(doc)
     insurance_subscription = doc.insurance_subscription
@@ -122,7 +140,7 @@ def duplicate_encounter(encounter):
     }
 
     fields_to_clear = ['name', 'owner', 'creation', 'modified', 'modified_by',
-                       'docstatus', 'amended_from', 'amendment_date', 'parentfield', 'parenttype']
+                       'docstatus', 'amended_from', 'amendment_date', 'parentfield', 'parenttype', 'sales_invoice']
 
     for key, value in child_tables.items():
         cur_table = encounter_dict.get(key)
@@ -204,6 +222,13 @@ def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_serv
 
 
 def on_submit(doc, method):
+    encounter_create_sales_invoice = frappe.get_value("Encounter Category", doc.encounter_category, "create_sales_invoice")
+    if encounter_create_sales_invoice:
+        if not doc.sales_invoice:
+            frappe.throw(_("The encounter cannot be submitted as the Sales Invoice is not created yet!<br><br>Click on Create Sales Invoice and Send to VFD before submitting.", "Cannot Submit Encounter"))
+        vfd_status = frappe.get_value("Sales Invoice", doc.sales_invoice, "vfd_status")
+        if vfd_status == "Not Sent":
+            frappe.throw(_("The encounter cannot be submitted as the Sales Invoice has not been sent to VFD!<br><br>Click on Send to VFD before submitting.", "Cannot Submit Encounter"))
     create_healthcare_docs(doc)
     create_delivery_note(doc)
 
@@ -364,7 +389,7 @@ def create_delivery_note(patient_encounter_doc):
         reference_name=patient_encounter_doc.name,
         patient=patient_encounter_doc.patient,
         patient_name=patient_encounter_doc.patient_name,
-        healthcare_service_unit=patient_encounter_doc.healthcare_service_unit,
+        healthcare_service_unit=patient_encounter_doc.healthcare_service_unit
         healthcare_practitioner=patient_encounter_doc.practitioner
     ))
     doc.set_missing_values()
