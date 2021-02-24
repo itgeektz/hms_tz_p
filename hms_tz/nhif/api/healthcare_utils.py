@@ -254,10 +254,10 @@ def get_references(item):
     refn = ""
     if item.reference_doctype:
         refd = item.reference_doctype
-        refn = item.item.reference_name
+        refn = item.reference_name
     elif item.reference_dt:
         refd = item.reference_dt
-        refn = item.item.reference_dn
+        refn = item.reference_dn
     return refd, refn
 
 
