@@ -89,6 +89,10 @@ def validate(doc, method):
                 frappe.throw(_("{0} not covered in Healthcare Insurance Coverage Plan").format(
                     row.get(value)))
             else:
+                row.is_restricted = next(i for i in hsic_list if i["healthcare_service_template"] == row.get(
+                    value)).get("approval_mandatory_for_claim")
+                if row.is_restricted:
+                    frappe.msgprint(_("The medication " + row.drug_code + " requires additional authorization"), alert=True)
                 maximum_number_of_claims = next(i for i in hsic_list if i["healthcare_service_template"] == row.get(
                     value)).get("maximum_number_of_claims")
                 if maximum_number_of_claims == 0:
@@ -343,6 +347,7 @@ def create_delivery_note(patient_encounter_doc):
         item.item_code = item_code
         item.item_name = item_name
         item.warehouse = warehouse
+        item.is_restricted = row.is_restricted
         item.qty = row.quantity or 1
         item.medical_code = row.medical_code
         item.rate = get_item_rate(
