@@ -170,6 +170,8 @@ def make_vital(appointment_doc, method):
 
 
 def make_encounter(vital_doc, method):
+    if not vital_doc.appointment:
+        return
     source_name = vital_doc.appointment
     target_doc = None
     encounter_doc = get_mapped_doc('Patient Appointment', source_name, {
@@ -187,6 +189,7 @@ def make_encounter(vital_doc, method):
             ]
         }
     }, target_doc, ignore_permissions=True)
+    encounter_doc.encounter_category = "Appointment"
 
     encounter_doc.save(ignore_permissions=True)
     frappe.msgprint(_('Patient Encounter {0} created'.format(

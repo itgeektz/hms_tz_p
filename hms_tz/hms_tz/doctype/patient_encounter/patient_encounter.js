@@ -493,7 +493,7 @@ var show_patient_vital_charts = function(patient, frm, btn_show_id, pts, title) 
 					}
 					if(btn_show_id=="bmi"){
 						bmi.push(data[i].bmi);
-						height.push(data[i].height);
+						height.push(data[i].height_in_cm);
 						weight.push(data[i].weight);
 					}
 				}
