@@ -232,3 +232,81 @@ def get_item_form_LRPT(LRPT_doc):
         item.item_code = None
         item.qty = 0
     return item
+
+
+def update_dimensions(doc):
+    for item in doc.items:
+        refd, refn = get_references(item)
+        if doc.healthcare_practitioner:
+            item.healthcare_practitioner = doc.healthcare_practitioner
+        elif refd and refn:
+            item.healthcare_practitioner = get_healthcare_practitioner(item)
+
+        if doc.healthcare_service_unit and not item.healthcare_service_unit and not refn:
+            item.healthcare_service_unit = doc.healthcare_service_unit
+
+        if refd and refn:
+            item.healthcare_service_unit = get_healthcare_service_unit(item)
+
+
+def get_references(item):
+    refd = ""
+    refn = ""
+    if item.get("reference_doctype"):
+        refd = item.get("reference_doctype")
+        refn = item.get("reference_name")
+    elif item.get("reference_dt"):
+        refd = item.get("reference_dt")
+        refn = item.get("reference_dn")
+    return refd, refn
+
+
+def get_healthcare_practitioner(item):
+    refd, refn = get_references(item)
+    if not refd or not refn:
+        return
+    if refd == "Patient Encounter":
+        return frappe.get_value("Patient Encounter", refn, "practitioner")
+    elif refd == "Patient Appointment":
+        return frappe.get_value("Patient Appointment", refn, "practitioner")
+    elif refd == "Drug Prescription":
+        parent, parenttype = frappe.get_value("Drug Prescription", refn, [
+            "parent", "parenttype"])
+        if parenttype == "Patient Encounter":
+            return frappe.get_value("Patient Encounter", parent, "practitioner")
+    elif refd == "Healthcare Service Order":
+        encounter = frappe.get_value(
+            "ealthcare Service Order", refn, "order_group")
+        if encounter:
+            return frappe.get_value("Patient Encounter", encounter, "practitioner")
+
+
+def get_healthcare_service_unit(item):
+    refd, refn = get_references(item)
+    if not refd or not refn:
+        return
+    if refd == "Patient Encounter":
+        return frappe.get_value("Patient Encounter", refn, "healthcare_service_unit")
+    elif refd == "Patient Appointment":
+        return frappe.get_value("Patient Appointment", refn, "service_unit")
+    elif refd == "Drug Prescription":
+        return frappe.get_value("Drug Prescription", refn, "healthcare_service_unit")
+    elif refd == "Healthcare Service Order":
+        order_doctype, order, order_group, billing_item = frappe.get_value(
+            refd, refn, ["order_doctype", "order", "order_group", "billing_item"])
+        if order_doctype in ["Lab Test Template", "Radiology Examination Template", "Clinical Procedure Template", "Therapy Plan Template"]:
+            return frappe.get_value(order_doctype, order, "healthcare_service_unit")
+        elif order_doctype == "Medication":
+            if not order_group:
+                return
+            prescriptions = frappe.get_all("Drug Prescription",
+                                           filters={
+                                               "parent": order_group,
+                                               "parentfield": "drug_prescription",
+                                               "drug_code": billing_item
+                                           },
+                                           fields=[
+                                               "name", "healthcare_service_unit"]
+                                           )
+            if len(prescriptions) > 0:
+                return prescriptions[0].healthcare_service_unit

@@ -1,11 +1,13 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
+from hms_tz.nhif.api.healthcare_utils import update_dimensions
 
 
 def validate(doc, method):
     set_prescribed(doc)
     set_missing_values(doc)
+    update_dimensions(doc)
 
 
 def after_insert(doc, method):

@@ -30,6 +30,7 @@ def on_trash(doc, method):
         frappe.delete_doc("Patient Medical Record", pmr_doc.name, ignore_permissions=True)
 
 def validate(doc, method):
+    checkـforـduplicate(doc)
     insurance_subscription = doc.insurance_subscription
     child_tables = {
         "drug_prescription": "drug_code",
@@ -39,15 +40,14 @@ def validate(doc, method):
         "therapies": "therapy_type",
         # "diet_recommendation": "diet_plan" dosent have Healthcare Service Insurance Coverage
     }
-    warehouse = get_warehouse_from_service_unit(doc.healthcare_service_unit)
     for key, value in child_tables.items():
         table = doc.get(key)
         for row in table:
-            if not doc.insurance_subscription:
-                row.prescribe = 1
             if not row.get("prescribe"):
                 validate_stock_item(row.get(value), row.get(
-                    "quantity") or 1, warehouse)
+                    "quantity") or 1, healthcare_service_unit = row.get("healthcare_service_unit"))
+            if not doc.insurance_subscription:
+                row.prescribe = 1
 
     if not insurance_subscription:
         return
@@ -108,6 +108,16 @@ def validate(doc, method):
                     frappe.throw(_("Maximum Number of Claims for {0} per year is exceeded").format(
                         row.get(value)))
     validate_totals(doc)
+
+
+def checkـforـduplicate(doc):
+    items = []
+    for item in doc.drug_prescription:
+        if item.drug_code not in items:
+            items.append(item.drug_code)
+        else:
+            frappe.throw(_("Drug '{0}' is duplicated in line '{1}' in Drug Prescription").format(
+                item.drug_code, item.idx))
 
 
 def get_year_end(dt, as_str=False):
@@ -189,20 +199,29 @@ def get_stock_availability(item_code, warehouse):
 
 
 @frappe.whitelist()
-def validate_stock_item(medication_name, qty, warehouse=None, healthcare_service_unit=None):
-    item_info = get_item_info(medication_name=medication_name)
-    if not warehouse and not healthcare_service_unit:
-        frappe.throw(_("Warehouse is missing"))
-    elif not warehouse and healthcare_service_unit:
+def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_service_unit=None, caller="Unknown"):
+    # frappe.msgprint(_("{0} warehouse passed. <br> {1} healthcare service unit passed").format(warehouse, healthcare_service_unit), alert=True)
+    frappe.msgprint(_("{0} was the unknown caller.<br>Please let IT Support know this message appearing.").format(caller), alert=True)
+    if caller != "Drug Prescription" and not healthcare_service_unit:
+        # LRPT code stock check goes here
+        return
+    item_info = get_item_info(medication_name=healthcare_service)
+    stock_qty = 0
+    if healthcare_service_unit:
         warehouse = get_warehouse_from_service_unit(healthcare_service_unit)
+        # frappe.msgprint(_("{0} selected using {1}").format(warehouse, healthcare_service_unit), alert=True)
+    if not warehouse:
+        frappe.throw(_("Warehouse is missing in healthcare service unit {0}").format(healthcare_service_unit))
     if item_info.get("is_stock") and item_info.get("item_code"):
         stock_qty = get_stock_availability(
             item_info.get("item_code"), warehouse) or 0
         if float(qty) > float(stock_qty):
-            frappe.throw(_("The quantity required for the item {0} is insufficient").format(
-                medication_name))
+            frappe.throw(_("The quantity required for the item {0} is insufficient in {1}/{2}. Available quantity is {3}.").format(
+                healthcare_service, warehouse, healthcare_service_unit, stock_qty))
             return False
-
+    if stock_qty > 0:
+        frappe.msgprint(_("Available quantity for the item {0} in {1}/{2} is {3}.").format(
+            healthcare_service, warehouse, healthcare_service_unit, stock_qty), alert=True)
     return True
 
 
@@ -332,10 +351,9 @@ def create_delivery_note(patient_encounter_doc):
         "Patient Appointment", patient_encounter_doc.appointment, ["insurance_subscription", "insurance_company"])
     if not insurance_subscription:
         return
-    warehouse = get_warehouse_from_service_unit(
-        patient_encounter_doc.healthcare_service_unit)
     items = []
     for row in patient_encounter_doc.drug_prescription:
+        warehouse = get_warehouse_from_service_unit(row.healthcare_service_unit)
         if row.prescribe:
             continue
         item_code = frappe.get_value("Medication", row.drug_code, "item_code")
@@ -377,6 +395,7 @@ def create_delivery_note(patient_encounter_doc):
         patient=patient_encounter_doc.patient,
         patient_name=patient_encounter_doc.patient_name,
         healthcare_service_unit=patient_encounter_doc.healthcare_service_unit
+        healthcare_practitioner=patient_encounter_doc.practitioner
     ))
     doc.set_missing_values()
     doc.insert(ignore_permissions=True)
@@ -507,6 +526,8 @@ def create_sales_invoice(encounter, encounter_category, encounter_mode_of_paymen
     doc.company = encounter_doc.company
     doc.debit_to = get_receivable_account(
         encounter_doc.company)
+    doc.healthcare_service_unit = encounter_doc.healthcare_service_unit,
+    doc.healthcare_practitioner = encounter_doc.practitioner
 
     item = doc.append('items', {})
     item.item_code = encounter_category.encounter_fee_item
