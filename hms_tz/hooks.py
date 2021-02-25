@@ -265,6 +265,11 @@ fixtures = [
         "Patient Encounter-create_sales_invoice",
         "Patient Encounter-sales_invoice",
         "Patient Encounter-sent_to_vfd",
+        "Lab Test Template-healthcare_service_unit",
+        "Drug Prescription-healthcare_service_unit",
+        "Patient Encounter-default_healthcare_service_unit",
+        "Radiology Examination Template-healthcare_service_unit",
+        "Clinical Procedure Template-healthcare_service_unit"
         "Patient Appointment-payment_reference",
         "Patient Encounter-create_sales_invoice",
         "Patient Encounter-sales_invoice",
@@ -441,6 +446,10 @@ fixtures = [
         "Patient Encounter-appointment_type-mandatory_depends_on",
         "Vital Signs-patient-read_only_depends_on",
     )]]},
+    {"doctype": "Accounting Dimension", "filters": [["name", "in", (
+        "Healthcare Practitioner",
+        "Healthcare Service Unit",
+    )]]},
 ]
 
 # Includes in <head>
@@ -569,6 +578,7 @@ doc_events = {
     },
     "Sales Invoice": {
         "on_submit": "hms_tz.nhif.api.sales_invoice.create_healthcare_docs",
+        "validate": "hms_tz.nhif.api.sales_invoice.validate",
     },
     "Healthcare Insurance Subscription": {
         "on_submit": "hms_tz.nhif.api.insurance_subscription.on_submit",

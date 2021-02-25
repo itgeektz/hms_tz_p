@@ -5,6 +5,11 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
+from hms_tz.nhif.api.healthcare_utils import update_dimensions
+
+
+def validate(doc, method):
+    update_dimensions(doc)
 
 
 def create_healthcare_docs(doc, method):

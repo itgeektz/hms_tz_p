@@ -21,6 +21,20 @@ frappe.ui.form.on('Patient Encounter', {
             frm.set_df_property('referring_practitioner', 'reqd', 0);
         }
     },
+    default_healthcare_service_unit: function (frm) {
+        if (frm.doc.default_healthcare_service_unit) {
+            frm.doc.drug_prescription.forEach(row => {
+                if (!row.healthcare_service_unit) {
+                    frappe.model.set_value(
+                        row.doctype,
+                        row.name,
+                        "healthcare_service_unit",
+                        frm.doc.default_healthcare_service_unit
+                    );
+                }
+            });
+        }
+    },
     patient_encounter_preliminary_diagnosis: function (frm) {
         set_medical_code(frm);
     },
@@ -337,7 +351,7 @@ frappe.ui.form.on('Lab Prescription', {
     lab_test_code: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.lab_test_code) { return; }
-        validate_stock_item(frm, row.lab_test_code);
+        validate_stock_item(frm, row.lab_test_code, 1, row.healthcare_service_unit, "Lab Test Template");
         check_is_not_available_inhouse(row.lab_test_code, "Lab Test Template", row.lab_test_code);
     },
     prescribe: function (frm, cdt, cdn) {
@@ -350,7 +364,7 @@ frappe.ui.form.on('Lab Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.lab_test_code);
+            validate_stock_item(frm, row.lab_test_code, 1, row.healthcare_service_unit, "Lab Test Template");
         }
     },
 });
@@ -359,7 +373,7 @@ frappe.ui.form.on('Radiology Procedure Prescription', {
     radiology_examination_template: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.radiology_examination_template) { return; }
-        validate_stock_item(frm, row.radiology_examination_template);
+        validate_stock_item(frm, row.radiology_examination_template, 1, row.healthcare_service_unit, "Radiology Examination Template");
         check_is_not_available_inhouse(row.radiology_examination_template, "Radiology Examination Template", row.radiology_examination_template);
     },
     prescribe: function (frm, cdt, cdn) {
@@ -372,7 +386,7 @@ frappe.ui.form.on('Radiology Procedure Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.radiology_examination_template);
+            validate_stock_item(frm, row.radiology_examination_template, 1, row.healthcare_service_unit, "Radiology Examination Template");
         }
     },
 });
@@ -381,7 +395,7 @@ frappe.ui.form.on('Procedure Prescription', {
     procedure: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.procedure) { return; }
-        validate_stock_item(frm, row.procedure);
+        validate_stock_item(frm, row.procedure, 1, row.healthcare_service_unit, "Clinical Procedure Template");
         check_is_not_available_inhouse(row.procedure, "Clinical Procedure Template", row.procedure);
     },
     prescribe: function (frm, cdt, cdn) {
@@ -394,7 +408,7 @@ frappe.ui.form.on('Procedure Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.procedure);
+            validate_stock_item(frm, row.procedure, 1, row.healthcare_service_unit, "Clinical Procedure Template");
         }
     },
 });
@@ -403,8 +417,8 @@ frappe.ui.form.on('Drug Prescription', {
     drug_code: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.drug_code) { return; }
-        validate_stock_item(frm, row.drug_code, row.quantity);
-        check_is_not_available_inhouse(row.drug_code, "Medication", row.drug_code);
+        validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit, "Drug Prescription");
+        check_is_not_available_inhouse(row.drug_code, "Medication", row.drug_code, row.healthcare_service_unit, "Drug Prescription");
     },
     prescribe: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
@@ -415,13 +429,13 @@ frappe.ui.form.on('Drug Prescription', {
     quantity: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.drug_code) { return; }
-        validate_stock_item(frm, row.drug_code, row.quantity);
+        validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit, "Drug Prescription");
     },
     override_subscription: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.drug_code, row.quantity);
+            validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit, "Drug Prescription");
         }
     },
     dosage: function (frm, cdt, cdn) {
@@ -434,8 +448,8 @@ frappe.ui.form.on('Therapy Plan Detail', {
     therapy_type: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.therapy_type) { return; }
-        validate_stock_item(frm, row.therapy_type);
-        check_is_not_available_inhouse(row.therapy_type, "Therapy Type", row.therapy_type);
+        validate_stock_item(frm, row.therapy_type, caller = "Therapy Type");
+        check_is_not_available_inhouse(row.therapy_type, 1, row.healthcare_service_unit, "Therapy Type");
     },
     prescribe: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
@@ -447,19 +461,23 @@ frappe.ui.form.on('Therapy Plan Detail', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.therapy_type);
+            validate_stock_item(frm, row.therapy_type, 1, row.healthcare_service_unit, "Therapy Type");
         }
     },
 });
 
 
-const validate_stock_item = function (frm, medication_name, qty = 1) {
+const validate_stock_item = function (frm, healthcare_service, qty = 1, healthcare_service_unit = "", caller = "Unknown") {
+    if (healthcare_service_unit == "") {
+        healthcare_service_unit = frm.doc.healthcare_service_unit
+    }
     frappe.call({
         method: 'hms_tz.nhif.api.patient_encounter.validate_stock_item',
         args: {
-            'medication_name': medication_name,
+            'healthcare_service': healthcare_service,
             'qty': qty,
-            'healthcare_service_unit': frm.doc.healthcare_service_unit
+            'caller': caller,
+            'healthcare_service_unit': healthcare_service_unit
         },
         callback: function (data) {
             if (data.message) {
