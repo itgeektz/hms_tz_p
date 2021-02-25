@@ -98,7 +98,7 @@ def get_patient_info(card_no=None):
                 raise e
 
 
-def update_patient_history(doc):
+def update_patient_history(doc="Healthcare Insurance Subscription"):
     company = get_default_company()
     update_history = frappe.get_value(
         "Company NHIF Settings", company, "update_patient_history")
@@ -106,16 +106,17 @@ def update_patient_history(doc):
         return
 
     medical_history = ""
-    for row in doc.codification_table:
-        if row.description:
-            medical_history += row.description + "\n"
-    doc.medical_history = medical_history
+    if doc.doctype == "Patient Encounter":
+        for row in doc.codification_table:
+            if row.description:
+                medical_history += row.description + "\n"
+        doc.medical_history = medical_history
 
-    medication = ""
-    for row in doc.chronic_medications:
-        if row.drug_name:
-            medication += row.drug_name + "\n"
-    doc.medication = medication
+        medication = ""
+        for row in doc.chronic_medications:
+            if row.drug_name:
+                medication += row.drug_name + "\n"
+        doc.medication = medication
 
 
 @frappe.whitelist()
