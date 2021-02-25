@@ -526,7 +526,7 @@ def create_sales_invoice(encounter, encounter_category, encounter_mode_of_paymen
     doc.company = encounter_doc.company
     doc.debit_to = get_receivable_account(
         encounter_doc.company)
-    doc.healthcare_service_unit = encounter_doc.healthcare_service_unit,
+    doc.healthcare_service_unit = encounter_doc.healthcare_service_unit
     doc.healthcare_practitioner = encounter_doc.practitioner
 
     item = doc.append('items', {})
