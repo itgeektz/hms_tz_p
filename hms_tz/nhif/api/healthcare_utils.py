@@ -252,12 +252,12 @@ def update_dimensions(doc):
 def get_references(item):
     refd = ""
     refn = ""
-    if item.reference_doctype:
-        refd = item.reference_doctype
-        refn = item.reference_name
-    elif item.reference_dt:
-        refd = item.reference_dt
-        refn = item.reference_dn
+    if item.get("reference_doctype"):
+        refd = item.get("reference_doctype")
+        refn = item.get("reference_name")
+    elif item.get("reference_dt"):
+        refd = item.get("reference_dt")
+        refn = item.get("reference_dn")
     return refd, refn
 
 
