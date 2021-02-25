@@ -1,7 +1,5 @@
 frappe.ui.form.on('Vital Signs', {
     refresh: function (frm) {
-        refresh_field('drug_prescription');
-        refresh_field('lab_test_prescription');
         if (frm.doc.patient) {
             show_patient_vital_charts(frm.doc.patient, frm, "bp", "mmHg", "Blood Pressure");
         }
