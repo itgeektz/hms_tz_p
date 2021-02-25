@@ -155,7 +155,22 @@ def get_consulting_charge_item(appointment_type, practitioner):
     return charge_item
 
 
-def make_vital(appointment_doc, method):
+@frappe.whitelist()
+def create_vital(appointment):
+    appointment_doc = frappe.get_doc("Patient Appointment", appointment)
+    vital_doc = frappe.get_doc(dict(
+        doctype="Vital Signs",
+        patient=appointment_doc.patient,
+        appointment=appointment_doc.name,
+        company=appointment_doc.company,
+    ))
+    vital_doc.save(ignore_permissions=True)
+    appointment_doc.ref_vital_signs = vital_doc.name
+    frappe.msgprint(_('Vital Signs {0} created'.format(
+        vital_doc.name)))
+
+
+def make_vital(appointment_doc):
     if not appointment_doc.ref_vital_signs and (appointment_doc.invoiced or (appointment_doc.insurance_claim and appointment_doc.authorization_number)):
         vital_doc = frappe.get_doc(dict(
             doctype="Vital Signs",
@@ -274,12 +289,17 @@ def send_vfd(invoice_name):
 
 
 @frappe.whitelist()
-def get_previous_appointment(patient):
-    appointments = frappe.get_all("Patient Appointment", filters={
+def get_previous_appointment(patient, filters=None):
+    the_filters = {
         "patient": patient,
-    },
-        fields=["appointment_date", "practitioner_name", "name"],
-        order_by='appointment_date desc',
-    )
+    }
+    if filters:
+        filters = json.loads(filters)
+        the_filters.update(filters)
+    appointments = frappe.get_all("Patient Appointment", filters=the_filters,
+                                  fields=["appointment_date",
+                                          "practitioner_name", "name"],
+                                  order_by='appointment_date desc',
+                                  )
     if len(appointments):
         return appointments[0]
