@@ -341,6 +341,9 @@ var duplicate = function (frm) {
             callback: function (data) {
                 if (data.message) {
                     frappe.set_route('Form', 'Patient Encounter', data.message);
+                    setTimeout(function () {
+                        frm.reload_doc();
+                    }, 2000);
                 }
             }
         });
@@ -469,7 +472,7 @@ frappe.ui.form.on('Therapy Plan Detail', {
 
 const validate_stock_item = function (frm, healthcare_service, qty = 1, healthcare_service_unit = "", caller = "Unknown") {
     if (healthcare_service_unit == "") {
-        healthcare_service_unit = frm.doc.healthcare_service_unit
+        healthcare_service_unit = frm.doc.healthcare_service_unit;
     }
     frappe.call({
         method: 'hms_tz.nhif.api.patient_encounter.validate_stock_item',

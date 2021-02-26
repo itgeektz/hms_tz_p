@@ -13,24 +13,7 @@ frappe.ui.form.on('Patient Appointment', {
         set_filters(frm);
         frm.trigger("update_primary_action");
         frm.trigger("toggle_reqd_referral_no");
-        if (!frm.doc.invoiced && frm.doc.patient && frm.doc.mode_of_payment && !frm.doc.insurance_subscription && frm.doc.status != "Cancelled") {
-            frm.add_custom_button(__('Create Sales Invoice'), function () {
-                if (frm.is_dirty()) {
-                    frm.save();
-                }
-                frappe.call({
-                    method: 'hms_tz.nhif.api.patient_appointment.invoice_appointment',
-                    args: {
-                        'name': frm.doc.name
-                    },
-                    callback: function (data) {
-                        if (data.message) {
-                            frm.reload_doc();
-                        }
-                    }
-                });
-            });
-        }
+        add_btns(frm);
         frm.trigger("mandatory_fields");
     },
     referring_practitioner: function (frm) {
@@ -192,7 +175,13 @@ frappe.ui.form.on('Patient Appointment', {
     },
     patient: function (frm) {
         if (frm.doc.patient) {
-            get_previous_appointment(frm);
+            const appointment = get_previous_appointment(frm);
+            if (appointment) {
+                frappe.msgprint(` 
+                <p>Last Appointment Date : ${appointment.appointment_date}</p>
+                <p>Last Doctor name : ${appointment.practitioner_name}</p>
+                `);
+            }
             setTimeout(() => {
                 frm.toggle_display('mode_of_payment', true);
                 frm.toggle_display('paid_amount', true);
@@ -357,20 +346,94 @@ const load_print_page = function (invoice_name, pos_profile) {
     );
 };
 
-const get_previous_appointment = (frm) => {
+const get_previous_appointment = (frm, filters) => {
+    let appointment;
+    if (!frm.doc.patient) return;
     frappe.call({
         method: 'hms_tz.nhif.api.patient_appointment.get_previous_appointment',
         args: {
             'patient': frm.doc.patient,
+            'filters': filters
         },
+        async: false,
         callback: function (data) {
             if (data.message) {
-                const appointment = data.message;
-                frappe.msgprint(` 
-                <p>Last Appointment Date : ${appointment.appointment_date}</p>
-                <p>Last Doctor name : ${appointment.practitioner_name}</p>
-                `);
+                appointment = data.message;
             }
         }
+    });
+    return appointment;
+};
+
+
+const get_value = (doctype, name, field) => {
+    let value;
+    frappe.call({
+        method: 'frappe.client.get_value',
+        args: {
+            'doctype': doctype,
+            'filters': { 'name': name },
+            'fieldname': field
+        },
+        async: false,
+        callback: function (r) {
+            if (!r.exc) {
+                value = r.message[field];
+            }
+        }
+    });
+    return value;
+};
+
+const add_btns = (frm) => {
+    if (!frm.doc.patient || frm.is_new()) return;
+    const valid_days = get_value("Healthcare Settings", "Healthcare Settings", "valid_days");
+    const last_appointment_date = get_previous_appointment(frm, { name: ["!=", frm.doc.name] }).appointment_date;
+    const diff = frappe.datetime.get_day_diff(frm.doc.appointment_date, last_appointment_date);
+    if (diff > valid_days) {
+        add_invoice_btn(frm);
+    }
+    else {
+        add_vital_btn(frm);
+    }
+};
+
+const add_invoice_btn = (frm) => {
+    if (!frm.doc.invoiced && frm.doc.patient && frm.doc.mode_of_payment && !frm.doc.insurance_subscription && frm.doc.status != "Cancelled") {
+        frm.add_custom_button(__('Create Sales Invoice'), function () {
+            if (frm.is_dirty()) {
+                frm.save();
+            }
+            frappe.call({
+                method: 'hms_tz.nhif.api.patient_appointment.invoice_appointment',
+                args: {
+                    'name': frm.doc.name
+                },
+                callback: function (data) {
+                    if (data.message) {
+                        frm.reload_doc();
+                    }
+                }
+            });
+        });
+    }
+};
+
+const add_vital_btn = frm => {
+    frm.add_custom_button(__('Create Vital'), function () {
+        if (frm.is_dirty()) {
+            frm.save();
+        }
+        frappe.call({
+            method: 'hms_tz.nhif.api.patient_appointment.create_vital',
+            args: {
+                'appointment': frm.doc.name
+            },
+            callback: function (data) {
+                if (data.message) {
+                    frm.reload_doc();
+                }
+            }
+        });
     });
 };
