@@ -341,6 +341,9 @@ var duplicate = function (frm) {
             callback: function (data) {
                 if (data.message) {
                     frappe.set_route('Form', 'Patient Encounter', data.message);
+                    setTimeout(function () {
+                        frm.reload_doc();
+                    }, 2000);
                 }
             }
         });
