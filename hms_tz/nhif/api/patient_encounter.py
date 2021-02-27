@@ -361,34 +361,50 @@ def create_delivery_note(patient_encounter_doc):
         "Patient Appointment", patient_encounter_doc.appointment, ["insurance_subscription", "insurance_company"])
     if not insurance_subscription:
         return
-    for row in patient_encounter_doc.drug_prescription:
-        items = []
-        warehouse = get_warehouse_from_service_unit(
-            row.healthcare_service_unit)
-        if row.prescribe:
+    warehouses = []
+    for line in patient_encounter_doc.drug_prescription:
+        if line.prescribe:
             continue
-        item_code = frappe.get_value("Medication", row.drug_code, "item_code")
-        is_stock, item_name = frappe.get_value(
-            "Item", item_code, ["is_stock_item", "item_name"])
+        item_code = frappe.get_value("Medication", line.drug_code, "item_code")
+        is_stock = frappe.get_value("Item", item_code, "is_stock_item")
         if not is_stock:
             continue
-        item = frappe.new_doc("Delivery Note Item")
-        item.item_code = item_code
-        item.item_name = item_name
-        item.warehouse = warehouse
-        item.is_restricted = row.is_restricted
-        item.qty = row.quantity or 1
-        item.medical_code = row.medical_code
-        item.rate = get_item_rate(
-            item_code, patient_encounter_doc.company, insurance_subscription, insurance_company)
-        item.reference_doctype = row.doctype
-        item.reference_name = row.name
-        item.description = row.drug_name + " for " + row.dosage + " for " + \
-            row.period + " with " + row.medical_code + " and doctor notes: " + \
-            (row.comment or "Take medication as per dosage.")
-        items.append(item)
+        warehouse = get_warehouse_from_service_unit(
+            line.healthcare_service_unit)
+        if warehouse and warehouse not in warehouses:
+            warehouses.append(warehouse)
+    for element in warehouses:
+        items = []
+        for row in patient_encounter_doc.drug_prescription:
+            if row.prescribe:
+                continue
+            warehouse = get_warehouse_from_service_unit(
+                row.healthcare_service_unit)
+            if element != warehouse:
+                continue
+            item_code = frappe.get_value(
+                "Medication", row.drug_code, "item_code")
+            is_stock, item_name = frappe.get_value(
+                "Item", item_code, ["is_stock_item", "item_name"])
+            if not is_stock:
+                continue
+            item = frappe.new_doc("Delivery Note Item")
+            item.item_code = item_code
+            item.item_name = item_name
+            item.warehouse = warehouse
+            item.is_restricted = row.is_restricted
+            item.qty = row.quantity or 1
+            item.medical_code = row.medical_code
+            item.rate = get_item_rate(
+                item_code, patient_encounter_doc.company, insurance_subscription, insurance_company)
+            item.reference_doctype = row.doctype
+            item.reference_name = row.name
+            item.description = row.drug_name + " for " + row.dosage + " for " + \
+                row.period + " with " + row.medical_code + " and doctor notes: " + \
+                (row.comment or "Take medication as per dosage.")
+            items.append(item)
         if len(items) == 0:
-            return
+            continue
         doc = frappe.get_doc(dict(
             doctype="Delivery Note",
             posting_date=nowdate(),
