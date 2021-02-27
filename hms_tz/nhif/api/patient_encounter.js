@@ -332,7 +332,10 @@ var duplicate = function (frm) {
         return;
     }
     frm.add_custom_button(__('Duplicate'), function () {
-        frm.save();
+        if (frm.is_dirty()) {
+            frm.save();
+        }
+        
         frappe.call({
             method: 'hms_tz.nhif.api.patient_encounter.duplicate_encounter',
             args: {
