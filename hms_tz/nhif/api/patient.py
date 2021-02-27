@@ -55,6 +55,10 @@ def get_patient_info(card_no=None):
         return
     # TODO: need to be fixed to support pultiple company
     company = get_default_company()
+    if not company:
+        company = frappe.get_list("Company NHIF Settings", fields="company")[0].company
+    if not company:
+        frappe.msgprint(_("No records found from Company NHIF Settings, please set them correctly"), alert=True)
     token = get_nhifservice_token(company)
 
     nhifservice_url = frappe.get_value(
