@@ -25,25 +25,28 @@ def set_price(doc, method):
             doc.reference_dt, doc.reference_dn, ["company", "prescribed"])
         if hso_prescribe:
             return
+    elif doc.reference_dt == "Patient Appointment":
+            company = frappe.get_value(
+            doc.reference_dt, doc.reference_dn, "company")
     else:
         company = frappe.defaults.get_user_default("Company")
+        if not company:
+            frappe.throw(_("Default company not found for this user"))
     if  doc.insurance_subscription:
         hic_plan = frappe.get_value(
             "Healthcare Insurance Subscription", doc.insurance_subscription, "healthcare_insurance_coverage_plan")
         price_list = frappe.get_value(
             "Healthcare Insurance Coverage Plan", hic_plan, "price_list")
+        if not price_list and doc.insurance_company:
+            price_list = frappe.get_value(
+            "Healthcare Insurance Company", doc.insurance_company, "default_price_list")
+        if not price_list:
+                frappe.throw(_("Please set Price List in Healthcare Insurance Coverage Plan"))
         if price_list:
+            price_list_rate = get_item_price(doc.service_item, price_list, company)
             if price_list_rate and price_list_rate != 0:
                 price_list_rate = get_item_price(doc.service_item, price_list, company)
                 doc.price_list_rate = price_list_rate
                 return
-
-    if not price_list and doc.insurance_company:
-        price_list = frappe.get_value(
-        "Healthcare Insurance Company", doc.insurance_company, "default_price_list")
-    if not price_list:
-            frappe.throw(_("Please set Price List in Healthcare Insurance Coverage Plan"))
-    price_list_rate = get_item_price(doc.service_item, price_list, company)
-    if price_list_rate == 0:
-        frappe.throw(_("Please set Price List for item: {0}").format(doc.service_item))
-    doc.price_list_rate = price_list_rate
+            if price_list_rate == 0:
+                frappe.throw(_("Please set Price List for item: {0}").format(doc.service_item))
