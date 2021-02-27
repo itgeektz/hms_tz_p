@@ -383,7 +383,7 @@ const add_btns = (frm) => {
     if (frm.doc.invoiced || !frm.doc.mode_of_payment || frm.doc.insurance_subscription || frm.doc.status == "Cancelled" || frm.doc.ref_vital_signs) return;
     var vitals_btn_added = false;
     const valid_days = get_value("Healthcare Settings", "Healthcare Settings", "valid_days");
-    const appointment = get_previous_appointment(frm, { name: ["!=", frm.doc.name], mode_of_payment: frm.doc.mode_of_payment });
+    const appointment = get_previous_appointment(frm, { name: ["!=", frm.doc.name], mode_of_payment: frm.doc.mode_of_payment, department: frm.doc.department });
     if (typeof appointment != "undefined") {
         const last_appointment_date = appointment.appointment_date;
         const diff = frappe.datetime.get_day_diff(frm.doc.appointment_date, last_appointment_date);
@@ -391,6 +391,7 @@ const add_btns = (frm) => {
             add_vital_btn(frm);
             vitals_btn_added = true;
             frappe.show_alert(__({ message: "Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!", indicator: "green" }));
+            frappe.set_value("invoiced", 1)
         }
     }
     if (!vitals_btn_added) {
@@ -409,9 +410,7 @@ const add_invoice_btn = (frm) => {
                 'name': frm.doc.name
             },
             callback: function (data) {
-                if (data.message) {
-                    frm.reload_doc();
-                }
+                frm.reload_doc();
             }
         });
     });
@@ -428,9 +427,7 @@ const add_vital_btn = frm => {
                 'appointment': frm.doc.name
             },
             callback: function (data) {
-                if (data.message) {
-                    frm.reload_doc();
-                }
+                frm.reload_doc();
             }
         });
     });

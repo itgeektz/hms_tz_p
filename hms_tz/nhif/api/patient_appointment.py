@@ -145,20 +145,11 @@ def get_consulting_charge_item(appointment_type, practitioner):
 @frappe.whitelist()
 def create_vital(appointment):
     appointment_doc = frappe.get_doc("Patient Appointment", appointment)
-    vital_doc = frappe.get_doc(dict(
-        doctype="Vital Signs",
-        patient=appointment_doc.patient,
-        appointment=appointment_doc.name,
-        company=appointment_doc.company,
-    ))
-    vital_doc.save(ignore_permissions=True)
-    appointment_doc.ref_vital_signs = vital_doc.name
-    frappe.msgprint(_('Vital Signs {0} created'.format(
-        vital_doc.name)))
+    make_vital(appointment_doc, "patient_appointment")
 
 
 def make_vital(appointment_doc, method):
-    if not appointment_doc.ref_vital_signs and (appointment_doc.invoiced or (appointment_doc.insurance_claim and appointment_doc.authorization_number)):
+    if not appointment_doc.ref_vital_signs and (appointment_doc.invoiced or (appointment_doc.insurance_claim and appointment_doc.authorization_number) or method == "patient_appointment"):
         vital_doc = frappe.get_doc(dict(
             doctype="Vital Signs",
             patient=appointment_doc.patient,
@@ -167,6 +158,7 @@ def make_vital(appointment_doc, method):
         ))
         vital_doc.save(ignore_permissions=True)
         appointment_doc.ref_vital_signs = vital_doc.name
+        appointment_doc.save()
         frappe.msgprint(_('Vital Signs {0} created'.format(
             vital_doc.name)))
 
