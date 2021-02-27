@@ -170,7 +170,7 @@ def create_vital(appointment):
         vital_doc.name)))
 
 
-def make_vital(appointment_doc):
+def make_vital(appointment_doc, method):
     if not appointment_doc.ref_vital_signs and (appointment_doc.invoiced or (appointment_doc.insurance_claim and appointment_doc.authorization_number)):
         vital_doc = frappe.get_doc(dict(
             doctype="Vital Signs",
