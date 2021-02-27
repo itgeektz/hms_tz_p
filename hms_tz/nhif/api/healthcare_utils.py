@@ -276,7 +276,7 @@ def get_healthcare_practitioner(item):
             return frappe.get_value("Patient Encounter", parent, "practitioner")
     elif refd == "Healthcare Service Order":
         encounter = frappe.get_value(
-            "ealthcare Service Order", refn, "order_group")
+            "Healthcare Service Order", refn, "order_group")
         if encounter:
             return frappe.get_value("Patient Encounter", encounter, "practitioner")
 
