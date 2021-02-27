@@ -361,8 +361,8 @@ def create_delivery_note(patient_encounter_doc):
         "Patient Appointment", patient_encounter_doc.appointment, ["insurance_subscription", "insurance_company"])
     if not insurance_subscription:
         return
-    items = []
     for row in patient_encounter_doc.drug_prescription:
+        items = []
         warehouse = get_warehouse_from_service_unit(
             row.healthcare_service_unit)
         if row.prescribe:
@@ -387,32 +387,31 @@ def create_delivery_note(patient_encounter_doc):
             row.period + " with " + row.medical_code + " and doctor notes: " + \
             (row.comment or "Take medication as per dosage.")
         items.append(item)
-
-    if len(items) == 0:
-        return
-    doc = frappe.get_doc(dict(
-        doctype="Delivery Note",
-        posting_date=nowdate(),
-        posting_time=nowtime(),
-        set_warehouse=warehouse,
-        company=patient_encounter_doc.company,
-        customer=frappe.get_value(
-            "Healthcare Insurance Company", insurance_company, "customer"),
-        currency=frappe.get_value(
-            "Company", patient_encounter_doc.company, "default_currency"),
-        items=items,
-        reference_doctype=patient_encounter_doc.doctype,
-        reference_name=patient_encounter_doc.name,
-        patient=patient_encounter_doc.patient,
-        patient_name=patient_encounter_doc.patient_name,
-        healthcare_service_unit=patient_encounter_doc.healthcare_service_unit,
-        healthcare_practitioner=patient_encounter_doc.practitioner
-    ))
-    doc.set_missing_values()
-    doc.insert(ignore_permissions=True)
-    if doc.get('name'):
-        frappe.msgprint(_('Pharmacy Dispensing/Delivery Note {0} created successfully.').format(
-            frappe.bold(doc.name)))
+        if len(items) == 0:
+            return
+        doc = frappe.get_doc(dict(
+            doctype="Delivery Note",
+            posting_date=nowdate(),
+            posting_time=nowtime(),
+            set_warehouse=warehouse,
+            company=patient_encounter_doc.company,
+            customer=frappe.get_value(
+                "Healthcare Insurance Company", insurance_company, "customer"),
+            currency=frappe.get_value(
+                "Company", patient_encounter_doc.company, "default_currency"),
+            items=items,
+            reference_doctype=patient_encounter_doc.doctype,
+            reference_name=patient_encounter_doc.name,
+            patient=patient_encounter_doc.patient,
+            patient_name=patient_encounter_doc.patient_name,
+            healthcare_service_unit=patient_encounter_doc.healthcare_service_unit,
+            healthcare_practitioner=patient_encounter_doc.practitioner
+        ))
+        doc.set_missing_values()
+        doc.insert(ignore_permissions=True)
+        if doc.get('name'):
+            frappe.msgprint(_('Pharmacy Dispensing/Delivery Note {0} created successfully.').format(
+                frappe.bold(doc.name)))
 
 
 @frappe.whitelist()
