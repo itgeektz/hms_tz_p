@@ -265,6 +265,7 @@ fixtures = [
         "Patient Encounter-sales_invoice",
         "Patient Encounter-sent_to_vfd",
         "Patient Encounter-encounter_mode_of_payment",
+        "Mode of Payment-price_list",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
