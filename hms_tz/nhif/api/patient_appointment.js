@@ -426,7 +426,7 @@ const add_invoice_btn = (frm) => {
 };
 
 const add_vital_btn = frm => {
-    frm.add_custom_button(__('Create Vital'), function () {
+    frm.add_custom_button(__('Create Vitals'), function () {
         if (frm.is_dirty()) {
             frm.save();
         }
