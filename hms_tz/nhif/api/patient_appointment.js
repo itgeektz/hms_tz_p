@@ -387,14 +387,20 @@ const get_value = (doctype, name, field) => {
 
 const add_btns = (frm) => {
     if (!frm.doc.patient || frm.is_new()) return;
+    var vitals_btn_added = false
     const valid_days = get_value("Healthcare Settings", "Healthcare Settings", "valid_days");
-    const last_appointment_date = get_previous_appointment(frm, { name: ["!=", frm.doc.name] }).appointment_date;
-    const diff = frappe.datetime.get_day_diff(frm.doc.appointment_date, last_appointment_date);
-    if (diff > valid_days) {
-        add_invoice_btn(frm);
+    const appointment = get_previous_appointment(frm, { name: ["!=", frm.doc.name] });
+    if (typeof appointment != "undefined") {
+        const last_appointment_date = appointment.appointment_date;
+        const diff = frappe.datetime.get_day_diff(frm.doc.appointment_date, last_appointment_date);
+        if (diff <= valid_days) {
+            add_vital_btn(frm);
+            vitals_btn_added = true
+            frappe.show_alert(__({ message: "Previous appointment found valid for free follow-up.<br>Skipping sales invoice for this appointment!", indicator: "green" }))
+        }
     }
-    else {
-        add_vital_btn(frm);
+    if (!vitals_btn_added) {
+        add_invoice_btn(frm);
     }
 };
 
