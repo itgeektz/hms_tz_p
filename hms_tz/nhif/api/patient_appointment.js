@@ -175,13 +175,6 @@ frappe.ui.form.on('Patient Appointment', {
     },
     patient: function (frm) {
         if (frm.doc.patient) {
-            const appointment = get_previous_appointment(frm);
-            if (appointment) {
-                frappe.msgprint(` 
-                <p>Last Appointment Date : ${appointment.appointment_date}</p>
-                <p>Last Doctor name : ${appointment.practitioner_name}</p>
-                `);
-            }
             setTimeout(() => {
                 frm.toggle_display('mode_of_payment', true);
                 frm.toggle_display('paid_amount', true);
@@ -387,16 +380,17 @@ const get_value = (doctype, name, field) => {
 
 const add_btns = (frm) => {
     if (!frm.doc.patient || frm.is_new()) return;
-    var vitals_btn_added = false
+    if (frm.doc.invoiced || !frm.doc.mode_of_payment || frm.doc.insurance_subscription || frm.doc.status == "Cancelled" || frm.doc.ref_vital_signs) return;
+    var vitals_btn_added = false;
     const valid_days = get_value("Healthcare Settings", "Healthcare Settings", "valid_days");
-    const appointment = get_previous_appointment(frm, { name: ["!=", frm.doc.name] });
+    const appointment = get_previous_appointment(frm, { name: ["!=", frm.doc.name], mode_of_payment: frm.doc.mode_of_payment });
     if (typeof appointment != "undefined") {
         const last_appointment_date = appointment.appointment_date;
         const diff = frappe.datetime.get_day_diff(frm.doc.appointment_date, last_appointment_date);
         if (diff <= valid_days) {
             add_vital_btn(frm);
-            vitals_btn_added = true
-            frappe.show_alert(__({ message: "Previous appointment found valid for free follow-up.<br>Skipping sales invoice for this appointment!", indicator: "green" }))
+            vitals_btn_added = true;
+            frappe.show_alert(__({ message: "Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!", indicator: "green" }));
         }
     }
     if (!vitals_btn_added) {
@@ -405,24 +399,22 @@ const add_btns = (frm) => {
 };
 
 const add_invoice_btn = (frm) => {
-    if (!frm.doc.invoiced && frm.doc.patient && frm.doc.mode_of_payment && !frm.doc.insurance_subscription && frm.doc.status != "Cancelled") {
-        frm.add_custom_button(__('Create Sales Invoice'), function () {
-            if (frm.is_dirty()) {
-                frm.save();
-            }
-            frappe.call({
-                method: 'hms_tz.nhif.api.patient_appointment.invoice_appointment',
-                args: {
-                    'name': frm.doc.name
-                },
-                callback: function (data) {
-                    if (data.message) {
-                        frm.reload_doc();
-                    }
+    frm.add_custom_button(__('Create Sales Invoice'), function () {
+        if (frm.is_dirty()) {
+            frm.save();
+        }
+        frappe.call({
+            method: 'hms_tz.nhif.api.patient_appointment.invoice_appointment',
+            args: {
+                'name': frm.doc.name
+            },
+            callback: function (data) {
+                if (data.message) {
+                    frm.reload_doc();
                 }
-            });
+            }
         });
-    }
+    });
 };
 
 const add_vital_btn = frm => {
