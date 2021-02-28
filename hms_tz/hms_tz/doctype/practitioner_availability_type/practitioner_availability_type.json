@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_rename": 1,
  "autoname": "field:availability_name",
  "creation": "2020-01-31 14:36:29.498419",
  "doctype": "DocType",
@@ -44,7 +45,7 @@
   }
  ],
  "links": [],
- "modified": "2020-12-24 10:26:00.333994",
+ "modified": "2021-02-28 18:51:27.379679",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Practitioner Availability Type",
