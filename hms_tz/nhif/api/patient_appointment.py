@@ -128,7 +128,6 @@ def invoice_appointment(name):
             "Patient Appointment", appointment_doc.name)
         appointment_doc.ref_sales_invoice = sales_invoice.name
         appointment_doc.invoiced = 1
-        appointment_doc.save()
         return "true"
 
 
@@ -149,7 +148,7 @@ def create_vital(appointment):
 
 
 def make_vital(appointment_doc, method):
-    if not appointment_doc.ref_vital_signs and (appointment_doc.invoiced or (appointment_doc.insurance_claim and appointment_doc.authorization_number) or method == "patient_appointment"):
+    if (not appointment_doc.ref_vital_signs) and (appointment_doc.invoiced or (appointment_doc.insurance_claim and appointment_doc.authorization_number) or method == "patient_appointment"):
         vital_doc = frappe.get_doc(dict(
             doctype="Vital Signs",
             patient=appointment_doc.patient,
@@ -158,7 +157,6 @@ def make_vital(appointment_doc, method):
         ))
         vital_doc.save(ignore_permissions=True)
         appointment_doc.ref_vital_signs = vital_doc.name
-        appointment_doc.save()
         frappe.msgprint(_('Vital Signs {0} created'.format(
             vital_doc.name)))
 
