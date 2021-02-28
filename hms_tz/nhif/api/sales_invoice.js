@@ -72,6 +72,7 @@ var get_healthcare_services_to_invoice = function(frm) {
 				fieldtype: 'Check',
 				label: 'Get Prescribed',
 				fieldname: "prescribed",
+				default: 1,
             },
             {
 				fieldtype: 'Button',
