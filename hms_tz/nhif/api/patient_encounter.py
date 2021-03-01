@@ -205,6 +205,10 @@ def get_stock_availability(item_code, warehouse):
 
 @frappe.whitelist()
 def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_service_unit=None, caller="Unknown"):
+    qty = float(qty)
+    if qty == 0:
+        qty = 1
+
     # frappe.msgprint(_("{0} warehouse passed. <br> {1} healthcare service unit passed").format(warehouse, healthcare_service_unit), alert=True)
     if caller != "Drug Prescription" and not healthcare_service_unit:
         # LRPT code stock check goes here
