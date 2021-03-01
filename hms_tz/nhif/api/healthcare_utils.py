@@ -77,7 +77,8 @@ def get_healthcare_service_order_to_invoice(patient, company, encounter, service
                 'reference_name': service.name,
                 'service': service_item,
                 'rate': practitioner_charge,
-                'income_account': income_account
+                'income_account': income_account,
+                'qty': service.quantity
             })
 
     return services_to_invoice
