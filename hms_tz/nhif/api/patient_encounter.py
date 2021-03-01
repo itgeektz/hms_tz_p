@@ -194,7 +194,7 @@ def get_item_info(item_code=None, medication_name=None):
 
 
 def get_stock_availability(item_code, warehouse):
-    latest_sle = frappe.db.sql("""SELECT SUM(actual_qty) AS actual_qty
+    latest_sle = frappe.db.sql("""SELECT SUM(qty_after_transaction) AS actual_qty
         FROM `tabStock Ledger Entry` 
         WHERE item_code = %s AND warehouse = %s
         LIMIT 1""", (item_code, warehouse), as_dict=1)
@@ -206,8 +206,6 @@ def get_stock_availability(item_code, warehouse):
 @frappe.whitelist()
 def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_service_unit=None, caller="Unknown"):
     # frappe.msgprint(_("{0} warehouse passed. <br> {1} healthcare service unit passed").format(warehouse, healthcare_service_unit), alert=True)
-    frappe.msgprint(_("{0} was the unknown caller.<br>Please let IT Support know this message appearing.").format(
-        caller), alert=True)
     if caller != "Drug Prescription" and not healthcare_service_unit:
         # LRPT code stock check goes here
         return
@@ -217,14 +215,14 @@ def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_serv
         warehouse = get_warehouse_from_service_unit(healthcare_service_unit)
         # frappe.msgprint(_("{0} selected using {1}").format(warehouse, healthcare_service_unit), alert=True)
     if not warehouse:
-        frappe.throw(_("Warehouse is missing in healthcare service unit {0}").format(
-            healthcare_service_unit))
+        frappe.throw(_("Warehouse is missing in healthcare service unit {0} when checking for {1}").format(
+            healthcare_service_unit, item_info.get("item_code")))
     if item_info.get("is_stock") and item_info.get("item_code"):
         stock_qty = get_stock_availability(
             item_info.get("item_code"), warehouse) or 0
         if float(qty) > float(stock_qty):
             frappe.throw(_("The quantity required for the item {0} is insufficient in {1}/{2}. Available quantity is {3}.").format(
-                healthcare_service, warehouse, healthcare_service_unit, stock_qty))
+                item_info.get("item_code"), warehouse, healthcare_service_unit, stock_qty))
             return False
     if stock_qty > 0:
         frappe.msgprint(_("Available quantity for the item {0} in {1}/{2} is {3}.").format(
@@ -423,6 +421,7 @@ def create_delivery_note(patient_encounter_doc):
             healthcare_service_unit=patient_encounter_doc.healthcare_service_unit,
             healthcare_practitioner=patient_encounter_doc.practitioner
         ))
+        doc.flags.ignore_permissions = True
         doc.set_missing_values()
         doc.insert(ignore_permissions=True)
         if doc.get('name'):
@@ -580,6 +579,7 @@ def create_sales_invoice(encounter, encounter_category, encounter_mode_of_paymen
     payment.amount = encounter_category.encounter_fee
 
     doc.set_taxes()
+    doc.flags.ignore_permissions = True
     doc.set_missing_values(for_validate=True)
     doc.flags.ignore_mandatory = True
     doc.save(ignore_permissions=True)
