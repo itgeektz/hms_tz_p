@@ -270,6 +270,9 @@ fixtures = [
         "Patient Encounter-copy_from_preliminary_diagnosis",
         "Patient Encounter-get_chronic_medications",
         "Patient Encounter-get_chronic_diagnosis",
+        "Patient-chronic_medications",
+        "Patient-codification_table",
+        "Patient-chronic_section",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
