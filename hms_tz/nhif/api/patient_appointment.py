@@ -128,6 +128,8 @@ def invoice_appointment(name):
             "Patient Appointment", appointment_doc.name)
         appointment_doc.ref_sales_invoice = sales_invoice.name
         appointment_doc.invoiced = 1
+        appointment_doc.db_update()
+        make_vital(appointment_doc, 'patient_appointment')
         return "true"
 
 
