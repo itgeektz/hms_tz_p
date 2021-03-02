@@ -54,7 +54,7 @@ frappe.ui.form.on('Patient Encounter', {
                 if (data.message) {
                     if (data.message.length == 0) {
                         frappe.show_alert({
-                            message: __(`There is no Chronic Diagnosis`),
+                            message: __(`There are no Chronic Diagnosis for this patient`),
                             indicator: 'red'
                         }, 5);
                         return;
@@ -252,7 +252,6 @@ var set_medical_code = function (frm) {
 
     frappe.meta.get_docfield("Lab Prescription", "medical_code", frm.doc.name).options = preliminary_diagnosis;
     refresh_field("lab_test_prescription");
-    frappe.show_alert("Lab updated with medical codes " + String(preliminary_diagnosis));
 
     frappe.meta.get_docfield("Radiology Procedure Prescription", "medical_code", frm.doc.name).options = preliminary_diagnosis;
     refresh_field("radiology_procedure_prescription");
