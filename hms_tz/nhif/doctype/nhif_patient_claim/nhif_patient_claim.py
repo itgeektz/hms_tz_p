@@ -96,6 +96,9 @@ class NHIFPatientClaim(Document):
                 new_row.created_by = frappe.get_value(
                     "User", row.modified_by, "full_name")
                 new_row.date_created = row.modified.strftime("%Y-%m-%d")
+        diagnosis_list = []
+        for encounter in self.patient_encounters:
+            encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
             for row in encounter_doc.patient_encounter_final_diagnosis:
                 if row.code in diagnosis_list:
                     continue
