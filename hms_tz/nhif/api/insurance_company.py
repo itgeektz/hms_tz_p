@@ -18,7 +18,7 @@ from frappe.model.naming import set_new_name
 def enqueue_get_nhif_price_package(company):
     enqueue(method=get_nhif_price_package, queue='long',
             timeout=10000000, is_async=True, kwargs=company)
-    frappe.msgprint(_("Start Getting NHIF Prices Packages"), alert=True)
+    frappe.msgprint(_("Getting NHIF Prices Packages"), alert=True)
     return
 
 
@@ -123,10 +123,19 @@ def get_nhif_price_package(kwargs):
                 VALUES {}
             '''.format(', '.join(['%s'] * len(insert_data))), tuple(insert_data))
             frappe.db.commit()
-            process_prices_list(company)
-            process_insurance_coverages()
+            frappe.msgprint(_("Received data from NHIF"))
             return data
 
+@frappe.whitelist()
+def process_nhif_records(company):
+    frappe.msgprint(_("Processing NHIF price lists"), alert=True)
+    enqueue(method=process_prices_list, queue='long',
+            timeout=10000000, is_async=True, kwargs=company)
+    process_prices_list(company)
+    frappe.msgprint(_("Processing NHIF Insurance Converages"), alert=True)
+    enqueue(method=process_insurance_coverages, queue='long',
+            timeout=10000000, is_async=True)
+    frappe.msgprint(_("Processing NHIF records completed"), alert=True)
 
 def process_prices_list(company):
     facility_code = frappe.get_value(
@@ -222,34 +231,6 @@ def get_insurance_coverage_items():
                 WHERE icd.customer_name = 'NHIF'
                 GROUP BY dt, m.name, icd.ref_code , icd.parent
             UNION ALL
-            SELECT 'Appointment Type' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
-                FROM `tabItem Customer Detail` icd
-                INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
-                INNER JOIN `tabAppointment Type` m ON icd.parent = m.inpatient_visit_charge_item
-                WHERE icd.customer_name = 'NHIF'
-                GROUP BY dt, m.name, icd.ref_code , icd.parent
-            UNION ALL
-            SELECT 'Clinical Procedure Template' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
-                FROM `tabItem Customer Detail` icd
-                INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
-                INNER JOIN `tabClinical Procedure Template` m ON icd.parent = m.item
-                WHERE icd.customer_name = 'NHIF'
-                GROUP BY dt, m.name, icd.ref_code , icd.parent
-            UNION ALL
-            SELECT 'Therapy Type' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
-                FROM `tabItem Customer Detail` icd
-                INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
-                INNER JOIN `tabTherapy Type` m ON icd.parent = m.item
-                WHERE icd.customer_name = 'NHIF'
-                GROUP BY dt, m.name, icd.ref_code , icd.parent
-            UNION ALL
-            SELECT 'Medication' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
-                FROM `tabItem Customer Detail` icd
-                INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
-                INNER JOIN `tabMedication` m ON icd.parent = m.item
-                WHERE icd.customer_name = 'NHIF'
-                GROUP BY dt, m.name, icd.ref_code , icd.parent
-            UNION ALL
             SELECT 'Lab Test Template' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
                 FROM `tabItem Customer Detail` icd
                 INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
@@ -261,6 +242,27 @@ def get_insurance_coverage_items():
                 FROM `tabItem Customer Detail` icd
                 INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
                 INNER JOIN `tabRadiology Examination Template` m ON icd.parent = m.item
+                WHERE icd.customer_name = 'NHIF'
+                GROUP BY dt, m.name, icd.ref_code , icd.parent
+            UNION ALL
+            SELECT 'Clinical Procedure Template' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
+                FROM `tabItem Customer Detail` icd
+                INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
+                INNER JOIN `tabClinical Procedure Template` m ON icd.parent = m.item
+                WHERE icd.customer_name = 'NHIF'
+                GROUP BY dt, m.name, icd.ref_code , icd.parent
+            UNION ALL
+            SELECT 'Medication' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
+                FROM `tabItem Customer Detail` icd
+                INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
+                INNER JOIN `tabMedication` m ON icd.parent = m.item
+                WHERE icd.customer_name = 'NHIF'
+                GROUP BY dt, m.name, icd.ref_code , icd.parent
+            UNION ALL
+            SELECT 'Therapy Type' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
+                FROM `tabItem Customer Detail` icd
+                INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
+                INNER JOIN `tabTherapy Type` m ON icd.parent = m.item
                 WHERE icd.customer_name = 'NHIF'
                 GROUP BY dt, m.name, icd.ref_code , icd.parent
             UNION ALL
