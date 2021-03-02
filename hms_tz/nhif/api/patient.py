@@ -6,13 +6,13 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from hms_tz.nhif.api.token import get_nhifservice_token
-from erpnext import get_company_currency, get_default_company
+from erpnext import get_default_company
 import json
 import requests
 from time import sleep
 from hms_tz.nhif.doctype.nhif_product.nhif_product import add_product
 from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
-from frappe.utils import nowdate, getdate
+from frappe.utils import getdate
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from hms_tz.nhif.api.healthcare_utils import remove_special_characters
 from datetime import date
@@ -53,12 +53,14 @@ def get_patient_info(card_no=None):
     if not card_no:
         frappe.msgprint(_("Please set Card No"))
         return
-    # TODO: need to be fixed to support pultiple company
+    # TODO: need to be fixed to support multiple company
     company = get_default_company()
     if not company:
         company = frappe.defaults.get_user_default("Company")
     if not company:
-        frappe.msgprint(_("No records found from Company NHIF Settings, please set them correctly"), alert=True)
+        company = frappe.get_list("Company NHIF Settings", fields=["company"], filters = {"enable": 1})[0].company
+    if not company:
+        frappe.throw(_("No companies found to connect to NHIF"))
     token = get_nhifservice_token(company)
 
     nhifservice_url = frappe.get_value(
