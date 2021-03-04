@@ -488,7 +488,6 @@ doctype_js = {
     "Healthcare Service Order": "nhif/api/service_order.js",
     "Healthcare Insurance Company": "nhif/api/insurance_company.js",
     "Vital Signs": "nhif/api/vital_signs.js",
-    "Inpatient Record": "nhif/api/inpatient_record.js",
     "Healthcare Insurance Subscription": "nhif/api/insurance_subscription.js",
 }
 # csf_tz.nhif.api.patient_appointment
