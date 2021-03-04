@@ -54,12 +54,6 @@ frappe.ui.form.on('Patient Appointment', {
     },
     insurance_company: function (frm) {
         frm.set_value("authorization_number", "");
-        if (frm.doc.insurance_subscription && frm.doc.insurance_company != "NHIF") {
-            frm.toggle_reqd("authorization_number", true);
-        }
-        else {
-            frm.toggle_reqd("authorization_number", false);
-        }
     },
     practitioner: function (frm) {
         frm.trigger("get_consulting_charge_item");
