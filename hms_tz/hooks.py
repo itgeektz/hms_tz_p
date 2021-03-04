@@ -274,6 +274,11 @@ fixtures = [
         "Patient-codification_table",
         "Patient-chronic_section",
         "Inpatient Record-insurance_coverage_plan",
+        "Inpatient Occupancy-delivery_note",
+        "Inpatient Occupancy-confirmed",
+        "Inpatient Record-inpatient_consultancy",
+        "Inpatient Record-inpatient_consultancies",
+        "Inpatient Record-insurance_coverage_plan",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -458,7 +463,9 @@ fixtures = [
         "Inpatient Record-inpatient_occupancies-read_only",
         "Inpatient Record-insurance_subscription-fetch_if_empty",
         "Inpatient Record-insurance_subscription-fetch_from",
-
+        "Inpatient Occupancy-check_out-in_list_view",
+        "Inpatient Occupancy-left-in_list_view",
+        "Inpatient Record-references-collapsible",
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",
