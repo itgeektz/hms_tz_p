@@ -54,7 +54,7 @@ frappe.ui.form.on('Patient Encounter', {
                 if (data.message) {
                     if (data.message.length == 0) {
                         frappe.show_alert({
-                            message: __(`There is no Chronic Diagnosis`),
+                            message: __(`There are no Chronic Diagnosis for this patient`),
                             indicator: 'red'
                         }, 5);
                         return;
@@ -204,6 +204,9 @@ frappe.ui.form.on('Patient Encounter', {
 
 
 frappe.ui.form.on('Codification Table', {
+    onload: function (frm) {
+        set_medical_code(frm);
+    },
     patient_encounter_preliminary_diagnosis_add: function (frm) {
         set_medical_code(frm);
     },
@@ -244,17 +247,20 @@ var get_final_diagnosis = function (frm) {
 var set_medical_code = function (frm) {
     const final_diagnosis = get_final_diagnosis(frm);
     const preliminary_diagnosis = get_preliminary_diagnosis(frm);
-    frappe.meta.get_docfield("Drug Prescription", "medical_code", frm.doc.name).options = final_diagnosis;
-    refresh_field("drug_prescription");
+    if (typeof final_diagnosis == "undefined") final_diagnosis = [];
+    if (typeof preliminary_diagnosis == "undefined") final_diagnosis = [];
 
     frappe.meta.get_docfield("Lab Prescription", "medical_code", frm.doc.name).options = preliminary_diagnosis;
     refresh_field("lab_test_prescription");
 
+    frappe.meta.get_docfield("Radiology Procedure Prescription", "medical_code", frm.doc.name).options = preliminary_diagnosis;
+    refresh_field("radiology_procedure_prescription");
+
     frappe.meta.get_docfield("Procedure Prescription", "medical_code", frm.doc.name).options = final_diagnosis;
     refresh_field("procedure_prescription");
 
-    frappe.meta.get_docfield("Radiology Procedure Prescription", "medical_code", frm.doc.name).options = preliminary_diagnosis;
-    refresh_field("radiology_procedure_prescription");
+    frappe.meta.get_docfield("Drug Prescription", "medical_code", frm.doc.name).options = final_diagnosis;
+    refresh_field("drug_prescription");
 
     frappe.meta.get_docfield("Therapy Plan Detail", "medical_code", frm.doc.name).options = final_diagnosis;
     refresh_field("therapies");

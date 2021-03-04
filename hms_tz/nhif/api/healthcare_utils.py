@@ -77,7 +77,8 @@ def get_healthcare_service_order_to_invoice(patient, company, encounter, service
                 'reference_name': service.name,
                 'service': service_item,
                 'rate': practitioner_charge,
-                'income_account': income_account
+                'income_account': income_account,
+                'qty': service.quantity
             })
 
     return services_to_invoice
@@ -276,7 +277,7 @@ def get_healthcare_practitioner(item):
             return frappe.get_value("Patient Encounter", parent, "practitioner")
     elif refd == "Healthcare Service Order":
         encounter = frappe.get_value(
-            "ealthcare Service Order", refn, "order_group")
+            "Healthcare Service Order", refn, "order_group")
         if encounter:
             return frappe.get_value("Patient Encounter", encounter, "practitioner")
 

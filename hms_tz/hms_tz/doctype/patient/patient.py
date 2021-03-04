@@ -141,6 +141,8 @@ class Patient(Document):
             return {'invoice': sales_invoice.name}
 
     def get_billing_info(self):
+        if not frappe.defaults.get_user_default("Company"):
+            return
         return get_patient_billing_info(self)
 
     def update_web_site_user_contact(self):

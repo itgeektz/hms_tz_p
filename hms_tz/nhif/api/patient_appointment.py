@@ -90,21 +90,8 @@ def invoice_appointment(name):
         'Healthcare Settings', 'automate_appointment_invoicing')
     appointment_invoiced = frappe.db.get_value(
         'Patient Appointment', appointment_doc.name, 'invoiced')
-    enable_free_follow_ups = frappe.db.get_single_value(
-        'Healthcare Settings', 'enable_free_follow_ups')
-    if enable_free_follow_ups:
-        fee_validity = check_fee_validity(appointment_doc)
-        if fee_validity and fee_validity.status == 'Completed':
-            fee_validity = None
-        elif not fee_validity:
-            if frappe.db.exists('Fee Validity Reference', {'appointment': appointment_doc.name}):
-                return
-            if check_is_new_patient(appointment_doc.patient, appointment_doc.name):
-                return
-    else:
-        fee_validity = None
 
-    if not automate_invoicing and not appointment_doc.insurance_subscription and appointment_doc.mode_of_payment and not appointment_invoiced and not fee_validity:
+    if not automate_invoicing and not appointment_doc.insurance_subscription and appointment_doc.mode_of_payment and not appointment_invoiced:
         sales_invoice = frappe.new_doc('Sales Invoice')
         sales_invoice.patient = appointment_doc.patient
         sales_invoice.customer = frappe.get_value(
@@ -141,7 +128,8 @@ def invoice_appointment(name):
             "Patient Appointment", appointment_doc.name)
         appointment_doc.ref_sales_invoice = sales_invoice.name
         appointment_doc.invoiced = 1
-        appointment_doc.save()
+        appointment_doc.db_update()
+        make_vital(appointment_doc, 'patient_appointment')
         return "true"
 
 
@@ -158,20 +146,11 @@ def get_consulting_charge_item(appointment_type, practitioner):
 @frappe.whitelist()
 def create_vital(appointment):
     appointment_doc = frappe.get_doc("Patient Appointment", appointment)
-    vital_doc = frappe.get_doc(dict(
-        doctype="Vital Signs",
-        patient=appointment_doc.patient,
-        appointment=appointment_doc.name,
-        company=appointment_doc.company,
-    ))
-    vital_doc.save(ignore_permissions=True)
-    appointment_doc.ref_vital_signs = vital_doc.name
-    frappe.msgprint(_('Vital Signs {0} created'.format(
-        vital_doc.name)))
+    make_vital(appointment_doc, "patient_appointment")
 
 
-def make_vital(appointment_doc):
-    if not appointment_doc.ref_vital_signs and (appointment_doc.invoiced or (appointment_doc.insurance_claim and appointment_doc.authorization_number)):
+def make_vital(appointment_doc, method):
+    if (not appointment_doc.ref_vital_signs) and (appointment_doc.invoiced or (appointment_doc.insurance_claim and appointment_doc.authorization_number) or method == "patient_appointment"):
         vital_doc = frappe.get_doc(dict(
             doctype="Vital Signs",
             patient=appointment_doc.patient,
