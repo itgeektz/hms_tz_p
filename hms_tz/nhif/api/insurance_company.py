@@ -137,7 +137,8 @@ def process_nhif_records(company):
             timeout=10000000, is_async=True)
     frappe.msgprint(_("Processing NHIF records completed"), alert=True)
 
-def process_prices_list(company):
+def process_prices_list(kwargs):
+    company = kwargs
     facility_code = frappe.get_value(
         "Company NHIF Settings", company, "facility_code")
     currency = frappe.get_value("Company", company, "default_currency")
@@ -175,11 +176,12 @@ def process_prices_list(company):
             price_list_name = "NHIF-" + schemeid
             package_list = frappe.db.sql(
                 '''
-                    SELECT schemeid, itemcode, unitprice, isactive, count(*) 
+                    SELECT schemeid, itemcode, unitprice, isactive
                     FROM `tabNHIF Price Package` 
                     WHERE facilitycode = {0} and schemeid = {1} and itemcode = {2}
-                    GROUP by itemcode , schemeid
-                    HAVING count(*) = 1
+                    GROUP BY itemcode, schemeid, facilitylevelcode
+                    ORDER BY facilitylevelcode
+                    LIMIT 1
                 '''.format(facility_code, schemeid, item.ref_code),
                 as_dict=1
             )
