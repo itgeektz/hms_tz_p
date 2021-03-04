@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import nowdate, get_year_start, getdate, nowtime
+from frappe.utils import nowdate, get_year_start, getdate, nowtime, add_to_date
 import datetime
 from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_service_unit
 from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
@@ -102,16 +102,24 @@ def validate(doc, method):
                     value)).get("maximum_number_of_claims")
                 if maximum_number_of_claims == 0:
                     continue
-                year_start = get_year_start(nowdate(), True)
-                year_end = get_year_end(nowdate(), True)
+                times = 12 / maximum_number_of_claims
+                count = 1
+                days = int(times * 30)
+                if times < 0.1:
+                    count = 1/times
+                    days = 30
+                start = add_to_date(nowdate(), days=-days)
+                end = nowdate()
                 claims_count = frappe.get_all("Healthcare Insurance Claim", filters={
                     "service_template": row.get(value),
                     "insurance_subscription": insurance_subscription,
-                    "claim_posting_date": ["between", year_start, year_end],
-                })
-                if maximum_number_of_claims > len(claims_count):
-                    frappe.throw(_("Maximum Number of Claims for {0} per year is exceeded").format(
-                        row.get(value)))
+                    "claim_posting_date": ["between", start, end],
+                },
+                    fields=["name", "calim_posting_date"]
+                )
+                if count > len(claims_count):
+                    frappe.throw(_("Maximum Number of Claims for {0} per year is exceeded within the last {1} days").format(
+                        row.get(value), days))
     validate_totals(doc)
 
 
@@ -125,11 +133,11 @@ def checkـforـduplicate(doc):
                 item.drug_code, item.idx))
 
 
-def get_year_end(dt, as_str=False):
-    dt = getdate(dt)
-    DATE_FORMAT = "%Y-%m-%d"
-    date = datetime.date(dt.year, 12, 31)
-    return date.strftime(DATE_FORMAT) if as_str else date
+# def get_year_end(dt, as_str=False):
+#     dt = getdate(dt)
+#     DATE_FORMAT = "%Y-%m-%d"
+#     date = datetime.date(dt.year, 12, 31)
+#     return date.strftime(DATE_FORMAT) if as_str else date
 
 
 @frappe.whitelist()
