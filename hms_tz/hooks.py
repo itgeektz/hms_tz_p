@@ -273,6 +273,7 @@ fixtures = [
         "Patient-chronic_medications",
         "Patient-codification_table",
         "Patient-chronic_section",
+        "Inpatient Record-insurance_coverage_plan",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -450,6 +451,14 @@ fixtures = [
         "Sales Invoice Item-item_tax_template-fetch_from",
         "Practitioner Availability-practitioner-in_standard_filter",
         "Practitioner Availability-main-allow_copy",
+        "Inpatient Occupancy-service_unit-read_only",
+        "Inpatient Occupancy-check_in-read_only",
+        "Inpatient Occupancy-left-read_only",
+        "Inpatient Occupancy-check_out-read_only",
+        "Inpatient Record-inpatient_occupancies-read_only",
+        "Inpatient Record-insurance_subscription-fetch_if_empty",
+        "Inpatient Record-insurance_subscription-fetch_from",
+
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",
@@ -488,7 +497,6 @@ doctype_js = {
     "Healthcare Service Order": "nhif/api/service_order.js",
     "Healthcare Insurance Company": "nhif/api/insurance_company.js",
     "Vital Signs": "nhif/api/vital_signs.js",
-    "Inpatient Record": "nhif/api/inpatient_record.js",
     "Healthcare Insurance Subscription": "nhif/api/insurance_subscription.js",
 }
 # csf_tz.nhif.api.patient_appointment
