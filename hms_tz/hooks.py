@@ -633,13 +633,13 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
+scheduler_events = {
 # 	"all": [
 # 		"hms_tz.tasks.all"
 # 	],
-# 	"daily": [
-# 		"hms_tz.tasks.daily"
-# 	],
+	"daily": [
+		"hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"
+	],
 # 	"hourly": [
 # 		"hms_tz.tasks.hourly"
 # 	],
@@ -649,7 +649,7 @@ doc_events = {
 # 	"monthly": [
 # 		"hms_tz.tasks.monthly"
 # 	]
-# }
+}
 
 # Testing
 # -------
