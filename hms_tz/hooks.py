@@ -512,6 +512,7 @@ doctype_js = {
     "Healthcare Insurance Company": "nhif/api/insurance_company.js",
     "Vital Signs": "nhif/api/vital_signs.js",
     "Healthcare Insurance Subscription": "nhif/api/insurance_subscription.js",
+    "Inpatient Record": "nhif/api/inpatient_record.js",
 }
 # csf_tz.nhif.api.patient_appointment
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
@@ -640,23 +641,23 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"hms_tz.tasks.all"
-# 	],
-# 	"daily": [
-# 		"hms_tz.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"hms_tz.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"hms_tz.tasks.weekly"
-# 	]
-# 	"monthly": [
-# 		"hms_tz.tasks.monthly"
-# 	]
-# }
+scheduler_events = {
+    # 	"all": [
+    # 		"hms_tz.tasks.all"
+    # 	],
+    "daily": [
+        "hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"
+    ],
+    # 	"hourly": [
+    # 		"hms_tz.tasks.hourly"
+    # 	],
+    # 	"weekly": [
+    # 		"hms_tz.tasks.weekly"
+    # 	]
+    # 	"monthly": [
+    # 		"hms_tz.tasks.monthly"
+    # 	]
+}
 
 # Testing
 # -------
