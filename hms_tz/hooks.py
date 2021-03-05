@@ -279,6 +279,13 @@ fixtures = [
         "Inpatient Record-inpatient_consultancy",
         "Inpatient Record-inpatient_consultancies",
         "Inpatient Record-insurance_coverage_plan",
+        "Vital Signs-section_break_2",
+        "Vital Signs-patient_vitals",
+        "Vital Signs-patient_vitals_summary",
+        "Therapy Type-is_not_available_inhouse",
+        "Radiology Examination-healthcare_practitioner_name",
+        "Inpatient Record-when_to_obtain_urgent_care",
+        "Clinical Procedure Template-healthcare_service_unit",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
