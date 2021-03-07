@@ -10,6 +10,32 @@ from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_item_price
 import json
 
 
+def validate(doc, method):
+    validate_inpatient_occupancies(doc)
+
+
+def validate_inpatient_occupancies(doc):
+    old_doc = frappe.get_doc(doc.doctype, doc.name)
+    count = 0
+    for old_row in old_doc.inpatient_occupancies:
+        count += 1
+        if not old_row.invoiced:
+            continue
+        valide = True
+        row = doc.inpatient_occupancies[count-1]
+        if str(row.check_in) != str(old_row.check_in):
+            valide = False
+        if str(row.check_out) != str(old_row.check_out):
+            valide = False
+        if row.left != old_row.left:
+            valide = False
+        if row.service_unit != old_row.service_unit:
+            valide = False
+        if not valide:
+            frappe.throw(
+                _("In Inpatient Occupancy line '{0}' has been invoiced. It cannot be modified or deleted").format(old_row.idx))
+
+
 def daily_update_inpatient_occupancies():
     occupancies = frappe.get_all(
         "Inpatient Record", filters={"status": "Admitted"})
