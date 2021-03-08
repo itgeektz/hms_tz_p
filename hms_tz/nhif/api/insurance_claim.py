@@ -25,7 +25,7 @@ def set_price(doc, method):
             doc.reference_dt, doc.reference_dn, ["company", "prescribed"])
         if hso_prescribe:
             return
-    elif doc.reference_dt in ["Patient Appointment", "Patient Encounter"]:
+    elif doc.reference_dt in ["Patient Appointment", "Patient Encounter", "Clinical Procedure"]:
             company = frappe.get_value(
             doc.reference_dt, doc.reference_dn, "company")
     else:
