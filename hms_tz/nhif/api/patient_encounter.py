@@ -105,7 +105,7 @@ def validate(doc, method):
                 times = 12 / maximum_number_of_claims
                 count = 1
                 days = int(times * 30)
-                if times < 0.1:
+                if times < 1:
                     count = 1/times
                     days = 30
                 start = add_to_date(nowdate(), days=-days)
