@@ -37,6 +37,7 @@ class MedicationChangeRequest(Document):
             doc.append('drug_prescription', new_row)
         doc.db_update_all()
         frappe.db.commit()
+        frappe.msgprint(_("Patient Encounter " + self.patient_encounter + " has been updated!"), alert=True)
 
     def update_delivery_note(self):
         doc = frappe.get_doc("Delivery Note", self.delivery_note)
@@ -69,6 +70,7 @@ class MedicationChangeRequest(Document):
                 (row.comment or "No Comments")
             doc.append('items', item)
         doc.save(ignore_permissions=True)
+        frappe.msgprint(_("Patient Encounter " + self.delivery_note + " has been updated!"), alert=True)
 
 
 @frappe.whitelist()
