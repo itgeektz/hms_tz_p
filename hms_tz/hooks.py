@@ -274,6 +274,20 @@ fixtures = [
         "Patient-codification_table",
         "Patient-chronic_section",
         "Inpatient Record-insurance_coverage_plan",
+        "Inpatient Occupancy-delivery_note",
+        "Inpatient Occupancy-confirmed",
+        "Inpatient Record-inpatient_consultancy",
+        "Inpatient Record-inpatient_consultancies",
+        "Inpatient Record-insurance_coverage_plan",
+        "Vital Signs-section_break_2",
+        "Vital Signs-patient_vitals",
+        "Vital Signs-patient_vitals_summary",
+        "Therapy Type-is_not_available_inhouse",
+        "Radiology Examination-healthcare_practitioner_name",
+        "Inpatient Record-when_to_obtain_urgent_care",
+        "Clinical Procedure Template-healthcare_service_unit",
+        "Healthcare Practitioner-default_medication_healthcare_service_unit",
+        "Healthcare Practitioner-default_values",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -458,7 +472,20 @@ fixtures = [
         "Inpatient Record-inpatient_occupancies-read_only",
         "Inpatient Record-insurance_subscription-fetch_if_empty",
         "Inpatient Record-insurance_subscription-fetch_from",
-
+        "Inpatient Occupancy-check_out-in_list_view",
+        "Inpatient Occupancy-left-in_list_view",
+        "Inpatient Record-references-collapsible",
+        "Radiology Examination-insurance_section-read_only",
+        "Radiology Examination-patient_name-fetch_from",
+        "Patient-medication-permlevel",
+        "Patient Encounter-naming_series-hidden",
+        "Patient Encounter-insurance_subscription-read_only",
+        "Patient Encounter-encounter_time-in_list_view",
+        "Normal Test Result-normal_range-columns",
+        "Healthcare Service Order-origin_section-hidden",
+        "Exercise-difficulty_level-fetch_if_empty",
+        "Drug Prescription-drug_name-in_list_view",
+        "Delivery Note-items-permlevel",
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",
@@ -498,6 +525,7 @@ doctype_js = {
     "Healthcare Insurance Company": "nhif/api/insurance_company.js",
     "Vital Signs": "nhif/api/vital_signs.js",
     "Healthcare Insurance Subscription": "nhif/api/insurance_subscription.js",
+    "Inpatient Record": "nhif/api/inpatient_record.js",
 }
 # csf_tz.nhif.api.patient_appointment
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
@@ -617,6 +645,9 @@ doc_events = {
         "onload": "hms_tz.nhif.api.delivery_note.onload",
         "after_insert": "hms_tz.nhif.api.delivery_note.after_insert",
     },
+    "Inpatient Record": {
+        "validate": "hms_tz.nhif.api.inpatient_record.validate",
+    },
 }
 
 # standard_queries = {
@@ -626,23 +657,23 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"hms_tz.tasks.all"
-# 	],
-# 	"daily": [
-# 		"hms_tz.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"hms_tz.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"hms_tz.tasks.weekly"
-# 	]
-# 	"monthly": [
-# 		"hms_tz.tasks.monthly"
-# 	]
-# }
+scheduler_events = {
+    # 	"all": [
+    # 		"hms_tz.tasks.all"
+    # 	],
+    "daily": [
+        "hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"
+    ],
+    # 	"hourly": [
+    # 		"hms_tz.tasks.hourly"
+    # 	],
+    # 	"weekly": [
+    # 		"hms_tz.tasks.weekly"
+    # 	]
+    # 	"monthly": [
+    # 		"hms_tz.tasks.monthly"
+    # 	]
+}
 
 # Testing
 # -------

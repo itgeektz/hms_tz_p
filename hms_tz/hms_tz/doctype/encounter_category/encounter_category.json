@@ -41,10 +41,11 @@
    "reqd": 1
   },
   {
-   "default": "0",
+   "default": "1",
    "fieldname": "create_sales_invoice",
    "fieldtype": "Check",
-   "label": "Create Sales Invoice"
+   "label": "Create Sales Invoice",
+   "read_only": 1
   },
   {
    "fieldname": "default_healthcare_practitioner",
@@ -75,7 +76,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-02-20 20:40:43.300683",
+ "modified": "2021-03-08 22:40:15.959803",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Encounter Category",

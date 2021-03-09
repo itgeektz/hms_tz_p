@@ -202,6 +202,13 @@ frappe.ui.form.on('Patient Encounter', {
 
 });
 
+frappe.ui.form.on('Drug Prescription', {
+    drug_prescription_add: function (frm, cdt, cdn) {
+        var row = frappe.get_doc(cdt, cdn);
+        if (!row.healthcare_service_unit) row.healthcare_service_unit = frm.doc.default_healthcare_service_unit;
+        refresh_field("drug_prescription");
+    }
+});
 
 frappe.ui.form.on('Codification Table', {
     onload: function (frm) {

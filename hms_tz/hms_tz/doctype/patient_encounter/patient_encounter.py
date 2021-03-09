@@ -46,6 +46,7 @@ def create_therapy_plan(encounter):
 	if len(encounter.therapies):
 		doc = frappe.new_doc('Therapy Plan')
 		doc.patient = encounter.patient
+		doc.company = encounter.company
 		doc.start_date = encounter.encounter_date
 		for entry in encounter.therapies:
 			doc.append('therapy_plan_details', {
