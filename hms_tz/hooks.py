@@ -486,6 +486,8 @@ fixtures = [
         "Exercise-difficulty_level-fetch_if_empty",
         "Drug Prescription-drug_name-in_list_view",
         "Delivery Note-items-permlevel",
+        "Drug Prescription-period-reqd",
+        "Drug Prescription-dosage-reqd",
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",
