@@ -286,6 +286,8 @@ fixtures = [
         "Radiology Examination-healthcare_practitioner_name",
         "Inpatient Record-when_to_obtain_urgent_care",
         "Clinical Procedure Template-healthcare_service_unit",
+        "Healthcare Practitioner-default_medication_healthcare_service_unit",
+        "Healthcare Practitioner-default_values",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
