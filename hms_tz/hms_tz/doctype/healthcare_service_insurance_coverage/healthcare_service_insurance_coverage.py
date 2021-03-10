@@ -20,5 +20,5 @@ class HealthcareServiceInsuranceCoverage(Document):
 											'end_date':['<=', self.end_date]
 											})
 		if len(service_insurance_coverages) > 0:
-			frappe.throw(_('Service {0} activated  this coverage plan {1}').format(frappe.bold(self.healthcare_service_template),
-				frappe.bold(self.healthcare_insurance_coverage_plan)), title=_('Not Allowed'))
+			frappe.throw(_('A Service {0} already activated for this coverage plan {1}').format(frappe.bold(self.healthcare_service_template),
+				frappe.bold(self.healthcare_insurance_coverage_plan)), title=_('Changes Not Allowed'))
