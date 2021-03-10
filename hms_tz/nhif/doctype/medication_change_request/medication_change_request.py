@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 import frappe
+from frappe import _
 from frappe.model.document import Document
 from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_service_unit
 from hms_tz.hms_tz.doctype.patient_encounter.patient_encounter import get_quantity
@@ -56,6 +57,8 @@ class MedicationChangeRequest(Document):
             if not is_stock:
                 continue
             item = frappe.new_doc("Delivery Note Item")
+            if not item:
+                frappe.throw(_("Could not create delivery note item for " + row.drug_code))
             item.item_code = item_code
             item.item_name = item_name
             item.warehouse = warehouse
