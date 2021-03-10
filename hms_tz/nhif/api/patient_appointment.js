@@ -15,6 +15,7 @@ frappe.ui.form.on('Patient Appointment', {
         frm.trigger("toggle_reqd_referral_no");
         add_btns(frm);
         frm.trigger("mandatory_fields");
+        set_auth_number_reqd(frm);
     },
     referring_practitioner: function (frm) {
         frm.set_value("healthcare_referrer", frm.doc.referring_practitioner);
@@ -54,6 +55,7 @@ frappe.ui.form.on('Patient Appointment', {
     },
     insurance_company: function (frm) {
         frm.set_value("authorization_number", "");
+        set_auth_number_reqd(frm);
     },
     practitioner: function (frm) {
         frm.trigger("get_consulting_charge_item");
@@ -426,3 +428,12 @@ const add_vital_btn = frm => {
         });
     });
 };
+
+const set_auth_number_reqd = frm => {
+    if (frm.doc.insurance_subscription && frm.doc.insurance_company != "NHIF") {
+        frm.toggle_reqd("authorization_number", true);
+    }
+    else {
+        frm.toggle_reqd("authorization_number", false);
+    }
+}
