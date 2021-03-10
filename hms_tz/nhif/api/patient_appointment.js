@@ -430,7 +430,7 @@ const add_vital_btn = frm => {
 };
 
 const set_auth_number_reqd = frm => {
-    if (frm.doc.insurance_subscription && frm.doc.insurance_company != "NHIF") {
+    if (frm.doc.insurance_subscription) {
         frm.toggle_reqd("authorization_number", true);
     }
     else {
