@@ -288,6 +288,10 @@ fixtures = [
         "Clinical Procedure Template-healthcare_service_unit",
         "Healthcare Practitioner-default_medication_healthcare_service_unit",
         "Healthcare Practitioner-default_values",
+        "Previous Therapy Plan Detail-comment",
+        "Previous Therapy Plan Detail-column_break_6",
+        "Previous Therapy Plan Detail-prescribe",
+        "Previous Therapy Plan Detail-override_subscription",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
