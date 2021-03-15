@@ -143,6 +143,7 @@ def checkـforـduplicate(doc):
 def duplicate_encounter(encounter):
     doc = frappe.get_doc("Patient Encounter", encounter)
     if not doc.docstatus == 1 or doc.encounter_type == 'Final' or doc.duplicate == 1:
+        frappe.msgprint(_("This encounter cannot be duplicated. Check if it is already duplicated using Menu/Links."), alert = True)
         return
     encounter_doc = frappe.copy_doc(doc)
     encounter_dict = encounter_doc.as_dict()

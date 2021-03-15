@@ -298,6 +298,10 @@ fixtures = [
         "Clinical Procedure-is_restricted",
         "Clinical Procedure-approval_number",
         "Clinical Procedure-approval_type",
+        "Previous Therapy Plan Detail-comment",
+        "Previous Therapy Plan Detail-column_break_6",
+        "Previous Therapy Plan Detail-prescribe",
+        "Previous Therapy Plan Detail-override_subscription",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
