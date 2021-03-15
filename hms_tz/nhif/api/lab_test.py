@@ -5,7 +5,12 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from hms_tz.nhif.api.healthcare_utils import create_delivery_note_from_LRPT
+from hms_tz.nhif.api.healthcare_utils import create_delivery_note_from_LRPT, get_restricted_LRPT
+
+
+def validate(doc, methd):
+    is_restricted = get_restricted_LRPT(doc)
+    doc.is_restricted = is_restricted
 
 
 @frappe.whitelist()

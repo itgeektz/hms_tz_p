@@ -96,7 +96,7 @@ def validate(doc, method):
                 row.is_restricted = next(i for i in hsic_list if i["healthcare_service_template"] == row.get(
                     value)).get("approval_mandatory_for_claim")
                 if row.is_restricted:
-                    frappe.msgprint(_("The medication " + row.drug_code +
+                    frappe.msgprint(_(row.doctype + " row " + str(row.idx) +
                                       " requires additional authorization"), alert=True)
                 maximum_number_of_claims = next(i for i in hsic_list if i["healthcare_service_template"] == row.get(
                     value)).get("maximum_number_of_claims")
@@ -114,12 +114,11 @@ def validate(doc, method):
                     "service_template": row.get(value),
                     "insurance_subscription": insurance_subscription,
                     "claim_posting_date": ["between", start, end],
-                },
-                    fields=["name", "calim_posting_date"]
+                }
                 )
                 if count > len(claims_count):
-                    frappe.throw(_("Maximum Number of Claims for {0} per year is exceeded within the last {1} days").format(
-                        row.get(value), days))
+                frappe.throw(_("Maximum Number of Claims for {0} per year is exceeded within the last {1} days").format(
+                    row.get(value), days))
     validate_totals(doc)
 
 

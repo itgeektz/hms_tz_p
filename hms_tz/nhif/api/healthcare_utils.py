@@ -311,3 +311,22 @@ def get_healthcare_service_unit(item):
                                            )
             if len(prescriptions) > 0:
                 return prescriptions[0].healthcare_service_unit
+
+
+def get_restricted_LRPT(doc):
+    template = doc.template
+    is_restricted = 0
+    if not template:
+        return is_restricted
+    if doc.ref_doctype and doc.ref_docname and doc.ref_doctype == "Patient Encounter":
+        insurance_subscription = frappe.get_value(
+            "Patient Encounter", doc.ref_docname, "insurance_subscription")
+        if insurance_subscription:
+            healthcare_insurance_coverage_plan = frappe.get_value(
+                "Healthcare Insurance Subscription", insurance_subscription, "healthcare_insurance_coverage_plan")
+            if healthcare_insurance_coverage_plan:
+                insurance_coverages = frappe.get_all(
+                    "Healthcare Service Insurance Coverage", filters={"healthcare_service_template": template, "healthcare_insurance_coverage_plan": healthcare_insurance_coverage_plan}, fields=["name", "approval_mandatory_for_claim"])
+                if len(insurance_coverages) > 0:
+                    is_restricted = insurance_coverages[0].approval_mandatory_for_claim
+    return is_restricted
