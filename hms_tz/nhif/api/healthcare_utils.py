@@ -314,7 +314,16 @@ def get_healthcare_service_unit(item):
 
 
 def get_restricted_LRPT(doc):
-    template = doc.template
+    if doc.doctype == "Lab Test":
+        template = doc.template
+    elif doc.doctype == "Radiology Examination":
+        template = doc.radiology_examination_template
+    elif doc.doctype == "Clinical Procedure":
+        template = doc.procedure_template
+    elif doc.doctype == "Therapy Plan":
+        template = doc.therapy_plan_template
+    else:
+        frappe.msgprint(_("Unknown Doctype " + doc.doctype + " found in get_restricted_LRPT. Setup may be missing."))
     is_restricted = 0
     if not template:
         return is_restricted
