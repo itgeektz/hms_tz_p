@@ -11,6 +11,11 @@ frappe.ui.form.on('Lab Test', {
             { fieldname: 'result_status', columns: 1 }
         ]
         get_patient_age(frm)
+		frm.get_field('descriptive_test_items').grid.editable_fields = [
+			{ fieldname: 'lab_test_particulars', columns: 3 },
+            { fieldname: 'result_component_option', columns: 4 },
+			{ fieldname: 'result_value', columns: 4 }
+		];
 		frm.set_query("result_component_option", "descriptive_test_items", function(doc, cdt, cdn) {
 			let d = locals[cdt][cdn];
 			return {
