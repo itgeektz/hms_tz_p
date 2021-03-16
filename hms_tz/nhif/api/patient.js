@@ -3,6 +3,9 @@ frappe.ui.form.on('Patient', {
     },
     onload: function (frm) {
         frm.trigger('add_get_info_btn');
+        if (frm.is_new()) {
+            frm.set_value("customer_group", "Patient")
+        }
     },
     refresh: function (frm) {
         frm.trigger('add_get_info_btn');
