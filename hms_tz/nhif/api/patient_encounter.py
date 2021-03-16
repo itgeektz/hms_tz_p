@@ -56,8 +56,8 @@ def validate(doc, method):
         return
 
     if not doc.healthcare_service_unit:
-        doc.healthcare_service_unit = "NW2F Room 05 OPD - SHMH-DSM"
-        frappe.msgprint(_("Healthcare Service Unit not set"), alert=True)
+        # doc.healthcare_service_unit = "NW2F Room 05 OPD - SHMH-DSM"
+        frappe.throw(_("Healthcare Service Unit not set"))
     healthcare_insurance_coverage_plan = frappe.get_value(
         "Healthcare Insurance Subscription", insurance_subscription, "healthcare_insurance_coverage_plan")
     if not healthcare_insurance_coverage_plan:
@@ -117,8 +117,8 @@ def validate(doc, method):
                 }
                 )
                 if count > len(claims_count):
-                frappe.throw(_("Maximum Number of Claims for {0} per year is exceeded within the last {1} days").format(
-                    row.get(value), days))
+                    frappe.throw(_("Maximum Number of Claims for {0} per year is exceeded within the last {1} days").format(
+                        row.get(value), days))
     validate_totals(doc)
 
 
