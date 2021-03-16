@@ -502,6 +502,11 @@ fixtures = [
         "Delivery Note-items-permlevel",
         "Drug Prescription-period-reqd",
         "Drug Prescription-dosage-reqd",
+        "Descriptive Test Result-result_value-in_list_view",
+        "Descriptive Test Result-lab_test_particulars-columns",
+        "Descriptive Test Result-lab_test_particulars-fetch_from",
+        "Patient Appointment-appointment_type-default",
+        "Patient-customer_group-default",
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",
