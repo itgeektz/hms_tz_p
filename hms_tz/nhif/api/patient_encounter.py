@@ -297,10 +297,10 @@ def create_lab_test(patient_encounter_doc, child_table):
         doc.ref_docname = patient_encounter_doc.name
         doc.invoiced = 1
 
-        for entry in ltt_doc.lab_test_groups:
-            doc.append('normal_test_items', {
-                'lab_test_name': entry.lab_test_description,
-            })
+        # for entry in ltt_doc.lab_test_groups:
+        #     doc.append('normal_test_items', {
+        #         'lab_test_name': entry.lab_test_description,
+        #     })
 
         doc.save(ignore_permissions=True)
         if doc.get('name'):
