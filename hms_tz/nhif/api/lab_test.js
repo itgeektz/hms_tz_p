@@ -11,6 +11,14 @@ frappe.ui.form.on('Lab Test', {
             { fieldname: 'result_status', columns: 1 }
         ]
         get_patient_age(frm)
+		frm.set_query("result_component_option", "descriptive_test_items", function(doc, cdt, cdn) {
+			let d = locals[cdt][cdn];
+			return {
+				filters: [
+					['Result Component Option', 'result_component', '=', d.lab_test_particulars]
+				]
+			};
+		});
     },
     patient: function (frm) {
         get_patient_age(frm)
