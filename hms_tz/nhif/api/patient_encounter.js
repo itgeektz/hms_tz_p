@@ -168,7 +168,7 @@ frappe.ui.form.on('Patient Encounter', {
         set_medical_code(frm);
     },
     create_sales_invoice: function (frm) {
-        if (frm.doc.docstatus != 0 || !frm.doc.encounter_mode_of_payment || !frm.doc.encounter_category || frm.doc.sales_invoice) {
+        if (frm.doc.docstatus != 0 || !frm.doc.encounter_mode_of_payment || !frm.doc.encounter_category || frm.doc.sales_invoice || !doc.__islocal) {
             return;
         }
         frappe.call({

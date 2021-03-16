@@ -94,7 +94,8 @@ def get_patient_info(card_no=None):
                     request_url=url,
                     request_header=headers,
                 )
-                frappe.throw(json.loads(r.text))
+                frappe.msgprint(json.loads(r.text))
+                frappe.msgprint(_("Getting information from NHIF failed. Try again after sometime, or continue manually."))
         except Exception as e:
             frappe.logger().debug({"webhook_error": e, "try": i + 1})
             sleep(3 * i + 1)
