@@ -143,6 +143,6 @@ def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practi
         return doc.get('name')
 
 def before_insert(doc, method):
-    if doc.inpatient_record and doc.encounter_type == "Initial":
+    if doc.reference_inpatient_record and doc.encounter_type == "Initial":
         frappe.throw(_("Cannot create Patient Encounter directly from Inpatient. Restricted for workflow."))
 
