@@ -1,6 +1,23 @@
 [
  {
   "default_value": null,
+  "doc_type": "Descriptive Test Result",
+  "docstatus": 0,
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "result_value",
+  "modified": "2021-02-05 20:24:04.120665",
+  "name": "Descriptive Test Result-result_value-hidden",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "property": "hidden",
+  "property_type": "Check",
+  "row_name": null,
+  "value": "1"
+ },
+ {
+  "default_value": null,
   "doc_type": "Practitioner Availability",
   "docstatus": 0,
   "doctype": "Property Setter",

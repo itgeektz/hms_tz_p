@@ -302,6 +302,7 @@ fixtures = [
         "Previous Therapy Plan Detail-column_break_6",
         "Previous Therapy Plan Detail-prescribe",
         "Previous Therapy Plan Detail-override_subscription",
+        "Inpatient Consultancy-encounter",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
