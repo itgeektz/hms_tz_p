@@ -24,6 +24,8 @@ def create_healthcare_docs(doc, method):
                     create_lab_test(hso_doc)
                 elif hso_doc.order_doctype == "Radiology Examination Template":
                     create_radiology_examination(hso_doc)
+                elif hso_doc.order_doctype == "Clinical Procedure":
+                    create_procedure_prescription(hso_doc)
 
 
 def create_lab_test(hso_doc):
@@ -81,4 +83,32 @@ def create_radiology_examination(hso_doc):
 
     if doc.get('name'):
         frappe.msgprint(_('Radiology Examination {0} created successfully.').format(
+            frappe.bold(doc.name)))
+
+def create_clinical_prescription(hso_doc):
+    if not hso_doc.order:
+        return
+    doc = frappe.new_doc('Clinical Procedure')
+    doc.patient = hso_doc.patient
+    doc.company = hso_doc.company
+    doc.procedure_template = hso_doc.order
+    doc.practitioner = hso_doc.practitioner
+    doc.source = hso_doc.source
+    doc.patient_sex = frappe.get_value(
+        "Patient", hso_doc.patient, "sex")
+    doc.medical_department = frappe.get_value(
+        "Clinical Procedure Template", hso_doc.order, "medical_department")
+    doc.ref_doctype = hso_doc.doctype
+    doc.ref_docname = hso_doc.name
+    doc.invoiced = 1
+    doc.notes = frappe.get_value(
+        hso_doc.order_reference_doctype, hso_doc.order_reference_name, "comments")
+
+    doc.save(ignore_permissions=True)
+
+    hso_doc.invoiced = 1
+    hso_doc.save(ignore_permissions=True)
+
+    if doc.get('name'):
+        frappe.msgprint(_('Clinical Procedure {0} created successfully.').format(
             frappe.bold(doc.name)))
