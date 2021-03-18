@@ -107,8 +107,16 @@ def get_item_rate(item_code, company, insurance_subscription, insurance_company)
             "Healthcare Insurance Subscription", insurance_subscription, "healthcare_insurance_coverage_plan")
         price_list = frappe.get_value(
             "Healthcare Insurance Coverage Plan", hic_plan, "price_list")
+        secondary_price_list = frappe.get_value(
+            "Healthcare Insurance Coverage Plan", hic_plan, "secondary_price_list")
         if price_list:
             price_list_rate = get_item_price(item_code, price_list, company)
+            if price_list_rate and price_list_rate != 0:
+                return price_list_rate
+            else:
+                price_list_rate = None
+        if not price_list_rate:
+            price_list_rate = get_item_price(item_code, secondary_price_list, company)
             if price_list_rate and price_list_rate != 0:
                 return price_list_rate
             else:
