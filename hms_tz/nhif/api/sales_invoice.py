@@ -42,6 +42,8 @@ def create_lab_test(hso_doc):
     doc.ref_doctype = hso_doc.doctype
     doc.ref_docname = hso_doc.name
     doc.invoiced = 1
+    doc.lab_test_comment = frappe.get_value(
+        hso_doc.order_reference_doctype, hso_doc.order_reference_name, "lab_test_comment")
 
     # for entry in ltt_doc.lab_test_groups:
     #     doc.append('normal_test_items', {
@@ -68,6 +70,9 @@ def create_radiology_examination(hso_doc):
     doc.ref_doctype = hso_doc.doctype
     doc.ref_docname = hso_doc.name
     doc.invoiced = 1
+
+    doc.lab_test_comment = frappe.get_value(
+        hso_doc.order_reference_doctype, hso_doc.order_reference_name, "lab_test_comment")
 
     doc.save(ignore_permissions=True)
 
