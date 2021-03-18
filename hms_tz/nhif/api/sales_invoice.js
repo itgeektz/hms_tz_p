@@ -186,6 +186,7 @@ var set_primary_action= function(frm, dialog, $results, invoice_healthcare_servi
 			if(invoice_healthcare_services) {
 				frm.set_value("patient", dialog.fields_dict.patient.input.value);
 			}
+			console.log(checked_values);
 			frm.set_value("items", []);
 			add_to_item_line(frm, checked_values, invoice_healthcare_services);
 			dialog.hide();
@@ -345,14 +346,19 @@ var list_row_data_items = function(head, $row, result, invoice_healthcare_servic
 var add_to_item_line = function(frm, checked_values, invoice_healthcare_services){
 	if(invoice_healthcare_services){
 		frappe.call({
-			doc: frm.doc,
-			method: "set_healthcare_services",
+			method: "hms_tz.nhif.api.healthcare_utils.set_healthcare_services",
 			args:{
+				doc: frm.doc,
 				checked_values: checked_values
 			},
-			callback: function() {
+			callback: function(r) {
 				frm.trigger("validate");
 				frm.refresh_fields();
+				if (frm.is_new()) {
+					frappe.set_route('Form', 'Sales Invoice', r.message)
+				} else {
+					frm.reload_doc();
+				}
 			}
 		});
 	}

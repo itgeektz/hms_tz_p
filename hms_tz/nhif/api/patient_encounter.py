@@ -302,6 +302,7 @@ def create_lab_test(patient_encounter_doc, child_table):
         doc.ref_doctype = patient_encounter_doc.doctype
         doc.ref_docname = patient_encounter_doc.name
         doc.invoiced = 1
+        doc.lab_test_comment = (child.medical_code or "No ICD Code") + " : " + child.lab_test_comment or "No Comment"
 
         # for entry in ltt_doc.lab_test_groups:
         #     doc.append('normal_test_items', {
@@ -415,8 +416,8 @@ def create_delivery_note(patient_encounter_doc):
                 item_code, patient_encounter_doc.company, insurance_subscription, insurance_company)
             item.reference_doctype = row.doctype
             item.reference_name = row.name
-            item.description = row.drug_name + " for " + row.dosage + " for " + \
-                row.period + " with " + row.medical_code + " and doctor notes: " + \
+            item.description = row.drug_name + " for " + (row.dosage or "No Prescription Dosage") + " for " + \
+                (row.period or "No Prescription Period") + " with " + row.medical_code + " and doctor notes: " + \
                 (row.comment or "Take medication as per dosage.")
             items.append(item)
         if len(items) == 0:
