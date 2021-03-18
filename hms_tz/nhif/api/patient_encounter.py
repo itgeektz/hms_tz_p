@@ -42,8 +42,7 @@ def validate(doc, method):
         "radiology_procedure_prescription": "radiology_examination_template",
         "therapies": "therapy_type",
         # "diet_recommendation": "diet_plan" dosent have Healthcare Service Insurance Coverage
-    }
-    for key, value in child_tables.items():
+    }    for key, value in child_tables.items():
         table = doc.get(key)
         for row in table:
             if not row.get("prescribe"):
@@ -107,7 +106,7 @@ def validate(doc, method):
                 times = 12 / maximum_number_of_claims
                 count = 1
                 days = int(times * 30)
-                if times < 0.1:
+                if times < 1:
                     count = 1/times
                     days = 30
                 start = add_to_date(nowdate(), days=-days)
