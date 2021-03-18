@@ -51,6 +51,8 @@ def validate(doc, method):
                     "quantity") or 1, healthcare_service_unit=row.get("healthcare_service_unit"))
             if not doc.insurance_subscription:
                 row.prescribe = 1
+                frappe.msgprint(
+                    _("{0} has been prescribed. Request the patient to visit the cashier for cash payment or prescription printout.").format(row.get(value)))
 
     if not insurance_subscription:
         return
@@ -233,6 +235,8 @@ def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_serv
         stock_qty = get_stock_availability(
             item_info.get("item_code"), warehouse) or 0
         if float(qty) > float(stock_qty):
+            frappe.msgprint(_("The quantity required for the item {0} is insufficient in {1}/{2}. Available quantity is {3}.").format(
+                item_info.get("item_code"), warehouse, healthcare_service_unit, stock_qty), alert=True)
             frappe.throw(_("The quantity required for the item {0} is insufficient in {1}/{2}. Available quantity is {3}.").format(
                 item_info.get("item_code"), warehouse, healthcare_service_unit, stock_qty))
             return False
@@ -532,7 +536,7 @@ def check_is_not_available_inhouse(item, doctype, docname):
         doctype, docname, "is_not_available_inhouse")
     if is_not_available_inhouse:
         frappe.msgprint(
-            _("NOTE: This healthcare service item, <b>{0}</b>, is not available inhouse and has been marked as prescribe.<br>Request the patient to get it from another healthcare service provider.").format(item))
+            _("NOTE: This healthcare service item, <b>{0}</b>, is not available inhouse and has been marked as prescribe.<br>Request the patient to get it from another healthcare service provider.").format(item), alert=True)
 
 
 @frappe.whitelist()
