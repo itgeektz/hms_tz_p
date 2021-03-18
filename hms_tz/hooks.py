@@ -302,6 +302,8 @@ fixtures = [
         "Previous Therapy Plan Detail-column_break_6",
         "Previous Therapy Plan Detail-prescribe",
         "Previous Therapy Plan Detail-override_subscription",
+        "Healthcare Insurance Coverage Plan-secondary_price_list",
+        "Item-healthcare_service_template",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
