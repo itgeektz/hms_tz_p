@@ -623,6 +623,7 @@ def update_inpatient_record_consultancy(doc):
         row.date = nowdate()
         row.consultation_item = item_code
         row.rate = rate
+        row.encounter = doc.name
         record_doc.save(ignore_permissions=True)
         frappe.msgprint(
             _("Inpatient Consultancy recorde added for item {0}").format("item_code"), alert=True)
