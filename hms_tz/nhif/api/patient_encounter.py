@@ -610,3 +610,8 @@ def create_sales_invoice(encounter, encounter_category, encounter_mode_of_paymen
     encounter_doc.db_update()
 
     return "true"
+
+def before_insert(doc, method):
+    if doc.inpatient_record and doc.encounter_type == "Initial":
+        frappe.throw(_("Cannot create Patient Encounter directly from Inpatient. Restricted for workflow."))
+
