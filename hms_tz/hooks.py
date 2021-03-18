@@ -639,6 +639,7 @@ doc_events = {
         ]
     },
     "Patient Encounter": {
+        "before_insert": "hms_tz.nhif.api.patient_encounter.before_insert",
         "after_insert": "hms_tz.nhif.api.patient_encounter.after_insert",
         "validate": "hms_tz.nhif.api.patient_encounter.validate",
         "on_trash": "hms_tz.nhif.api.patient_encounter.on_trash",
@@ -681,7 +682,6 @@ doc_events = {
     },
     "Inpatient Record": {
         "validate": "hms_tz.nhif.api.inpatient_record.validate",
-        "before_insert": "hms_tz.nhif.api.inpatient_record.before_insert",
     },
 }
 
