@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 # Copyright (c) 2018, earthians and contributors
 # For license information, please see license.txt
 
@@ -180,6 +180,8 @@ def create_delivery_note_from_LRPT(LRPT_doc, patient_encounter_doc):
     item_row.item_code = item_code
     item_row.item_name = item_name
     item_row.warehouse = warehouse
+    item_row.healthcare_service_unit = item.healthcare_service_unit
+    item_row.practitioner = patient_encounter_doc.practitioner
     item_row.qty = item.qty
     item_row.rate = get_item_rate(
         item_code, patient_encounter_doc.company, insurance_subscription, insurance_company)
@@ -226,16 +228,16 @@ def get_warehouse_from_service_unit(healthcare_service_unit):
 def get_item_form_LRPT(LRPT_doc):
     item = frappe._dict()
     if LRPT_doc.doctype == "Lab Test":
-        item.item_code = frappe.get_value(
-            "Lab Test Template", LRPT_doc.template, "item")
+        item.item_code, item.healthcare_service_unit = frappe.get_value(
+            "Lab Test Template", LRPT_doc.template, ["item", "healthcare_service_unit"])
         item.qty = 1
     elif LRPT_doc.doctype == "Radiology Examination":
-        item.item_code = frappe.get_value(
-            "Radiology Examination Template", LRPT_doc.radiology_examination_template, "item")
+        item.item_code, item.healthcare_service_unit = frappe.get_value(
+            "Radiology Examination Template", LRPT_doc.radiology_examination_template, ["item", "healthcare_service_unit"])
         item.qty = 1
     elif LRPT_doc.doctype == "Clinical Procedure":
-        item.item_code = frappe.get_value(
-            "Clinical Procedure Template", LRPT_doc.procedure_template, "item")
+        item.item_code, item.healthcare_service_unit = frappe.get_value(
+             "Clinical Procedure Template", LRPT_doc.procedure_template, ["item", "healthcare_service_unit"])
         item.qty = 1
     elif LRPT_doc.doctype == "Therapy Plan":
         item.item_code = None
@@ -388,7 +390,13 @@ def set_healthcare_services(doc, checked_values):
             item_line.reference_dn = checked_item['dn']
         if checked_item['description']:
             item_line.description = checked_item['description']
-        # frappe.get_value()
+        hso_doc = frappe.get_doc(item_line.reference_dt, item_line.reference_dn)
+        item_line.healthcare_practitioner = hso_doc.ordered_by
+        if hso_doc.order_doctype == "Medication":
+            item_line.healthcare_service_unit = frappe.get_value(hso_doc.order_reference_doctype, hso_doc.order_reference_name, "healthcare_service_unit")
+        else:
+            item_line.healthcare_service_unit = frappe.get_value(hso_doc.order_doctype, hso_doc.order, "healthcare_service_unit")
+        item_line.warehouse = get_warehouse_from_service_unit(item_line.healthcare_service_unit)
         # item_line.warehouse = checked_item['warehouse']
         # item_line.healthcare_service_unit = checked_item['healthcare_service_unit']
         # item_line.healthcare_practitioner = checked_item['healthcare_practitioner']
