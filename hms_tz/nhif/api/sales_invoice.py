@@ -102,7 +102,7 @@ def create_clinical_prescription(hso_doc):
     doc.ref_docname = hso_doc.name
     doc.invoiced = 1
     doc.notes = frappe.get_value(
-        hso_doc.order_reference_doctype, hso_doc.order_reference_name, "comments")
+        hso_doc.order_reference_doctype, hso_doc.order_reference_name, "comments") or "No Comment"
 
     doc.save(ignore_permissions=True)
 
