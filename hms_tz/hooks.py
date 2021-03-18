@@ -306,6 +306,12 @@ fixtures = [
         "Item-healthcare_service_template",
         "Previous Lab Prescription-prescribe",
         "Previous Lab Prescription-override_subscription",
+        "Previous Drug Prescription-override_subscription",
+        "Previous Drug Prescription-prescribe",
+        "Previous Procedure Prescription-prescribe",
+        "Previous Procedure Prescription-override_subscription",
+        "Previous Radiology Procedure Prescription-prescribe",
+        "Previous Radiology Procedure Prescription-override_subscription",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
