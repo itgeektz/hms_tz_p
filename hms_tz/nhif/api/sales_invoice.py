@@ -85,7 +85,7 @@ def create_radiology_examination(hso_doc):
         frappe.msgprint(_('Radiology Examination {0} created successfully.').format(
             frappe.bold(doc.name)))
 
-def create_clinical_prescription(hso_doc):
+def create_procedure_prescription(hso_doc):
     if not hso_doc.order:
         return
     doc = frappe.new_doc('Clinical Procedure')
