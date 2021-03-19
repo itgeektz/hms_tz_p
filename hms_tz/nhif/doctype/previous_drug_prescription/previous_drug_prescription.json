@@ -36,6 +36,7 @@
   "occurrence",
   "occurence_period",
   "note",
+  "section_break_25",
   "drug_prescription_created"
  ],
  "fields": [
@@ -224,7 +225,7 @@
    "default": "0",
    "fieldname": "override_subscription",
    "fieldtype": "Check",
-   "label": "override_subscription"
+   "label": "Override Healthcare Insurance Subscription"
   },
   {
    "default": "0",
@@ -248,11 +249,15 @@
    "fieldname": "drug_prescription_created",
    "fieldtype": "Check",
    "label": "drug_prescription_created"
+  },
+  {
+   "fieldname": "section_break_25",
+   "fieldtype": "Section Break"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2021-03-19 15:31:16.387172",
+ "modified": "2021-03-19 20:41:01.438242",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Previous Drug Prescription",
