@@ -302,7 +302,7 @@ def create_lab_test(patient_encounter_doc, child_table):
         doc.ref_doctype = patient_encounter_doc.doctype
         doc.ref_docname = patient_encounter_doc.name
         doc.invoiced = 1
-        doc.lab_test_comment = (child.medical_code or "No ICD Code") + " : " + child.lab_test_comment or "No Comment"
+        doc.lab_test_comment = (child.medical_code or "No ICD Code") + " : " + (child.lab_test_comment or "No Comment")
 
         # for entry in ltt_doc.lab_test_groups:
         #     doc.append('normal_test_items', {
@@ -333,7 +333,8 @@ def create_radiology_examination(patient_encounter_doc, child_table):
         doc.ref_doctype = patient_encounter_doc.doctype
         doc.ref_docname = patient_encounter_doc.name
         doc.invoiced = 1
-        doc.radiology_test_comment = (child.medical_code or "No ICD Code") + " : " + child.radiology_test_comment or "No Comment"
+        doc.notes = (child.medical_code or "No ICD Code") + " : " + \
+            (child.radiology_test_comment or "No Comment")
 
         doc.save(ignore_permissions=True)
         if doc.get('name'):
@@ -363,7 +364,7 @@ def create_procedure_prescription(patient_encounter_doc, child_table, insurance_
         doc.ref_docname = patient_encounter_doc.name
         doc.invoiced = 1
         doc.notes = (child.medical_code or "No ICD Code") + \
-            " : " + child.comments or "No Comment"
+            " : " + (child.comments or "No Comment")
 
 
         doc.save(ignore_permissions=True)
