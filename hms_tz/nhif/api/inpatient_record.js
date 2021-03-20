@@ -18,9 +18,6 @@ frappe.ui.form.on('Inpatient Occupancy', {
     inpatient_occupancies_move: (frm, cdt, cdn) => {
         control_inpatient_record_move(frm, cdt, cdn);
     },
-    form_render: (frm, cdt, cdn) => {
-        control_inpatient_record_permissing(frm, cdt, cdn);
-    },
     check_in: (frm, cdt, cdn) => {
         control_inpatient_record_permissing(frm, cdt, cdn);
     },
