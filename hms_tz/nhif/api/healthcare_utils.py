@@ -8,7 +8,7 @@ from frappe import _
 from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_income_account
 from hms_tz.hms_tz.utils import validate_customer_created
 from hms_tz.nhif.api.patient_appointment import get_insurance_amount
-from frappe.utils import nowdate, nowtime
+from frappe.utils import nowdate, nowtime, add_days
 import base64
 import re
 
@@ -30,6 +30,7 @@ def get_healthcare_service_order_to_invoice(patient, company, encounter, service
     encounter_dict = frappe.get_all("Patient Encounter", filters={
         "reference_encounter": encounter,
         "docstatus": 1,
+        'is_not_billable': 0
     })
     encounter_list = [encounter]
 
@@ -41,6 +42,7 @@ def get_healthcare_service_order_to_invoice(patient, company, encounter, service
         'company': company,
         'order_group': ["in", encounter_list],
         'invoiced': False,
+        'order_date': [">", add_days(nowdate(), -3)],
         'docstatus': 1
     }
 
