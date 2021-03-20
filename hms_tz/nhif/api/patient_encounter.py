@@ -7,7 +7,7 @@ import frappe
 from frappe import _
 from frappe.utils import nowdate, get_year_start, getdate, nowtime, add_to_date
 import datetime
-from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_service_unit
+from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_service_unit, get_item_price
 from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
 
 
@@ -263,6 +263,7 @@ def on_submit(doc, method):
                 _("The encounter cannot be submitted as the Sales Invoice has not been sent to VFD!<br><br>Click on Send to VFD before submitting.", "Cannot Submit Encounter"))
     create_healthcare_docs(doc)
     create_delivery_note(doc)
+    update_inpatient_record_consultancy(doc)
 
 
 def create_healthcare_docs(patient_encounter_doc):
@@ -618,7 +619,25 @@ def create_sales_invoice(encounter, encounter_category, encounter_mode_of_paymen
 
     return "true"
 
-def before_insert(doc, method):
-    if doc.inpatient_record and doc.encounter_type == "Initial":
-        frappe.throw(_("Cannot create Patient Encounter directly from Inpatient. Restricted for workflow."))
+def update_inpatient_record_consultancy(doc):
+    if doc.inpatient_record:
+        item_code = frappe.get_value("Healthcare Practitioner",
+                                doc.practitioner, "inpatient_visit_charge_item")
+        rate = 0
+        if doc.insurance_subscription:
+            rate = get_item_rate(
+                    item_code, doc.company, doc.insurance_subscription, doc.insurance_company)
+        elif doc.mode_of_payment:
+            price_list= frappe.get_value("Mode of Payment",doc.mode_of_payment, "price_list")
+            rate = get_item_price(item_code, price_list, doc.company)
+        
+        record_doc = frappe.get_doc("Inpatient Record",doc.inpatient_record)
+        row = record_doc.append("inpatient_consultancy",{})
+        row.date = nowdate()
+        row.consultation_item = item_code
+        row.rate = rate
+        row.encounter = doc.name
+        record_doc.save(ignore_permissions=True)
+        frappe.msgprint(
+            _("Inpatient Consultancy recorde added for item {0}").format("item_code"), alert=True)
 
