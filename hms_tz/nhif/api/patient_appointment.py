@@ -15,7 +15,7 @@ import requests
 from hms_tz.nhif.doctype.nhif_product.nhif_product import add_product
 from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
-
+from frappe.utils import date_diff, getdate
 
 @frappe.whitelist()
 def get_insurance_amount(insurance_subscription, billing_item, company, patient, insurance_company):
@@ -147,6 +147,21 @@ def create_vital(appointment):
 
 
 def make_vital(appointment_doc, method):
+    valid_days = int(frappe.get_value("Healthcare Settings", "Healthcare Settings", "valid_days"))
+    filters = {
+        "name": ['!=', appointment_doc.name],
+        'mode_of_payment': appointment_doc.mode_of_payment,
+        'insurance_subscription': appointment_doc.insurance_subscription,
+        'department': appointment_doc.department}
+    appointment = get_previous_appointment(appointment_doc.patient, filters)
+    if appointment:
+        diff = date_diff(appointment_doc.appointment_date,
+                         appointment.appointment_date)
+        if (diff <= valid_days):
+            appointment_doc.invoiced = 1
+            appointment_doc.follow_up = 1
+            frappe.msgprint(_("Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"), alert=True)
+
     if (not appointment_doc.ref_vital_signs) and (appointment_doc.invoiced or (appointment_doc.insurance_claim and appointment_doc.authorization_number) or method == "patient_appointment"):
         vital_doc = frappe.get_doc(dict(
             doctype="Vital Signs",
@@ -270,7 +285,9 @@ def get_previous_appointment(patient, filters=None):
         "patient": patient,
     }
     if filters:
-        filters = json.loads(filters)
+        # when the function is called from frontend
+        if type(filters) == str:
+            filters = json.loads(filters)
         the_filters.update(filters)
     appointments = frappe.get_all("Patient Appointment", filters=the_filters,
                                   fields=["appointment_date",
