@@ -33,6 +33,8 @@ def on_trash(doc, method):
 
 
 def validate(doc, method):
+    if doc.encounter_type == "Initial":
+        doc.reference_encounter = doc.name
     checkـforـduplicate(doc)
     insurance_subscription = doc.insurance_subscription
     child_tables = {
