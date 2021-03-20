@@ -175,7 +175,7 @@ def make_vital(appointment_doc, method):
 
 
 def make_encounter(vital_doc, method):
-    if not vital_doc.appointment:
+    if not vital_doc.appointment or vital_doc.inpatient_record:
         return
     source_name = vital_doc.appointment
     target_doc = None
