@@ -32,7 +32,8 @@ def validate(doc, method):
         if doc.next_to_kin_mobile_no[0] == "0":
             doc.next_to_kin_mobile_no = "255" + doc.next_to_kin_mobile_no[1:]
     validate_mobile_number(doc.name, doc.mobile)
-    update_patient_history(doc)
+    if not doc.is_new():
+        update_patient_history(doc)
 
 
 @frappe.whitelist()
@@ -105,25 +106,27 @@ def get_patient_info(card_no=None):
                 raise e
 
 
-def update_patient_history(doc="Healthcare Insurance Subscription"):
-    company = get_default_company()
-    update_history = frappe.get_value(
-        "Company NHIF Settings", company, "update_patient_history")
-    if not update_history:
-        return
+def update_patient_history(doc):
+    # Remarked till multi company setting is required and feasible from Patient doctype 2021-03-20 19:57:14
+    # company = get_default_company()
+    # update_history = frappe.get_value(
+    #     "Company NHIF Settings", company, "update_patient_history")
+    # if not update_history:
+    #     return
 
     medical_history = ""
-    if doc.doctype == "Patient Encounter":
-        for row in doc.codification_table:
-            if row.description:
-                medical_history += row.description + "\n"
-        doc.medical_history = medical_history
+    for row in doc.codification_table:
+        if row.description:
+            medical_history += row.description + "\n"
+    doc.medical_history = medical_history
 
-        medication = ""
-        for row in doc.chronic_medications:
-            if row.drug_name:
-                medication += row.drug_name + "\n"
-        doc.medication = medication
+    medication = ""
+    for row in doc.chronic_medications:
+        if row.drug_name:
+            medication += row.drug_name + "\n"
+    doc.medication = medication
+    if doc.medical_history or doc.medication:
+        frappe.msgprint(_("Update patient history for medical history and chronic medications"), alert = True)
 
 
 @frappe.whitelist()
