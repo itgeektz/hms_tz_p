@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 # Copyright (c) 2018, earthians and contributors
 # For license information, please see license.txt
 
@@ -8,7 +8,7 @@ from frappe import _
 from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_income_account
 from hms_tz.hms_tz.utils import validate_customer_created
 from hms_tz.nhif.api.patient_appointment import get_insurance_amount
-from frappe.utils import nowdate, nowtime
+from frappe.utils import nowdate, nowtime, add_days
 import base64
 import re
 
@@ -30,6 +30,7 @@ def get_healthcare_service_order_to_invoice(patient, company, encounter, service
     encounter_dict = frappe.get_all("Patient Encounter", filters={
         "reference_encounter": encounter,
         "docstatus": 1,
+        'is_not_billable': 0
     })
     encounter_list = [encounter]
 
@@ -41,6 +42,7 @@ def get_healthcare_service_order_to_invoice(patient, company, encounter, service
         'company': company,
         'order_group': ["in", encounter_list],
         'invoiced': False,
+        'order_date': [">", add_days(nowdate(), -3)],
         'docstatus': 1
     }
 
@@ -107,8 +109,16 @@ def get_item_rate(item_code, company, insurance_subscription, insurance_company)
             "Healthcare Insurance Subscription", insurance_subscription, "healthcare_insurance_coverage_plan")
         price_list = frappe.get_value(
             "Healthcare Insurance Coverage Plan", hic_plan, "price_list")
+        secondary_price_list = frappe.get_value(
+            "Healthcare Insurance Coverage Plan", hic_plan, "secondary_price_list")
         if price_list:
             price_list_rate = get_item_price(item_code, price_list, company)
+            if price_list_rate and price_list_rate != 0:
+                return price_list_rate
+            else:
+                price_list_rate = None
+        if not price_list_rate:
+            price_list_rate = get_item_price(item_code, secondary_price_list, company)
             if price_list_rate and price_list_rate != 0:
                 return price_list_rate
             else:
@@ -172,6 +182,8 @@ def create_delivery_note_from_LRPT(LRPT_doc, patient_encounter_doc):
     item_row.item_code = item_code
     item_row.item_name = item_name
     item_row.warehouse = warehouse
+    item_row.healthcare_service_unit = item.healthcare_service_unit
+    item_row.practitioner = patient_encounter_doc.practitioner
     item_row.qty = item.qty
     item_row.rate = get_item_rate(
         item_code, patient_encounter_doc.company, insurance_subscription, insurance_company)
@@ -218,16 +230,16 @@ def get_warehouse_from_service_unit(healthcare_service_unit):
 def get_item_form_LRPT(LRPT_doc):
     item = frappe._dict()
     if LRPT_doc.doctype == "Lab Test":
-        item.item_code = frappe.get_value(
-            "Lab Test Template", LRPT_doc.template, "item")
+        item.item_code, item.healthcare_service_unit = frappe.get_value(
+            "Lab Test Template", LRPT_doc.template, ["item", "healthcare_service_unit"])
         item.qty = 1
     elif LRPT_doc.doctype == "Radiology Examination":
-        item.item_code = frappe.get_value(
-            "Radiology Examination Template", LRPT_doc.radiology_examination_template, "item")
+        item.item_code, item.healthcare_service_unit = frappe.get_value(
+            "Radiology Examination Template", LRPT_doc.radiology_examination_template, ["item", "healthcare_service_unit"])
         item.qty = 1
     elif LRPT_doc.doctype == "Clinical Procedure":
-        item.item_code = frappe.get_value(
-            "Clinical Procedure Template", LRPT_doc.procedure_template, "item")
+        item.item_code, item.healthcare_service_unit = frappe.get_value(
+             "Clinical Procedure Template", LRPT_doc.procedure_template, ["item", "healthcare_service_unit"])
         item.qty = 1
     elif LRPT_doc.doctype == "Therapy Plan":
         item.item_code = None
@@ -339,3 +351,57 @@ def get_restricted_LRPT(doc):
                 if len(insurance_coverages) > 0:
                     is_restricted = insurance_coverages[0].approval_mandatory_for_claim
     return is_restricted
+
+# Sales Invoice Dialog Box for Healthcare Services
+@frappe.whitelist()
+def set_healthcare_services(doc, checked_values):
+    import json
+    doc = frappe.get_doc(json.loads(doc))
+    checked_values = json.loads(checked_values)
+    doc.items = []
+    from erpnext.stock.get_item_details import get_item_details
+    for checked_item in checked_values:
+        item_line = doc.append("items", {})
+        price_list, price_list_currency = frappe.db.get_values(
+            "Price List", {"selling": 1}, ['name', 'currency'])[0]
+        args = {
+            'doctype': "Sales Invoice",
+            'item_code': checked_item['item'],
+            'company': doc.company,
+            'customer': frappe.db.get_value("Patient", doc.patient, "customer"),
+            'selling_price_list': price_list,
+            'price_list_currency': price_list_currency,
+            'plc_conversion_rate': 1.0,
+            'conversion_rate': 1.0
+        }
+        item_details = get_item_details(args)
+        item_line.item_code = checked_item['item']
+        item_line.qty = 1
+        if checked_item['qty']:
+            item_line.qty = checked_item['qty']
+        if checked_item['rate']:
+            item_line.rate = checked_item['rate']
+        else:
+            item_line.rate = item_details.price_list_rate
+        item_line.amount = float(item_line.rate) * float(item_line.qty)
+        if checked_item['income_account']:
+            item_line.income_account = checked_item['income_account']
+        if checked_item['dt']:
+            item_line.reference_dt = checked_item['dt']
+        if checked_item['dn']:
+            item_line.reference_dn = checked_item['dn']
+        if checked_item['description']:
+            item_line.description = checked_item['description']
+        hso_doc = frappe.get_doc(item_line.reference_dt, item_line.reference_dn)
+        item_line.healthcare_practitioner = hso_doc.ordered_by
+        if hso_doc.order_doctype == "Medication":
+            item_line.healthcare_service_unit = frappe.get_value(hso_doc.order_reference_doctype, hso_doc.order_reference_name, "healthcare_service_unit")
+        else:
+            item_line.healthcare_service_unit = frappe.get_value(hso_doc.order_doctype, hso_doc.order, "healthcare_service_unit")
+        item_line.warehouse = get_warehouse_from_service_unit(item_line.healthcare_service_unit)
+        # item_line.warehouse = checked_item['warehouse']
+        # item_line.healthcare_service_unit = checked_item['healthcare_service_unit']
+        # item_line.healthcare_practitioner = checked_item['healthcare_practitioner']
+    doc.set_missing_values(for_validate=True)
+    doc.save()
+    return doc.name

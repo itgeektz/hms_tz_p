@@ -7,6 +7,8 @@
  "field_order": [
   "radiology_examination_template",
   "medical_code",
+  "override_subscription",
+  "prescribe",
   "radiology_procedure_name",
   "invoiced",
   "column_break_4",
@@ -163,12 +165,24 @@
    "in_list_view": 1,
    "label": "Medical Code",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "override_subscription",
+   "fieldtype": "Check",
+   "label": "Override Healthcare Insurance Subscription"
+  },
+  {
+   "default": "0",
+   "fieldname": "prescribe",
+   "fieldtype": "Check",
+   "label": "Prescribe"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2020-11-19 15:19:49.641071",
+ "modified": "2021-03-19 20:34:51.398300",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Previous Radiology Procedure Prescription",

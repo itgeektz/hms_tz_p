@@ -5,20 +5,17 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from hms_tz.hms_tz.doctype.patient_appointment.patient_appointment import get_appointment_item, check_is_new_patient
+from hms_tz.hms_tz.doctype.patient_appointment.patient_appointment import get_appointment_item
 from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account
-from hms_tz.hms_tz.utils import check_fee_validity, get_service_item_and_practitioner_charge
 from frappe.utils import getdate
 from frappe.model.mapper import get_mapped_doc
 from hms_tz.nhif.api.token import get_nhifservice_token
-from erpnext import get_company_currency, get_default_company
 import json
 import requests
-from time import sleep
 from hms_tz.nhif.doctype.nhif_product.nhif_product import add_product
 from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
-
+from frappe.utils import date_diff, getdate
 
 @frappe.whitelist()
 def get_insurance_amount(insurance_subscription, billing_item, company, patient, insurance_company):
@@ -150,6 +147,20 @@ def create_vital(appointment):
 
 
 def make_vital(appointment_doc, method):
+    filters = {
+        "name": ['!=', appointment_doc.name],
+        'mode_of_payment': appointment_doc.mode_of_payment,
+        'insurance_subscription': appointment_doc.insurance_subscription,
+        'department': appointment_doc.department}
+    appointment = get_previous_appointment(appointment_doc.patient, filters)
+    if appointment and appointment_doc.appointment_date:
+        diff = date_diff(appointment_doc.appointment_date,
+                         appointment.appointment_date)
+        valid_days = int(frappe.get_value("Healthcare Settings", "Healthcare Settings", "valid_days"))
+        if (diff <= valid_days):
+            appointment_doc.follow_up = 1
+            frappe.msgprint(_("Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"), alert=True)
+
     if (not appointment_doc.ref_vital_signs) and (appointment_doc.invoiced or (appointment_doc.insurance_claim and appointment_doc.authorization_number) or method == "patient_appointment"):
         vital_doc = frappe.get_doc(dict(
             doctype="Vital Signs",
@@ -164,7 +175,7 @@ def make_vital(appointment_doc, method):
 
 
 def make_encounter(vital_doc, method):
-    if not vital_doc.appointment:
+    if not vital_doc.appointment or vital_doc.inpatient_record:
         return
     source_name = vital_doc.appointment
     target_doc = None
@@ -273,7 +284,9 @@ def get_previous_appointment(patient, filters=None):
         "patient": patient,
     }
     if filters:
-        filters = json.loads(filters)
+        # when the function is called from frontend
+        if type(filters) == str:
+            filters = json.loads(filters)
         the_filters.update(filters)
     appointments = frappe.get_all("Patient Appointment", filters=the_filters,
                                   fields=["appointment_date",
@@ -282,3 +295,8 @@ def get_previous_appointment(patient, filters=None):
                                   )
     if len(appointments):
         return appointments[0]
+
+
+def before_insert(doc, method):
+    if doc.inpatient_record:
+        frappe.throw(_("You cannot create an appointment for a patient already admitted.<br>First <b>discharge the patient</b> and then create the appointment."))

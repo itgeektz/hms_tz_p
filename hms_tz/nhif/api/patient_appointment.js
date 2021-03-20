@@ -375,21 +375,21 @@ const get_value = (doctype, name, field) => {
 };
 
 const add_btns = (frm) => {
-    if (!frm.doc.patient || frm.is_new()) return;
-    if (frm.doc.invoiced || !frm.doc.mode_of_payment || frm.doc.insurance_subscription || frm.doc.status == "Cancelled" || frm.doc.ref_vital_signs) return;
+    if (!frm.doc.patient || frm.is_new() | frm.doc.invoiced || frm.doc.status == "Cancelled" || frm.doc.ref_vital_signs) return;
     var vitals_btn_added = false;
     const valid_days = get_value("Healthcare Settings", "Healthcare Settings", "valid_days");
-    const appointment = get_previous_appointment(frm, { name: ["!=", frm.doc.name], mode_of_payment: frm.doc.mode_of_payment, department: frm.doc.department });
+    const appointment = get_previous_appointment(frm, { name: ["!=", frm.doc.name], mode_of_payment: frm.doc.mode_of_payment, insurance_subscription: frm.doc.insurance_subscription, department: frm.doc.department });
     if (typeof appointment != "undefined") {
         const last_appointment_date = appointment.appointment_date;
         const diff = frappe.datetime.get_day_diff(frm.doc.appointment_date, last_appointment_date);
         if (diff <= valid_days) {
             add_vital_btn(frm);
             vitals_btn_added = true;
+            frm.set_value("invoiced", 1);
             frappe.show_alert(__({ message: "Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!", indicator: "green" }));
-            frappe.set_value("invoiced", 1)
         }
     }
+    if (!frm.doc.mode_of_payment || frm.doc.insurance_subscription) return;
     if (!vitals_btn_added) {
         add_invoice_btn(frm);
     }
