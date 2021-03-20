@@ -301,6 +301,10 @@ fixtures = [
         "Healthcare Insurance Coverage Plan-secondary_price_list",
         "Item-healthcare_service_template",
         "Patient Appointment-old_hms_number",
+        "Patient Appointment-follow_up",
+        "Patient Appointment-column_break_78",
+        "Clinical Procedure-clinical_procedure_notes",
+        "Clinical Procedure-section_break_49",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -536,6 +540,29 @@ fixtures = [
         "Medication Change Request-patient-in_list_view",
         "Patient Appointment-main-default_print_format",
         "Lab Test-patient_name-in_standard_filter",
+        "Patient-medical_history-hidden",
+        "Patient-medication-hidden",
+        "Patient Appointment-practitioner_name-hidden",
+        "Patient Appointment-status-hidden",
+        "Patient Appointment-claim_status-hidden",
+        "Patient Appointment-insurance_company-hidden",
+        "Patient Appointment-insurance_claim-hidden",
+        "Patient Appointment-sb_source-depends_on",
+        "Patient Appointment-duration-hidden",
+        "Patient Appointment-practitioner_availability-hidden",
+        "Therapy Plan-patient_name-in_list_view",
+        "Clinical Procedure-practitioner-read_only_depends_on",
+        "Clinical Procedure-practitioner-mandatory_depends_on",
+        "Healthcare Service Order-priority-in_list_view",
+        "Healthcare Service Order-order_date-in_list_view",
+        "Healthcare Service Order-order-in_list_view",
+        "Healthcare Service Order-order_doctype-in_list_view",
+        "Healthcare Service Order-staff_role-in_list_view",
+        "Healthcare Service Order-status-in_list_view",
+        "Inpatient Record-admitted_datetime-in_list_view",
+        "Inpatient Record-discharge_ordered_date-in_list_view",
+        "Inpatient Record-expected_discharge-in_list_view",
+        "Inpatient Record-patient_name-in_list_view",
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",
@@ -641,6 +668,7 @@ inpatient_record_list_js = {"doctype": "nhif/api/inpatient_record_list.js"}
 
 doc_events = {
     "Patient Appointment": {
+        "before_insert": "hms_tz.nhif.api.patient_appointment.before_insert",
         "validate": [
             "hms_tz.nhif.api.patient_appointment.make_vital",
         ]
