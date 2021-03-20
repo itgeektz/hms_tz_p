@@ -53,6 +53,7 @@ def create_lab_test(hso_doc):
     #     })
 
     doc.save(ignore_permissions=True)
+    frappe.db.commit()
     if doc.get('name'):
         frappe.msgprint(_('Lab Test {0} created successfully.').format(
             frappe.bold(doc.name)))
@@ -77,6 +78,7 @@ def create_radiology_examination(hso_doc):
         hso_doc.order_reference_doctype, hso_doc.order_reference_name, "lab_test_comment")
 
     doc.save(ignore_permissions=True)
+    frappe.db.commit()
 
     hso_doc.invoiced = 1
     hso_doc.save(ignore_permissions=True)
@@ -92,7 +94,7 @@ def create_procedure_prescription(hso_doc):
     doc.patient = hso_doc.patient
     doc.company = hso_doc.company
     doc.procedure_template = hso_doc.order
-    doc.practitioner = hso_doc.practitioner
+    doc.practitioner = hso_doc.ordered_by
     doc.source = hso_doc.source
     doc.patient_sex = frappe.get_value(
         "Patient", hso_doc.patient, "sex")
@@ -101,10 +103,12 @@ def create_procedure_prescription(hso_doc):
     doc.ref_doctype = hso_doc.doctype
     doc.ref_docname = hso_doc.name
     doc.invoiced = 1
+
     doc.notes = frappe.get_value(
         hso_doc.order_reference_doctype, hso_doc.order_reference_name, "comments") or "No Comment"
 
     doc.save(ignore_permissions=True)
+    frappe.db.commit()
 
     hso_doc.invoiced = 1
     hso_doc.save(ignore_permissions=True)
