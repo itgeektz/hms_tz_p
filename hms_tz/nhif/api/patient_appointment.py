@@ -5,16 +5,13 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from hms_tz.hms_tz.doctype.patient_appointment.patient_appointment import get_appointment_item, check_is_new_patient
+from hms_tz.hms_tz.doctype.patient_appointment.patient_appointment import get_appointment_item
 from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account
-from hms_tz.hms_tz.utils import check_fee_validity, get_service_item_and_practitioner_charge
 from frappe.utils import getdate
 from frappe.model.mapper import get_mapped_doc
 from hms_tz.nhif.api.token import get_nhifservice_token
-from erpnext import get_company_currency, get_default_company
 import json
 import requests
-from time import sleep
 from hms_tz.nhif.doctype.nhif_product.nhif_product import add_product
 from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
