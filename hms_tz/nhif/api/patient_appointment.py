@@ -295,3 +295,8 @@ def get_previous_appointment(patient, filters=None):
                                   )
     if len(appointments):
         return appointments[0]
+
+
+def before_insert(doc, method):
+    if doc.inpatient_record:
+        frappe.throw(_("You cannot create an appointment for a patient already admitted.<br>First <b>discharge the patient</b> and then create the appointment."))
