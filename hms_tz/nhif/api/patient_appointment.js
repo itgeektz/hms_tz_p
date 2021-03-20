@@ -378,16 +378,14 @@ const add_btns = (frm) => {
     if (!frm.doc.patient || frm.is_new() | frm.doc.invoiced || frm.doc.status == "Cancelled" || frm.doc.ref_vital_signs) return;
     var vitals_btn_added = false;
     const valid_days = get_value("Healthcare Settings", "Healthcare Settings", "valid_days");
-    frappe.show_alert(__({ message: valid_days, indicator: "green" }));
     const appointment = get_previous_appointment(frm, { name: ["!=", frm.doc.name], mode_of_payment: frm.doc.mode_of_payment, insurance_subscription: frm.doc.insurance_subscription, department: frm.doc.department });
-    frappe.show_alert(__({ message: appointment, indicator: "green" }));
     if (typeof appointment != "undefined") {
         const last_appointment_date = appointment.appointment_date;
         const diff = frappe.datetime.get_day_diff(frm.doc.appointment_date, last_appointment_date);
         if (diff <= valid_days) {
             add_vital_btn(frm);
             vitals_btn_added = true;
-            frappe.set_value("invoiced", 1)
+            frm.set_value("invoiced", 1);
             frappe.show_alert(__({ message: "Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!", indicator: "green" }));
         }
     }
