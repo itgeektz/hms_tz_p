@@ -11,6 +11,15 @@ frappe.ui.form.on('Patient Encounter', {
         set_medical_code(frm);
         add_btn_final(frm);
         duplicate(frm);
+        frm.set_query('healthcare_service_unit', 'drug_prescription', function () {
+            return {
+                filters: [
+                    {
+                        'service_unit_type': 'Pharmacy'
+                    }
+                ]
+            };
+        });
     },
     refresh: function (frm) {
         set_medical_code(frm);
@@ -19,7 +28,7 @@ frappe.ui.form.on('Patient Encounter', {
         if (frm.doc.source == "External Referral") {
             frm.set_df_property('referring_practitioner', 'hidden', 1);
             frm.set_df_property('referring_practitioner', 'reqd', 0);
-        }
+        };
     },
     default_healthcare_service_unit: function (frm) {
         if (frm.doc.default_healthcare_service_unit) {
