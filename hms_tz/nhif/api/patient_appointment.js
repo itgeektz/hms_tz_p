@@ -431,7 +431,8 @@ const add_vital_btn = frm => {
 
 const set_auth_number_reqd = frm => {
     if (frm.doc.insurance_subscription) {
-        frm.toggle_reqd("authorization_number", true);
+        // Removed reqd for time being 2021-03-21 10:36:11
+        frm.toggle_reqd("authorization_number", false);
     }
     else {
         frm.toggle_reqd("authorization_number", false);
