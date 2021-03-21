@@ -160,6 +160,10 @@ def make_vital(appointment_doc, method):
         if (diff <= valid_days):
             appointment_doc.follow_up = 1
             frappe.msgprint(_("Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"), alert=True)
+        else:
+            appointment_doc.follow_up = 0
+            frappe.msgprint(_("This appointment requires to be paid for!"), alert=True)
+
 
     if (not appointment_doc.ref_vital_signs) and (appointment_doc.invoiced or (appointment_doc.insurance_claim and appointment_doc.authorization_number) or method == "patient_appointment"):
         vital_doc = frappe.get_doc(dict(
