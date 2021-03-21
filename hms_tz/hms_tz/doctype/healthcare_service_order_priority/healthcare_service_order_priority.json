@@ -1,7 +1,6 @@
 {
  "actions": [],
  "autoname": "field:service_order_priority",
- "beta": 1,
  "creation": "2020-07-20 16:55:08.862332",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -20,7 +19,7 @@
   }
  ],
  "links": [],
- "modified": "2020-12-24 10:25:47.068131",
+ "modified": "2021-03-21 11:45:53.411342",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Healthcare Service Order Priority",

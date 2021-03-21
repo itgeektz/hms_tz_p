@@ -1,7 +1,6 @@
 {
  "actions": [],
  "autoname": "format:{objective}-{patient}-{start_date}",
- "beta": 1,
  "creation": "2020-07-20 19:06:27.924282",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -215,7 +214,7 @@
   }
  ],
  "links": [],
- "modified": "2020-12-24 10:25:34.131441",
+ "modified": "2021-03-21 11:45:56.768124",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Episode of Care",

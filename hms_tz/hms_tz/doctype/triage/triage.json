@@ -1,7 +1,6 @@
 {
  "actions": [],
  "autoname": "field:triage_description",
- "beta": 1,
  "creation": "2020-04-04 23:56:56.339111",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -47,7 +46,7 @@
   }
  ],
  "links": [],
- "modified": "2020-12-24 10:26:05.527989",
+ "modified": "2021-03-21 11:45:51.719281",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Triage",

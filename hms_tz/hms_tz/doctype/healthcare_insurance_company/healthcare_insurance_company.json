@@ -4,7 +4,6 @@
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "naming_series:",
- "beta": 1,
  "creation": "2020-10-16 08:41:43.197991",
  "description": "Healthcare Insurance Company",
  "doctype": "DocType",
@@ -121,7 +120,7 @@
   }
  ],
  "links": [],
- "modified": "2020-12-24 10:25:38.455556",
+ "modified": "2021-03-21 11:45:55.753826",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Healthcare Insurance Company",

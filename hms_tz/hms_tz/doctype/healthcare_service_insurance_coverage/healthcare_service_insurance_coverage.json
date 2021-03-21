@@ -1,7 +1,6 @@
 {
  "actions": [],
  "autoname": "naming_series:",
- "beta": 1,
  "creation": "2020-10-16 10:11:39.077709",
  "description": "Healthcare Service Insurance Coverage",
  "doctype": "DocType",
@@ -129,7 +128,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2020-12-24 10:25:43.400986",
+ "modified": "2021-03-21 11:45:53.956331",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Healthcare Service Insurance Coverage",

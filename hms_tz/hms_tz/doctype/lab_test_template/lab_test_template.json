@@ -3,7 +3,6 @@
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:lab_test_code",
- "beta": 1,
  "creation": "2016-03-29 17:35:36.761223",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -349,7 +348,7 @@
   }
  ],
  "links": [],
- "modified": "2021-02-06 17:53:37.123106",
+ "modified": "2021-03-21 11:45:50.923150",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Lab Test Template",

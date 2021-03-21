@@ -3,7 +3,6 @@
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:service_frequency_name",
- "beta": 1,
  "creation": "2020-09-23 12:01:21.905533",
  "description": "Insurance Service Frequency",
  "doctype": "DocType",
@@ -37,7 +36,7 @@
   }
  ],
  "links": [],
- "modified": "2020-12-24 10:25:49.780644",
+ "modified": "2021-03-21 11:45:52.886212",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Insurance Service Frequency",

@@ -1,7 +1,6 @@
 {
  "actions": [],
  "autoname": "field:service_order_reason",
- "beta": 1,
  "creation": "2020-07-20 16:49:29.504052",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -20,7 +19,7 @@
   }
  ],
  "links": [],
- "modified": "2020-12-24 10:25:47.406752",
+ "modified": "2021-03-21 11:45:53.154123",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Healthcare Service Order Reason",

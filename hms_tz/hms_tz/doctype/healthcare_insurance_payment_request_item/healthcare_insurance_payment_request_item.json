@@ -1,6 +1,5 @@
 {
  "actions": [],
- "beta": 1,
  "creation": "2020-10-26 08:50:24.587112",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -69,7 +68,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2020-12-24 10:25:40.760854",
+ "modified": "2021-03-21 11:45:54.353026",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Healthcare Insurance Payment Request Item",

@@ -4,7 +4,6 @@
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "HPA.#####",
- "beta": 1,
  "creation": "2020-09-25 09:02:20.838228",
  "description": "Practitioner Availability",
  "doctype": "DocType",
@@ -241,7 +240,7 @@
   }
  ],
  "links": [],
- "modified": "2020-12-24 10:25:59.404393",
+ "modified": "2021-03-21 11:45:52.053570",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Practitioner Availability",
