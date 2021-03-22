@@ -9,6 +9,13 @@ from hms_tz.nhif.api.healthcare_utils import update_dimensions
 
 
 def validate(doc, method):
+    if doc.is_new():
+        return
+    for item in doc.items:
+        if not item.is_free_item and item.amount == 0:
+            frappe.throw(_("Amount of the item cannot be blank."))
+    if doc.is_pos and doc.outstanding_amount != 0:
+        frappe.throw(_("Sales invoice not paid in full."))
     update_dimensions(doc)
 
 
@@ -74,14 +81,11 @@ def create_radiology_examination(hso_doc):
     doc.ref_docname = hso_doc.name
     doc.invoiced = 1
 
-    doc.lab_test_comment = frappe.get_value(
-        hso_doc.order_reference_doctype, hso_doc.order_reference_name, "lab_test_comment")
+    doc.notes = frappe.get_value(
+        hso_doc.order_reference_doctype, hso_doc.order_reference_name, "radiology_test_comment")
 
     doc.save(ignore_permissions=True)
     frappe.db.commit()
-
-    hso_doc.invoiced = 1
-    hso_doc.save(ignore_permissions=True)
 
     if doc.get('name'):
         frappe.msgprint(_('Radiology Examination {0} created successfully.').format(
@@ -110,8 +114,6 @@ def create_procedure_prescription(hso_doc):
     doc.save(ignore_permissions=True)
     frappe.db.commit()
 
-    hso_doc.invoiced = 1
-    hso_doc.save(ignore_permissions=True)
 
     if doc.get('name'):
         frappe.msgprint(_('Clinical Procedure {0} created successfully.').format(
