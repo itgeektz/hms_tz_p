@@ -9,6 +9,7 @@
   "medical_code",
   "override_subscription",
   "prescribe",
+  "is_not_available_inhouse",
   "no_of_sessions",
   "sessions_completed",
   "column_break_7",
@@ -140,11 +141,18 @@
    "label": "Intent",
    "options": "\nProposal\nPlan\nDirective\nOrder\nOriginal Order\nReflex Order\nFiller Order\nInstance Order\nOption",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_not_available_inhouse",
+   "fieldtype": "Check",
+   "label": "Is Not Available Inhouse",
+   "read_only": 1
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2021-03-19 20:46:44.994684",
+ "modified": "2021-03-22 19:22:42.972780",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Previous Therapy Plan Detail",

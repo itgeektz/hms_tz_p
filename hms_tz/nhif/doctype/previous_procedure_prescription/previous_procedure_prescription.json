@@ -10,6 +10,7 @@
   "medical_code",
   "override_subscription",
   "prescribe",
+  "is_not_available_inhouse",
   "procedure_name",
   "department",
   "practitioner",
@@ -212,11 +213,18 @@
    "fieldtype": "Select",
    "label": "HSO Payment Method",
    "options": "\nCash\nPrescribe"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_not_available_inhouse",
+   "fieldtype": "Check",
+   "label": "Is Not Available Inhouse",
+   "read_only": 1
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2021-03-19 20:38:36.060518",
+ "modified": "2021-03-22 19:22:02.238767",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Previous Procedure Prescription",

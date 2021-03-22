@@ -9,6 +9,7 @@
   "medical_code",
   "override_subscription",
   "prescribe",
+  "is_not_available_inhouse",
   "radiology_procedure_name",
   "invoiced",
   "column_break_4",
@@ -177,12 +178,19 @@
    "fieldname": "prescribe",
    "fieldtype": "Check",
    "label": "Prescribe"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_not_available_inhouse",
+   "fieldtype": "Check",
+   "label": "Is Not Available Inhouse",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2021-03-19 20:34:51.398300",
+ "modified": "2021-03-22 19:21:48.209962",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Previous Radiology Procedure Prescription",
