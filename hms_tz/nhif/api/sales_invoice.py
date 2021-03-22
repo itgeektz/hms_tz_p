@@ -5,116 +5,39 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from hms_tz.nhif.api.healthcare_utils import update_dimensions
+from hms_tz.nhif.api.healthcare_utils import update_dimensions, create_individual_lab_test, create_individual_radiology_examination, create_individual_procedure_prescription
 
 
 def validate(doc, method):
-    if doc.is_new():
-        return
     for item in doc.items:
         if not item.is_free_item and item.amount == 0:
-            frappe.throw(_("Amount of the item cannot be blank."))
-    if doc.is_pos and doc.outstanding_amount != 0:
-        frappe.throw(_("Sales invoice not paid in full."))
+            frappe.throw(_("Amount of the healthcare service <b>'{0}'</b> cannot be ZERO. Please do not select this item and request Pricing team to resolve this.").format(item.item_name))
     update_dimensions(doc)
 
+@frappe.whitelist()
+def create_pending_healthcare_docs(doc_name):
+    doc = frappe.get_doc("Sales Invoice", doc_name)
+    create_healthcare_docs(doc, "From Front End")
 
 def create_healthcare_docs(doc, method):
+    if doc.is_pos and doc.outstanding_amount != 0:
+        frappe.throw(_("Sales invoice not paid in full. Make sure that full payment amount is received and recorded."))
+
     for item in doc.items:
         if item.reference_dt:
             if item.reference_dt == "Healthcare Service Order":
                 hso_doc = frappe.get_doc(
                     "Healthcare Service Order", item.reference_dn)
-                if hso_doc.insurance_subscription and hso_doc.prescribed:
+                if hso_doc.insurance_subscription and not hso_doc.prescribed:
                     return
+                if not hso_doc.order:
+                    frappe.msgprint(_("HSO order not found..."), alert = True)
+                    return
+                child = frappe.get_doc(hso_doc.order_reference_doctype,
+                                    hso_doc.order_reference_name)
                 if hso_doc.order_doctype == "Lab Test Template":
-                    create_lab_test(hso_doc)
+                    create_individual_lab_test(hso_doc, child)
                 elif hso_doc.order_doctype == "Radiology Examination Template":
-                    create_radiology_examination(hso_doc)
-                elif hso_doc.order_doctype == "Clinical Procedure":
-                    create_procedure_prescription(hso_doc)
-
-
-def create_lab_test(hso_doc):
-    if not hso_doc.order:
-        return
-    ltt_doc = frappe.get_doc("Lab Test Template", hso_doc.order)
-    patient_sex = frappe.get_value("Patient", hso_doc.patient, "sex")
-
-    doc = frappe.new_doc('Lab Test')
-    doc.patient = hso_doc.patient
-    doc.patient_sex = patient_sex
-    doc.company = hso_doc.company
-    doc.template = ltt_doc.name
-    doc.practitioner = hso_doc.ordered_by
-    doc.source = hso_doc.source
-    doc.ref_doctype = hso_doc.doctype
-    doc.ref_docname = hso_doc.name
-    doc.invoiced = 1
-    doc.lab_test_comment = frappe.get_value(
-        hso_doc.order_reference_doctype, hso_doc.order_reference_name, "lab_test_comment")
-
-    # for entry in ltt_doc.lab_test_groups:
-    #     doc.append('normal_test_items', {
-    #         'lab_test_name': entry.lab_test_description,
-    #     })
-
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
-    if doc.get('name'):
-        frappe.msgprint(_('Lab Test {0} created successfully.').format(
-            frappe.bold(doc.name)))
-
-
-def create_radiology_examination(hso_doc):
-    if not hso_doc.order:
-        return
-    doc = frappe.new_doc('Radiology Examination')
-    doc.patient = hso_doc.patient
-    doc.company = hso_doc.company
-    doc.radiology_examination_template = hso_doc.order
-    doc.practitioner = hso_doc.ordered_by
-    doc.source = hso_doc.source
-    doc.medical_department = frappe.get_value(
-        "Radiology Examination Template", hso_doc.order, "medical_department")
-    doc.ref_doctype = hso_doc.doctype
-    doc.ref_docname = hso_doc.name
-    doc.invoiced = 1
-
-    doc.notes = frappe.get_value(
-        hso_doc.order_reference_doctype, hso_doc.order_reference_name, "radiology_test_comment")
-
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
-
-    if doc.get('name'):
-        frappe.msgprint(_('Radiology Examination {0} created successfully.').format(
-            frappe.bold(doc.name)))
-
-def create_procedure_prescription(hso_doc):
-    if not hso_doc.order:
-        return
-    doc = frappe.new_doc('Clinical Procedure')
-    doc.patient = hso_doc.patient
-    doc.company = hso_doc.company
-    doc.procedure_template = hso_doc.order
-    doc.practitioner = hso_doc.ordered_by
-    doc.source = hso_doc.source
-    doc.patient_sex = frappe.get_value(
-        "Patient", hso_doc.patient, "sex")
-    doc.medical_department = frappe.get_value(
-        "Clinical Procedure Template", hso_doc.order, "medical_department")
-    doc.ref_doctype = hso_doc.doctype
-    doc.ref_docname = hso_doc.name
-    doc.invoiced = 1
-
-    doc.notes = frappe.get_value(
-        hso_doc.order_reference_doctype, hso_doc.order_reference_name, "comments") or "No Comment"
-
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
-
-
-    if doc.get('name'):
-        frappe.msgprint(_('Clinical Procedure {0} created successfully.').format(
-            frappe.bold(doc.name)))
+                    create_individual_radiology_examination(hso_doc, child)
+                elif hso_doc.order_doctype == "Clinical Procedure Template":
+                    create_individual_procedure_prescription(hso_doc, child)
