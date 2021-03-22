@@ -23,6 +23,11 @@ frappe.ui.form.on('Patient Encounter', {
     },
     refresh: function (frm) {
         set_medical_code(frm);
+        if (frm.doc.duplicate == 1) {
+            frm.remove_custom_button("Schedule Admission");
+            frm.remove_custom_button("Refer Practitioner");
+            frm.remove_custom_button("Create");
+        }
         add_btn_final(frm);
         duplicate(frm);
         if (frm.doc.source == "External Referral") {
@@ -333,7 +338,7 @@ var validate_medical_code = function (frm) {
 };
 
 var add_btn_final = function (frm) {
-    if (frm.doc.docstatus == 1 && frm.doc.encounter_type != 'Final') {
+    if (frm.doc.docstatus == 1 && frm.doc.encounter_type != 'Final' && frm.doc.duplicate == 0) {
         frm.add_custom_button(__('Set as Final'), function () {
             frappe.call({
                 method: 'hms_tz.nhif.api.patient_encounter.finalized_encounter',
@@ -350,7 +355,7 @@ var add_btn_final = function (frm) {
 };
 
 var duplicate = function (frm) {
-    if (frm.doc.docstatus != 1 || frm.doc.encounter_type == 'Final') {
+    if (frm.doc.docstatus != 1 || frm.doc.encounter_type == 'Final' || frm.doc.duplicate == 1) {
         return;
     }
     frm.add_custom_button(__('Duplicate'), function () {
@@ -380,7 +385,10 @@ frappe.ui.form.on('Lab Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.lab_test_code) { return; }
         validate_stock_item(frm, row.lab_test_code, 1, row.healthcare_service_unit, "Lab Test Template");
-        check_is_not_available_inhouse(row.lab_test_code, "Lab Test Template", row.lab_test_code);
+        if (row.is_not_available_inhouse) {
+            msgprint = "NOTE: This healthcare service item, <b>" + row.lab_test_code + "</b>, is not available inhouse and has been marked as prescribe.<br><br>Request the patient to get it from another healthcare service provider."
+            frappe.show_alert(__(msgprint))
+        }
     },
     prescribe: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
@@ -402,7 +410,10 @@ frappe.ui.form.on('Radiology Procedure Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.radiology_examination_template) { return; }
         validate_stock_item(frm, row.radiology_examination_template, 1, row.healthcare_service_unit, "Radiology Examination Template");
-        check_is_not_available_inhouse(row.radiology_examination_template, "Radiology Examination Template", row.radiology_examination_template);
+        if (row.is_not_available_inhouse) {
+            msgprint = "NOTE: This healthcare service item, <b>" + row.radiology_examination_template + "</b>, is not available inhouse and has been marked as prescribe.<br>Request the patient to get it from another healthcare service provider."
+            frappe.show_alert(__(msgprint))
+        }
     },
     prescribe: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
@@ -424,7 +435,10 @@ frappe.ui.form.on('Procedure Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.procedure) { return; }
         validate_stock_item(frm, row.procedure, 1, row.healthcare_service_unit, "Clinical Procedure Template");
-        check_is_not_available_inhouse(row.procedure, "Clinical Procedure Template", row.procedure);
+        if (row.is_not_available_inhouse) {
+            msgprint = "NOTE: This healthcare service item, <b>" + row.procedure + "</b>, is not available inhouse and has been marked as prescribe.<br>Request the patient to get it from another healthcare service provider."
+            frappe.show_alert(__(msgprint))
+        }
     },
     prescribe: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
@@ -446,7 +460,10 @@ frappe.ui.form.on('Drug Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.drug_code) { return; }
         validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit, "Drug Prescription");
-        check_is_not_available_inhouse(row.drug_code, "Medication", row.drug_code, row.healthcare_service_unit, "Drug Prescription");
+        if (row.is_not_available_inhouse) {
+            msgprint = "NOTE: This healthcare service item, <b>" + row.drug_code + "</b>, is not available inhouse and has been marked as prescribe.<br>Request the patient to get it from another healthcare service provider."
+            frappe.show_alert(__(msgprint))
+        }
     },
     prescribe: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
@@ -476,8 +493,11 @@ frappe.ui.form.on('Therapy Plan Detail', {
     therapy_type: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe || !row.therapy_type) { return; }
-        validate_stock_item(frm, row.therapy_type, caller = "Therapy Type");
-        check_is_not_available_inhouse(row.therapy_type, 1, row.healthcare_service_unit, "Therapy Type");
+        validate_stock_item(frm, row.therapy_type, 1, row.healthcare_service_unit, "Therapy Type");
+        if (row.is_not_available_inhouse) {
+            msgprint = "NOTE: This healthcare service item, <b>" + row.therapy_type + "</b>, is not available inhouse and has been marked as prescribe.<br>Request the patient to get it from another healthcare service provider."
+            frappe.show_alert(__(msgprint))
+        }
     },
     prescribe: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
@@ -514,22 +534,6 @@ const validate_stock_item = function (frm, healthcare_service, qty = 1, healthca
         }
     });
 };
-const check_is_not_available_inhouse = function (item, doctype, docname) {
-    frappe.call({
-        method: 'hms_tz.nhif.api.patient_encounter.check_is_not_available_inhouse',
-        args: {
-            item: item,
-            doctype: doctype,
-            docname: docname,
-        },
-        callback: function (data) {
-            if (data.message) {
-                // console.log(data.message)
-            }
-        }
-    });
-};
-
 const load_print_page = function (invoice_name, pos_profile) {
     const print_format = pos_profile.print_format || "AV Tax Invoice";
     const letter_head = pos_profile.letter_head || 0;
