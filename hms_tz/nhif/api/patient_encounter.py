@@ -7,7 +7,7 @@ import frappe
 from frappe import _
 from frappe.utils import nowdate, get_year_start, getdate, nowtime, add_to_date
 import datetime
-from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_service_unit, get_item_price
+from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_service_unit, get_item_price, create_individual_lab_test, create_individual_radiology_examination, create_individual_procedure_prescription
 from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
 
 
@@ -36,6 +36,14 @@ def validate(doc, method):
     if doc.encounter_type == "Initial":
         doc.reference_encounter = doc.name
     checkـforـduplicate(doc)
+    mtuha_missing = ""
+    for final_diagnosis in doc.patient_encounter_final_diagnosis:
+        if not final_diagnosis.mtuha:
+            mtuha_missing += "-  <b>" + final_diagnosis.medical_code + "</b><br>"
+
+    if mtuha_missing:
+        frappe.throw(_("{0}<br>MTUHA Code not defined for the above diagnosis").format(mtuha_missing))
+
     insurance_subscription = doc.insurance_subscription
     child_tables = {
         "drug_prescription": "drug_code",
@@ -45,16 +53,23 @@ def validate(doc, method):
         "therapies": "therapy_type",
         # "diet_recommendation": "diet_plan" dosent have Healthcare Service Insurance Coverage
     }
+    prescribed_list = ""
     for key, value in child_tables.items():
         table = doc.get(key)
+
         for row in table:
+            quantity = row.get("quantity") or row.get("no_of_sessions")
             if not row.get("prescribe"):
-                validate_stock_item(row.get(value), row.get(
-                    "quantity") or 1, healthcare_service_unit=row.get("healthcare_service_unit"))
+                validate_stock_item(row.get(value), quantity, healthcare_service_unit=row.get("healthcare_service_unit"))
             if not doc.insurance_subscription:
                 row.prescribe = 1
-                frappe.msgprint(
-                    _("{0} has been prescribed. Request the patient to visit the cashier for cash payment or prescription printout.").format(row.get(value)))
+                prescribed_list += "-  <b>" + row.get(value) + "</b><BR>"
+            else:
+                if row.get("no_of_sessions") and doc.insurance_subscription:
+                    row.no_of_sessions = 1
+                    frappe.msgprint(_("No of sessions have been set to 1 for {0}.").format(row.get(value)), alert = True)
+    if prescribed_list:
+        frappe.msgprint(_("{0}<BR>The above been prescribed. <b>Request the patient to visit the cashier for cash payment</b> or prescription printout.").format(prescribed_list))
 
     if not insurance_subscription:
         return
@@ -73,9 +88,6 @@ def validate(doc, method):
         table = doc.get(key)
         for row in table:
             if row.override_subscription or row.prescribe:
-                if row.prescribe:
-                    frappe.msgprint(
-                        _("{0} has been prescribed. Request the patient to visit the cashier for cash payment or prescription printout.").format(row.get(value)))
                 continue
             hsic_list = frappe.get_all("Healthcare Service Insurance Coverage",
                                     fields={"healthcare_service_template",
@@ -146,7 +158,7 @@ def checkـforـduplicate(doc):
 @frappe.whitelist()
 def duplicate_encounter(encounter):
     doc = frappe.get_doc("Patient Encounter", encounter)
-    if not doc.docstatus == 1 or doc.encounter_type == 'Final' or doc.duplicate == 1:
+    if not doc.docstatus == 1 or doc.encounter_type == 'Final' or doc.duplicated == 1:
         frappe.msgprint(_("This encounter cannot be duplicated. Check if it is already duplicated using Menu/Links."), alert = True)
         return
     encounter_doc = frappe.copy_doc(doc)
@@ -173,7 +185,7 @@ def duplicate_encounter(encounter):
                 new_row[fieldname] = None
             encounter_dict[value].append(new_row)
         encounter_dict[key] = []
-    encounter_dict["duplicate"] = 0
+    encounter_dict["duplicated"] = 0
     encounter_dict["encounter_type"] = "Ongoing"
     if not encounter_dict.get("reference_encounter"):
         encounter_dict["reference_encounter"] = doc.name
@@ -184,7 +196,7 @@ def duplicate_encounter(encounter):
     encounter_doc.save()
     frappe.msgprint(
         _('Patient Encounter {0} created'.format(encounter_doc.name)))
-    doc.duplicate = 1
+    doc.duplicated = 1
     doc.save()
     return encounter_doc.name
 
@@ -217,14 +229,18 @@ def get_stock_availability(item_code, warehouse):
 
 @frappe.whitelist()
 def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_service_unit=None, caller="Unknown"):
-    qty = float(qty)
-    if qty == 0:
-        qty = 1
-
     # frappe.msgprint(_("{0} warehouse passed. <br> {1} healthcare service unit passed").format(warehouse, healthcare_service_unit), alert=True)
     if caller != "Drug Prescription" and not healthcare_service_unit:
         # LRPT code stock check goes here
         return
+
+    if (frappe.get_value("Medication", healthcare_service, "is_not_available_inhouse")):
+        return
+
+    qty = float(qty)
+    if qty == 0:
+        qty = 1
+
     item_info = get_item_info(medication_name=healthcare_service)
     stock_qty = 0
     if healthcare_service_unit:
@@ -269,115 +285,24 @@ def on_submit(doc, method):
 def create_healthcare_docs(patient_encounter_doc):
     if not patient_encounter_doc.appointment:
         return
-    insurance_subscription = frappe.get_value(
-        "Patient Appointment", patient_encounter_doc.appointment, "insurance_subscription")
-    if not insurance_subscription:
+    if not patient_encounter_doc.insurance_subscription:
         return
     child_tables_list = ["lab_test_prescription",
                          "radiology_procedure_prescription", "procedure_prescription"]
-    for child in child_tables_list:
-        if patient_encounter_doc.get(child):
-            if child == "lab_test_prescription":
-                create_lab_test(patient_encounter_doc,
-                                patient_encounter_doc.get(child))
-            elif child == "radiology_procedure_prescription":
-                create_radiology_examination(
-                    patient_encounter_doc, patient_encounter_doc.get(child))
-            elif child == "procedure_prescription":
-                create_procedure_prescription(
-                    patient_encounter_doc, patient_encounter_doc.get(child), insurance_subscription)
-
-
-def create_lab_test(patient_encounter_doc, child_table):
-    for child in child_table:
-        if child.prescribe:
-            continue
-        patient_sex = frappe.get_value(
-            "Patient", patient_encounter_doc.patient, "sex")
-        ltt_doc = frappe.get_doc("Lab Test Template", child.lab_test_code)
-        doc = frappe.new_doc('Lab Test')
-        doc.patient = patient_encounter_doc.patient
-        doc.patient_sex = patient_sex
-        doc.company = patient_encounter_doc.company
-        doc.template = ltt_doc.name
-        doc.practitioner = patient_encounter_doc.practitioner
-        doc.source = patient_encounter_doc.source
-        doc.ref_doctype = patient_encounter_doc.doctype
-        doc.ref_docname = patient_encounter_doc.name
-        doc.invoiced = 1
-        doc.lab_test_comment = (child.medical_code or "No ICD Code") + " : " + (child.lab_test_comment or "No Comment")
-
-        # for entry in ltt_doc.lab_test_groups:
-        #     doc.append('normal_test_items', {
-        #         'lab_test_name': entry.lab_test_description,
-        #     })
-
-        doc.save(ignore_permissions=True)
-        if doc.get('name'):
-            frappe.msgprint(_('Lab Test {0} created successfully.').format(
-                frappe.bold(doc.name)))
-            child.lab_test_created = 1
-            child.lab_test = doc.name
-            child.db_update()
-
-
-def create_radiology_examination(patient_encounter_doc, child_table):
-    for child in child_table:
-        if child.prescribe:
-            continue
-        doc = frappe.new_doc('Radiology Examination')
-        doc.patient = patient_encounter_doc.patient
-        doc.company = patient_encounter_doc.company
-        doc.radiology_examination_template = child.radiology_examination_template
-        doc.practitioner = patient_encounter_doc.practitioner
-        doc.source = patient_encounter_doc.source
-        doc.medical_department = frappe.get_value(
-            "Radiology Examination Template", child.radiology_examination_template, "medical_department")
-        doc.ref_doctype = patient_encounter_doc.doctype
-        doc.ref_docname = patient_encounter_doc.name
-        doc.invoiced = 1
-        doc.notes = (child.medical_code or "No ICD Code") + " : " + \
-            (child.radiology_test_comment or "No Comment")
-
-        doc.save(ignore_permissions=True)
-        if doc.get('name'):
-            frappe.msgprint(_('Radiology Examination {0} created successfully.').format(
-                frappe.bold(doc.name)))
-            child.radiology_examination_created = 1
-            child.radiology_examination = doc.name
-            child.db_update()
-
-
-def create_procedure_prescription(patient_encounter_doc, child_table, insurance_subscription):
-    for child in child_table:
-        if child.prescribe:
-            continue
-        doc = frappe.new_doc('Clinical Procedure')
-        doc.patient = patient_encounter_doc.patient
-        doc.company = patient_encounter_doc.company
-        doc.procedure_template = child.procedure
-        doc.practitioner = patient_encounter_doc.practitioner
-        doc.source = patient_encounter_doc.source
-        doc.insurance_subscription = insurance_subscription
-        doc.patient_sex = frappe.get_value(
-            "Patient", patient_encounter_doc.patient, "sex")
-        doc.medical_department = frappe.get_value(
-            "Clinical Procedure Template", child.procedure, "medical_department")
-        doc.ref_doctype = patient_encounter_doc.doctype
-        doc.ref_docname = patient_encounter_doc.name
-        doc.invoiced = 1
-        doc.notes = (child.medical_code or "No ICD Code") + \
-            " : " + (child.comments or "No Comment")
-
-
-        doc.save(ignore_permissions=True)
-        if doc.get('name'):
-            frappe.msgprint(_('Clinical Procedure {0} created successfully.').format(
-                frappe.bold(doc.name)))
-            child.procedure_created = 1
-            child.clinical_procedure = doc.name
-            child.db_update()
-
+    for child_table_field in child_tables_list:
+        if patient_encounter_doc.get(child_table_field):
+            child_table = patient_encounter_doc.get(child_table_field)
+            for child in child_table:
+                if child.prescribe:
+                    continue
+                if child.doctype == "lab_test_prescription":
+                    create_individual_lab_test(patient_encounter_doc, child)
+                elif child.doctype == "radiology_procedure_prescription":
+                    create_individual_radiology_examination(
+                        patient_encounter_doc, patient_encounter_doc.get(child))
+                elif child.doctype == "procedure_prescription":
+                    create_individual_procedure_prescription(
+                        patient_encounter_doc, patient_encounter_doc.get(child))
 
 def create_delivery_note(patient_encounter_doc):
     if not patient_encounter_doc.appointment:
@@ -539,16 +464,6 @@ def validate_totals(doc):
     if diff < 0:
         frappe.throw(_("The total daily limit of {0} for the Insurance Subscription {1} has been exceeded by {2}. <br> Please contact the reception to increase the limit or prescribe the items").format(
             doc.daily_limit, doc.insurance_subscription, diff))
-
-
-@frappe.whitelist()
-def check_is_not_available_inhouse(item, doctype, docname):
-    is_not_available_inhouse = frappe.get_value(
-        doctype, docname, "is_not_available_inhouse")
-    if is_not_available_inhouse:
-        frappe.msgprint(
-            _("NOTE: This healthcare service item, <b>{0}</b>, is not available inhouse and has been marked as prescribe.<br>Request the patient to get it from another healthcare service provider.").format(item), alert=True)
-
 
 @frappe.whitelist()
 def finalized_encounter(cur_encounter, ref_encounter=None):
