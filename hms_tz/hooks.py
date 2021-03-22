@@ -281,6 +281,7 @@ fixtures = [
         "Previous Therapy Plan Detail-prescribe",
         "Previous Therapy Plan Detail-override_subscription",
         "Inpatient Consultancy-encounter",
+        "Patient Encounter-is_not_billable",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
