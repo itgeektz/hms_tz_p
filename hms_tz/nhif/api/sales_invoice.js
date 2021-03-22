@@ -16,10 +16,18 @@ frappe.ui.form.on('Sales Invoice', {
 				frm.add_custom_button(__('Healthcare Services'), function() {
 					get_healthcare_services_to_invoice(frm);
 				},"Get Items From");
-				frm.add_custom_button(__('Prescriptions'), function() {
-					get_drugs_to_invoice(frm);
-				},"Get Items From");
 			}
+			frm.add_custom_button(__("Create Pending Healthcare Services"), function () {
+				frappe.call({
+					method: 'hms_tz.nhif.api.sales_invoice.create_pending_healthcare_docs',
+					args: {
+						doc_name: frm.doc.name,
+					},
+					callback: function (r) {
+						// Any other code
+					}
+				});
+			});
 		}
 		else {
 			frm.set_df_property("patient", "hidden", 1);
@@ -59,19 +67,6 @@ var get_healthcare_services_to_invoice = function(frm) {
 					};
 				}
             },
-            { fieldtype: 'Column Break'	},
-            {
-				fieldtype: 'Link',
-				options: 'Healthcare Service Order Category',
-				label: 'Service Order Category',
-				fieldname: "service_order_category",
-            },
-            {
-				fieldtype: 'Check',
-				label: 'Get Prescribed',
-				fieldname: "prescribed",
-				default: 1,
-            },
             {
 				fieldtype: 'Button',
 				label: 'Get Items',
@@ -89,21 +84,18 @@ var get_healthcare_services_to_invoice = function(frm) {
 	});
     dialog.fields_dict.get_items.input.onclick = function() {
         var patient = dialog.fields_dict.patient.input.value;
-        var service_order_category = dialog.fields_dict.service_order_category.input.value
         var encounter = dialog.fields_dict.encounter.input.value
-		var prescribed = dialog.fields_dict.prescribed.last_value
 		if(patient && encounter){
 			selected_patient = patient;
 			var method = "hms_tz.nhif.api.healthcare_utils.get_healthcare_services_to_invoice";
 			var args = {
                 patient: patient,
                 company: frm.doc.company,
-                service_order_category: service_order_category,
                 encounter: encounter,
-                prescribed: prescribed,
+                prescribed: 1,
 			};
 			var columns = (["service", "reference_name", "reference_type"]);
-			get_healthcare_items(frm, true, $results, $placeholder, method, args, columns, service_order_category);
+			get_healthcare_items(frm, true, $results, $placeholder, method, args, columns);
 		}
 		else if(!patient){
 			selected_patient = '';
@@ -129,7 +121,7 @@ var get_healthcare_services_to_invoice = function(frm) {
 };
 
 
-var get_healthcare_items = function(frm, invoice_healthcare_services, $results, $placeholder, method, args, columns, service_order_category) {
+var get_healthcare_items = function (frm, invoice_healthcare_services, $results, $placeholder, method, args, columns) {
 	var me = this;
 	$results.empty();
 	frappe.call({
@@ -184,8 +176,6 @@ var set_primary_action= function(frm, dialog, $results, invoice_healthcare_servi
 			if(invoice_healthcare_services) {
 				frm.set_value("patient", dialog.fields_dict.patient.input.value);
 			}
-			console.log(checked_values);
-			frm.set_value("items", []);
 			add_to_item_line(frm, checked_values, invoice_healthcare_services);
 			dialog.hide();
 		}
