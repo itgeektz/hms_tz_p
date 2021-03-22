@@ -1,4 +1,4 @@
- # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Copyright (c) 2018, earthians and contributors
 # For license information, please see license.txt
 
@@ -41,7 +41,7 @@ def get_healthcare_service_order_to_invoice(patient, company, encounter, service
         'patient': patient.name,
         'company': company,
         'order_group': ["in", encounter_list],
-        'invoiced': False,
+        'invoiced': 0,
         'order_date': [">", add_days(nowdate(), -3)],
         'docstatus': 1
     }
@@ -399,9 +399,101 @@ def set_healthcare_services(doc, checked_values):
         else:
             item_line.healthcare_service_unit = frappe.get_value(hso_doc.order_doctype, hso_doc.order, "healthcare_service_unit")
         item_line.warehouse = get_warehouse_from_service_unit(item_line.healthcare_service_unit)
-        # item_line.warehouse = checked_item['warehouse']
-        # item_line.healthcare_service_unit = checked_item['healthcare_service_unit']
-        # item_line.healthcare_practitioner = checked_item['healthcare_practitioner']
     doc.set_missing_values(for_validate=True)
     doc.save()
     return doc.name
+
+def create_individual_lab_test(source_doc, child):
+    if child.lab_test_created == 1:
+        return
+    ltt_doc = frappe.get_doc("Lab Test Template", child.lab_test_code)
+    patient_sex = frappe.get_value("Patient", source_doc.patient, "sex")
+
+    doc = frappe.new_doc('Lab Test')
+    doc.patient = source_doc.patient
+    doc.patient_sex = patient_sex
+    doc.company = source_doc.company
+    doc.template = ltt_doc.name
+    if source_doc.doctype == "Healthcare Service Order":
+        doc.practitioner = source_doc.ordered_by
+    else:
+        doc.practitioner = source_doc.practitioner
+    doc.source = source_doc.source
+    doc.insurance_subscription = source_doc.insurance_subscription
+    doc.ref_doctype = source_doc.doctype
+    doc.ref_docname = source_doc.name
+    doc.invoiced = 1
+    doc.service_comment = (child.medical_code or "No ICD Code") + \
+        " : " + (child.lab_test_comment or "No Comment")
+
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    if doc.get('name'):
+        frappe.msgprint(_('Lab Test {0} created successfully.').format(
+            frappe.bold(doc.name)))
+        child.lab_test_created = 1
+        child.lab_test = doc.name
+        child.db_update()
+
+def create_individual_radiology_examination(source_doc, child):
+    if child.radiology_examination_created == 1:
+        return
+    doc = frappe.new_doc('Radiology Examination')
+    doc.patient = source_doc.patient
+    doc.company = source_doc.company
+    doc.radiology_examination_template = child.radiology_examination_template
+    if source_doc.doctype == "Healthcare Service Order":
+        doc.practitioner = source_doc.ordered_by
+    else:
+        doc.practitioner = source_doc.practitioner
+    doc.source = source_doc.source
+    doc.insurance_subscription = source_doc.insurance_subscription
+    doc.medical_department = frappe.get_value(
+        "Radiology Examination Template", child.radiology_examination_template, "medical_department")
+    doc.ref_doctype = source_doc.doctype
+    doc.ref_docname = source_doc.name
+    doc.invoiced = 1
+    doc.service_comment = (child.medical_code or "No ICD Code") + " : " + \
+        (child.radiology_test_comment or "No Comment")
+
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    if doc.get('name'):
+        frappe.msgprint(_('Radiology Examination {0} created successfully.').format(
+            frappe.bold(doc.name)))
+        child.radiology_examination_created = 1
+        child.radiology_examination = doc.name
+        child.db_update()
+
+def create_individual_procedure_prescription(source_doc, child):
+    if child.procedure_created == 1:
+        return
+    doc = frappe.new_doc('Clinical Procedure')
+    doc.patient = source_doc.patient
+    doc.company = source_doc.company
+    doc.procedure_template = child.procedure
+    if source_doc.doctype == "Healthcare Service Order":
+        doc.practitioner = source_doc.ordered_by
+    else:
+        doc.practitioner = source_doc.practitioner
+    doc.source = source_doc.source
+    doc.insurance_subscription = source_doc.insurance_subscription
+    doc.patient_sex = frappe.get_value(
+        "Patient", source_doc.patient, "sex")
+    doc.medical_department = frappe.get_value(
+        "Clinical Procedure Template", child.procedure, "medical_department")
+    doc.ref_doctype = source_doc.doctype
+    doc.ref_docname = source_doc.name
+    doc.invoiced = 1
+    doc.service_comment = (child.medical_code or "No ICD Code") + \
+        " : " + (child.comments or "No Comment")
+
+    doc.save(ignore_permissions=True)
+    if doc.get('name'):
+        frappe.msgprint(_('Clinical Procedure {0} created successfully.').format(
+            frappe.bold(doc.name)))
+        child.procedure_created = 1
+        child.clinical_procedure = doc.name
+        child.db_update()
