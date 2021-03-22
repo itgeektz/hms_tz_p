@@ -1,6 +1,4 @@
 frappe.ui.form.on('Sales Invoice', {
-    setup: function (frm) {
-    },
     onload: function (frm) {
         frm.trigger('add_get_info_btn')
     },
@@ -29,7 +27,6 @@ frappe.ui.form.on('Sales Invoice', {
 			frm.set_df_property("ref_practitioner", "hidden", 1);
 		}
 	},
-    
 })
 
 var get_healthcare_services_to_invoice = function(frm) {
