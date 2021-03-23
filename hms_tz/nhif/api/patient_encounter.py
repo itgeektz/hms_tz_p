@@ -56,18 +56,17 @@ def validate(doc, method):
     prescribed_list = ""
     for key, value in child_tables.items():
         table = doc.get(key)
-
         for row in table:
             quantity = row.get("quantity") or row.get("no_of_sessions")
-            if not row.get("prescribe"):
-                validate_stock_item(row.get(value), quantity, healthcare_service_unit=row.get("healthcare_service_unit"))
-            if not doc.insurance_subscription:
+            if (not doc.insurance_subscription) or row.prescribe or row.is_not_available_inhouse:
                 row.prescribe = 1
                 prescribed_list += "-  <b>" + row.get(value) + "</b><BR>"
-            else:
+            elif not row.prescribe:
                 if row.get("no_of_sessions") and doc.insurance_subscription:
-                    row.no_of_sessions = 1
-                    frappe.msgprint(_("No of sessions have been set to 1 for {0}.").format(row.get(value)), alert = True)
+                    if row.no_of_sessions != 1:
+                        row.no_of_sessions = 1
+                        frappe.msgprint(_("No of sessions have been set to 1 for {0} as per insurance rules.").format(row.get(value)), alert = True)
+                validate_stock_item(row.get(value), quantity, healthcare_service_unit=row.get("healthcare_service_unit"))
     if prescribed_list:
         frappe.msgprint(_("{0}<BR>The above been prescribed. <b>Request the patient to visit the cashier for cash payment</b> or prescription printout.").format(prescribed_list))
 
@@ -133,7 +132,7 @@ def validate(doc, method):
                 row.is_restricted = next(i for i in hsic_list if i["healthcare_service_template"] == row.get(
                     value)).get("approval_mandatory_for_claim")
                 if row.is_restricted:
-                    frappe.msgprint(_(row.doctype + " row " + str(row.idx) +
+                    frappe.msgprint(_(row.doctype + " row " + str(row.get(value)) +
                                       " requires additional authorization"), alert=True)
     validate_totals(doc)
 
@@ -261,7 +260,7 @@ def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_serv
                 item_info.get("item_code"), warehouse, healthcare_service_unit, stock_qty))
             return False
     if stock_qty > 0:
-        frappe.msgprint(_("Available quantity for the item {0} in {1}/{2} is {3}.").format(
+        frappe.msgprint(_("Available quantity for the item {0} in {1}/{2} is {3} pcs.").format(
             healthcare_service, warehouse, healthcare_service_unit, stock_qty), alert=True)
     return True
 
@@ -281,12 +280,21 @@ def on_submit(doc, method):
     create_delivery_note(doc)
     update_inpatient_record_consultancy(doc)
 
+@frappe.whitelist()
+def create_healthcare_docs_from_name(patient_encounter_doc_name):
+    patient_encounter_doc = frappe.get_doc("Patient Encounter", patient_encounter_doc_name)
+    create_healthcare_docs(patient_encounter_doc)
 
 def create_healthcare_docs(patient_encounter_doc):
+    if patient_encounter_doc.docstatus != 1:
+        frappe.msgprint(_("Cannot process Patient Encounter that is not submitted! Please submit and try again."), alert = True)
+        return
     if not patient_encounter_doc.appointment:
+        frappe.msgprint(_("Patient Encounter does not have patient appointment number! Request for support with this message."), alert = True)
         return
     if not patient_encounter_doc.insurance_subscription:
         return
+
     child_tables_list = ["lab_test_prescription",
                          "radiology_procedure_prescription", "procedure_prescription"]
     for child_table_field in child_tables_list:
@@ -295,14 +303,12 @@ def create_healthcare_docs(patient_encounter_doc):
             for child in child_table:
                 if child.prescribe:
                     continue
-                if child.doctype == "lab_test_prescription":
+                if child.doctype == "Lab Prescription":
                     create_individual_lab_test(patient_encounter_doc, child)
-                elif child.doctype == "radiology_procedure_prescription":
-                    create_individual_radiology_examination(
-                        patient_encounter_doc, patient_encounter_doc.get(child))
-                elif child.doctype == "procedure_prescription":
-                    create_individual_procedure_prescription(
-                        patient_encounter_doc, patient_encounter_doc.get(child))
+                elif child.doctype == "Radiology Procedure Prescription":
+                    create_individual_radiology_examination(patient_encounter_doc, child)
+                elif child.doctype == "Procedure Prescription":
+                    create_individual_procedure_prescription(patient_encounter_doc, child)
 
 def create_delivery_note(patient_encounter_doc):
     if not patient_encounter_doc.appointment:
