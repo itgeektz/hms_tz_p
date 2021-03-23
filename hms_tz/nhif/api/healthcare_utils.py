@@ -491,6 +491,8 @@ def create_individual_procedure_prescription(source_doc, child):
         " : " + (child.comments or "No Comment")
 
     doc.save(ignore_permissions=True)
+    frappe.db.commit()
+
     if doc.get('name'):
         frappe.msgprint(_('Clinical Procedure {0} created successfully.').format(
             frappe.bold(doc.name)))
