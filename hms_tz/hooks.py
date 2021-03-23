@@ -88,7 +88,6 @@ fixtures = [
         "Patient Encounter Symptom-system",
         "Patient Encounter-blood_group",
         "Patient Encounter-column_break_31",
-        "Patient Encounter-duplicate",
         "Patient Encounter-encounter_type",
         "Patient Encounter-examination_detail",
         "Patient Encounter-from_encounter",
@@ -282,6 +281,7 @@ fixtures = [
         "Previous Therapy Plan Detail-override_subscription",
         "Inpatient Consultancy-encounter",
         "Patient Encounter-is_not_billable",
+        "Patient Encounter-duplicated",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
