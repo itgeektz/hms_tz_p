@@ -149,7 +149,6 @@ def create_vital(appointment):
 def make_vital(appointment_doc, method):
     filters = {
         "name": ['!=', appointment_doc.name],
-        'mode_of_payment': appointment_doc.mode_of_payment,
         'insurance_subscription': appointment_doc.insurance_subscription,
         'department': appointment_doc.department}
     appointment = get_previous_appointment(appointment_doc.patient, filters)
