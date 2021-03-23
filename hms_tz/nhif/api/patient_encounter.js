@@ -11,17 +11,19 @@ frappe.ui.form.on('Patient Encounter', {
         set_medical_code(frm);
         add_btn_final(frm);
         duplicate(frm);
-        frm.add_custom_button(__('Create Pending Healthcare Services'), function () {
-            frappe.call({
-                method: 'hms_tz.nhif.api.patient_encounter.create_healthcare_docs_from_name',
-                args: {
-                    'patient_encounter_doc_name': frm.doc.name
-                },
-                callback: (function (data) {
-                    //
-                })
+        if (frm.doc.docstatus == 1) {
+            frm.add_custom_button(__('Create Pending Healthcare Services'), function () {
+                frappe.call({
+                    method: 'hms_tz.nhif.api.patient_encounter.create_healthcare_docs_from_name',
+                    args: {
+                        'patient_encounter_doc_name': frm.doc.name
+                    },
+                    callback: (function (data) {
+                        //
+                    })
+                });
             });
-        });
+        };
         frm.set_query('healthcare_service_unit', 'drug_prescription', function () {
             return {
                 filters: [

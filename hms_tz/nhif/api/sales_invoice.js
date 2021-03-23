@@ -17,17 +17,19 @@ frappe.ui.form.on('Sales Invoice', {
 					get_healthcare_services_to_invoice(frm);
 				},"Get Items From");
 			}
-			frm.add_custom_button(__("Create Pending Healthcare Services"), function () {
-				frappe.call({
-					method: 'hms_tz.nhif.api.sales_invoice.create_pending_healthcare_docs',
-					args: {
-						doc_name: frm.doc.name,
-					},
-					callback: function (r) {
-						// Any other code
-					}
+			if (frm.doc.docstatus == 1) {
+				frm.add_custom_button(__("Create Pending Healthcare Services"), function () {
+					frappe.call({
+						method: 'hms_tz.nhif.api.sales_invoice.create_pending_healthcare_docs',
+						args: {
+							doc_name: frm.doc.name,
+						},
+						callback: function (r) {
+							// Any other code
+						}
+					});
 				});
-			});
+			};
 		}
 		else {
 			frm.set_df_property("patient", "hidden", 1);
