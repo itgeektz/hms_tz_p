@@ -279,6 +279,7 @@ def on_submit(doc, method):
     create_healthcare_docs(doc)
     create_delivery_note(doc)
     update_inpatient_record_consultancy(doc)
+    on_update_after_submit(doc, "on_submit")
 
 @frappe.whitelist()
 def create_healthcare_docs_from_name(patient_encounter_doc_name):
@@ -359,6 +360,9 @@ def create_delivery_note(patient_encounter_doc):
                 (row.period or "No Prescription Period") + " with " + row.medical_code + " and doctor notes: " + \
                 (row.comment or "Take medication as per dosage.")
             items.append(item)
+            row.drug_prescription_created = 1
+            patient_encounter_doc.save()
+            frappe.db.commit()
         if len(items) == 0:
             continue
         doc = frappe.get_doc(dict(
@@ -562,3 +566,35 @@ def update_inpatient_record_consultancy(doc):
         frappe.msgprint(
             _("Inpatient Consultancy recorde added for item {0}").format("item_code"), alert=True)
 
+def on_update_after_submit(doc, method):
+    if doc.is_not_billable:
+        return
+    child_tables_list = ["lab_test_prescription",
+                         "radiology_procedure_prescription", "procedure_prescription", "drug_prescription"]
+    services_created_pending = 0
+    for child_table_field in child_tables_list:
+        if services_created_pending:
+            break
+        if doc.get(child_table_field):
+            child_table = doc.get(child_table_field)
+            for child in child_table:
+                if child.doctype == "Lab Prescription":
+                    if child.lab_test_created == 0:
+                        services_created_pending = 1
+                        break
+                elif child.doctype == "Radiology Procedure Prescription":
+                    if child.radiology_examination_created == 0:
+                        services_created_pending = 1
+                        break
+                elif child.doctype == "Procedure Prescription":
+                    if child.procedure_created == 0:
+                        services_created_pending = 1
+                        break
+                elif child.doctype == "Drug Prescription":
+                    if child.drug_prescription_created == 0:
+                        services_created_pending = 1
+                        break
+    if services_created_pending == 0:
+        doc.db_set("is_not_billable", 1)
+    else:
+        doc.db_set("is_not_billable", 0)
