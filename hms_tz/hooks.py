@@ -660,7 +660,6 @@ doc_events = {
     },
     "Inpatient Record": {
         "validate": "hms_tz.nhif.api.inpatient_record.validate",
-        "before_insert": "hms_tz.nhif.api.inpatient_record.before_insert",
     },
 }
 
