@@ -282,6 +282,12 @@ fixtures = [
         "Inpatient Consultancy-encounter",
         "Patient Encounter-is_not_billable",
         "Patient Encounter-duplicated",
+        "Procedure Prescription-is_not_available_inhouse",
+        "Radiology Procedure Prescription-is_not_available_inhouse",
+        "Drug Prescription-is_not_available_inhouse",
+        "Lab Prescription-is_not_available_inhouse",
+        "Therapy Plan Detail-is_not_available_inhouse",
+        "Clinical Procedure-service_comment",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -488,6 +494,7 @@ fixtures = [
         "Patient-allergy_medical_and_surgical_history-collapsible",
         "Patient-sb_relation-hidden",
         "Patient-personal_and_social_history-collapsible",
+        "Vital Signs-patient-in_list_view",
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",

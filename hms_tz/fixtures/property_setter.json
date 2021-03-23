@@ -1684,40 +1684,6 @@
  },
  {
   "default_value": null,
-  "doc_type": "Patient",
-  "docstatus": 0,
-  "doctype": "Property Setter",
-  "doctype_or_field": "DocField",
-  "field_name": "personal_and_social_history",
-  "modified": "2020-12-19 12:10:19.576236",
-  "name": "Patient-personal_and_social_history-permlevel",
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "property": "permlevel",
-  "property_type": "Int",
-  "row_name": null,
-  "value": "1"
- },
- {
-  "default_value": null,
-  "doc_type": "Patient",
-  "docstatus": 0,
-  "doctype": "Property Setter",
-  "doctype_or_field": "DocField",
-  "field_name": "risk_factors",
-  "modified": "2020-12-19 12:10:20.506274",
-  "name": "Patient-risk_factors-permlevel",
-  "parent": null,
-  "parentfield": null,
-  "parenttype": null,
-  "property": "permlevel",
-  "property_type": "Int",
-  "row_name": null,
-  "value": "1"
- },
- {
-  "default_value": null,
   "doc_type": "Patient Encounter",
   "docstatus": 0,
   "doctype": "Property Setter",
@@ -3432,5 +3398,22 @@
   "property_type": "Check",
   "row_name": null,
   "value": "1"
+ },
+ {
+  "default_value": null,
+  "doc_type": "Vital Signs",
+  "docstatus": 0,
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "patient",
+  "modified": "2021-03-22 20:24:22.875436",
+  "name": "Vital Signs-patient-in_list_view",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "property": "in_list_view",
+  "property_type": "Check",
+  "row_name": null,
+  "value": "0"
  }
 ]
