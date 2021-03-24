@@ -18,6 +18,8 @@ def set_patient_encounter(doc, method):
 
 
 def set_price(doc, method):
+    if not doc.insurance_subscription:
+        return
     price_list = None
     price_list_rate = None
     if doc.reference_dt == "Healthcare Service Order":
@@ -25,14 +27,15 @@ def set_price(doc, method):
             doc.reference_dt, doc.reference_dn, ["company", "prescribed"])
         if hso_prescribe:
             return
-    elif doc.reference_dt in ["Patient Appointment", "Patient Encounter", "Clinical Procedure"]:
+    elif doc.reference_dt in ["Patient Appointment", "Patient Encounter", "Lab Test", "Radiology Examination", "Clinical Procedure"]:
             company = frappe.get_value(
             doc.reference_dt, doc.reference_dn, "company")
     else:
         company = frappe.defaults.get_user_default("Company")
         if not company:
-            frappe.throw(_("Default company not found for this user"))
-    if  doc.insurance_subscription:
+            frappe.msgprint(_("Default company not found for this user"), alert = True)
+            return
+    if doc.insurance_subscription:
         hic_plan = frappe.get_value(
             "Healthcare Insurance Subscription", doc.insurance_subscription, "healthcare_insurance_coverage_plan")
         price_list = frappe.get_value(
