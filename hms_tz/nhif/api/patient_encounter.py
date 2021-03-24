@@ -9,6 +9,7 @@ from frappe.utils import nowdate, get_year_start, getdate, nowtime, add_to_date
 import datetime
 from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_service_unit, get_item_price, create_individual_lab_test, create_individual_radiology_examination, create_individual_procedure_prescription
 from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
+import time
 
 
 def after_insert(doc, method):
@@ -279,7 +280,7 @@ def on_submit(doc, method):
     create_healthcare_docs(doc)
     create_delivery_note(doc)
     update_inpatient_record_consultancy(doc)
-    frappe.enqueue(method=enaueue_on_update_after_submit, queue='short',
+    frappe.enqueue(method=enqueue_on_update_after_submit, queue='short',
                 timeout=10000, is_async=True, kwargs=doc.name)
 
 @frappe.whitelist()
@@ -604,5 +605,6 @@ def on_update_after_submit(doc, method):
     else:
         doc.db_set("is_not_billable", 0)
 
-def enaueue_on_update_after_submit(doc_name):
+def enqueue_on_update_after_submit(doc_name):
+    time.sleep(5)
     on_update_after_submit(frappe.get_doc("Patient Encounter", doc_name))
