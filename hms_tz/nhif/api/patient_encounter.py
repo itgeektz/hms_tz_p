@@ -279,12 +279,14 @@ def on_submit(doc, method):
     create_healthcare_docs(doc)
     create_delivery_note(doc)
     update_inpatient_record_consultancy(doc)
-    on_update_after_submit(doc, "on_submit")
+    frappe.enqueue(method=enaueue_on_update_after_submit, queue='short',
+                timeout=10000, is_async=True, kwargs=doc.name)
 
 @frappe.whitelist()
 def create_healthcare_docs_from_name(patient_encounter_doc_name):
     patient_encounter_doc = frappe.get_doc("Patient Encounter", patient_encounter_doc_name)
     create_healthcare_docs(patient_encounter_doc)
+    create_delivery_note(patient_encounter_doc)
 
 def create_healthcare_docs(patient_encounter_doc):
     if patient_encounter_doc.docstatus != 1:
@@ -310,6 +312,7 @@ def create_healthcare_docs(patient_encounter_doc):
                     create_individual_radiology_examination(patient_encounter_doc, child)
                 elif child.doctype == "Procedure Prescription":
                     create_individual_procedure_prescription(patient_encounter_doc, child)
+    
 
 def create_delivery_note(patient_encounter_doc):
     if not patient_encounter_doc.appointment:
@@ -321,6 +324,8 @@ def create_delivery_note(patient_encounter_doc):
     warehouses = []
     for line in patient_encounter_doc.drug_prescription:
         if line.prescribe:
+            continue
+        if line.drug_prescription_created:
             continue
         item_code = frappe.get_value("Medication", line.drug_code, "item_code")
         is_stock = frappe.get_value("Item", item_code, "is_stock_item")
@@ -598,3 +603,6 @@ def on_update_after_submit(doc, method):
         doc.db_set("is_not_billable", 1)
     else:
         doc.db_set("is_not_billable", 0)
+
+def enaueue_on_update_after_submit(doc_name):
+    on_update_after_submit(frappe.get_doc("Patient Encounter", doc_name))
