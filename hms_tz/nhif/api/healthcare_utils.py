@@ -48,8 +48,7 @@ def get_healthcare_service_order_to_invoice(patient, company, encounter, service
 
     if service_order_category:
         filters['healthcare_service_order_category'] = service_order_category
-    if prescribed:
-        filters['prescribed'] = prescribed
+    filters['prescribed'] = 1
     services_to_invoice = []
     services = frappe.get_list(
         'Healthcare Service Order',
@@ -426,15 +425,15 @@ def create_individual_lab_test(source_doc, child):
     doc.service_comment = (child.medical_code or "No ICD Code") + \
         " : " + (child.lab_test_comment or "No Comment")
 
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
-
     if doc.get('name'):
         frappe.msgprint(_('Lab Test {0} created successfully.').format(
             frappe.bold(doc.name)))
         child.lab_test_created = 1
         child.lab_test = doc.name
         child.db_update()
+
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
 
 def create_individual_radiology_examination(source_doc, child):
     if child.radiology_examination_created == 1:
@@ -457,15 +456,15 @@ def create_individual_radiology_examination(source_doc, child):
     doc.service_comment = (child.medical_code or "No ICD Code") + " : " + \
         (child.radiology_test_comment or "No Comment")
 
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
-
     if doc.get('name'):
         frappe.msgprint(_('Radiology Examination {0} created successfully.').format(
             frappe.bold(doc.name)))
         child.radiology_examination_created = 1
         child.radiology_examination = doc.name
         child.db_update()
+
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
 
 def create_individual_procedure_prescription(source_doc, child):
     if child.procedure_created == 1:
@@ -490,12 +489,11 @@ def create_individual_procedure_prescription(source_doc, child):
     doc.service_comment = (child.medical_code or "No ICD Code") + \
         " : " + (child.comments or "No Comment")
 
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
-
     if doc.get('name'):
         frappe.msgprint(_('Clinical Procedure {0} created successfully.').format(
             frappe.bold(doc.name)))
         child.procedure_created = 1
         child.clinical_procedure = doc.name
         child.db_update()
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
