@@ -515,6 +515,13 @@ fixtures = [
         "Sales Invoice-is_pos-default",
         "Drug Prescription-drug_prescription_created-read_only",
         "Drug Prescription-drug_prescription_created-label",
+        "Sales Invoice Item-rate-permlevel",
+        "Sales Invoice Item-qty-permlevel",
+        "Sales Invoice Item-item_code-permlevel",
+        "Sales Invoice-section_break2-hidden",
+        "Sales Invoice-sales_team_section_break-hidden",
+        "Sales Invoice-debit_to-permlevel",
+        "Sales Invoice-column_break4-permlevel",
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",
@@ -547,6 +554,7 @@ fixtures = [
 doctype_js = {
     "Patient Appointment": "nhif/api/patient_appointment.js",
     "Patient": "nhif/api/patient.js",
+    "Sales Order": "nhif/api/sales_order.js",
     "Sales Invoice": "nhif/api/sales_invoice.js",
     "Patient Encounter": "nhif/api/patient_encounter.js",
     "Lab Test": "nhif/api/lab_test.js",
