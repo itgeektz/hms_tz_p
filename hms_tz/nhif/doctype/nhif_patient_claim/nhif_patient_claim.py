@@ -152,6 +152,9 @@ class NHIFPatientClaim(Document):
             }
         ]
         self.nhif_patient_claim_item = []
+        inpatient_record = frappe.get_value(
+            "Patient", self.patient, "inpatient_record") or None
+        is_inpatient = True if inpatient_record else False
         for encounter in self.patient_encounters:
             encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
             for i in childs_map:
@@ -188,7 +191,7 @@ class NHIFPatientClaim(Document):
 
         patient_appointment_doc = frappe.get_doc(
             "Patient Appointment", self.patient_appointment)
-        if not patient_appointment_doc.follow_up:
+        if not is_inpatient and not patient_appointment_doc.follow_up:
             item_code = patient_appointment_doc.billing_item
             item_rate = get_item_rate(
                 item_code, self.company, patient_appointment_doc.insurance_subscription, patient_appointment_doc.insurance_company)
