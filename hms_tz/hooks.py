@@ -290,6 +290,7 @@ fixtures = [
         "Clinical Procedure-service_comment",
         "Sales Invoice Payment-payment_reference",
         "Patient Appointment-follow_up",
+        "Patient Encounter-old_hms_registration_no",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -522,6 +523,14 @@ fixtures = [
         "Sales Invoice-sales_team_section_break-hidden",
         "Sales Invoice-debit_to-permlevel",
         "Sales Invoice-column_break4-permlevel",
+        "Patient Encounter-practitioner-default",
+        "Patient Encounter-practitioner-mandatory_depends_on",
+        "Patient Encounter-appointment_type-mandatory_depends_on",
+        "Patient Encounter-appointment_type-hidden",
+        "Patient Appointment-main-default_print_format",
+        "Patient Encounter-encounter_time-read_only",
+        "Patient Encounter-encounter_date-read_only",
+        "Inpatient Consultancy-confirmed-permlevel"
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",
@@ -649,6 +658,7 @@ doc_events = {
         "validate": "hms_tz.nhif.api.patient_encounter.validate",
         "on_trash": "hms_tz.nhif.api.patient_encounter.on_trash",
         "on_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
+        "before_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
         "on_update_after_submit": "hms_tz.nhif.api.patient_encounter.on_update_after_submit",
     },
     "Healthcare Service Order": {
