@@ -232,26 +232,26 @@ class NHIFPatientClaim(Document):
                 item_code = frappe.get_value(
                     "Healthcare Service Unit Type", service_unit_type, "item")
                 if is_consultancy_chargeable:
-                    for row in record_doc.inpatient_consultancy:
-                        if row.is_confirmed and str(row.date) == checkin_date and row.rate:
-                            item_code = row.consultation_item
+                    for row_item in record_doc.inpatient_consultancy:
+                        if row_item.is_confirmed and str(row_item.date) == checkin_date and row_item.rate:
+                            item_code = row_item.consultation_item
                             new_row = self.append(
                                 "nhif_patient_claim_item", {})
-                            new_row.item_name = row.consultation_item
+                            new_row.item_name = row_item.consultation_item
                             new_row.item_code = get_item_refcode(item_code)
                             new_row.item_quantity = 1
-                            new_row.unit_price = row.rate
-                            new_row.amount_claime = item_rate * new_row.item_quantity
+                            new_row.unit_price = row_item.rate
+                            new_row.amount_claime = row_item.rate
                             new_row.approval_ref_no = ""
-                            new_row.patient_encounter = row.encounter or record_doc.admission_encounter
-                            new_row.ref_doctype = row.doctype
-                            new_row.ref_docname = row.name
+                            new_row.patient_encounter = row_item.encounter or record_doc.admission_encounter
+                            new_row.ref_doctype = row_item.doctype
+                            new_row.ref_docname = row_item.name
                             new_row.folio_item_id = str(uuid.uuid1())
                             new_row.folio_id = self.folio_id
-                            new_row.date_created = row.modified.strftime(
+                            new_row.date_created = row_item.modified.strftime(
                                 "%Y-%m-%d")
                             new_row.created_by = frappe.get_value(
-                                "User", row.modified_by, "full_name")
+                                "User", row_item.modified_by, "full_name")
                 if is_service_chargeable:
                     for encounter in self.patient_encounters:
                         encounter_doc = frappe.get_doc(
