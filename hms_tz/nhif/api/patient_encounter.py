@@ -67,6 +67,7 @@ def validate(doc, method):
                     if row.no_of_sessions != 1:
                         row.no_of_sessions = 1
                         frappe.msgprint(_("No of sessions have been set to 1 for {0} as per insurance rules.").format(row.get(value)), alert = True)
+            if not row.is_not_available_inhouse:
                 validate_stock_item(row.get(value), quantity, healthcare_service_unit=row.get("healthcare_service_unit"))
     if prescribed_list:
         frappe.msgprint(_("{0}<BR>The above been prescribed. <b>Request the patient to visit the cashier for cash payment</b> or prescription printout.").format(prescribed_list))
@@ -608,3 +609,5 @@ def on_update_after_submit(doc, method):
 def enqueue_on_update_after_submit(doc_name):
     time.sleep(5)
     on_update_after_submit(frappe.get_doc("Patient Encounter", doc_name))
+
+def before_submit(doc, method)
