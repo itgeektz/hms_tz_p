@@ -268,16 +268,6 @@ def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_serv
 
 
 def on_submit(doc, method):
-    encounter_create_sales_invoice = frappe.get_value(
-        "Encounter Category", doc.encounter_category, "create_sales_invoice")
-    if encounter_create_sales_invoice:
-        if not doc.sales_invoice:
-            frappe.throw(_("The encounter cannot be submitted as the Sales Invoice is not created yet!<br><br>Click on Create Sales Invoice and Send to VFD before submitting.", "Cannot Submit Encounter"))
-        vfd_status = frappe.get_value(
-            "Sales Invoice", doc.sales_invoice, "vfd_status")
-        if vfd_status == "Not Sent":
-            frappe.throw(
-                _("The encounter cannot be submitted as the Sales Invoice has not been sent to VFD!<br><br>Click on Send to VFD before submitting.", "Cannot Submit Encounter"))
     create_healthcare_docs(doc)
     create_delivery_note(doc)
     update_inpatient_record_consultancy(doc)
@@ -314,7 +304,6 @@ def create_healthcare_docs(patient_encounter_doc):
                     create_individual_radiology_examination(patient_encounter_doc, child)
                 elif child.doctype == "Procedure Prescription":
                     create_individual_procedure_prescription(patient_encounter_doc, child)
-    
 
 def create_delivery_note(patient_encounter_doc):
     if not patient_encounter_doc.appointment:
@@ -609,3 +598,15 @@ def on_update_after_submit(doc, method):
 def enqueue_on_update_after_submit(doc_name):
     time.sleep(5)
     on_update_after_submit(frappe.get_doc("Patient Encounter", doc_name))
+
+def before_submit(doc, method):
+    encounter_create_sales_invoice = frappe.get_value(
+        "Encounter Category", doc.encounter_category, "create_sales_invoice")
+    if encounter_create_sales_invoice:
+        if not doc.sales_invoice:
+            frappe.throw(_("The encounter cannot be submitted as the Sales Invoice is not created yet!<br><br>Click on Create Sales Invoice and Send to VFD before submitting.", "Cannot Submit Encounter"))
+        vfd_status = frappe.get_value(
+            "Sales Invoice", doc.sales_invoice, "vfd_status")
+        if vfd_status == "Not Sent":
+            frappe.throw(
+                _("The encounter cannot be submitted as the Sales Invoice has not been sent to VFD!<br><br>Click on Send to VFD before submitting.", "Cannot Submit Encounter"))
