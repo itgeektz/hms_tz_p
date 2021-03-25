@@ -25,7 +25,8 @@ class NHIFPatientClaim(Document):
         self.set_claim_values()
 
     def on_trash(self):
-        frappe.set_value("Patient Appointment", self.patient_appointment, "nhif_patient_claim", "")
+        frappe.set_value("Patient Appointment",
+                         self.patient_appointment, "nhif_patient_claim", "")
 
     def before_submit(self):
         if not self.patient_signature:
@@ -54,14 +55,14 @@ class NHIFPatientClaim(Document):
         if not self.practitioner_no:
             frappe.throw(_("There no TZ MCT Code for Practitioner {0}").format(
                 final_patient_encounter.practitioner))
-        appointment_type = frappe.get_value(
-            "Patient Appointment", self.patient_appointment, "appointment_type")
-        self.date_discharge = final_patient_encounter.encounter_date if appointment_type == "In Patient" else None
+        inpatient_record = frappe.get_value(
+            "Patient", self.patient, "inpatient_record") or None
+        self.date_discharge = final_patient_encounter.encounter_date if inpatient_record else None
         self.date_admitted = frappe.get_value(
-            "Patient Appointment", self.patient_appointment, "appointment_date") if appointment_type == "In Patient" else None
+            "Patient Appointment", self.patient_appointment, "appointment_date") if inpatient_record else None
         self.attendance_date = frappe.get_value(
             "Patient Appointment", self.patient_appointment, "appointment_date")
-        self.patient_type_code = "OUT" if appointment_type != "In Patient" else "IN"
+        self.patient_type_code = "OUT" if not inpatient_record else "IN"
         self.patient_file_no = self.get_patient_file_no()
         self.set_patient_claim_disease()
         self.set_patient_claim_item()
@@ -91,7 +92,8 @@ class NHIFPatientClaim(Document):
                 new_row.folio_disease_id = str(uuid.uuid1())
                 new_row.folio_id = self.folio_id
                 new_row.medical_code = row.medical_code
-                new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
+                new_row.disease_code = row.code[:3] + \
+                    "." + (row.code[3:4] or "0")
                 new_row.description = row.description
                 new_row.created_by = frappe.get_value(
                     "User", row.modified_by, "full_name")
