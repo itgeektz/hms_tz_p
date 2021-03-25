@@ -246,7 +246,7 @@
    "fieldtype": "Table",
    "label": "NHIF Patient Claim Disease",
    "options": "NHIF Patient Claim Disease",
-   "read_only": 1
+   "permlevel": 1
   },
   {
    "fieldname": "section_break_30",
@@ -257,7 +257,7 @@
    "fieldtype": "Table",
    "label": "NHIF Patient Claim Item",
    "options": "NHIF Patient Claim Item",
-   "read_only": 1
+   "permlevel": 1
   },
   {
    "fieldname": "folio_id",
@@ -298,6 +298,7 @@
    "read_only": 1
   },
   {
+   "depends_on": "eval: doc.nhif_patient_claim_item",
    "fieldname": "patient_signature",
    "fieldtype": "Signature",
    "label": "Patient Signature"
@@ -314,7 +315,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2020-12-19 23:42:47.064631",
+ "modified": "2021-03-24 12:57:27.843633",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim",
