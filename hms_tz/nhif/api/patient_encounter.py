@@ -43,7 +43,8 @@ def validate(doc, method):
             mtuha_missing += "-  <b>" + final_diagnosis.medical_code + "</b><br>"
 
     if mtuha_missing:
-        frappe.throw(_("{0}<br>MTUHA Code not defined for the above diagnosis").format(mtuha_missing))
+        frappe.throw(
+            _("{0}<br>MTUHA Code not defined for the above diagnosis").format(mtuha_missing))
 
     insurance_subscription = doc.insurance_subscription
     child_tables = {
@@ -66,11 +67,14 @@ def validate(doc, method):
                 if row.get("no_of_sessions") and doc.insurance_subscription:
                     if row.no_of_sessions != 1:
                         row.no_of_sessions = 1
-                        frappe.msgprint(_("No of sessions have been set to 1 for {0} as per insurance rules.").format(row.get(value)), alert = True)
+                        frappe.msgprint(_("No of sessions have been set to 1 for {0} as per insurance rules.").format(
+                            row.get(value)), alert=True)
             if not row.is_not_available_inhouse:
-                validate_stock_item(row.get(value), quantity, healthcare_service_unit=row.get("healthcare_service_unit"))
+                validate_stock_item(row.get(value), quantity, healthcare_service_unit=row.get(
+                    "healthcare_service_unit"))
     if prescribed_list:
-        frappe.msgprint(_("{0}<BR>The above been prescribed. <b>Request the patient to visit the cashier for cash payment</b> or prescription printout.").format(prescribed_list))
+        frappe.msgprint(
+            _("{0}<BR>The above been prescribed. <b>Request the patient to visit the cashier for cash payment</b> or prescription printout.").format(prescribed_list))
 
     if not insurance_subscription:
         return
@@ -84,25 +88,24 @@ def validate(doc, method):
         frappe.throw(_("Healthcare Insurance Coverage Plan is Not defiend"))
     # hsic => Healthcare Service Insurance Coverage
 
-
     for key, value in child_tables.items():
         table = doc.get(key)
         for row in table:
             if row.override_subscription or row.prescribe:
                 continue
             hsic_list = frappe.get_all("Healthcare Service Insurance Coverage",
-                                    fields={"healthcare_service_template",
-                                            "maximum_number_of_claims",
-                                            "approval_mandatory_for_claim"},
-                                    filters={
-                                        "is_active": 1,
-                                        "healthcare_insurance_coverage_plan": healthcare_insurance_coverage_plan,
-                                        "start_date": ["<=", nowdate()],
-                                        "end_date": [">=", nowdate()],
-                                        "healthcare_service_template": row.get(value)
-                                    },
-                                    order_by="modified desc"
-            )
+                                       fields={"healthcare_service_template",
+                                               "maximum_number_of_claims",
+                                               "approval_mandatory_for_claim"},
+                                       filters={
+                                           "is_active": 1,
+                                           "healthcare_insurance_coverage_plan": healthcare_insurance_coverage_plan,
+                                           "start_date": ["<=", nowdate()],
+                                           "end_date": [">=", nowdate()],
+                                           "healthcare_service_template": row.get(value)
+                                       },
+                                       order_by="modified desc"
+                                       )
             items_list = []
             if len(hsic_list) > 0:
                 for i in hsic_list:
@@ -160,7 +163,8 @@ def checkـforـduplicate(doc):
 def duplicate_encounter(encounter):
     doc = frappe.get_doc("Patient Encounter", encounter)
     if not doc.docstatus == 1 or doc.encounter_type == 'Final' or doc.duplicated == 1:
-        frappe.msgprint(_("This encounter cannot be duplicated. Check if it is already duplicated using Menu/Links."), alert = True)
+        frappe.msgprint(
+            _("This encounter cannot be duplicated. Check if it is already duplicated using Menu/Links."), alert=True)
         return
     encounter_doc = frappe.copy_doc(doc)
     encounter_dict = encounter_doc.as_dict()
@@ -272,20 +276,25 @@ def on_submit(doc, method):
     create_delivery_note(doc)
     update_inpatient_record_consultancy(doc)
     frappe.enqueue(method=enqueue_on_update_after_submit, queue='short',
-                timeout=10000, is_async=True, kwargs=doc.name)
+                   timeout=10000, is_async=True, kwargs=doc.name)
+
 
 @frappe.whitelist()
 def create_healthcare_docs_from_name(patient_encounter_doc_name):
-    patient_encounter_doc = frappe.get_doc("Patient Encounter", patient_encounter_doc_name)
+    patient_encounter_doc = frappe.get_doc(
+        "Patient Encounter", patient_encounter_doc_name)
     create_healthcare_docs(patient_encounter_doc)
     create_delivery_note(patient_encounter_doc)
 
+
 def create_healthcare_docs(patient_encounter_doc):
     if patient_encounter_doc.docstatus != 1:
-        frappe.msgprint(_("Cannot process Patient Encounter that is not submitted! Please submit and try again."), alert = True)
+        frappe.msgprint(
+            _("Cannot process Patient Encounter that is not submitted! Please submit and try again."), alert=True)
         return
     if not patient_encounter_doc.appointment:
-        frappe.msgprint(_("Patient Encounter does not have patient appointment number! Request for support with this message."), alert = True)
+        frappe.msgprint(
+            _("Patient Encounter does not have patient appointment number! Request for support with this message."), alert=True)
         return
     if not patient_encounter_doc.insurance_subscription:
         return
@@ -301,9 +310,12 @@ def create_healthcare_docs(patient_encounter_doc):
                 if child.doctype == "Lab Prescription":
                     create_individual_lab_test(patient_encounter_doc, child)
                 elif child.doctype == "Radiology Procedure Prescription":
-                    create_individual_radiology_examination(patient_encounter_doc, child)
+                    create_individual_radiology_examination(
+                        patient_encounter_doc, child)
                 elif child.doctype == "Procedure Prescription":
-                    create_individual_procedure_prescription(patient_encounter_doc, child)
+                    create_individual_procedure_prescription(
+                        patient_encounter_doc, child)
+
 
 def create_delivery_note(patient_encounter_doc):
     if not patient_encounter_doc.appointment:
@@ -337,8 +349,10 @@ def create_delivery_note(patient_encounter_doc):
                 continue
             item_code = frappe.get_value(
                 "Medication", row.drug_code, "item_code")
-            is_stock, item_name = frappe.get_value(
-                "Item", item_code, ["is_stock_item", "item_name"])
+            is_stock = frappe.get_value(
+                "Item", item_code, "is_stock_item")
+            item_name = frappe.get_value(
+                "Item", item_code, "item_name")
             if not is_stock:
                 continue
             item = frappe.new_doc("Delivery Note Item")
@@ -358,6 +372,7 @@ def create_delivery_note(patient_encounter_doc):
             items.append(item)
             row.drug_prescription_created = 1
             patient_encounter_doc.save()
+            patient_encounter_doc.reload()
             frappe.db.commit()
         if len(items) == 0:
             continue
@@ -471,6 +486,7 @@ def validate_totals(doc):
         frappe.throw(_("The total daily limit of {0} for the Insurance Subscription {1} has been exceeded by {2}. <br> Please contact the reception to increase the limit or prescribe the items").format(
             doc.daily_limit, doc.insurance_subscription, diff))
 
+
 @frappe.whitelist()
 def finalized_encounter(cur_encounter, ref_encounter=None):
     frappe.set_value("Patient Encounter", cur_encounter,
@@ -540,20 +556,22 @@ def create_sales_invoice(encounter, encounter_category, encounter_mode_of_paymen
 
     return "true"
 
+
 def update_inpatient_record_consultancy(doc):
     if doc.inpatient_record:
         item_code = frappe.get_value("Healthcare Practitioner",
-                                doc.practitioner, "inpatient_visit_charge_item")
+                                     doc.practitioner, "inpatient_visit_charge_item")
         rate = 0
         if doc.insurance_subscription:
             rate = get_item_rate(
-                    item_code, doc.company, doc.insurance_subscription, doc.insurance_company)
+                item_code, doc.company, doc.insurance_subscription, doc.insurance_company)
         elif doc.mode_of_payment:
-            price_list= frappe.get_value("Mode of Payment",doc.mode_of_payment, "price_list")
+            price_list = frappe.get_value(
+                "Mode of Payment", doc.mode_of_payment, "price_list")
             rate = get_item_price(item_code, price_list, doc.company)
-        
-        record_doc = frappe.get_doc("Inpatient Record",doc.inpatient_record)
-        row = record_doc.append("inpatient_consultancy",{})
+
+        record_doc = frappe.get_doc("Inpatient Record", doc.inpatient_record)
+        row = record_doc.append("inpatient_consultancy", {})
         row.date = nowdate()
         row.consultation_item = item_code
         row.rate = rate
@@ -561,6 +579,7 @@ def update_inpatient_record_consultancy(doc):
         record_doc.save(ignore_permissions=True)
         frappe.msgprint(
             _("Inpatient Consultancy recorde added for item {0}").format("item_code"), alert=True)
+
 
 def on_update_after_submit(doc, method):
     if doc.is_not_billable:
@@ -595,9 +614,11 @@ def on_update_after_submit(doc, method):
     else:
         doc.db_set("is_not_billable", 0)
 
+
 def enqueue_on_update_after_submit(doc_name):
     time.sleep(5)
     on_update_after_submit(frappe.get_doc("Patient Encounter", doc_name))
+
 
 def before_submit(doc, method):
     encounter_create_sales_invoice = frappe.get_value(
