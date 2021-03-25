@@ -290,6 +290,10 @@ fixtures = [
         "Clinical Procedure-service_comment",
         "Sales Invoice Payment-payment_reference",
         "Patient Appointment-follow_up",
+        "Inpatient Consultancy-is_confirmed",
+        "Inpatient Occupancy-is_confirmed",
+        "Healthcare Service Unit-is_consultancy_chargeable",
+        "Healthcare Service Unit-is_service_chargeable",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
