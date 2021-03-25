@@ -35,7 +35,7 @@ frappe.ui.form.on('Inpatient Occupancy', {
     },
     confirmed: (frm, cdt, cdn) => {
         let row = frappe.get_doc(cdt, cdn);
-        if (row.invoiced || !row.left) return;
+        if (row.is_confirmed || !row.left) return;
         if (frm.is_dirty()) {
             frm.save();
         }
@@ -79,5 +79,6 @@ frappe.ui.form.on('Inpatient Consultancy', {
         }
         frappe.model.set_value(cdt, cdn, "is_confirmed", 1);
         frm.refresh_field("inpatient_consultancy");
+        frm.save();
     },
 });
