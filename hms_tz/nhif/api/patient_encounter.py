@@ -609,5 +609,3 @@ def on_update_after_submit(doc, method):
 def enqueue_on_update_after_submit(doc_name):
     time.sleep(5)
     on_update_after_submit(frappe.get_doc("Patient Encounter", doc_name))
-
-def before_submit(doc, method)
