@@ -36,7 +36,7 @@ frappe.ui.form.on('Patient Encounter', {
     },
     refresh: function (frm) {
         set_medical_code(frm);
-        if (frm.doc.duplicate == 1) {
+        if (frm.doc.duplicated == 1) {
             frm.remove_custom_button("Schedule Admission");
             frm.remove_custom_button("Refer Practitioner");
             frm.remove_custom_button("Create");
@@ -279,12 +279,12 @@ var get_final_diagnosis = function (frm) {
 };
 
 var set_medical_code = function (frm) {
-    const final_diagnosis = get_final_diagnosis(frm);
-    const preliminary_diagnosis = get_preliminary_diagnosis(frm);
+    let final_diagnosis = get_final_diagnosis(frm);
+    let preliminary_diagnosis = get_preliminary_diagnosis(frm);
     if (typeof final_diagnosis == "undefined") final_diagnosis = [];
     if (typeof preliminary_diagnosis == "undefined") final_diagnosis = [];
 
-    frappe.meta.get_docfield("Lab Prescription", "medical_code", frm.doc.name).options = preliminary_diagnosis;
+    cur_frm.fields_dict.lab_test_prescription.grid.get_docfield('medical_code').options = preliminary_diagnosis;
     refresh_field("lab_test_prescription");
 
     frappe.meta.get_docfield("Radiology Procedure Prescription", "medical_code", frm.doc.name).options = preliminary_diagnosis;
@@ -351,7 +351,7 @@ var validate_medical_code = function (frm) {
 };
 
 var add_btn_final = function (frm) {
-    if (frm.doc.docstatus == 1 && frm.doc.encounter_type != 'Final' && frm.doc.duplicate == 0) {
+    if (frm.doc.docstatus == 1 && frm.doc.encounter_type != 'Final' && frm.doc.duplicated == 0) {
         frm.add_custom_button(__('Set as Final'), function () {
             frappe.call({
                 method: 'hms_tz.nhif.api.patient_encounter.finalized_encounter',
@@ -368,7 +368,7 @@ var add_btn_final = function (frm) {
 };
 
 var duplicate = function (frm) {
-    if (frm.doc.docstatus != 1 || frm.doc.encounter_type == 'Final' || frm.doc.duplicate == 1) {
+    if (frm.doc.docstatus != 1 || frm.doc.encounter_type == 'Final' || frm.doc.duplicated == 1) {
         return;
     }
     frm.add_custom_button(__('Duplicate'), function () {
