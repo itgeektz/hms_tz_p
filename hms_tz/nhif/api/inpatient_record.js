@@ -57,7 +57,7 @@ frappe.ui.form.on('Inpatient Occupancy', {
 
 const control_inpatient_record_permissing = (frm, cdt, cdn) => {
     let row = frappe.get_doc(cdt, cdn);
-    if (row.invoiced) {
+    if (row.is_confirmed) {
         frm.reload_doc();
         frappe.throw(__(`This line has been invoiced. It cannot be modified or deleted`));
     }
@@ -69,3 +69,15 @@ const control_inpatient_record_move = (frm, cdt, cdn) => {
     frappe.throw(__(`This line should not be moved`));
 
 };
+
+frappe.ui.form.on('Inpatient Consultancy', {
+    confirmed: (frm, cdt, cdn) => {
+        let row = frappe.get_doc(cdt, cdn);
+        if (row.is_confirmed) return;
+        if (frm.is_dirty()) {
+            frm.save();
+        }
+        frappe.model.set_value(cdt, cdn, "is_confirmed", 1);
+        frm.refresh_field("inpatient_consultancy");
+    },
+});
