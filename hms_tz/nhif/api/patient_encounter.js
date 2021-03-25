@@ -496,6 +496,9 @@ frappe.ui.form.on('Drug Prescription', {
         if (row.prescribe || !row.drug_code) { return; }
         validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit, "Drug Prescription");
     },
+    healthcare_service_unit: function (frm, cdt, cdn) {
+        if (frm.healthcare_service_unit) frm.trigger("drug_code");
+    },
     is_not_available_inhouse: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
         if (row.is_not_available_inhouse) {
@@ -509,9 +512,7 @@ frappe.ui.form.on('Drug Prescription', {
         }
     },
     quantity: function (frm, cdt, cdn) {
-        let row = frappe.get_doc(cdt, cdn);
-        if (row.prescribe || !row.drug_code) { return; }
-        validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit, "Drug Prescription");
+        if (frm.quantity) frm.trigger("drug_code");
     },
     override_subscription: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
