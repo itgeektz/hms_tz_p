@@ -8,7 +8,6 @@ frappe.ui.form.on('Patient Encounter', {
         validate_medical_code(frm);
     },
     onload: function (frm) {
-        set_medical_code(frm);
         add_btn_final(frm);
         duplicate(frm);
         if (frm.doc.docstatus == 1) {
@@ -35,7 +34,7 @@ frappe.ui.form.on('Patient Encounter', {
         });
     },
     refresh: function (frm) {
-        set_medical_code(frm);
+        set_medical_code(frm, true);
         if (frm.doc.duplicated == 1) {
             frm.remove_custom_button("Schedule Admission");
             frm.remove_custom_button("Refer Practitioner");
@@ -96,12 +95,6 @@ frappe.ui.form.on('Patient Encounter', {
                 }
             });
         }
-    },
-    patient_encounter_preliminary_diagnosis: function (frm) {
-        set_medical_code(frm);
-    },
-    patient_encounter_final_diagnosis: function (frm) {
-        set_medical_code(frm);
     },
     get_chronic_diagnosis: function (frm) {
         if (frm.doc.docstatus == 1) {
@@ -274,115 +267,74 @@ frappe.ui.form.on('Drug Prescription', {
 });
 
 frappe.ui.form.on('Codification Table', {
-    onload: function (frm) {
-        set_medical_code(frm);
-    },
-    patient_encounter_preliminary_diagnosis_add: function (frm) {
-        set_medical_code(frm);
-    },
-    patient_encounter_preliminary_diagnosis_remove: function (frm) {
-        set_medical_code(frm);
-    },
-    patient_encounter_final_diagnosis_add: function (frm) {
-        set_medical_code(frm);
-    },
-    patient_encounter_final_diagnosis_remove: function (frm) {
-        set_medical_code(frm);
-    },
-    medical_code (frm, cdt, cdn) {
-        set_medical_code(frm);
-    }
+    patient_encounter_preliminary_diagnosis_remove: set_medical_code,
+    patient_encounter_final_diagnosis_remove: set_medical_code,
+    medical_code: set_medical_code,
 });
 
-var get_preliminary_diagnosis = function (frm) {
+function get_diagnosis_list (frm, table_name) {
     const diagnosis_list = [];
-    if (frm.doc.patient_encounter_preliminary_diagnosis) {
-        frm.doc.patient_encounter_preliminary_diagnosis.forEach(element => {
+    if (frm.doc[table_name]) {
+        frm.doc[table_name].forEach(element => {
+            if (!element.medical_code) return;
             diagnosis_list.push(element.medical_code);
         });
-        return diagnosis_list;
+    }
+    return diagnosis_list;
+}
+
+const medical_code_mapping = {
+    "patient_encounter_preliminary_diagnosis": [
+        'lab_test_prescription',
+        'radiology_procedure_prescription'
+    ],
+    "patient_encounter_final_diagnosis": [
+        'procedure_prescription',
+        'drug_prescription',
+        'therapies',
+        'diet_recommendation'
+    ]
+}
+
+function set_medical_code (frm, reset_columns) {
+    function set_options_for_fields (fields, from_table) {
+        const options = get_diagnosis_list(frm, from_table);
+
+        for (const fieldname of fields) {
+            const grid = frm.fields_dict[fieldname].grid;
+
+            if (reset_columns) {
+                grid.visible_columns = undefined;
+                grid.setup_visible_columns();
+            }
+
+            grid.fields_map.medical_code.options = options;
+            grid.refresh();
+        }
+    }
+
+    for (const [from_table, fields] of Object.entries(medical_code_mapping)) {
+        set_options_for_fields(fields, from_table);
     }
 };
 
-var get_final_diagnosis = function (frm) {
-    const diagnosis_list = [];
-    if (frm.doc.patient_encounter_final_diagnosis) {
-        frm.doc.patient_encounter_final_diagnosis.forEach(element => {
-            diagnosis_list.push(element.medical_code);
-        });
-        return diagnosis_list;
-    }
-};
+function validate_medical_code (frm) {
 
-var set_medical_code = function (frm) {
-    let final_diagnosis = get_final_diagnosis(frm);
-    let preliminary_diagnosis = get_preliminary_diagnosis(frm);
-    if (typeof final_diagnosis == "undefined") final_diagnosis = [];
-    if (typeof preliminary_diagnosis == "undefined") final_diagnosis = [];
+    for (const [from_table, fields] of Object.entries(medical_code_mapping)) {
+        const options = get_diagnosis_list(frm, from_table);
 
-    cur_frm.fields_dict.lab_test_prescription.grid.get_docfield('medical_code').options = preliminary_diagnosis;
-    refresh_field("lab_test_prescription");
+        for (const fieldname of fields) {
+            if (!frm.doc[fieldname]) continue;
 
-    frappe.meta.get_docfield("Radiology Procedure Prescription", "medical_code", frm.doc.name).options = preliminary_diagnosis;
-    refresh_field("radiology_procedure_prescription");
-
-    frappe.meta.get_docfield("Procedure Prescription", "medical_code", frm.doc.name).options = final_diagnosis;
-    refresh_field("procedure_prescription");
-
-    frappe.meta.get_docfield("Drug Prescription", "medical_code", frm.doc.name).options = final_diagnosis;
-    refresh_field("drug_prescription");
-
-    frappe.meta.get_docfield("Therapy Plan Detail", "medical_code", frm.doc.name).options = final_diagnosis;
-    refresh_field("therapies");
-
-    frappe.meta.get_docfield("Diet Recommendation", "medical_code", frm.doc.name).options = final_diagnosis;
-    refresh_field("diet_recommendation");
-
-    frm.refresh_fields();
-};
-
-var validate_medical_code = function (frm) {
-    if (frm.doc.drug_prescription) {
-        frm.doc.drug_prescription.forEach(element => {
-            if (!get_final_diagnosis(frm).includes(element.medical_code)) {
-                frappe.throw(__(`The medical code is not set in 'Drug Prescription' line item ${element.idx}`));
-            }
-        });
-    }
-    if (frm.doc.lab_test_prescription) {
-        frm.doc.lab_test_prescription.forEach(element => {
-            if (!get_preliminary_diagnosis(frm).includes(element.medical_code)) {
-                frappe.throw(__(`The medical code is not set in 'Lab Prescription' line item ${element.idx}`));
-            }
-        });
-    }
-    if (frm.doc.procedure_prescription) {
-        frm.doc.procedure_prescription.forEach(element => {
-            if (!get_final_diagnosis(frm).includes(element.medical_code)) {
-                frappe.throw(__(`The medical code is not set in 'Procedure Prescription' line item ${element.idx}`));
-            }
-        });
-    }
-    if (frm.doc.radiology_procedure_prescription) {
-        frm.doc.radiology_procedure_prescription.forEach(element => {
-            if (!get_preliminary_diagnosis(frm).includes(element.medical_code)) {
-                frappe.throw(__(`The medical code is not set in 'Radiology Procedure Prescription' line item ${element.idx}`));
-            }
-        });
-    }
-    if (frm.doc.procedure_prescription) {
-        frm.doc.procedure_prescription.forEach(element => {
-            if (!get_final_diagnosis(frm).includes(element.medical_code)) {
-                frappe.throw(__(`The medical code is not set in 'Therapy Plan Detail' line item ${element.idx}`));
-            }
-        });
-    }
-    if (frm.doc.diet_recommendation) {
-        frm.doc.diet_recommendation.forEach(element => {
-            if (!get_final_diagnosis(frm).includes(element.medical_code)) {
-                frappe.throw(__(`The medical code is not set in 'Diet Recommendation' line item ${element.idx}`));
-            }
-        });
+            frm.doc[fieldname].forEach(element => {
+                if (!options.includes(element.medical_code)) {
+                    frappe.throw(__(`The Medical Code in the
+                    ${frm.fields_dict[fieldname].df.label} table
+                    at line ${element.idx} is empty or does not exist in the
+                    ${frm.fields_dict[from_table].df.label} table.`));
+                }
+            })
+        }
     }
 };
 
@@ -411,7 +363,7 @@ var duplicate = function (frm) {
         if (frm.is_dirty()) {
             frm.save();
         }
-        
+
         frappe.call({
             method: 'hms_tz.nhif.api.patient_encounter.duplicate_encounter',
             args: {
