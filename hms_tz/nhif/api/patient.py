@@ -34,6 +34,7 @@ def validate(doc, method):
     validate_mobile_number(doc.name, doc.mobile)
     if not doc.is_new():
         update_patient_history(doc)
+        create_subscription(doc)
 
 
 @frappe.whitelist()
@@ -59,7 +60,8 @@ def get_patient_info(card_no=None):
     if not company:
         company = frappe.defaults.get_user_default("Company")
     if not company:
-        company = frappe.get_list("Company NHIF Settings", fields=["company"], filters = {"enable": 1})[0].company
+        company = frappe.get_list("Company NHIF Settings", fields=[
+                                  "company"], filters={"enable": 1})[0].company
     if not company:
         frappe.throw(_("No companies found to connect to NHIF"))
     token = get_nhifservice_token(company)
@@ -96,7 +98,8 @@ def get_patient_info(card_no=None):
                     request_header=headers,
                 )
                 frappe.msgprint(json.loads(r.text))
-                frappe.msgprint(_("Getting information from NHIF failed. Try again after sometime, or continue manually."))
+                frappe.msgprint(
+                    _("Getting information from NHIF failed. Try again after sometime, or continue manually."))
         except Exception as e:
             frappe.logger().debug({"webhook_error": e, "try": i + 1})
             sleep(3 * i + 1)
@@ -126,7 +129,8 @@ def update_patient_history(doc):
             medication += row.drug_name + "\n"
     doc.medication = medication
     if doc.medical_history or doc.medication:
-        frappe.msgprint(_("Update patient history for medical history and chronic medications"), alert = True)
+        frappe.msgprint(
+            _("Update patient history for medical history and chronic medications"), alert=True)
 
 
 @frappe.whitelist()
@@ -141,3 +145,26 @@ def check_card_number(card_no, is_new=None, patient=None):
         return patients[0].name
     else:
         return "false"
+
+
+def create_subscription(doc):
+    subscription_list = frappe.get_all("Healthcare Insurance Subscription", filters={
+                                       "patient": doc.name, "is_active": 1})
+    if len(subscription_list) > 0 or not doc.product_code:
+        return
+    if not frappe.db.exists("NHIF Product", doc.product_code):
+        return
+    plan = frappe.get_value(
+        "NHIF Product", doc.product_code, "healthcare_insurance_coverage_plan")
+    if not plan:
+        return
+    plan_doc = frappe.get_doc("Healthcare Insurance Coverage Plan", plan)
+    sub_doc = frappe.new_doc("Healthcare Insurance Subscription")
+    sub_doc.patient = doc.name
+    sub_doc.insurance_company = plan_doc.insurance_company
+    sub_doc.healthcare_insurance_coverage_plan = plan_doc.nacoverage_plan_nameme
+    sub_doc.coverage_plan_card_number = doc.card_no
+    sub_doc.save(ignore_permissions=True)
+    sub_doc.submit()
+    frappe.msgprint(
+        _("Healthcare Insurance Subscription {0} is created").format(sub_doc.name))
