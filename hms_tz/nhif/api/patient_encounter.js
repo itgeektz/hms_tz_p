@@ -283,6 +283,19 @@ function get_diagnosis_list (frm, table_name) {
     return diagnosis_list;
 }
 
+const medical_code_mapping = {
+    "patient_encounter_preliminary_diagnosis": [
+        'lab_test_prescription',
+        'radiology_procedure_prescription'
+    ],
+    "patient_encounter_final_diagnosis": [
+        'procedure_prescription',
+        'drug_prescription',
+        'therapies',
+        'diet_recommendation'
+    ]
+}
+
 function set_medical_code (frm, reset_columns) {
     function set_options_for_fields (fields, from_table) {
         const options = get_diagnosis_list(frm, from_table);
@@ -300,59 +313,28 @@ function set_medical_code (frm, reset_columns) {
         }
     }
 
-    set_options_for_fields(
-        ['lab_test_prescription', 'radiology_procedure_prescription'],
-        "patient_encounter_preliminary_diagnosis"
-    );
-
-    set_options_for_fields(
-        ['procedure_prescription', 'drug_prescription', 'therapies', 'diet_recommendation'],
-        "patient_encounter_final_diagnosis"
-    )
+    for (const [from_table, fields] of Object.entries(medical_code_mapping)) {
+        set_options_for_fields(fields, from_table);
+    }
 };
 
-var validate_medical_code = function (frm) {
-    if (frm.doc.drug_prescription) {
-        frm.doc.drug_prescription.forEach(element => {
-            if (!get_final_diagnosis(frm).includes(element.medical_code)) {
-                frappe.throw(__(`The medical code is not set in 'Drug Prescription' line item ${element.idx}`));
-            }
-        });
-    }
-    if (frm.doc.lab_test_prescription) {
-        frm.doc.lab_test_prescription.forEach(element => {
-            if (!get_preliminary_diagnosis(frm).includes(element.medical_code)) {
-                frappe.throw(__(`The medical code is not set in 'Lab Prescription' line item ${element.idx}`));
-            }
-        });
-    }
-    if (frm.doc.procedure_prescription) {
-        frm.doc.procedure_prescription.forEach(element => {
-            if (!get_final_diagnosis(frm).includes(element.medical_code)) {
-                frappe.throw(__(`The medical code is not set in 'Procedure Prescription' line item ${element.idx}`));
-            }
-        });
-    }
-    if (frm.doc.radiology_procedure_prescription) {
-        frm.doc.radiology_procedure_prescription.forEach(element => {
-            if (!get_preliminary_diagnosis(frm).includes(element.medical_code)) {
-                frappe.throw(__(`The medical code is not set in 'Radiology Procedure Prescription' line item ${element.idx}`));
-            }
-        });
-    }
-    if (frm.doc.procedure_prescription) {
-        frm.doc.procedure_prescription.forEach(element => {
-            if (!get_final_diagnosis(frm).includes(element.medical_code)) {
-                frappe.throw(__(`The medical code is not set in 'Therapy Plan Detail' line item ${element.idx}`));
-            }
-        });
-    }
-    if (frm.doc.diet_recommendation) {
-        frm.doc.diet_recommendation.forEach(element => {
-            if (!get_final_diagnosis(frm).includes(element.medical_code)) {
-                frappe.throw(__(`The medical code is not set in 'Diet Recommendation' line item ${element.idx}`));
-            }
-        });
+function validate_medical_code (frm) {
+
+    for (const [from_table, fields] of Object.entries(medical_code_mapping)) {
+        const options = get_diagnosis_list(frm, from_table);
+
+        for (const fieldname of fields) {
+            if (!frm.doc[fieldname]) continue;
+
+            frm.doc[fieldname].forEach(element => {
+                if (!options.includes(element.medical_code)) {
+                    frappe.throw(__(`The Medical Code in the
+                    ${frm.fields_dict[fieldname].df.label} table
+                    at line ${element.idx} is empty or does not exist in the
+                    ${frm.fields_dict[from_table].df.label} table.`));
+                }
+            })
+        }
     }
 };
 
