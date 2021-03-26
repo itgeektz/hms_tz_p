@@ -164,7 +164,7 @@ def make_vital(appointment_doc, method):
             frappe.msgprint(_("This appointment requires to be paid for!"), alert=True)
 
 
-    if (not appointment_doc.ref_vital_signs) and (appointment_doc.invoiced or (appointment_doc.insurance_claim and appointment_doc.authorization_number) or method == "patient_appointment"):
+    if (not appointment_doc.ref_vital_signs) and (appointment_doc.invoiced or (appointment_doc.insurance_subscription and appointment_doc.authorization_number) or method == "patient_appointment"):
         vital_doc = frappe.get_doc(dict(
             doctype="Vital Signs",
             patient=appointment_doc.patient,
