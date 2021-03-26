@@ -371,9 +371,6 @@ def create_delivery_note(patient_encounter_doc):
                 (row.comment or "Take medication as per dosage.")
             items.append(item)
             row.drug_prescription_created = 1
-            patient_encounter_doc.save()
-            patient_encounter_doc.reload()
-            frappe.db.commit()
         if len(items) == 0:
             continue
         doc = frappe.get_doc(dict(
@@ -615,9 +612,9 @@ def on_update_after_submit(doc, method):
         doc.db_set("is_not_billable", 0)
 
 
-def enqueue_on_update_after_submit(doc_name):
+def enqueue_on_update_after_submit(kwargs):
     time.sleep(5)
-    on_update_after_submit(frappe.get_doc("Patient Encounter", doc_name))
+    on_update_after_submit(frappe.get_doc("Patient Encounter", kwargs), "enqueue")
 
 
 def before_submit(doc, method):
