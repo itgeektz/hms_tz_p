@@ -531,6 +531,8 @@ fixtures = [
         "Patient Encounter-encounter_time-read_only",
         "Patient Encounter-encounter_date-read_only",
         "Inpatient Consultancy-confirmed-permlevel"
+        "Radiology Examination-practitioner-in_standard_filter",
+        "Healthcare Practitioner-main-search_fields",
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",

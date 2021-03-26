@@ -54,6 +54,34 @@ frappe.ui.form.on('Patient Encounter', {
                 }
             };
         });
+        frm.set_query('radiology_examination_template', 'radiology_procedure_prescription', function () {
+            return {
+                filters: {
+                    disabled: 0
+                }
+            };
+        });
+        frm.set_query('procedure', 'procedure_prescription', function () {
+            return {
+                filters: {
+                    disabled: 0
+                }
+            };
+        });
+        frm.set_query('drug_code', 'drug_prescription', function () {
+            return {
+                filters: {
+                    disabled: 0
+                }
+            };
+        });
+        frm.set_query('therapy_type', 'therapies', function () {
+            return {
+                filters: {
+                    disabled: 0
+                }
+            };
+        });
     },
     default_healthcare_service_unit: function (frm) {
         if (frm.doc.default_healthcare_service_unit) {
