@@ -403,6 +403,8 @@ def set_healthcare_services(doc, checked_values):
     return doc.name
 
 def create_individual_lab_test(source_doc, child):
+    frappe.msgprint(child.lab_test_created)
+
     if child.lab_test_created == 1:
         return
     ltt_doc = frappe.get_doc("Lab Test Template", child.lab_test_code)
@@ -426,15 +428,16 @@ def create_individual_lab_test(source_doc, child):
     doc.service_comment = (child.medical_code or "No ICD Code") + \
         " : " + (child.lab_test_comment or "No Comment")
 
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
     if doc.get('name'):
         frappe.msgprint(_('Lab Test {0} created successfully.').format(
             frappe.bold(doc.name)))
-        child.lab_test_created = 1
-        child.lab_test = doc.name
-        child.db_update()
 
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    child.lab_test_created = 1
+    child.lab_test = doc.name
+    child.db_update()
+
 
 def create_individual_radiology_examination(source_doc, child):
     if child.radiology_examination_created == 1:
@@ -458,15 +461,15 @@ def create_individual_radiology_examination(source_doc, child):
     doc.service_comment = (child.medical_code or "No ICD Code") + " : " + \
         (child.radiology_test_comment or "No Comment")
 
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
     if doc.get('name'):
         frappe.msgprint(_('Radiology Examination {0} created successfully.').format(
             frappe.bold(doc.name)))
-        child.radiology_examination_created = 1
-        child.radiology_examination = doc.name
-        child.db_update()
 
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    child.radiology_examination_created = 1
+    child.radiology_examination = doc.name
+    child.db_update()
 
 def create_individual_procedure_prescription(source_doc, child):
     if child.procedure_created == 1:
@@ -492,11 +495,12 @@ def create_individual_procedure_prescription(source_doc, child):
     doc.service_comment = (child.medical_code or "No ICD Code") + \
         " : " + (child.comments or "No Comment")
 
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
     if doc.get('name'):
         frappe.msgprint(_('Clinical Procedure {0} created successfully.').format(
             frappe.bold(doc.name)))
-        child.procedure_created = 1
-        child.clinical_procedure = doc.name
-        child.db_update()
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
+
+    child.procedure_created = 1
+    child.clinical_procedure = doc.name
+    child.db_update()
