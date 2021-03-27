@@ -162,9 +162,9 @@ def create_subscription(doc):
     sub_doc = frappe.new_doc("Healthcare Insurance Subscription")
     sub_doc.patient = doc.name
     sub_doc.insurance_company = plan_doc.insurance_company
-    sub_doc.healthcare_insurance_coverage_plan = plan_doc.nacoverage_plan_nameme
+    sub_doc.healthcare_insurance_coverage_plan = plan_doc.name
     sub_doc.coverage_plan_card_number = doc.card_no
     sub_doc.save(ignore_permissions=True)
     sub_doc.submit()
     frappe.msgprint(
-        _("Healthcare Insurance Subscription {0} is created").format(sub_doc.name))
+        _("AUTO Healthcare Insurance Subscription {0} is created").format(sub_doc.name))
