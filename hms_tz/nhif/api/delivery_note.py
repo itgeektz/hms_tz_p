@@ -5,6 +5,9 @@ from hms_tz.nhif.api.healthcare_utils import update_dimensions
 
 
 def validate(doc, method):
+    for item in doc.items:
+        if item.is_restricted and not item.approval_number:
+            frappe.throw(_("Approval number required for {0}").format(item.item_name))
     set_prescribed(doc)
     set_missing_values(doc)
     update_dimensions(doc)
