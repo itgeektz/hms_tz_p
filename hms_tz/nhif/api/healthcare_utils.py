@@ -133,7 +133,7 @@ def get_item_rate(item_code, company, insurance_subscription, insurance_company)
         price_list_rate = get_item_price(item_code, price_list, company)
     if price_list_rate == (0 or None):
         frappe.throw(
-            _("Please set Price List for item: {0}").format(item_code))
+            _("Please set Price List for item: {0} in price list {1}").format(item_code, price_list))
     return price_list_rate
 
 
@@ -403,8 +403,6 @@ def set_healthcare_services(doc, checked_values):
     return doc.name
 
 def create_individual_lab_test(source_doc, child):
-    frappe.msgprint(child.lab_test_created)
-
     if child.lab_test_created == 1:
         return
     ltt_doc = frappe.get_doc("Lab Test Template", child.lab_test_code)
