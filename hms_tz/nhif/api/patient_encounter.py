@@ -275,8 +275,8 @@ def on_submit(doc, method):
     create_healthcare_docs(doc)
     create_delivery_note(doc)
     update_inpatient_record_consultancy(doc)
-    frappe.enqueue(method=enqueue_on_update_after_submit, queue='short',
-                   timeout=10000, is_async=True, kwargs=doc.name)
+    # frappe.enqueue(method=enqueue_on_update_after_submit, queue='short',
+    #                timeout=10000, is_async=True, kwargs=doc.name)
 
 
 @frappe.whitelist()
@@ -606,10 +606,10 @@ def on_update_after_submit(doc, method):
                     if child.drug_prescription_created == 0:
                         services_created_pending = 1
                         break
-    if services_created_pending == 0:
-        doc.db_set("is_not_billable", 1)
-    else:
-        doc.db_set("is_not_billable", 0)
+    # if services_created_pending == 0:
+    #     doc.db_set("is_not_billable", 1)
+    # else:
+    #     doc.db_set("is_not_billable", 0)
 
 
 def enqueue_on_update_after_submit(kwargs):
