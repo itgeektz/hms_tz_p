@@ -669,7 +669,7 @@ doc_events = {
         "on_trash": "hms_tz.nhif.api.patient_encounter.on_trash",
         "on_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
         "before_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
-        "on_update_after_submit": "hms_tz.nhif.api.patient_encounter.on_update_after_submit",
+        # "on_update_after_submit": "hms_tz.nhif.api.patient_encounter.on_update_after_submit",
     },
     "Healthcare Service Order": {
         "before_insert": "hms_tz.nhif.api.service_order.set_missing_values",
@@ -706,6 +706,7 @@ doc_events = {
         "validate": "hms_tz.nhif.api.delivery_note.validate",
         "onload": "hms_tz.nhif.api.delivery_note.onload",
         "after_insert": "hms_tz.nhif.api.delivery_note.after_insert",
+        "before_submit": "hms_tz.nhif.api.delivery_note.before_submit",
     },
     "Inpatient Record": {
         "validate": "hms_tz.nhif.api.inpatient_record.validate",
