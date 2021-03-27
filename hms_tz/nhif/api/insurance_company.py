@@ -131,8 +131,8 @@ def process_nhif_records(company):
     frappe.msgprint(_("Processing NHIF price lists"), alert=True)
     enqueue(method=process_prices_list, queue='long',
             timeout=10000000, is_async=True, kwargs=company)
-    process_prices_list(company)
     frappe.msgprint(_("Processing NHIF Insurance Converages"), alert=True)
+    # process_insurance_coverages()
     enqueue(method=process_insurance_coverages, queue='long',
             timeout=10000000, is_async=True)
     frappe.msgprint(_("Processing NHIF records completed"), alert=True)
@@ -163,9 +163,10 @@ def process_prices_list(kwargs):
 
     item_list = frappe.db.sql(
         '''
-            SELECT ref_code, parent as item_code from `tabItem Customer Detail`
-                WHERE customer_name = 'NHIF'
-                GROUP by ref_code , parent
+            SELECT icd.ref_code, icd.parent as item_code, npp.schemeid from `tabItem Customer Detail` icd
+                INNER JOIN `tabNHIF Price Package` npp ON icd.ref_code = npp.itemcode
+                WHERE icd.customer_name = 'NHIF'
+                GROUP by icd.ref_code , icd.parent, npp.schemeid
         ''',
         as_dict=1
     )
@@ -173,6 +174,8 @@ def process_prices_list(kwargs):
     for item in item_list:
         for scheme in schemeid_list:
             schemeid = scheme.schemeid
+            if item.schemeid != schemeid:
+                continue
             price_list_name = "NHIF-" + schemeid
             package_list = frappe.db.sql(
                 '''
@@ -226,54 +229,61 @@ def process_prices_list(kwargs):
 def get_insurance_coverage_items():
     items_list = frappe.db.sql(
         '''
-            SELECT 'Appointment Type' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
+            SELECT 'Appointment Type' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, npp.schemeid
                 FROM `tabItem Customer Detail` icd
                 INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
                 INNER JOIN `tabAppointment Type` m ON icd.parent = m.out_patient_consulting_charge_item
+                INNER JOIN `tabNHIF Price Package` npp ON icd.ref_code = npp.itemcode
                 WHERE icd.customer_name = 'NHIF'
-                GROUP BY dt, m.name, icd.ref_code , icd.parent
+                GROUP BY dt, m.name, icd.ref_code , icd.parent, npp.schemeid
             UNION ALL
-            SELECT 'Lab Test Template' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
+            SELECT 'Lab Test Template' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, npp.schemeid
                 FROM `tabItem Customer Detail` icd
                 INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
                 INNER JOIN `tabLab Test Template` m ON icd.parent = m.item
+                INNER JOIN `tabNHIF Price Package` npp ON icd.ref_code = npp.itemcode
                 WHERE icd.customer_name = 'NHIF'
-                GROUP BY dt, m.name, icd.ref_code , icd.parent
+                GROUP BY dt, m.name, icd.ref_code , icd.parent, npp.schemeid
             UNION ALL
-            SELECT 'Radiology Examination Template' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
+            SELECT 'Radiology Examination Template' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, npp.schemeid
                 FROM `tabItem Customer Detail` icd
                 INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
                 INNER JOIN `tabRadiology Examination Template` m ON icd.parent = m.item
+                INNER JOIN `tabNHIF Price Package` npp ON icd.ref_code = npp.itemcode
                 WHERE icd.customer_name = 'NHIF'
-                GROUP BY dt, m.name, icd.ref_code , icd.parent
+                GROUP BY dt, m.name, icd.ref_code , icd.parent, npp.schemeid
             UNION ALL
-            SELECT 'Clinical Procedure Template' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
+            SELECT 'Clinical Procedure Template' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, npp.schemeid
                 FROM `tabItem Customer Detail` icd
                 INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
                 INNER JOIN `tabClinical Procedure Template` m ON icd.parent = m.item
+                INNER JOIN `tabNHIF Price Package` npp ON icd.ref_code = npp.itemcode
                 WHERE icd.customer_name = 'NHIF'
-                GROUP BY dt, m.name, icd.ref_code , icd.parent
+                GROUP BY dt, m.name, icd.ref_code , icd.parent, npp.schemeid
             UNION ALL
-            SELECT 'Medication' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
+            SELECT 'Medication' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, npp.schemeid
                 FROM `tabItem Customer Detail` icd
                 INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
                 INNER JOIN `tabMedication` m ON icd.parent = m.item
+                INNER JOIN `tabNHIF Price Package` npp ON icd.ref_code = npp.itemcode
                 WHERE icd.customer_name = 'NHIF'
-                GROUP BY dt, m.name, icd.ref_code , icd.parent
+                GROUP BY dt, m.name, icd.ref_code , icd.parent, npp.schemeid
             UNION ALL
-            SELECT 'Therapy Type' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
+            SELECT 'Therapy Type' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, npp.schemeid
                 FROM `tabItem Customer Detail` icd
                 INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
                 INNER JOIN `tabTherapy Type` m ON icd.parent = m.item
+                INNER JOIN `tabNHIF Price Package` npp ON icd.ref_code = npp.itemcode
                 WHERE icd.customer_name = 'NHIF'
-                GROUP BY dt, m.name, icd.ref_code , icd.parent
+                GROUP BY dt, m.name, icd.ref_code , icd.parent, npp.schemeid
             UNION ALL
-            SELECT 'Healthcare Service Unit Type' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code
+            SELECT 'Healthcare Service Unit Type' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, npp.schemeid
                 FROM `tabItem Customer Detail` icd
                 INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
                 INNER JOIN `tabHealthcare Service Unit Type` m ON icd.parent = m.item
+                INNER JOIN `tabNHIF Price Package` npp ON icd.ref_code = npp.itemcode
                 WHERE icd.customer_name = 'NHIF'
-                GROUP BY dt, m.name, icd.ref_code , icd.parent
+                GROUP BY dt, m.name, icd.ref_code , icd.parent, npp.schemeid
         ''',
         as_dict=1
     )
@@ -314,14 +324,19 @@ def process_insurance_coverages():
 
     coverage_plan_list = frappe.get_all(
         "Healthcare Insurance Coverage Plan",
+        fields={"name", "nhif_scheme_id"},
         filters={"insurance_company_name": "NHIF", "is_active": 1}
     )
+    frappe.msgprint(str(coverage_plan_list))
 
     for plan in coverage_plan_list:
         insert_data = []
         time_stamp = now()
         user = frappe.session.user
         for item in items_list:
+            frappe.msgprint(plan.nhif_scheme_id + ":" + item.schemeid)
+            if plan.nhif_scheme_id != item.schemeid:
+                continue
             excluded_services = get_excluded_services(item.ref_code)
             if excluded_services and excluded_services.excludedforproducts:
                 if plan.name in excluded_services.excludedforproducts:
@@ -373,30 +388,32 @@ def process_insurance_coverages():
                 1
             ))
 
-        frappe.db.sql(
-            "DELETE FROM `tabHealthcare Service Insurance Coverage` WHERE is_auto_generated = 1 AND healthcare_insurance_coverage_plan = '{0}'".format(plan.name))
+        if plan.name:
+            frappe.db.sql(
+                "DELETE FROM `tabHealthcare Service Insurance Coverage` WHERE is_auto_generated = 1 AND healthcare_insurance_coverage_plan = '{0}'".format(plan.name))
 
-        frappe.db.sql('''
-            INSERT INTO `tabHealthcare Service Insurance Coverage`
-            (
-                `approval_mandatory_for_claim`, 
-                `coverage`, 
-                `creation`, 
-                `discount`, 
-                `end_date`, 
-                `healthcare_insurance_coverage_plan`, 
-                `healthcare_service`, 
-                `healthcare_service_template`, 
-                `is_active`, 
-                `manual_approval_only`, 
-                `maximum_number_of_claims`, 
-                `modified`, 
-                `modified_by`, 
-                `name`, 
-                `naming_series`, 
-                `owner`, 
-                `start_date`,
-                `is_auto_generated`
-            )
-            VALUES {}
-        '''.format(', '.join(['%s'] * len(insert_data))), tuple(insert_data))
+        if insert_data:
+            frappe.db.sql('''
+                INSERT INTO `tabHealthcare Service Insurance Coverage`
+                (
+                    `approval_mandatory_for_claim`, 
+                    `coverage`, 
+                    `creation`, 
+                    `discount`, 
+                    `end_date`, 
+                    `healthcare_insurance_coverage_plan`, 
+                    `healthcare_service`, 
+                    `healthcare_service_template`, 
+                    `is_active`, 
+                    `manual_approval_only`, 
+                    `maximum_number_of_claims`, 
+                    `modified`, 
+                    `modified_by`, 
+                    `name`, 
+                    `naming_series`, 
+                    `owner`, 
+                    `start_date`,
+                    `is_auto_generated`
+                )
+                VALUES {}
+            '''.format(', '.join(['%s'] * len(insert_data))), tuple(insert_data))
