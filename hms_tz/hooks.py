@@ -291,6 +291,12 @@ fixtures = [
         "Sales Invoice Payment-payment_reference",
         "Patient Appointment-follow_up",
         "Patient Encounter-old_hms_registration_no",
+        "Prescription Dosage-section_break_3",
+        "Radiology Examination-service_comment",
+        "Lab Test-service_comment",
+        "Healthcare Insurance Coverage Plan-nhif_scheme_id",
+        "Prescription Dosage-dosage_form",
+        "Prescription Dosage-column_break_1",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -533,6 +539,8 @@ fixtures = [
         "Inpatient Consultancy-confirmed-permlevel"
         "Radiology Examination-practitioner-in_standard_filter",
         "Healthcare Practitioner-main-search_fields",
+        "Chronic Medications-period-fetch_if_empty",
+        "Chronic Medications-dosage-fetch_if_empty",
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",
