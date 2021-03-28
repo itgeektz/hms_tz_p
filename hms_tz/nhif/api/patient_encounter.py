@@ -275,6 +275,7 @@ def on_submit(doc, method):
     create_healthcare_docs(doc)
     create_delivery_note(doc)
     update_inpatient_record_consultancy(doc)
+    frappe.db.commit()
     # frappe.enqueue(method=enqueue_on_update_after_submit, queue='short',
     #                timeout=10000, is_async=True, kwargs=doc.name)
 

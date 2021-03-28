@@ -427,7 +427,6 @@ def create_individual_lab_test(source_doc, child):
         " : " + (child.lab_test_comment or "No Comment")
 
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
     if doc.get('name'):
         frappe.msgprint(_('Lab Test {0} created successfully.').format(
             frappe.bold(doc.name)))
@@ -460,7 +459,6 @@ def create_individual_radiology_examination(source_doc, child):
         (child.radiology_test_comment or "No Comment")
 
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
     if doc.get('name'):
         frappe.msgprint(_('Radiology Examination {0} created successfully.').format(
             frappe.bold(doc.name)))
@@ -494,7 +492,6 @@ def create_individual_procedure_prescription(source_doc, child):
         " : " + (child.comments or "No Comment")
 
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
     if doc.get('name'):
         frappe.msgprint(_('Clinical Procedure {0} created successfully.').format(
             frappe.bold(doc.name)))
