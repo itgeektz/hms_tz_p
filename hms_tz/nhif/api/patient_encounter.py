@@ -198,7 +198,7 @@ def duplicate_encounter(encounter):
     encounter_dict["previous_total"] = doc.previous_total + doc.current_total
     encounter_dict["current_total"] = 0
     encounter_doc = frappe.get_doc(encounter_dict)
-    encounter_doc.save()
+    encounter_doc.save(ignore_permissions=True)
     frappe.msgprint(
         _('Patient Encounter {0} created'.format(encounter_doc.name)))
     doc.duplicated = 1
