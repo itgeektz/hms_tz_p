@@ -53,8 +53,7 @@
    "fieldname": "item_quantity",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Item Quantity",
-   "read_only": 1
+   "label": "Item Quantity"
   },
   {
    "columns": 1,
@@ -179,7 +178,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2021-01-26 18:37:34.787377",
+ "modified": "2021-03-26 17:44:26.501511",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim Item",
