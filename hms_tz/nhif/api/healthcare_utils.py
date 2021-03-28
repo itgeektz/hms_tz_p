@@ -499,3 +499,10 @@ def create_individual_procedure_prescription(source_doc, child):
     child.procedure_created = 1
     child.clinical_procedure = doc.name
     child.db_update()
+
+
+def msgThrow(msg,method="throw",alert=False):
+    if method == "validate":
+        frappe.msgprint(msg,alert=alert)
+    else:
+        frappe.throw(msg)
