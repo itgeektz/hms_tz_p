@@ -7,7 +7,7 @@ import frappe
 from frappe import _
 from frappe.utils import nowdate, get_year_start, getdate, nowtime, add_to_date
 import datetime
-from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_service_unit, get_item_price, create_individual_lab_test, create_individual_radiology_examination, create_individual_procedure_prescription
+from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_service_unit, get_item_price, create_individual_lab_test, create_individual_radiology_examination, create_individual_procedure_prescription, msgThrow
 from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
 import time
 
@@ -33,18 +33,17 @@ def on_trash(doc, method):
                           pmr_doc.name, ignore_permissions=True)
 
 
-def validate(doc, method):
+def on_submit_validation(doc, method):
     if doc.encounter_type == "Initial":
         doc.reference_encounter = doc.name
-    checkـforـduplicate(doc)
+    checkـforـduplicate(doc, method)
     mtuha_missing = ""
     for final_diagnosis in doc.patient_encounter_final_diagnosis:
         if not final_diagnosis.mtuha:
             mtuha_missing += "-  <b>" + final_diagnosis.medical_code + "</b><br>"
 
     if mtuha_missing:
-        frappe.throw(
-            _("{0}<br>MTUHA Code not defined for the above diagnosis").format(mtuha_missing))
+        msgThrow(_("{0}<br>MTUHA Code not defined for the above diagnosis").format(mtuha_missing), method)
 
     insurance_subscription = doc.insurance_subscription
     child_tables = {
@@ -71,7 +70,7 @@ def validate(doc, method):
                             row.get(value)), alert=True)
             if not row.is_not_available_inhouse:
                 validate_stock_item(row.get(value), quantity, healthcare_service_unit=row.get(
-                    "healthcare_service_unit"))
+                    "healthcare_service_unit"), method=method)
     if prescribed_list:
         frappe.msgprint(
             _("{0}<BR>The above been prescribed. <b>Request the patient to visit the cashier for cash payment</b> or prescription printout.").format(prescribed_list))
@@ -111,8 +110,8 @@ def validate(doc, method):
                 for i in hsic_list:
                     items_list.append(i.healthcare_service_template)
             if row.get(value) not in items_list:
-                frappe.throw(_("{0} not covered in Healthcare Insurance Coverage Plan").format(
-                    row.get(value)))
+                msgThrow(_("{0} not covered in Healthcare Insurance Coverage Plan").format(
+                    row.get(value)), method)
             else:
                 maximum_number_of_claims = next(i for i in hsic_list if i["healthcare_service_template"] == row.get(
                     value)).get("maximum_number_of_claims")
@@ -142,14 +141,14 @@ def validate(doc, method):
     validate_totals(doc)
 
 
-def checkـforـduplicate(doc):
+def checkـforـduplicate(doc, method):
     items = []
     for item in doc.drug_prescription:
         if item.drug_code not in items:
             items.append(item.drug_code)
         else:
-            frappe.throw(_("Drug '{0}' is duplicated in line '{1}' in Drug Prescription").format(
-                item.drug_code, item.idx))
+            msgThrow(_("Drug '{0}' is duplicated in line '{1}' in Drug Prescription").format(
+                item.drug_code, item.idx), method)
 
 
 # def get_year_end(dt, as_str=False):
@@ -233,7 +232,7 @@ def get_stock_availability(item_code, warehouse):
 
 
 @frappe.whitelist()
-def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_service_unit=None, caller="Unknown"):
+def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_service_unit=None, caller="Unknown", method="throw"):
     # frappe.msgprint(_("{0} warehouse passed. <br> {1} healthcare service unit passed").format(warehouse, healthcare_service_unit), alert=True)
     if caller != "Drug Prescription" and not healthcare_service_unit:
         # LRPT code stock check goes here
@@ -252,18 +251,16 @@ def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_serv
         warehouse = get_warehouse_from_service_unit(healthcare_service_unit)
         # frappe.msgprint(_("{0} selected using {1}").format(warehouse, healthcare_service_unit), alert=True)
     if not warehouse:
-        frappe.throw(_("Warehouse is missing in healthcare service unit {0} when checking for {1}").format(
-            healthcare_service_unit, item_info.get("item_code")))
+        msgThrow(_("Warehouse is missing in healthcare service unit {0} when checking for {1}").format(
+            healthcare_service_unit, item_info.get("item_code")), method)
     if item_info.get("is_stock") and item_info.get("item_code"):
         stock_qty = get_stock_availability(
             item_info.get("item_code"), warehouse) or 0
         if float(qty) > float(stock_qty):
             # To be removed after few months of stability. 2021-03-18 17:01:46
             # This is to avoid socketio diconnection when bench is restarted but user session is on.
-            frappe.msgprint(_("The quantity required for the item {0} is INSUFFICIENT in {1}/{2}. Available quantity is {3}.").format(
-                item_info.get("item_code"), warehouse, healthcare_service_unit, stock_qty), alert=True)
-            frappe.throw(_("The quantity required for the item {0} is INSUFFICIENT in {1}/{2}. Available quantity is {3}.").format(
-                item_info.get("item_code"), warehouse, healthcare_service_unit, stock_qty))
+            msgThrow(_("The quantity required for the item {0} is INSUFFICIENT in {1}/{2}. Available quantity is {3}.").format(
+                item_info.get("item_code"), warehouse, healthcare_service_unit, stock_qty), method)
             return False
     if stock_qty > 0:
         frappe.msgprint(_("Available quantity for the item {0} in {1}/{2} is {3} pcs.").format(
@@ -272,6 +269,7 @@ def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_serv
 
 
 def on_submit(doc, method):
+    on_submit_validation(doc, method)
     create_healthcare_docs(doc)
     create_delivery_note(doc)
     update_inpatient_record_consultancy(doc)
