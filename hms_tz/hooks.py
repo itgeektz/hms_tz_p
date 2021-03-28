@@ -665,7 +665,7 @@ doc_events = {
     },
     "Patient Encounter": {
         "after_insert": "hms_tz.nhif.api.patient_encounter.after_insert",
-        "validate": "hms_tz.nhif.api.patient_encounter.validate",
+        "validate": "hms_tz.nhif.api.patient_encounter.on_submit_validation",
         "on_trash": "hms_tz.nhif.api.patient_encounter.on_trash",
         "on_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
         "before_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
@@ -724,11 +724,11 @@ scheduler_events = {
     # 	"all": [
     # 		"hms_tz.tasks.all"
     # 	],
-    # "cron": {
-    #     "*/5 * * * *": [
-    #         "hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"
-    #     ]
-    # },
+    "cron": {
+        "*/1 * * * *": [
+            "hms_tz.nhif.api.inpatient_record.real_auto_submit"
+        ]
+    },
     "daily": [
         "hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"
     ],
