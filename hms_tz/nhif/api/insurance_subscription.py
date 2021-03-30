@@ -24,11 +24,14 @@ def set_insurance_card_detail_in_patient(doc):
         fields = ["coverage_plan_card_number"]
     )
     str_coverage_plan_card_number = ""
+    card_count = 0
     for card in his_list:
         if card.coverage_plan_card_number:
+            card_count += 1
             str_coverage_plan_card_number += card.coverage_plan_card_number + ", "
     
-    frappe.set_value("Patient", doc.patient, "insurance_card_detail", str_coverage_plan_card_number)
+    if card_count > 1:
+        frappe.set_value("Patient", doc.patient, "insurance_card_detail", str_coverage_plan_card_number)
 
 
 @frappe.whitelist()

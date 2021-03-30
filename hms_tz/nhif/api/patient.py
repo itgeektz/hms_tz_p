@@ -34,7 +34,6 @@ def validate(doc, method):
     validate_mobile_number(doc.name, doc.mobile)
     if not doc.is_new():
         update_patient_history(doc)
-        create_subscription(doc)
 
 
 @frappe.whitelist()
@@ -167,4 +166,8 @@ def create_subscription(doc):
     sub_doc.save(ignore_permissions=True)
     sub_doc.submit()
     frappe.msgprint(
-        _("AUTO Healthcare Insurance Subscription {0} is created").format(sub_doc.name))
+        _("<h3>AUTO</h3> Healthcare Insurance Subscription {0} is created").format(sub_doc.name))
+
+def after_insert(doc, method):
+    doc.insurance_card_detail = doc.card_no + ", "
+    create_subscription(doc)
