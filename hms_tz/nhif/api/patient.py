@@ -34,6 +34,8 @@ def validate(doc, method):
     validate_mobile_number(doc.name, doc.mobile)
     if not doc.is_new():
         update_patient_history(doc)
+    else:
+        doc.insurance_card_detail = doc.card_no + ", "
 
 
 @frappe.whitelist()
