@@ -501,7 +501,7 @@ def create_individual_procedure_prescription(source_doc, child):
     child.db_update()
 
 
-def msgThrow(msg,method="throw",alert=False):
+def msgThrow(msg,method="throw",alert=True):
     if method == "validate":
         frappe.msgprint(msg,alert=alert)
     else:
