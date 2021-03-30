@@ -720,7 +720,6 @@ doc_events = {
         "on_update": "hms_tz.nhif.api.service_order.after_save",
     },
     "Sales Invoice": {
-        "before_submit": "hms_tz.nhif.api.sales_invoice.before_submit",
         "on_submit": "hms_tz.nhif.api.sales_invoice.create_healthcare_docs",
         "validate": "hms_tz.nhif.api.sales_invoice.validate",
     },
