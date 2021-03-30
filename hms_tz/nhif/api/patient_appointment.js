@@ -329,7 +329,7 @@ const load_print_page = function (invoice_name, pos_profile) {
     printWindow.addEventListener(
         "load",
         function () {
-            printWindow.print();
+            // printWindow.print();
         },
         true
     );
