@@ -17,11 +17,10 @@ def validate(doc, method):
 @frappe.whitelist()
 def create_pending_healthcare_docs(doc_name):
     doc = frappe.get_doc("Sales Invoice", doc_name)
-    create_healthcare_docs(doc, "From Front End")
-
-def before_submit(doc, method):
     if doc.is_pos and doc.outstanding_amount != 0:
         frappe.throw(_("Sales invoice not paid in full. Make sure that full paid amount is entered in Mode of Payments table."))
+    create_healthcare_docs(doc, "From Front End")
+
 
 def create_healthcare_docs(doc, method):
     for item in doc.items:
