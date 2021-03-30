@@ -297,6 +297,11 @@ fixtures = [
         "Healthcare Insurance Coverage Plan-nhif_scheme_id",
         "Prescription Dosage-dosage_form",
         "Prescription Dosage-column_break_1",
+        "Clinical Procedure-healthcare_notes_template",
+        "Clinical Procedure-mtuha",
+        "Clinical Procedure-section_break_0",
+        "Clinical Procedure-procedure_notes",
+        "Clinical Procedure-section_break_38",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -569,6 +574,16 @@ fixtures = [
         "Budget-budget_against-options",
         "Clinical Procedure-naming_series-options",
         "Patient Appointment-sb_source-depends_on",
+        "Healthcare Service Insurance Coverage-healthcare_service_template-in_standard_filter",
+        "Healthcare Service Insurance Coverage-healthcare_service-in_standard_filter",
+        "Lab Test-section_break_50-hidden",
+        "Inpatient Occupancy-invoiced-read_only",
+        "Patient-first_name-read_only_depends_on",
+        "Clinical Procedure-sb_refs-hidden",
+        "Clinical Procedure-sample-hidden",
+        "Clinical Procedure-start_time-hidden",
+        "Clinical Procedure-start_date-hidden",
+        "Patient Encounter-insurance_section-hidden",
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",
@@ -684,6 +699,7 @@ doc_events = {
     },
     "Patient": {
         "validate": "hms_tz.nhif.api.patient.validate",
+        "after_insert": "hms_tz.nhif.api.patient.after_insert",
     },
     "Healthcare Insurance Claim": {
         "before_insert": [
@@ -754,7 +770,7 @@ scheduler_events = {
     # 	],
     "cron": {
         "*/1 * * * *": [
-            "hms_tz.nhif.api.inpatient_record.real_auto_submit"
+            "hms_tz.nhif.api.service_order.real_auto_submit"
         ]
     },
     "daily": [
