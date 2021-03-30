@@ -262,9 +262,9 @@ def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_serv
             msgThrow(_("The quantity required for the item {0} is INSUFFICIENT in {1}/{2}. Available quantity is {3}.").format(
                 item_info.get("item_code"), warehouse, healthcare_service_unit, stock_qty), method)
             return False
-    if stock_qty > 0:
-        frappe.msgprint(_("Available quantity for the item {0} in {1}/{2} is {3} pcs.").format(
-            healthcare_service, warehouse, healthcare_service_unit, stock_qty), alert=True)
+    # if stock_qty > 0:
+    #     frappe.msgprint(_("Available quantity for the item {0} in {1}/{2} is {3} pcs.").format(
+    #         healthcare_service, warehouse, healthcare_service_unit, stock_qty), alert=True)
     return True
 
 
