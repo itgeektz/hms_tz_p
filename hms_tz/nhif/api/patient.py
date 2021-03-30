@@ -35,7 +35,7 @@ def validate(doc, method):
     if not doc.is_new():
         update_patient_history(doc)
     else:
-        doc.insurance_card_detail = doc.card_no + ", "
+        doc.insurance_card_detail = (doc.card_no or "") + ", "
 
 
 @frappe.whitelist()
@@ -149,11 +149,11 @@ def check_card_number(card_no, is_new=None, patient=None):
 
 
 def create_subscription(doc):
+    if not frappe.db.exists("NHIF Product", doc.product_code):
+        return
     subscription_list = frappe.get_all("Healthcare Insurance Subscription", filters={
                                        "patient": doc.name, "is_active": 1})
     if len(subscription_list) > 0 or not doc.product_code:
-        return
-    if not frappe.db.exists("NHIF Product", doc.product_code):
         return
     plan = frappe.get_value(
         "NHIF Product", doc.product_code, "healthcare_insurance_coverage_plan")
@@ -171,5 +171,7 @@ def create_subscription(doc):
         _("<h3>AUTO</h3> Healthcare Insurance Subscription {0} is created").format(sub_doc.name))
 
 def after_insert(doc, method):
-    doc.insurance_card_detail = doc.card_no + ", "
+    if not doc.card_no:
+        return
+    doc.insurance_card_detail = (doc.card_no or "") + ", "
     create_subscription(doc)
