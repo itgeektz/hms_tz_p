@@ -176,7 +176,9 @@ def validate_invoiced_inpatient(inpatient_record):
 		if service_unit_names:
 			pending_invoices.append("Inpatient Occupancy (" + service_unit_names + ")")
 
-	docs = ["Patient Appointment", "Patient Encounter", "Lab Test", "Clinical Procedure"]
+	# docs = ["Patient Appointment", "Patient Encounter", "Lab Test", "Clinical Procedure"]
+	# Changed on 2021-03-30 07:20:09 by MPCTZ to include only Patient Appointment
+	docs = ["Patient Appointment"]
 
 	for doc in docs:
 		doc_name_list = get_inpatient_docs_not_invoiced(doc, inpatient_record)
