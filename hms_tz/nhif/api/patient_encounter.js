@@ -255,7 +255,19 @@ frappe.ui.form.on('Patient Encounter', {
             }
         });
     },
-
+    undo_set_as_final: function (frm) {
+        if (!frm.doc.finalized) return;
+        frappe.call({
+            method: "hms_tz.nhif.api.patient_encounter.undo_finalized_encounter",
+            args: {
+                ref_encounter: frm.doc.reference_encounter,
+                cur_encounter: frm.doc.name,
+            },
+            callback: function (data) {
+                frm.reload_doc();
+            },
+        });
+    },
 });
 
 frappe.ui.form.on('Drug Prescription', {

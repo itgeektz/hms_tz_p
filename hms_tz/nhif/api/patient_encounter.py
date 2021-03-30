@@ -627,3 +627,18 @@ def before_submit(doc, method):
         if vfd_status == "Not Sent":
             frappe.throw(
                 _("The encounter cannot be submitted as the Sales Invoice has not been sent to VFD!<br><br>Click on Send to VFD before submitting.", "Cannot Submit Encounter"))
+
+@frappe.whitelist()
+def undo_finalized_encounter(cur_encounter, ref_encounter=None):
+    encounters_list = frappe.get_all("Patient Encounter", filters={
+        "docstatus": 1,
+        "reference_encounter": ref_encounter
+    })
+    for element in encounters_list:
+        frappe.set_value("Patient Encounter", element.name, "finalized", 0)
+    if not ref_encounter:
+        frappe.set_value("Patient Encounter", cur_encounter,
+                         "finalized", 0)
+        return
+    frappe.set_value("Patient Encounter", cur_encounter,
+                     "encounter_type", "Ongoing")
