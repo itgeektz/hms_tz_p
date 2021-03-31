@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals 
 import frappe
+from frappe import _
 # from frappe import _
 from hms_tz.nhif.api.patient import get_patient_info
 
@@ -51,3 +52,16 @@ def check_patient_info(patient, card_no, patient_name):
         patient_doc.membership_no = patient_info.get("membership_no")
         patient_doc.save(ignore_permissions=True)
     return patient_info.get("FullName")
+
+def before_insert(doc, method):
+    his_list = frappe.get_all("Healthcare Insurance Subscription",
+                              filters={
+                                  "patient": doc.patient,
+                                  "docstatus": 1,
+                                  "healthcare_insurance_coverage_plan": doc.healthcare_insurance_coverage_plan,
+                                  "coverage_plan_card_number": doc.coverage_plan_card_number
+                              },
+                              fields=["coverage_plan_card_number", "coverage_plan_name"]
+                              )
+    if his_list:
+        frappe.throw(_("The card {0} already exists for plan {1}").format(doc.coverage_plan_card_number, doc.coverage_plan_name))

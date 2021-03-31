@@ -724,6 +724,7 @@ doc_events = {
         "validate": "hms_tz.nhif.api.sales_invoice.validate",
     },
     "Healthcare Insurance Subscription": {
+        "before_insert": "hms_tz.nhif.api.insurance_subscription.before_insert",
         "on_submit": "hms_tz.nhif.api.insurance_subscription.on_submit",
         "before_cancel": "hms_tz.nhif.api.insurance_subscription.on_cancel",
     },
