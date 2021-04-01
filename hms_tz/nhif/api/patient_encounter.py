@@ -36,6 +36,13 @@ def on_trash(doc, method):
 def on_submit_validation(doc, method):
     if doc.encounter_type == "Initial":
         doc.reference_encounter = doc.name
+    submitting_healthcare_practitioner = frappe.db.get_value(
+        "Healthcare Practitioner", {"user_id": frappe.session.user}, ["name"])
+    if submitting_healthcare_practitioner:
+        doc.practitioner = submitting_healthcare_practitioner
+        # frappe.msgprint(_("Auto setting the Healthcare Practitioner to {0}").format(
+        #     submitting_healthcare_practitioner), alert=True)
+    frappe.throw("test")
     checkـforـduplicate(doc, method)
     mtuha_missing = ""
     for final_diagnosis in doc.patient_encounter_final_diagnosis:
