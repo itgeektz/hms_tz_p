@@ -42,7 +42,6 @@ def on_submit_validation(doc, method):
         doc.practitioner = submitting_healthcare_practitioner
         # frappe.msgprint(_("Auto setting the Healthcare Practitioner to {0}").format(
         #     submitting_healthcare_practitioner), alert=True)
-    frappe.throw("test")
     checkـforـduplicate(doc, method)
     mtuha_missing = ""
     for final_diagnosis in doc.patient_encounter_final_diagnosis:
