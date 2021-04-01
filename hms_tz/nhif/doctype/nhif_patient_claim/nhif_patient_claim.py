@@ -22,6 +22,8 @@ from PyPDF2 import PdfFileWriter
 class NHIFPatientClaim(Document):
     def validate(self):
         self.patient_encounters = self.get_patient_encounters()
+        from hms_tz.nhif.api.patient_encounter import finalized_encounter
+        finalized_encounter(self.patient_encounters[-1])
         self.set_claim_values()
 
     def on_trash(self):
@@ -72,8 +74,8 @@ class NHIFPatientClaim(Document):
                                             filters={
                                                 "appointment": self.patient_appointment,
                                                 "docstatus": 1,
-                                            }
-                                            )
+                                            },
+                                            order_by='`creation` ASC')
         return patient_encounters
 
     def set_patient_claim_disease(self):
