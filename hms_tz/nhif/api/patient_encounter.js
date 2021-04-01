@@ -208,6 +208,7 @@ frappe.ui.form.on('Patient Encounter', {
                 row.medical_code = element.medical_code;
                 row.code = element.code;
                 row.description = element.description;
+                row.mtuha = element.mtuha;
                 frappe.show_alert({
                     message: __(`Medical Code '${element.medical_code}' added successfully`),
                     indicator: 'green'
