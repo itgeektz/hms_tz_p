@@ -78,8 +78,8 @@ def on_submit_validation(doc, method):
                 validate_stock_item(row.get(value), quantity, healthcare_service_unit=row.get(
                     "healthcare_service_unit"), method=method)
     if prescribed_list:
-        frappe.msgprint(
-            _("{0}<BR>The above been prescribed. <b>Request the patient to visit the cashier for cash payment</b> or prescription printout.").format(prescribed_list))
+        msgThrow(
+            _("{0}<BR>The above been prescribed. <b>Request the patient to visit the cashier for cash payment</b> or prescription printout.").format(prescribed_list), method)
 
     if not insurance_subscription:
         return
