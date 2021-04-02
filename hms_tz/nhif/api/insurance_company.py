@@ -18,7 +18,6 @@ from frappe.model.naming import set_new_name
 def enqueue_get_nhif_price_package(company):
     enqueue(method=get_nhif_price_package, queue='long',
             timeout=10000000, is_async=True, kwargs=company)
-    frappe.msgprint(_("Getting NHIF Prices Packages"), alert=True)
     return
 
 
@@ -128,14 +127,12 @@ def get_nhif_price_package(kwargs):
 
 @frappe.whitelist()
 def process_nhif_records(company):
-    frappe.msgprint(_("Processing NHIF price lists"), alert=True)
     enqueue(method=process_prices_list, queue='long',
             timeout=10000000, is_async=True, kwargs=company)
-    frappe.msgprint(_("Processing NHIF Insurance Converages"), alert=True)
-    # process_insurance_coverages()
+    frappe.msgprint(_("Queued Processing NHIF price lists"), alert=True)
     enqueue(method=process_insurance_coverages, queue='long',
             timeout=10000000, is_async=True)
-    frappe.msgprint(_("Processing NHIF records completed"), alert=True)
+    frappe.msgprint(_("Queued Processing NHIF Insurance Coverages"), alert=True)
 
 def process_prices_list(kwargs):
     company = kwargs
@@ -327,14 +324,12 @@ def process_insurance_coverages():
         fields={"name", "nhif_scheme_id"},
         filters={"insurance_company_name": "NHIF", "is_active": 1}
     )
-    frappe.msgprint(str(coverage_plan_list))
 
     for plan in coverage_plan_list:
         insert_data = []
         time_stamp = now()
         user = frappe.session.user
         for item in items_list:
-            frappe.msgprint(plan.nhif_scheme_id + ":" + item.schemeid)
             if plan.nhif_scheme_id != item.schemeid:
                 continue
             excluded_services = get_excluded_services(item.ref_code)
@@ -353,22 +348,17 @@ def process_insurance_coverages():
 
             maximumquantity = 0
             isrestricted = 0
-            if excluded_services:
-                price_package = get_price_package(
-                    item.ref_code, excluded_services.schemeid)
-                if price_package:
-                    if price_package.maximumquantity and price_package.maximumquantity != "-1":
-                        maximumquantity = int(price_package.maximumquantity)
-                    if price_package.isrestricted:
-                        isrestricted = int(price_package.isrestricted)
+            price_package = get_price_package(item.ref_code, item.schemeid)
+            if price_package:
+                if price_package.maximumquantity and price_package.maximumquantity != "-1":
+                    maximumquantity = int(price_package.maximumquantity)
+                if price_package.isrestricted:
+                    isrestricted = int(price_package.isrestricted)
 
-            doc.maximum_number_of_claims = maximumquantity
-            doc.approval_mandatory_for_claim = isrestricted
-            doc.manual_approval_only = isrestricted
             set_new_name(doc)
 
             insert_data.append((
-                doc.approval_mandatory_for_claim,
+                isrestricted, # doc.approval_mandatory_for_claim,
                 doc.coverage,
                 time_stamp,
                 doc.discount,
@@ -377,8 +367,8 @@ def process_insurance_coverages():
                 doc.healthcare_service,
                 doc.healthcare_service_template,
                 doc.is_active,
-                doc.manual_approval_only,
-                doc.maximum_number_of_claims,
+                isrestricted, # doc.manual_approval_only,
+                maximumquantity, # doc.maximum_number_of_claims,
                 time_stamp,
                 user,
                 doc.name,
