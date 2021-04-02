@@ -209,10 +209,10 @@ frappe.ui.form.on('Patient Encounter', {
                 row.code = element.code;
                 row.description = element.description;
                 row.mtuha = element.mtuha;
-                frappe.show_alert({
-                    message: __(`Medical Code '${element.medical_code}' added successfully`),
-                    indicator: 'green'
-                }, 5);
+                // frappe.show_alert({
+                //     message: __(`Medical Code '${element.medical_code}' added successfully`),
+                //     indicator: 'green'
+                // }, 5);
             } else {
                 frappe.show_alert({
                     message: __(`Medical Code '${element.medical_code}' already exists`),
