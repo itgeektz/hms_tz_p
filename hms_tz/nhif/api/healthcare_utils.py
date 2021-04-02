@@ -27,8 +27,9 @@ def get_healthcare_services_to_invoice(patient, company, encounter=None, service
 
 
 def get_healthcare_service_order_to_invoice(patient, company, encounter, service_order_category=None, prescribed=None):
+    reference_encounter = frappe.get_value("Patient Encounter", encounter, "reference_encounter")
     encounter_dict = frappe.get_all("Patient Encounter", filters={
-        "reference_encounter": encounter,
+        "reference_encounter": reference_encounter,
         "docstatus": 1,
         'is_not_billable': 0
     })
@@ -42,7 +43,7 @@ def get_healthcare_service_order_to_invoice(patient, company, encounter, service
         'company': company,
         'order_group': ["in", encounter_list],
         'invoiced': 0,
-        'order_date': [">", add_days(nowdate(), -3)],
+        'creation': [">", add_days(nowdate(), -5)],
         'docstatus': 1
     }
 
