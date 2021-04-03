@@ -7,7 +7,7 @@ import frappe
 from frappe import _
 from frappe.utils import nowdate, get_year_start, getdate, nowtime, add_to_date
 import datetime
-from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_service_unit, get_item_price, create_individual_lab_test, create_individual_radiology_examination, create_individual_procedure_prescription, msgThrow
+from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_service_unit, get_item_price, create_individual_lab_test, create_individual_radiology_examination, create_individual_procedure_prescription, msgThrow, msgPrint
 from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
 import time
 
@@ -78,7 +78,7 @@ def on_submit_validation(doc, method):
                 validate_stock_item(row.get(value), quantity, healthcare_service_unit=row.get(
                     "healthcare_service_unit"), method=method)
     if prescribed_list:
-        msgThrow(
+        msgPrint(
             _("{0}<BR>The above been prescribed. <b>Request the patient to visit the cashier for cash payment</b> or prescription printout.").format(prescribed_list), method)
 
     if not insurance_subscription:
