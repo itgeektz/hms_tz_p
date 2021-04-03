@@ -57,7 +57,8 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Diagnosis Type",
-   "read_only": 1
+   "permlevel": 1,
+   "reqd": 1
   },
   {
    "fieldname": "medical_code",
@@ -65,7 +66,7 @@
    "in_list_view": 1,
    "label": "Medical Code",
    "options": "Medical Code",
-   "read_only": 1
+   "permlevel": 1
   },
   {
    "fetch_from": "medical_code.description",
@@ -97,7 +98,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2020-12-17 22:58:36.218748",
+ "modified": "2021-04-03 14:33:31.981143",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim Disease",
