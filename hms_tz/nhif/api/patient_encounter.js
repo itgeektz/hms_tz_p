@@ -223,6 +223,25 @@ frappe.ui.form.on('Patient Encounter', {
         refresh_field('patient_encounter_final_diagnosis');
         set_medical_code(frm);
     },
+    encounter_category: function (frm) {
+        if (frm.doc.patient_encounter_preliminary_diagnosis && frm.doc.patient_encounter_preliminary_diagnosis.length > 0) {
+            return;
+        } else if (frm.doc.encounter_category.includes("Direct Cash")) {
+            let preliminary_row = frappe.model.add_child(frm.doc, "Codification Table", "patient_encounter_preliminary_diagnosis");
+            preliminary_row.medical_code = "ICD-10 R69";
+            preliminary_row.code = "R69";
+            preliminary_row.description = "Illness, unspecified";
+            preliminary_row.mtuha = "Other";
+            refresh_field('patient_encounter_preliminary_diagnosis');
+            let final_row = frappe.model.add_child(frm.doc, "Codification Table", "patient_encounter_final_diagnosis");
+            final_row.medical_code = "ICD-10 R69";
+            final_row.code = "R69";
+            final_row.description = "Illness, unspecified";
+            final_row.mtuha = "Other";
+            refresh_field('patient_encounter_final_diagnosis');
+        }
+
+    },
     create_sales_invoice: function (frm) {
         if (frm.doc.docstatus != 0 || !frm.doc.encounter_mode_of_payment || !frm.doc.encounter_category || frm.doc.sales_invoice) {
             frappe.show_alert(__("The criteria for this button to work not met!"))
