@@ -66,8 +66,9 @@ class NHIFPatientClaim(Document):
             "Patient Appointment", self.patient_appointment, "appointment_date")
         self.patient_type_code = "OUT" if not inpatient_record else "IN"
         self.patient_file_no = self.get_patient_file_no()
-        self.set_patient_claim_disease()
-        self.set_patient_claim_item()
+        if not self.nhif_patient_claim_disease:
+            self.set_patient_claim_disease()
+            self.set_patient_claim_item()
 
     def get_patient_encounters(self):
         patient_encounters = frappe.get_all("Patient Encounter",
