@@ -14,6 +14,7 @@ import time
 
 def after_insert(doc, method):
     doc.sales_invoice = ""
+    doc.is_not_billable = 0
     doc.save()
     doc.reload()
 
@@ -183,7 +184,7 @@ def duplicate_encounter(encounter):
     }
 
     fields_to_clear = ['name', 'owner', 'creation', 'modified', 'modified_by',
-                       'docstatus', 'amended_from', 'amendment_date', 'parentfield', 'parenttype', 'sales_invoice']
+                       'docstatus', 'amended_from', 'amendment_date', 'parentfield', 'parenttype', 'sales_invoice', 'is_not_billable']
 
     for key, value in child_tables.items():
         cur_table = encounter_dict.get(key)
@@ -280,8 +281,8 @@ def on_submit(doc, method):
     create_delivery_note(doc)
     update_inpatient_record_consultancy(doc)
     frappe.db.commit()
-    # frappe.enqueue(method=enqueue_on_update_after_submit, queue='short',
-    #                timeout=10000, is_async=True, kwargs=doc.name)
+    frappe.enqueue(method=enqueue_on_update_after_submit, queue='long',
+                   timeout=300, is_async=True, **{"doc_name": doc.name})
 
 
 @frappe.whitelist()
@@ -611,15 +612,20 @@ def on_update_after_submit(doc, method):
                     if child.drug_prescription_created == 0:
                         services_created_pending = 1
                         break
-    # if services_created_pending == 0:
-    #     doc.db_set("is_not_billable", 1)
-    # else:
-    #     doc.db_set("is_not_billable", 0)
+    if services_created_pending == 0:
+        doc.is_not_billable = 1
+        frappe.msgprint("done doc.is_not_billable = 1")
+    else:
+        doc.is_not_billable = 0
+        frappe.msgprint("done doc.is_not_billable = 0")
+    if method == "enqueue":
+        frappe.msgprint("done method enqueue db commit")
+        doc.db_update()
 
 
-def enqueue_on_update_after_submit(kwargs):
+def enqueue_on_update_after_submit(doc_name):
     time.sleep(5)
-    on_update_after_submit(frappe.get_doc("Patient Encounter", kwargs), "enqueue")
+    on_update_after_submit(frappe.get_doc("Patient Encounter", doc_name), "enqueue")
 
 
 def before_submit(doc, method):
