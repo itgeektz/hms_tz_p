@@ -290,6 +290,10 @@ fixtures = [
         "Clinical Procedure-service_comment",
         "Sales Invoice Payment-payment_reference",
         "Patient Appointment-follow_up",
+        "Inpatient Consultancy-is_confirmed",
+        "Inpatient Occupancy-is_confirmed",
+        "Healthcare Service Unit-is_consultancy_chargeable",
+        "Healthcare Service Unit-is_service_chargeable",
         "Patient Encounter-old_hms_registration_no",
         "Prescription Dosage-section_break_3",
         "Radiology Examination-service_comment",
@@ -310,6 +314,7 @@ fixtures = [
         "Patient Encounter-undo_set_as_final",
         "Healthcare Practitioner-bypass_vitals",
     )]]},
+        "Prescription Dosage-default_strength",
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
         "Appointment Type-main-sort_order",
@@ -730,7 +735,7 @@ doc_events = {
         "on_trash": "hms_tz.nhif.api.patient_encounter.on_trash",
         "on_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
         "before_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
-        # "on_update_after_submit": "hms_tz.nhif.api.patient_encounter.on_update_after_submit",
+        "on_update_after_submit": "hms_tz.nhif.api.patient_encounter.on_update_after_submit",
     },
     "Healthcare Service Order": {
         "before_insert": "hms_tz.nhif.api.service_order.set_missing_values",
@@ -771,6 +776,9 @@ doc_events = {
     },
     "Inpatient Record": {
         "validate": "hms_tz.nhif.api.inpatient_record.validate",
+    },
+    "Prescription Dosage": {
+        "before_insert": "hms_tz.nhif.api.prescription_dosage.before_insert",
     },
 }
 
