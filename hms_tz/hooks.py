@@ -306,7 +306,7 @@ fixtures = [
         "Clinical Procedure-section_break_0",
         "Clinical Procedure-procedure_notes",
         "Clinical Procedure-section_break_38",
-    )]]},
+        "Prescription Dosage-default_strength",
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
         "Appointment Type-main-sort_order",
@@ -717,7 +717,7 @@ doc_events = {
         "on_trash": "hms_tz.nhif.api.patient_encounter.on_trash",
         "on_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
         "before_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
-        # "on_update_after_submit": "hms_tz.nhif.api.patient_encounter.on_update_after_submit",
+        "on_update_after_submit": "hms_tz.nhif.api.patient_encounter.on_update_after_submit",
     },
     "Healthcare Service Order": {
         "before_insert": "hms_tz.nhif.api.service_order.set_missing_values",
@@ -758,6 +758,9 @@ doc_events = {
     },
     "Inpatient Record": {
         "validate": "hms_tz.nhif.api.inpatient_record.validate",
+    },
+    "Prescription Dosage": {
+        "before_insert": "hms_tz.nhif.api.prescription_dosage.before_insert",
     },
 }
 
