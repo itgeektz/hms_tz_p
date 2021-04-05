@@ -290,6 +290,10 @@ fixtures = [
         "Clinical Procedure-service_comment",
         "Sales Invoice Payment-payment_reference",
         "Patient Appointment-follow_up",
+        "Inpatient Consultancy-is_confirmed",
+        "Inpatient Occupancy-is_confirmed",
+        "Healthcare Service Unit-is_consultancy_chargeable",
+        "Healthcare Service Unit-is_service_chargeable",
         "Patient Encounter-old_hms_registration_no",
         "Prescription Dosage-section_break_3",
         "Radiology Examination-service_comment",
@@ -303,7 +307,7 @@ fixtures = [
         "Clinical Procedure-procedure_notes",
         "Clinical Procedure-section_break_38",
         "Patient Appointment-ref_patient_encounter",
-    )]]},
+        "Prescription Dosage-default_strength",
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
         "Appointment Type-main-sort_order",
@@ -755,6 +759,9 @@ doc_events = {
     },
     "Inpatient Record": {
         "validate": "hms_tz.nhif.api.inpatient_record.validate",
+    },
+    "Prescription Dosage": {
+        "before_insert": "hms_tz.nhif.api.prescription_dosage.before_insert",
     },
 }
 
