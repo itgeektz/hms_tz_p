@@ -18,11 +18,11 @@ frappe.ui.form.on('Inpatient Record', {
 	},
 
 	refresh: function(frm) {
-		if (!frm.doc.__islocal && (frm.doc.status == 'Admission Scheduled' || frm.doc.status == 'Admitted')) {
-			frm.enable_save();
-		} else {
-			frm.disable_save();
-		}
+		// if (!frm.doc.__islocal && (frm.doc.status == 'Admission Scheduled' || frm.doc.status == 'Admitted')) {
+		frm.enable_save();
+		// } else {
+		// 	frm.disable_save();
+		// }
 
 		if (!frm.doc.__islocal && frm.doc.status == 'Admission Scheduled') {
 			frm.add_custom_button(__('Admit'), function() {
@@ -43,7 +43,7 @@ frappe.ui.form.on('Inpatient Record', {
 			},'View');
 		}
 		if (!frm.doc.__islocal && frm.doc.status != 'Admitted') {
-			frm.disable_save();
+			// frm.disable_save();
 			frm.set_df_property('btn_transfer', 'hidden', 1);
 		} else {
 			frm.set_df_property('btn_transfer', 'hidden', 0);

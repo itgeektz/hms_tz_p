@@ -27,8 +27,9 @@ def get_healthcare_services_to_invoice(patient, company, encounter=None, service
 
 
 def get_healthcare_service_order_to_invoice(patient, company, encounter, service_order_category=None, prescribed=None):
+    reference_encounter = frappe.get_value("Patient Encounter", encounter, "reference_encounter")
     encounter_dict = frappe.get_all("Patient Encounter", filters={
-        "reference_encounter": encounter,
+        "reference_encounter": reference_encounter,
         "docstatus": 1,
         'is_not_billable': 0
     })
@@ -42,7 +43,7 @@ def get_healthcare_service_order_to_invoice(patient, company, encounter, service
         'company': company,
         'order_group': ["in", encounter_list],
         'invoiced': 0,
-        'order_date': [">", add_days(nowdate(), -3)],
+        'creation': [">", add_days(nowdate(), -5)],
         'docstatus': 1
     }
 
@@ -133,7 +134,7 @@ def get_item_rate(item_code, company, insurance_subscription, insurance_company)
         price_list_rate = get_item_price(item_code, price_list, company)
     if price_list_rate == (0 or None):
         frappe.throw(
-            _("Please set Price List for item: {0}").format(item_code))
+            _("Please set Price List for item: {0} in price list {1}").format(item_code, price_list))
     return price_list_rate
 
 
@@ -426,15 +427,15 @@ def create_individual_lab_test(source_doc, child):
     doc.service_comment = (child.medical_code or "No ICD Code") + \
         " : " + (child.lab_test_comment or "No Comment")
 
+    doc.save(ignore_permissions=True)
     if doc.get('name'):
         frappe.msgprint(_('Lab Test {0} created successfully.').format(
             frappe.bold(doc.name)))
-        child.lab_test_created = 1
-        child.lab_test = doc.name
-        child.db_update()
 
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    child.lab_test_created = 1
+    child.lab_test = doc.name
+    child.db_update()
+
 
 def create_individual_radiology_examination(source_doc, child):
     if child.radiology_examination_created == 1:
@@ -458,15 +459,14 @@ def create_individual_radiology_examination(source_doc, child):
     doc.service_comment = (child.medical_code or "No ICD Code") + " : " + \
         (child.radiology_test_comment or "No Comment")
 
+    doc.save(ignore_permissions=True)
     if doc.get('name'):
         frappe.msgprint(_('Radiology Examination {0} created successfully.').format(
             frappe.bold(doc.name)))
-        child.radiology_examination_created = 1
-        child.radiology_examination = doc.name
-        child.db_update()
 
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    child.radiology_examination_created = 1
+    child.radiology_examination = doc.name
+    child.db_update()
 
 def create_individual_procedure_prescription(source_doc, child):
     if child.procedure_created == 1:
@@ -492,11 +492,25 @@ def create_individual_procedure_prescription(source_doc, child):
     doc.service_comment = (child.medical_code or "No ICD Code") + \
         " : " + (child.comments or "No Comment")
 
+    doc.save(ignore_permissions=True)
     if doc.get('name'):
         frappe.msgprint(_('Clinical Procedure {0} created successfully.').format(
             frappe.bold(doc.name)))
-        child.procedure_created = 1
-        child.clinical_procedure = doc.name
-        child.db_update()
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
+
+    child.procedure_created = 1
+    child.clinical_procedure = doc.name
+    child.db_update()
+
+
+def msgThrow(msg,method="throw",alert=True):
+    if method == "validate":
+        frappe.msgprint(msg,alert=alert)
+    else:
+        frappe.throw(msg)
+
+
+def msgPrint(msg, method="throw", alert=False):
+    if method == "validate":
+        frappe.msgprint(msg, alert=True)
+    else:
+        frappe.msgprint(msg, alert=alert)

@@ -25,7 +25,7 @@ frappe.ui.form.on('Patient', {
 			});
 		}
 
-		if (frm.doc.patient_name && frappe.user.has_role('Physician')) {
+		if (frm.doc.patient_name && frappe.user.has_role('Healthcare Practitioner')) {
 			frm.add_custom_button(__('Patient History'), function() {
 				frappe.route_options = {'patient': frm.doc.name};
 				frappe.set_route('patient_history');
@@ -42,7 +42,7 @@ frappe.ui.form.on('Patient', {
 		frm.toggle_display(['address_html','contact_html'], !frm.doc.__islocal);
 
 		if (!frm.is_new()) {
-			if((frappe.user.has_role('Nursing User') || frappe.user.has_role('Physician'))){
+			if ((frappe.user.has_role('Healthcare Nursing') || frappe.user.has_role('Healthcare Practitioner'))){
 				frm.add_custom_button(__('Vital Signs'), function () {
 					create_vital_signs(frm);
 				}, 'Create');

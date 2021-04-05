@@ -294,6 +294,18 @@ fixtures = [
         "Inpatient Occupancy-is_confirmed",
         "Healthcare Service Unit-is_consultancy_chargeable",
         "Healthcare Service Unit-is_service_chargeable",
+        "Patient Encounter-old_hms_registration_no",
+        "Prescription Dosage-section_break_3",
+        "Radiology Examination-service_comment",
+        "Lab Test-service_comment",
+        "Healthcare Insurance Coverage Plan-nhif_scheme_id",
+        "Prescription Dosage-dosage_form",
+        "Prescription Dosage-column_break_1",
+        "Clinical Procedure-healthcare_notes_template",
+        "Clinical Procedure-mtuha",
+        "Clinical Procedure-section_break_0",
+        "Clinical Procedure-procedure_notes",
+        "Clinical Procedure-section_break_38",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -526,6 +538,56 @@ fixtures = [
         "Sales Invoice-sales_team_section_break-hidden",
         "Sales Invoice-debit_to-permlevel",
         "Sales Invoice-column_break4-permlevel",
+        "Patient Encounter-practitioner-default",
+        "Patient Encounter-practitioner-mandatory_depends_on",
+        "Patient Encounter-appointment_type-mandatory_depends_on",
+        "Patient Encounter-appointment_type-hidden",
+        "Patient Appointment-main-default_print_format",
+        "Patient Encounter-encounter_time-read_only",
+        "Patient Encounter-encounter_date-read_only",
+        "Inpatient Consultancy-confirmed-permlevel"
+        "Radiology Examination-practitioner-in_standard_filter",
+        "Healthcare Practitioner-main-search_fields",
+        "Chronic Medications-period-fetch_if_empty",
+        "Chronic Medications-dosage-fetch_if_empty",
+        "Sales Invoice-edit_printing_settings-depends_on",
+        "Sales Invoice-terms_section_break-depends_on",
+        "Sales Invoice-subscription_section-depends_on",
+        "Sales Invoice-more_info-depends_on",
+        "Sales Invoice-tax_category-depends_on",
+        "Sales Invoice-shipping_rule-depends_on",
+        "Sales Invoice-address_and_contact-depends_on",
+        "Sales Invoice-update_stock-depends_on",
+        "Sales Invoice-customer_po_details-depends_on",
+        "Vital Signs-main-allow_rename",
+        "Healthcare Service Order-patient_name-in_list_view",
+        "Healthcare Service Order-order_group-in_list_view",
+        "Healthcare Service Order-patient-in_standard_filter",
+        "Clinical Procedure-main-allow_copy",
+        "Healthcare Service Order-main-allow_copy",
+        "Healthcare Service Order-order_group-in_standard_filter",
+        "Healthcare Insurance Subscription-insurance_company_name-in_standard_filter",
+        "Healthcare Insurance Subscription-patient-in_standard_filter",
+        "Delivery Note Item-batch_no-hidden",
+        "Delivery Note Item-warehouse-columns",
+        "Delivery Note Item-qty-columns",
+        "Delivery Note Item-section_break_6-columns",
+        "Delivery Note Item-rate-in_list_view",
+        "Delivery Note Item-uom-in_list_view",
+        "Delivery Note Item-description-in_list_view",
+        "Budget-budget_against-options",
+        "Clinical Procedure-naming_series-options",
+        "Patient Appointment-sb_source-depends_on",
+        "Healthcare Service Insurance Coverage-healthcare_service_template-in_standard_filter",
+        "Healthcare Service Insurance Coverage-healthcare_service-in_standard_filter",
+        "Lab Test-section_break_50-hidden",
+        "Inpatient Occupancy-invoiced-read_only",
+        "Patient-first_name-read_only_depends_on",
+        "Clinical Procedure-sb_refs-hidden",
+        "Clinical Procedure-sample-hidden",
+        "Clinical Procedure-start_time-hidden",
+        "Clinical Procedure-start_date-hidden",
+        "Patient Encounter-insurance_section-hidden",
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",
@@ -641,6 +703,7 @@ doc_events = {
     },
     "Patient": {
         "validate": "hms_tz.nhif.api.patient.validate",
+        "after_insert": "hms_tz.nhif.api.patient.after_insert",
     },
     "Healthcare Insurance Claim": {
         "before_insert": [
@@ -650,21 +713,22 @@ doc_events = {
     },
     "Patient Encounter": {
         "after_insert": "hms_tz.nhif.api.patient_encounter.after_insert",
-        "validate": "hms_tz.nhif.api.patient_encounter.validate",
+        "validate": "hms_tz.nhif.api.patient_encounter.on_submit_validation",
         "on_trash": "hms_tz.nhif.api.patient_encounter.on_trash",
         "on_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
-        "on_update_after_submit": "hms_tz.nhif.api.patient_encounter.on_update_after_submit",
+        "before_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
+        # "on_update_after_submit": "hms_tz.nhif.api.patient_encounter.on_update_after_submit",
     },
     "Healthcare Service Order": {
         "before_insert": "hms_tz.nhif.api.service_order.set_missing_values",
         "on_update": "hms_tz.nhif.api.service_order.after_save",
     },
     "Sales Invoice": {
-        "before_submit": "hms_tz.nhif.api.sales_invoice.before_submit",
         "on_submit": "hms_tz.nhif.api.sales_invoice.create_healthcare_docs",
         "validate": "hms_tz.nhif.api.sales_invoice.validate",
     },
     "Healthcare Insurance Subscription": {
+        "before_insert": "hms_tz.nhif.api.insurance_subscription.before_insert",
         "on_submit": "hms_tz.nhif.api.insurance_subscription.on_submit",
         "before_cancel": "hms_tz.nhif.api.insurance_subscription.on_cancel",
     },
@@ -690,6 +754,7 @@ doc_events = {
         "validate": "hms_tz.nhif.api.delivery_note.validate",
         "onload": "hms_tz.nhif.api.delivery_note.onload",
         "after_insert": "hms_tz.nhif.api.delivery_note.after_insert",
+        "before_submit": "hms_tz.nhif.api.delivery_note.before_submit",
     },
     "Inpatient Record": {
         "validate": "hms_tz.nhif.api.inpatient_record.validate",
@@ -707,11 +772,11 @@ scheduler_events = {
     # 	"all": [
     # 		"hms_tz.tasks.all"
     # 	],
-    # "cron": {
-    #     "*/5 * * * *": [
-    #         "hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"
-    #     ]
-    # },
+    "cron": {
+        "*/1 * * * *": [
+            "hms_tz.nhif.api.service_order.real_auto_submit"
+        ]
+    },
     "daily": [
         "hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"
     ],

@@ -34,8 +34,8 @@ def validate_inpatient_occupancies(doc):
         if row.service_unit != old_row.service_unit:
             valide = False
         if not valide:
-            frappe.throw(
-                _("In Inpatient Occupancy line '{0}' has been invoiced. It cannot be modified or deleted").format(old_row.idx))
+            frappe.msgprint(
+                _("In Inpatient Occupancy line '{0}' has been invoiced. It should not be modified or deleted").format(old_row.idx))
 
 
 def daily_update_inpatient_occupancies():

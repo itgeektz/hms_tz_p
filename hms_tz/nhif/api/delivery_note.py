@@ -53,3 +53,8 @@ def set_missing_values(doc):
         if doc.reference_doctype == "Patient Encounter":
             doc.patient = frappe.get_value(
                 "Patient Encounter", doc.reference_name, "patient")
+
+def before_submit(doc, method):
+    for item in doc.items:
+        if item.is_restricted and not item.approval_number:
+            frappe.throw(_("Approval number required for {0}. Please open line {1} and set the Approval Number.").format(item.item_name, item.idx))

@@ -56,11 +56,11 @@ frappe.ui.form.on('Inpatient Occupancy', {
 });
 
 const control_inpatient_record_permissing = (frm, cdt, cdn) => {
-    let row = frappe.get_doc(cdt, cdn);
-    if (row.is_confirmed) {
-        frm.reload_doc();
-        frappe.throw(__(`This line has been invoiced. It cannot be modified or deleted`));
-    }
+    // let row = frappe.get_doc(cdt, cdn);
+    // if (row.invoiced) {
+    //     frm.reload_doc();
+    //     frappe.throw(__(`This line has been invoiced. It cannot be modified or deleted`));
+    // }
 };
 
 const control_inpatient_record_move = (frm, cdt, cdn) => {
