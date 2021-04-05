@@ -302,7 +302,7 @@ fixtures = [
         "Clinical Procedure-section_break_0",
         "Clinical Procedure-procedure_notes",
         "Clinical Procedure-section_break_38",
-    )]]},
+        "Prescription Dosage-default_strength",
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
         "Appointment Type-main-sort_order",
@@ -754,6 +754,9 @@ doc_events = {
     },
     "Inpatient Record": {
         "validate": "hms_tz.nhif.api.inpatient_record.validate",
+    },
+    "Prescription Dosage": {
+        "before_insert": "hms_tz.nhif.api.prescription_dosage.before_insert",
     },
 }
 
