@@ -127,7 +127,7 @@ def invoice_appointment(name):
         appointment_doc.ref_sales_invoice = sales_invoice.name
         appointment_doc.invoiced = 1
         appointment_doc.db_update()
-        make_vital(appointment_doc, 'patient_appointment')
+        make_next_doc(appointment_doc, "validate")
         return "true"
 
 
@@ -178,10 +178,17 @@ def make_vital(appointment_doc, method):
             vital_doc.name)))
 
 
-def make_encounter(vital_doc, method):
-    if not vital_doc.appointment or vital_doc.inpatient_record:
+def make_encounter(doc, method):
+    if doc.is_new():
         return
-    source_name = vital_doc.appointment
+    if doc.doctype == "Vital Signs":
+        if not doc.appointment or doc.inpatient_record:
+            return
+        source_name = doc.appointment
+    elif doc.doctype == "Patient Appointment":
+        if not doc.authorization_number or doc.ref_patient_encounter:
+            return
+        source_name = doc.name
     target_doc = None
     encounter_doc = get_mapped_doc('Patient Appointment', source_name, {
         'Patient Appointment': {
@@ -201,6 +208,9 @@ def make_encounter(vital_doc, method):
     encounter_doc.encounter_category = "Appointment"
 
     encounter_doc.save(ignore_permissions=True)
+    if doc.doctype == "Patient Appointment":
+        doc.ref_patient_encounter = encounter_doc.name
+
     frappe.msgprint(_('Patient Encounter {0} created'.format(
         encounter_doc.name)))
 
@@ -301,10 +311,6 @@ def get_previous_appointment(patient, filters=None):
         return appointments[0]
 
 
-def before_insert(doc, method):
-    if doc.inpatient_record:
-        frappe.throw(_("You cannot create an appointment for a patient already admitted.<br>First <b>discharge the patient</b> and then create the appointment."))
-
 def set_follow_up(appointment_doc, method):
     filters = {
         "name": ['!=', appointment_doc.name],
@@ -321,3 +327,13 @@ def set_follow_up(appointment_doc, method):
         else:
             appointment_doc.follow_up = 0
             # frappe.msgprint(_("This appointment requires to be paid for!"), alert=True)
+
+def make_next_doc(doc, method):
+    if doc.inpatient_record:
+        frappe.throw(_("You cannot create an appointment for a patient already admitted.<br>First <b>discharge the patient</b> and then create the appointment."))
+    if doc.is_new():
+        return
+    if frappe.get_value("Healthcare Practitioner", doc.practitioner, "bypass_vitals"):
+        make_encounter(doc, "validate")
+    else:
+        make_vital(doc, 'patient_appointment')

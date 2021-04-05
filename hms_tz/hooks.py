@@ -302,6 +302,7 @@ fixtures = [
         "Clinical Procedure-section_break_0",
         "Clinical Procedure-procedure_notes",
         "Clinical Procedure-section_break_38",
+        "Patient Appointment-ref_patient_encounter",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -691,7 +692,7 @@ inpatient_record_list_js = {"doctype": "nhif/api/inpatient_record_list.js"}
 doc_events = {
     "Patient Appointment": {
         "validate": [
-            "hms_tz.nhif.api.patient_appointment.make_vital",
+            "hms_tz.nhif.api.patient_appointment.make_next_doc",
         ]
     },
     "Vital Signs": {
