@@ -21,7 +21,7 @@ def validate_inpatient_occupancies(doc):
     count = 0
     for old_row in old_doc.inpatient_occupancies:
         count += 1
-        if not old_row.invoiced:
+        if not old_row.is_confirmed:
             continue
         valide = True
         row = doc.inpatient_occupancies[count-1]
@@ -92,7 +92,7 @@ def confirmed(row, doc):
     if item_rate:
         delivery_note = create_delivery_note(encounter, item_code, item_rate, warehouse,
                                              row, doc.primary_practitioner)
-        frappe.set_value(row.doctype, row.name, "invoiced", 1)
+        frappe.set_value(row.doctype, row.name, "is_confirmed", 1)
         return delivery_note
 
 
@@ -102,9 +102,6 @@ def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practi
     if not insurance_subscription:
         return
 
-    is_stock = frappe.get_value("Item", item_code, "is_stock_item")
-    if not is_stock:
-        return
     items = []
     item = frappe.new_doc("Delivery Note Item")
     item.item_code = item_code
