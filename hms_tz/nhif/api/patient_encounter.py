@@ -614,12 +614,12 @@ def on_update_after_submit(doc, method):
                         break
     if services_created_pending == 0:
         doc.is_not_billable = 1
-        frappe.msgprint("done doc.is_not_billable = 1")
+        # frappe.msgprint("done doc.is_not_billable = 1")
     else:
         doc.is_not_billable = 0
-        frappe.msgprint("done doc.is_not_billable = 0")
+        # frappe.msgprint("done doc.is_not_billable = 0")
     if method == "enqueue":
-        frappe.msgprint("done method enqueue db commit")
+        # frappe.msgprint("done method enqueue db commit")
         doc.db_update()
 
 
