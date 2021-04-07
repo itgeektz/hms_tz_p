@@ -323,8 +323,6 @@ fixtures = [
         "Inpatient Record-price_list",
         "Inpatient Occupancy-amount",
     )]]},
-        "Patient Appointment-ref_patient_encounter",
-        "Prescription Dosage-default_strength",
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
         "Appointment Type-main-sort_order",
@@ -630,7 +628,6 @@ fixtures = [
         "Drug Prescription-period-columns",
         "Drug Prescription-dosage-columns",
         "Drug Prescription-drug_code-columns",
-        "Employee-image-hidden",
         "Healthcare Insurance Company-customer-read_only",
         "Healthcare Insurance Claim-service_template-in_standard_filter",
         "Healthcare Insurance Claim-service_template-in_list_view",
