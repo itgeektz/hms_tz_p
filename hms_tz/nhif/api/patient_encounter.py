@@ -281,8 +281,8 @@ def on_submit(doc, method):
     create_delivery_note(doc)
     update_inpatient_record_consultancy(doc)
     frappe.db.commit()
-    frappe.enqueue(method=enqueue_on_update_after_submit, queue='long',
-                   timeout=300, is_async=True, **{"doc_name": doc.name})
+    # frappe.enqueue(method=enqueue_on_update_after_submit, queue='long',
+    #                timeout=300, is_async=True, **{"doc_name": doc.name})
 
 
 @frappe.whitelist()
