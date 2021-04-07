@@ -240,6 +240,7 @@ frappe.ui.form.on('Patient Encounter', {
             final_row.mtuha = "Other";
             refresh_field('patient_encounter_final_diagnosis');
         }
+        set_medical_code(frm);
 
     },
     create_sales_invoice: function (frm) {
