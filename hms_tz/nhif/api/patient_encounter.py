@@ -204,8 +204,7 @@ def duplicate_encounter(encounter):
     encounter_doc.save(ignore_permissions=True)
     frappe.msgprint(
         _('Patient Encounter {0} created'.format(encounter_doc.name)))
-    doc.duplicated = 1
-    doc.save()
+    frappe.db.update(doc.doctype, doc.name, {"duplicated": 1})
     return encounter_doc.name
 
 
