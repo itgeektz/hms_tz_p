@@ -13,9 +13,7 @@ import time
 
 
 def after_insert(doc, method):
-    doc.sales_invoice = ""
-    doc.save()
-    doc.reload()
+    frappe.db.update(doc.doctype, doc.name, {"sales_invoice": "", "is_not_billable": 0})
 
 
 def on_trash(doc, method):
