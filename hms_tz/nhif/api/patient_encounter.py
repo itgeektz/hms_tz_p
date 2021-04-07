@@ -262,7 +262,7 @@ def validate_stock_item(healthcare_service, qty, warehouse=None, healthcare_serv
         if float(qty) > float(stock_qty):
             # To be removed after few months of stability. 2021-03-18 17:01:46
             # This is to avoid socketio diconnection when bench is restarted but user session is on.
-            msgThrow(_("The quantity required for the item {0} is INSUFFICIENT in {1}/{2}. Available quantity is {3}.").format(
+            msgThrow(_("Available quantity for item: <h4 style='background-color: LightCoral'>{0} is {3}</h4>In {1}/{2}.").format(
                 item_info.get("item_code"), warehouse, healthcare_service_unit, stock_qty), method)
             return False
     # if stock_qty > 0:
@@ -276,7 +276,6 @@ def on_submit(doc, method):
     create_healthcare_docs(doc)
     create_delivery_note(doc)
     update_inpatient_record_consultancy(doc)
-    frappe.db.commit()
     # frappe.enqueue(method=enqueue_on_update_after_submit, queue='long',
     #                timeout=300, is_async=True, **{"doc_name": doc.name})
 
