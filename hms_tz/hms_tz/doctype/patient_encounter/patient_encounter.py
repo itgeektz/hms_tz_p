@@ -128,7 +128,7 @@ def create_healthcare_service_order(encounter):
 				'order_description': medication.get_value('description'),
 				'intent': drug.get_value('intent'),
 				'priority': drug.get_value('priority'),
-				'quantity': drug.get_quantity(),
+				'quantity': drug.get_value("quantity"),
 				'sequence': drug.get_value('sequence'),
 				'expected_date': drug.get_value('expected_date'),
 				'as_needed': drug.get_value('as_needed'),

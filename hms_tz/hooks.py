@@ -306,6 +306,22 @@ fixtures = [
         "Clinical Procedure-section_break_0",
         "Clinical Procedure-procedure_notes",
         "Clinical Procedure-section_break_38",
+        "Clinical Procedure Template-healthcare_notes_template",
+        "Clinical Procedure-pre_operative_note",
+        "Clinical Procedure-section_break_43",
+        "Inpatient Record-column_break_92",
+        "Company-default_item_tax_template",
+        "Patient Encounter-undo_set_as_final",
+        "Healthcare Practitioner-bypass_vitals",
+        "Patient Appointment-ref_patient_encounter",
+        "Healthcare Service Unit-is_service_chargeable",
+        "Healthcare Service Unit-is_consultancy_chargeable",
+        "Inpatient Consultancy-is_confirmed",
+        "Inpatient Occupancy-is_confirmed",
+        "Prescription Dosage-default_strength",
+        "Inpatient Record-patient_appointment",
+        "Inpatient Record-price_list",
+        "Inpatient Occupancy-amount",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
@@ -588,6 +604,35 @@ fixtures = [
         "Clinical Procedure-start_time-hidden",
         "Clinical Procedure-start_date-hidden",
         "Patient Encounter-insurance_section-hidden",
+        "Clinical Procedure-main-default_print_format",
+        "Radiology Examination-main-default_print_format",
+        "Delivery Note-main-default_print_format",
+        "Healthcare Service Insurance Coverage-healthcare_service_template-in_standard_filter",
+        "Healthcare Service Insurance Coverage-healthcare_service-in_standard_filter",
+        "Lab Test-section_break_50-hidden",
+        "Inpatient Occupancy-invoiced-read_only",
+        "POS Profile-warehouse-depends_on",
+        "POS Profile-update_stock-default",
+        "Shift Type-last_sync_of_checkin-in_list_view",
+        "Prescription Dosage-main-quick_entry",
+        "Vital Signs-height-hidden",
+        "Patient-customer_group-default",
+        "Dosage Strength-strength-label",
+        "Medical Code-description-in_standard_filter",
+        "Vital Signs-patient_name-in_standard_filter",
+        "Drug Prescription-quantity-columns",
+        "Drug Prescription-quantity-in_list_view",
+        "Drug Prescription-interval_uom-in_list_view",
+        "Drug Prescription-interval-in_list_view",
+        "Drug Prescription-comment-in_list_view",
+        "Drug Prescription-period-columns",
+        "Drug Prescription-dosage-columns",
+        "Drug Prescription-drug_code-columns",
+        "Healthcare Insurance Company-customer-read_only",
+        "Healthcare Insurance Claim-service_template-in_standard_filter",
+        "Healthcare Insurance Claim-service_template-in_list_view",
+        "Healthcare Insurance Claim-healthcare_service_type-in_standard_filter",
+        "Healthcare Insurance Claim-healthcare_service_type-in_list_view",
     )]]},
     {"doctype": "Accounting Dimension", "filters": [["name", "in", (
         "Healthcare Practitioner",
@@ -695,7 +740,7 @@ inpatient_record_list_js = {"doctype": "nhif/api/inpatient_record_list.js"}
 doc_events = {
     "Patient Appointment": {
         "validate": [
-            "hms_tz.nhif.api.patient_appointment.make_vital",
+            "hms_tz.nhif.api.patient_appointment.make_next_doc",
         ]
     },
     "Vital Signs": {
@@ -758,6 +803,9 @@ doc_events = {
     },
     "Inpatient Record": {
         "validate": "hms_tz.nhif.api.inpatient_record.validate",
+    },
+    "Prescription Dosage": {
+        "before_insert": "hms_tz.nhif.api.prescription_dosage.before_insert",
     },
 }
 

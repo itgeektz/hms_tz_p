@@ -432,6 +432,8 @@ def create_individual_lab_test(source_doc, child):
         frappe.msgprint(_('Lab Test {0} created successfully.').format(
             frappe.bold(doc.name)))
 
+    # frappe.set_value("Lab Prescription", child.name, "lab_test_created", 1)
+    # frappe.set_value("Lab Prescription", child.name, "lab_test", doc.name)
     child.lab_test_created = 1
     child.lab_test = doc.name
     child.db_update()
