@@ -10,8 +10,9 @@ from frappe.utils.background_jobs import enqueue
 
 def after_save(doc, method):
     if doc.docstatus == 0 and doc.order_reference_name:
-        enqueue(method=auto_submit, queue='short',
-                timeout=10000, is_async=True, kwargs=doc.name)
+        # enqueue(method=auto_submit, queue='short',
+        #         timeout=10000, is_async=True, kwargs=doc.name)
+        return
 
 
 def set_missing_values(doc, method):
@@ -37,7 +38,6 @@ def clear_insurance_details(service_order):
     service_order_doc.insurance_company = ""
     service_order_doc.claim_status = ""
     service_order_doc.db_update()
-    frappe.db.commit()
 
     insurance_claim_doc = frappe.get_doc(
         'Healthcare Insurance Claim', insurance_claim)
@@ -45,7 +45,6 @@ def clear_insurance_details(service_order):
     insurance_claim_doc.db_update()
     insurance_claim_doc.reload()
     insurance_claim_doc.delete()
-    frappe.db.commit()
 
     child_tables = {
         "drug_prescription": "drug_prescription_created",
@@ -64,7 +63,7 @@ def clear_insurance_details(service_order):
         setattr(child_row_doc, created_field, 0)
         child_row_doc.prescribe = 1
         child_row_doc.db_update()
-        frappe.db.commit()
+    frappe.db.commit()
 
     frappe.msgprint(_('Healthcare Insurance Claim {0} deleted successfully.').format(
         frappe.bold(insurance_claim)), alert=True)
