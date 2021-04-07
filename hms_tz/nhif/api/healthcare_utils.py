@@ -163,7 +163,11 @@ def get_app_branch(app):
 def create_delivery_note_from_LRPT(LRPT_doc, patient_encounter_doc):
     if not patient_encounter_doc.appointment:
         return
-    insurance_subscription, insurance_company = frappe.get_value(
+    # purposely put this below to skip the delivery note process 2021-04-07 14:36:07
+    if patient_encounter_doc.appointment:
+        return
+    # purposely put this above to skip the delivery note process 2021-04-07 14:36:04
+    insurance_subscription, insurance_company, inpatient_record = frappe.get_value(
         "Patient Appointment", patient_encounter_doc.appointment, ["insurance_subscription", "insurance_company"])
     if not insurance_subscription:
         return
@@ -432,8 +436,6 @@ def create_individual_lab_test(source_doc, child):
         frappe.msgprint(_('Lab Test {0} created successfully.').format(
             frappe.bold(doc.name)))
 
-    # frappe.set_value("Lab Prescription", child.name, "lab_test_created", 1)
-    # frappe.set_value("Lab Prescription", child.name, "lab_test", doc.name)
     child.lab_test_created = 1
     child.lab_test = doc.name
     child.db_update()
