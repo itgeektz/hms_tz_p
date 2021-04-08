@@ -163,7 +163,7 @@ def process_prices_list(kwargs):
             SELECT icd.ref_code, icd.parent as item_code, npp.schemeid from `tabItem Customer Detail` icd
                 INNER JOIN `tabNHIF Price Package` npp ON icd.ref_code = npp.itemcode
                 WHERE icd.customer_name = 'NHIF'
-                GROUP by icd.ref_code , icd.parent, npp.schemeid
+                GROUP by icd.ref_code, icd.parent, npp.schemeid
         ''',
         as_dict=1
     )
@@ -195,7 +195,7 @@ def process_prices_list(kwargs):
                                                          "selling": 1
                                                      },
                                                      fields=[
-                                                         "name", "price_list_rate"]
+                                                         "name", "item_code", "price_list_rate"]
                                                      )
                     if len(item_price_list) > 0:
                         for price in item_price_list:
@@ -213,14 +213,17 @@ def process_prices_list(kwargs):
 
                     elif int(package.isactive) == 1:
                         item_price_doc = frappe.new_doc("Item Price")
-                        item_price_doc.item_code = item.item_code
-                        item_price_doc.price_list = price_list_name
-                        item_price_doc.currency = currency
-                        item_price_doc.price_list_rate = float(
-                            package.unitprice)
-                        item_price_doc.buying = 0
-                        item_price_doc.selling = 1
+                        item_price_doc.update({
+                            "item_code": item.item_code,
+                            "price_list": price_list_name,
+                            "currency": currency,
+                            "price_list_rate": float(package.unitprice),
+                            "buying": 0,
+                            "selling": 1 
+                        })
+                        item_price_doc.insert(ignore_permissions=True)
                         item_price_doc.save(ignore_permissions=True)
+    frappe.db.commit()
 
 
 def get_insurance_coverage_items():
