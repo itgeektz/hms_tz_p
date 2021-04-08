@@ -391,7 +391,7 @@ var add_btn_final = function (frm) {
 };
 
 var duplicate = function (frm) {
-    if (frm.doc.docstatus != 1 || frm.doc.encounter_type == 'Final' || frm.doc.duplicated == 1) {
+    if (frm.doc.docstatus != 1 || frm.doc.encounter_type == 'Final' || frm.doc.duplicated == 1 || frm.doc.healthcare_practitioner == "Direct Cash") {
         return;
     }
     frm.add_custom_button(__('Duplicate'), function () {
