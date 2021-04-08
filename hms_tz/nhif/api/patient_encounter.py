@@ -186,7 +186,11 @@ def on_submit_validation(doc, method):
                 {
                     "service_template": template,
                     "insurance_subscription": insurance_subscription,
-                    "claim_posting_date": ["between", add_to_date(today, -days), today],
+                    "claim_posting_date": [
+                        "between",
+                        add_to_date(today, days=-days),
+                        today,
+                    ],
                 },
             )
 
