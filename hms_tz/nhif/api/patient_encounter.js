@@ -38,7 +38,9 @@ frappe.ui.form.on('Patient Encounter', {
         if (frm.doc.duplicated == 1 || frm.doc.finalized) {
             frm.remove_custom_button("Schedule Admission");
             frm.remove_custom_button("Refer Practitioner");
-            frm.remove_custom_button("Create");
+            frm.remove_custom_button("Vital Signs", "Create");
+            frm.remove_custom_button("Medical Record", "Create");
+            frm.remove_custom_button("Clinical Procedure", "Create");
         }
         add_btn_final(frm);
         duplicate(frm);
