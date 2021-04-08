@@ -336,4 +336,4 @@ def make_next_doc(doc, method):
     if frappe.get_value("Healthcare Practitioner", doc.practitioner, "bypass_vitals"):
         make_encounter(doc, "validate")
     else:
-        make_vital(doc, 'patient_appointment')
+        make_vital(doc, method)
