@@ -35,7 +35,7 @@ frappe.ui.form.on('Patient Encounter', {
     },
     refresh: function (frm) {
         set_medical_code(frm, true);
-        if (frm.doc.duplicated == 1) {
+        if (frm.doc.duplicated == 1 || frm.doc.finalized) {
             frm.remove_custom_button("Schedule Admission");
             frm.remove_custom_button("Refer Practitioner");
             frm.remove_custom_button("Create");
