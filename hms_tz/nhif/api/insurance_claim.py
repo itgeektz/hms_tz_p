@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from hms_tz.nhif.api.patient_appointment import get_item_price
+from hms_tz.nhif.api.healthcare_utils import get_item_rate
 
 
 def set_patient_encounter(doc, method):
@@ -36,17 +37,8 @@ def set_price(doc, method):
             frappe.msgprint(_("Default company not found for this user"), alert = True)
             return
     if doc.insurance_subscription:
-        hic_plan = frappe.get_value(
-            "Healthcare Insurance Subscription", doc.insurance_subscription, "healthcare_insurance_coverage_plan")
-        price_list = frappe.get_value(
-            "Healthcare Insurance Coverage Plan", hic_plan, "price_list")
-        if not price_list and doc.insurance_company:
-            price_list = frappe.get_value(
-            "Healthcare Insurance Company", doc.insurance_company, "default_price_list")
-        if not price_list:
-                frappe.throw(_("Please set Price List in Healthcare Insurance Coverage Plan"))
         if price_list:
-            price_list_rate = get_item_price(doc.service_item, price_list, company)
+            price_list_rate = get_item_rate(doc.service_item, company, doc.insurance_subscription, doc.insurance_company)
             if price_list_rate and price_list_rate != 0:
                 price_list_rate = get_item_price(doc.service_item, price_list, company)
                 doc.price_list_rate = price_list_rate
