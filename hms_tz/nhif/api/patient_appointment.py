@@ -17,6 +17,7 @@ from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from frappe.utils import date_diff, getdate
 
+
 @frappe.whitelist()
 def get_insurance_amount(insurance_subscription, billing_item, company, patient, insurance_company):
     price_list = None
@@ -36,9 +37,10 @@ def get_insurance_amount(insurance_subscription, billing_item, company, patient,
 
 
 @frappe.whitelist()
-def get_mop_amount(billing_item, mop, company, patient):
+def get_mop_amount(billing_item, mop=None, company=None, patient=None):
     price_list = None
-    price_list = frappe.get_value("Mode of Payment", mop, "price_list")
+    if mop:
+        price_list = frappe.get_value("Mode of Payment", mop, "price_list")
     if not price_list:
         price_list = get_default_price_list(patient)
         if not price_list:
@@ -154,14 +156,16 @@ def make_vital(appointment_doc, method):
     if appointment and appointment_doc.appointment_date:
         diff = date_diff(appointment_doc.appointment_date,
                          appointment.appointment_date)
-        valid_days = int(frappe.get_value("Healthcare Settings", "Healthcare Settings", "valid_days"))
+        valid_days = int(frappe.get_value(
+            "Healthcare Settings", "Healthcare Settings", "valid_days"))
         if (diff <= valid_days):
             appointment_doc.follow_up = 1
-            frappe.msgprint(_("Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"), alert=True)
+            frappe.msgprint(
+                _("Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"), alert=True)
         else:
             appointment_doc.follow_up = 0
-            frappe.msgprint(_("This appointment requires to be paid for!"), alert=True)
-
+            frappe.msgprint(
+                _("This appointment requires to be paid for!"), alert=True)
 
     if (not appointment_doc.ref_vital_signs) and (appointment_doc.invoiced or (appointment_doc.insurance_subscription and appointment_doc.authorization_number) or method == "patient_appointment"):
         vital_doc = frappe.get_doc(dict(
@@ -318,7 +322,8 @@ def set_follow_up(appointment_doc, method):
     if appointment and appointment_doc.appointment_date:
         diff = date_diff(appointment_doc.appointment_date,
                          appointment.appointment_date)
-        valid_days = int(frappe.get_value("Healthcare Settings", "Healthcare Settings", "valid_days"))
+        valid_days = int(frappe.get_value(
+            "Healthcare Settings", "Healthcare Settings", "valid_days"))
         if (diff <= valid_days):
             appointment_doc.follow_up = 1
             appointment_doc.invoiced = 1
@@ -327,9 +332,11 @@ def set_follow_up(appointment_doc, method):
             appointment_doc.follow_up = 0
             # frappe.msgprint(_("This appointment requires to be paid for!"), alert=True)
 
+
 def make_next_doc(doc, method):
     if doc.inpatient_record:
-        frappe.throw(_("You cannot create an appointment for a patient already admitted.<br>First <b>discharge the patient</b> and then create the appointment."))
+        frappe.throw(
+            _("You cannot create an appointment for a patient already admitted.<br>First <b>discharge the patient</b> and then create the appointment."))
     if doc.is_new():
         return
     if frappe.get_value("Healthcare Practitioner", doc.practitioner, "bypass_vitals"):

@@ -10,6 +10,7 @@ import datetime
 from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_warehouse_from_service_unit, get_item_price, create_individual_lab_test, create_individual_radiology_examination, create_individual_procedure_prescription, msgThrow, msgPrint
 from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_receivable_account, get_income_account
 import time
+from hms_tz.nhif.api.patient_appointment import get_mop_amount
 
 
 def after_insert(doc, method):
@@ -228,7 +229,7 @@ def get_item_info(item_code=None, medication_name=None):
 
 def get_stock_availability(item_code, warehouse):
     latest_sle = frappe.db.sql("""SELECT SUM(qty_after_transaction) AS actual_qty
-        FROM `tabStock Ledger Entry` 
+        FROM `tabStock Ledger Entry`
         WHERE item_code = %s AND warehouse = %s
         LIMIT 1""", (item_code, warehouse), as_dict=1)
 
@@ -627,6 +628,7 @@ def enqueue_on_update_after_submit(doc_name):
 
 
 def before_submit(doc, method):
+    set_amounts(doc)
     encounter_create_sales_invoice = frappe.get_value(
         "Encounter Category", doc.encounter_category, "create_sales_invoice")
     if encounter_create_sales_invoice:
@@ -653,3 +655,48 @@ def undo_finalized_encounter(cur_encounter, ref_encounter=None):
         return
     frappe.set_value("Patient Encounter", cur_encounter,
                      "encounter_type", "Ongoing")
+
+
+def set_amounts(doc):
+    childs_map = [
+        {
+            "table": "lab_test_prescription",
+            "doctype": "Lab Test Template",
+            "item": "lab_test_code",
+        },
+        {
+            "table": "radiology_procedure_prescription",
+            "doctype": "Radiology Examination Template",
+            "item": "radiology_examination_template",
+        },
+        {
+            "table": "procedure_prescription",
+            "doctype": "Clinical Procedure Template",
+            "item": "procedure",
+        },
+        {
+            "table": "drug_prescription",
+            "doctype": "Medication",
+            "item": "drug_code",
+        },
+        {
+            "table": "therapies",
+            "doctype": "Therapy Type",
+            "item": "therapy_type",
+        }
+    ]
+    try:
+        for child in childs_map:
+            for row in doc.get(child.get("table")):
+                item_rate = 0
+                item_code = frappe.get_value(
+                    child.get("doctype"), row.get(child.get("item")), "item")
+                if row.prescribe or not doc.insurance_subscription:
+                    item_rate = get_mop_amount(
+                        item_code, doc.mode_of_payment, doc.company, doc.patient)
+                else:
+                    item_rate = get_item_rate(
+                        item_code, doc.company, doc.insurance_subscription, doc.insurance_company)
+            row.amount = item_rate
+    except Exception:
+        frappe.log_error(frappe.get_traceback())
