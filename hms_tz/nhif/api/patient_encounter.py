@@ -5,8 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import nowdate, get_year_start, getdate, nowtime, add_to_date
-import datetime
+from frappe.utils import nowdate, getdate, nowtime, add_to_date
 from hms_tz.nhif.api.healthcare_utils import (
     get_item_rate,
     get_warehouse_from_service_unit,
@@ -151,25 +150,41 @@ def on_submit_validation(doc, method):
         filters={
             "is_active": 1,
             "healthcare_insurance_coverage_plan": healthcare_insurance_coverage_plan,
-            "start_date": ("<=", nowdate()),
-            "end_date": (">=", nowdate()),
+            "start_date": ("<=", today),
+            "end_date": (">=", today),
             "healthcare_service_template": ("in", healthcare_service_templates),
         },
         order_by="modified desc",
     )
 
     hsic_map = {hsic.healthcare_service_template: hsic for hsic in hsic_list}
+    hicp_name = frappe.get_value(
+        "Healthcare Insurance Coverage Plan",
+        healthcare_insurance_coverage_plan,
+        "coverage_plan_name",
+    )
     for template in healthcare_service_templates:
+        coverage_info = hsic_map[template]
         if template not in hsic_map:
             msgThrow(
-                _("{0} not covered in Healthcare Insurance Coverage Plan").format(
-                    template
-                ),
+                _(
+                    "{0} not covered in Healthcare Insurance Coverage Plan "
+                    + str(hicp_name)
+                ).format(template),
                 method,
             )
             continue
 
-        coverage_info = hsic_map[template]
+        for row in healthcare_service_templates[template]:
+            row.is_restricted = coverage_info.approval_mandatory_for_claim
+            if row.is_restricted:
+                frappe.msgprint(
+                    _("{0} with template {1} requires additional authorization").format(
+                        _(row.doctype), template
+                    ),
+                    alert=True,
+                )
+
         if coverage_info.maximum_number_of_claims == 0:
             continue
 
@@ -201,17 +216,6 @@ def on_submit_validation(doc, method):
                     " last {1} days"
                 ).format(template, days)
             )
-
-        for row in healthcare_service_templates[template]:
-            row.is_restricted = coverage_info.approval_mandatory_for_claim
-            if row.is_restricted:
-                frappe.msgprint(
-                    _("{0} with template {1} requires additional authorization").format(
-                        _(row.doctype), template
-                    ),
-                    alert=True,
-                )
-
     validate_totals(doc)
 
 
