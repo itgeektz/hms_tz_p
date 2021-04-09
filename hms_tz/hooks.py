@@ -322,6 +322,11 @@ fixtures = [
         "Inpatient Record-patient_appointment",
         "Inpatient Record-price_list",
         "Inpatient Occupancy-amount",
+        "Lab Prescription-amount",
+        "Radiology Procedure Prescription-amount",
+        "Procedure Prescription-amount",
+        "Drug Prescription-amount",
+        "Therapy Plan Detail-amount",
     )]]},
     {"doctype": "Property Setter", "filters": [["name", "in", (
         "Appointment Type-main-sort_field",
