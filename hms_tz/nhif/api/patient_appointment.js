@@ -389,7 +389,7 @@ const add_btns = (frm) => {
         }
     }
     if (!frm.doc.mode_of_payment || frm.doc.insurance_subscription) return;
-    if (vitals_btn_required) {
+    if (vitals_btn_required || frm.doc.follow_up) {
         add_vital_btn(frm);
     } else {
         add_invoice_btn(frm);
