@@ -86,10 +86,8 @@ def invoice_appointment(name):
     set_follow_up(appointment_doc, "invoice_appointment")
     automate_invoicing = frappe.db.get_single_value(
         'Healthcare Settings', 'automate_appointment_invoicing')
-    appointment_invoiced = frappe.db.get_value(
-        'Patient Appointment', appointment_doc.name, 'invoiced')
 
-    if not automate_invoicing and not appointment_doc.insurance_subscription and appointment_doc.mode_of_payment and not appointment_invoiced:
+    if not automate_invoicing and not appointment_doc.insurance_subscription and appointment_doc.mode_of_payment and not appointment_doc.invoiced and not appointment_doc.follow_up:
         sales_invoice = frappe.new_doc('Sales Invoice')
         sales_invoice.patient = appointment_doc.patient
         sales_invoice.customer = frappe.get_value(
@@ -323,6 +321,7 @@ def set_follow_up(appointment_doc, method):
         valid_days = int(frappe.get_value("Healthcare Settings", "Healthcare Settings", "valid_days"))
         if (diff <= valid_days):
             appointment_doc.follow_up = 1
+            appointment_doc.invoiced = 1
             # frappe.msgprint(_("Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"), alert=True)
         else:
             appointment_doc.follow_up = 0
