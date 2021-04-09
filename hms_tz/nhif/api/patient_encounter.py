@@ -13,7 +13,8 @@ import time
 
 
 def after_insert(doc, method):
-    frappe.db.update(doc.doctype, doc.name, {"sales_invoice": "", "is_not_billable": 0})
+    frappe.db.update(doc.doctype, doc.name, {
+                     "sales_invoice": "", "is_not_billable": 0})
 
 
 def on_trash(doc, method):
@@ -47,7 +48,8 @@ def on_submit_validation(doc, method):
             mtuha_missing += "-  <b>" + final_diagnosis.medical_code + "</b><br>"
 
     if mtuha_missing:
-        msgThrow(_("{0}<br>MTUHA Code not defined for the above diagnosis").format(mtuha_missing), method)
+        msgThrow(_("{0}<br>MTUHA Code not defined for the above diagnosis").format(
+            mtuha_missing), method)
 
     insurance_subscription = doc.insurance_subscription
     child_tables = {
@@ -620,7 +622,8 @@ def on_update_after_submit(doc, method):
 
 def enqueue_on_update_after_submit(doc_name):
     time.sleep(5)
-    on_update_after_submit(frappe.get_doc("Patient Encounter", doc_name), "enqueue")
+    on_update_after_submit(frappe.get_doc(
+        "Patient Encounter", doc_name), "enqueue")
 
 
 def before_submit(doc, method):
@@ -634,6 +637,7 @@ def before_submit(doc, method):
         if vfd_status == "Not Sent":
             frappe.throw(
                 _("The encounter cannot be submitted as the Sales Invoice has not been sent to VFD!<br><br>Click on Send to VFD before submitting.", "Cannot Submit Encounter"))
+
 
 @frappe.whitelist()
 def undo_finalized_encounter(cur_encounter, ref_encounter=None):
