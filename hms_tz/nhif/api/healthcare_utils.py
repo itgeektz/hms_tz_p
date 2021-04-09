@@ -59,8 +59,6 @@ def get_healthcare_service_order_to_invoice(patient, company, encounter, service
 
     if services:
         for service in services:
-            practitioner_charge = 0
-            income_account = None
             service_item = None
             if service.order_doctype and service.order:
                 is_not_available_inhouse = frappe.get_value(
@@ -69,17 +67,11 @@ def get_healthcare_service_order_to_invoice(patient, company, encounter, service
                     continue
             if service.ordered_by:
                 service_item = service.billing_item
-                practitioner_charge = get_insurance_amount(
-                    service.insurance_subscription, service.billing_item, company, patient.name, service.insurance_company)
-                income_account = get_income_account(
-                    service.ordered_by, company)
 
             services_to_invoice.append({
                 'reference_type': 'Healthcare Service Order',
                 'reference_name': service.name,
                 'service': service_item,
-                'rate': practitioner_charge,
-                'income_account': income_account,
                 'qty': service.quantity
             })
 
@@ -167,7 +159,7 @@ def create_delivery_note_from_LRPT(LRPT_doc, patient_encounter_doc):
     if patient_encounter_doc.appointment:
         return
     # purposely put this above to skip the delivery note process 2021-04-07 14:36:04
-    insurance_subscription, insurance_company, inpatient_record = frappe.get_value(
+    insurance_subscription, insurance_company = frappe.get_value(
         "Patient Appointment", patient_encounter_doc.appointment, ["insurance_subscription", "insurance_company"])
     if not insurance_subscription:
         return
