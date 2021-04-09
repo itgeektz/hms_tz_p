@@ -60,7 +60,7 @@ frappe.ui.form.on('Patient', {
                         const d = new frappe.ui.Dialog({
                             title: "Patient's information",
                             primary_action_label: 'Submit',
-                            primary_action (values) {
+                            primary_action(values) {
                                 update_patient_info(frm, card);
                                 d.hide();
                             }
@@ -129,7 +129,7 @@ frappe.ui.form.on('Patient', {
     },
 });
 
-function update_patient_info (frm, card) {
+function update_patient_info(frm, card) {
     frm.set_value("first_name", card.FirstName);
     frm.set_value("middle_name", card.MiddleName);
     frm.set_value("last_name", card.LastName);

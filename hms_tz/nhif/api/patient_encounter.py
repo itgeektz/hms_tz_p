@@ -419,7 +419,10 @@ def create_healthcare_docs(patient_encounter_doc):
             alert=True,
         )
         return
-    if not patient_encounter_doc.insurance_subscription:
+    if (
+        not patient_encounter_doc.insurance_subscription
+        and not patient_encounter_doc.inpatient_record
+    ):
         return
 
     child_tables_list = [
