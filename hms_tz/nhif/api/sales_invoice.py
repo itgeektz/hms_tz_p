@@ -55,10 +55,3 @@ def create_healthcare_docs(doc, method):
                     create_individual_radiology_examination(hso_doc, child)
                 elif hso_doc.order_doctype == "Clinical Procedure Template":
                     create_individual_procedure_prescription(hso_doc, child)
-    frappe.enqueue(
-        method="hms_tz.nhif.api.patient_encounter.enqueue_on_update_after_submit",
-        queue="short",
-        timeout=10000,
-        is_async=True,
-        kwargs=doc.name,
-    )
