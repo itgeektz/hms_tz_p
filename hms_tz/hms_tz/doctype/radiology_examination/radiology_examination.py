@@ -38,7 +38,7 @@ class RadiologyExamination(Document):
 			self.company = ref_company
 
 def set_title_field(self):
-	self.title = _('{0} - {1}').format(self.patient, self.radiology_examination_template)[:100]
+	self.title = _('{0} - {1}').format(self.patient_name or self.patient, self.radiology_examination_template)[:100]
 
 def insert_to_medical_record(doc):
     subject = cstr(doc.radiology_examination_template)
