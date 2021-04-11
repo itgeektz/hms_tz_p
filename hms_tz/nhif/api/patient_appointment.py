@@ -19,33 +19,17 @@ import requests
 from hms_tz.nhif.doctype.nhif_product.nhif_product import add_product
 from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
+from hms_tz.nhif.api.healthcare_utils import get_item_rate
 from frappe.utils import date_diff, getdate
 
 
 @frappe.whitelist()
 def get_insurance_amount(
-    insurance_subscription, billing_item, company, patient, insurance_company
+    insurance_subscription, billing_item, company, insurance_company
 ):
-    price_list = None
-    healthcare_insurance_coverage_plan = frappe.get_value(
-        "Healthcare Insurance Subscription",
-        insurance_subscription,
-        "healthcare_insurance_coverage_plan",
+    return get_item_rate(
+        billing_item, company, insurance_subscription, insurance_company
     )
-    price_list = frappe.get_value(
-        "Healthcare Insurance Coverage Plan",
-        healthcare_insurance_coverage_plan,
-        "price_list",
-    )
-    if not price_list:
-        price_list = frappe.get_value(
-            "Healthcare Insurance Company", insurance_company, "default_price_list"
-        )
-    if not price_list:
-        price_list = get_default_price_list(patient)
-    if not price_list:
-        frappe.throw(_("Please set Price List in Healthcare Insurance Coverage Plan"))
-    return get_item_price(billing_item, price_list, company)
 
 
 @frappe.whitelist()
