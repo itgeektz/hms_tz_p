@@ -49,9 +49,10 @@ def get_insurance_amount(
 
 
 @frappe.whitelist()
-def get_mop_amount(billing_item, mop, company, patient):
+def get_mop_amount(billing_item, mop=None, company=None, patient=None):
     price_list = None
-    price_list = frappe.get_value("Mode of Payment", mop, "price_list")
+    if mop:
+        price_list = frappe.get_value("Mode of Payment", mop, "price_list")
     if not price_list:
         price_list = get_default_price_list(patient)
         if not price_list:

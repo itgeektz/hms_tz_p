@@ -329,6 +329,11 @@ fixtures = [
                     "Inpatient Record-price_list",
                     "Inpatient Occupancy-amount",
                     "Lab Test-title",
+                    "Lab Prescription-amount",
+                    "Radiology Procedure Prescription-amount",
+                    "Procedure Prescription-amount",
+                    "Drug Prescription-amount",
+                    "Therapy Plan Detail-amount",
                 ),
             ]
         ],
