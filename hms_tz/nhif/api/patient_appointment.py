@@ -53,10 +53,10 @@ def get_mop_amount(billing_item, mop=None, company=None, patient=None):
     price_list = None
     if mop:
         price_list = frappe.get_value("Mode of Payment", mop, "price_list")
-    if not price_list:
+    if not price_list and patient:
         price_list = get_default_price_list(patient)
-        if not price_list:
-            frappe.throw(_("Please set Price List in Mode of Payment"))
+    if not price_list:
+        frappe.throw(_("Please set Price List in Mode of Payment"))
     return get_item_price(billing_item, price_list, company)
 
 
