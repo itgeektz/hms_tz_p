@@ -532,6 +532,7 @@ def create_delivery_note(patient_encounter_doc):
                     "Company", patient_encounter_doc.company, "default_currency"
                 ),
                 items=items,
+                coverage_plan_name=patient_encounter_doc.insurance_coverage_plan,
                 reference_doctype=patient_encounter_doc.doctype,
                 reference_name=patient_encounter_doc.name,
                 patient=patient_encounter_doc.patient,
