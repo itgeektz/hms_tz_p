@@ -5,7 +5,10 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from hms_tz.nhif.api.healthcare_utils import create_delivery_note_from_LRPT, get_restricted_LRPT
+from hms_tz.nhif.api.healthcare_utils import (
+    create_delivery_note_from_LRPT,
+    get_restricted_LRPT,
+)
 
 
 def validate(doc, methd):
@@ -42,9 +45,10 @@ def get_normals(lab_test_name, patient_age, patient_sex):
 
 def get_lab_test_template(lab_test_name):
     template_id = frappe.db.exists(
-        'Lab Test Template', {'lab_test_name': lab_test_name})
+        "Lab Test Template", {"lab_test_name": lab_test_name}
+    )
     if template_id:
-        return frappe.get_doc('Lab Test Template', template_id)
+        return frappe.get_doc("Lab Test Template", template_id)
     return False
 
 
@@ -54,8 +58,7 @@ def on_submit(doc, methd):
 
 def create_delivery_note(doc):
     if doc.ref_doctype and doc.ref_docname and doc.ref_doctype == "Patient Encounter":
-        patient_encounter_doc = frappe.get_doc(
-            doc.ref_doctype, doc.ref_docname)
+        patient_encounter_doc = frappe.get_doc(doc.ref_doctype, doc.ref_docname)
         create_delivery_note_from_LRPT(doc, patient_encounter_doc)
 
 
@@ -64,12 +67,15 @@ def after_insert(doc, methd):
 
 
 def on_trash(doc, methd):
-    sample_list = frappe.get_all("Sample Collection", filters={
-        "ref_doctype": doc.doctype,
-        "ref_docname": doc.name,
-    })
+    sample_list = frappe.get_all(
+        "Sample Collection",
+        filters={
+            "ref_doctype": doc.doctype,
+            "ref_docname": doc.name,
+        },
+    )
     for item in sample_list:
-        frappe.delete_doc('Sample Collection', item.name)
+        frappe.delete_doc("Sample Collection", item.name)
 
 
 def create_sample_collection(doc):
@@ -94,5 +100,6 @@ def create_sample_collection(doc):
 
     sample_doc.flags.ignore_permissions = True
     sample_doc.insert()
-    frappe.msgprint(_("Sample Collection created {0}").format(
-        sample_doc.name), alert=True)
+    frappe.msgprint(
+        _("Sample Collection created {0}").format(sample_doc.name), alert=True
+    )

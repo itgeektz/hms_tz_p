@@ -11,19 +11,19 @@ frappe.ui.form.on('Lab Test', {
             { fieldname: 'result_status', columns: 1 }
         ]
         get_patient_age(frm)
-		frm.get_field('descriptive_test_items').grid.editable_fields = [
-			{ fieldname: 'lab_test_particulars', columns: 3 },
+        frm.get_field('descriptive_test_items').grid.editable_fields = [
+            { fieldname: 'lab_test_particulars', columns: 3 },
             { fieldname: 'result_component_option', columns: 4 },
-			{ fieldname: 'result_value', columns: 4 }
-		];
-		frm.set_query("result_component_option", "descriptive_test_items", function(doc, cdt, cdn) {
-			let d = locals[cdt][cdn];
-			return {
-				filters: [
-					['Result Component Option', 'result_component', '=', d.lab_test_particulars]
-				]
-			};
-		});
+            { fieldname: 'result_value', columns: 4 }
+        ];
+        frm.set_query("result_component_option", "descriptive_test_items", function (doc, cdt, cdn) {
+            let d = locals[cdt][cdn];
+            return {
+                filters: [
+                    ['Result Component Option', 'result_component', '=', d.lab_test_particulars]
+                ]
+            };
+        });
     },
     patient: function (frm) {
         get_patient_age(frm)
@@ -64,8 +64,8 @@ frappe.ui.form.on('Normal Test Result', {
 
 var calc_data_normals = function (data, value) {
     const result = {
-        detailed_normal_range : "",
-        result_status : ""
+        detailed_normal_range: "",
+        result_status: ""
     };
     if (data.min && !data.max) {
         result.detailed_normal_range = "> " + data.min

@@ -16,8 +16,13 @@ from frappe.model.naming import set_new_name
 
 @frappe.whitelist()
 def enqueue_get_nhif_price_package(company):
-    enqueue(method=get_nhif_price_package, queue='long',
-            timeout=10000000, is_async=True, kwargs=company)
+    enqueue(
+        method=get_nhif_price_package,
+        queue="long",
+        timeout=10000000,
+        is_async=True,
+        kwargs=company,
+    )
     return
 
 
@@ -25,18 +30,18 @@ def get_nhif_price_package(kwargs):
     company = kwargs
     user = frappe.session.user
     frappe.db.sql("DELETE FROM `tabNHIF Price Package` WHERE name != 'ABC'")
-    frappe.db.sql(
-        "DELETE FROM `tabNHIF Excluded Services` WHERE name != 'ABC'")
+    frappe.db.sql("DELETE FROM `tabNHIF Excluded Services` WHERE name != 'ABC'")
     frappe.db.commit()
     token = get_claimsservice_token(company)
     claimsserver_url, facility_code = frappe.get_value(
-        "Company NHIF Settings", company, ["claimsserver_url", "facility_code"])
-    headers = {
-        "Authorization": "Bearer " + token
-    }
-    url = str(claimsserver_url) + \
-        "/claimsserver/api/v1/Packages/GetPricePackageWithExcludedServices?FacilityCode=" + \
-        str(facility_code)
+        "Company NHIF Settings", company, ["claimsserver_url", "facility_code"]
+    )
+    headers = {"Authorization": "Bearer " + token}
+    url = (
+        str(claimsserver_url)
+        + "/claimsserver/api/v1/Packages/GetPricePackageWithExcludedServices?FacilityCode="
+        + str(facility_code)
+    )
     r = requests.get(url, headers=headers, timeout=300)
     if r.status_code != 200:
         add_log(
@@ -51,40 +56,43 @@ def get_nhif_price_package(kwargs):
                 request_type="GetPricePackageWithExcludedServices",
                 request_url=url,
                 request_header=headers,
-                response_data=json.loads(r.text)
+                response_data=json.loads(r.text),
             )
             time_stamp = now()
             data = json.loads(r.text)
             insert_data = []
             for item in data.get("PricePackage"):
-                insert_data.append((
-                    frappe.generate_hash("", 20),
-                    facility_code,
-                    time_stamp,
-                    log_name,
-                    item.get("ItemCode"),
-                    item.get("PriceCode"),
-                    item.get("LevelPriceCode"),
-                    item.get("OldItemCode"),
-                    item.get("ItemTypeID"),
-                    item.get("ItemName"),
-                    item.get("Strength"),
-                    item.get("Dosage"),
-                    item.get("PackageID"),
-                    item.get("SchemeID"),
-                    item.get("FacilityLevelCode"),
-                    item.get("UnitPrice"),
-                    item.get("IsRestricted"),
-                    item.get("MaximumQuantity"),
-                    item.get("AvailableInLevels"),
-                    item.get("PractitionerQualifications"),
-                    item.get("IsActive"),
-                    time_stamp,
-                    time_stamp,
-                    user,
-                    user
-                ))
-            frappe.db.sql('''
+                insert_data.append(
+                    (
+                        frappe.generate_hash("", 20),
+                        facility_code,
+                        time_stamp,
+                        log_name,
+                        item.get("ItemCode"),
+                        item.get("PriceCode"),
+                        item.get("LevelPriceCode"),
+                        item.get("OldItemCode"),
+                        item.get("ItemTypeID"),
+                        item.get("ItemName"),
+                        item.get("Strength"),
+                        item.get("Dosage"),
+                        item.get("PackageID"),
+                        item.get("SchemeID"),
+                        item.get("FacilityLevelCode"),
+                        item.get("UnitPrice"),
+                        item.get("IsRestricted"),
+                        item.get("MaximumQuantity"),
+                        item.get("AvailableInLevels"),
+                        item.get("PractitionerQualifications"),
+                        item.get("IsActive"),
+                        time_stamp,
+                        time_stamp,
+                        user,
+                        user,
+                    )
+                )
+            frappe.db.sql(
+                """
                 INSERT INTO `tabNHIF Price Package`
                 (
                     `name`, `facilitycode`, `time_stamp`, `log_name`, `itemcode`, `pricecode`,
@@ -95,24 +103,31 @@ def get_nhif_price_package(kwargs):
                     `modified_by`, `owner`
                 )
                 VALUES {}
-            '''.format(', '.join(['%s'] * len(insert_data))), tuple(insert_data))
+            """.format(
+                    ", ".join(["%s"] * len(insert_data))
+                ),
+                tuple(insert_data),
+            )
             insert_data = []
             for item in data.get("ExcludedServices"):
-                insert_data.append((
-                    frappe.generate_hash("", 20),
-                    facility_code,
-                    time_stamp,
-                    log_name,
-                    item.get("ItemCode"),
-                    item.get("SchemeID"),
-                    item.get("SchemeName"),
-                    item.get("ExcludedForProducts"),
-                    time_stamp,
-                    time_stamp,
-                    user,
-                    user
-                ))
-            frappe.db.sql('''
+                insert_data.append(
+                    (
+                        frappe.generate_hash("", 20),
+                        facility_code,
+                        time_stamp,
+                        log_name,
+                        item.get("ItemCode"),
+                        item.get("SchemeID"),
+                        item.get("SchemeName"),
+                        item.get("ExcludedForProducts"),
+                        time_stamp,
+                        time_stamp,
+                        user,
+                        user,
+                    )
+                )
+            frappe.db.sql(
+                """
                 INSERT INTO `tabNHIF Excluded Services`
                 (
                     `name`, `facilitycode`, `time_stamp`, `log_name`, `itemcode`, `schemeid`,
@@ -120,32 +135,48 @@ def get_nhif_price_package(kwargs):
                     `modified_by`, `owner`
                 )
                 VALUES {}
-            '''.format(', '.join(['%s'] * len(insert_data))), tuple(insert_data))
+            """.format(
+                    ", ".join(["%s"] * len(insert_data))
+                ),
+                tuple(insert_data),
+            )
             frappe.db.commit()
             frappe.msgprint(_("Received data from NHIF"))
             return data
 
+
 @frappe.whitelist()
 def process_nhif_records(company):
-    enqueue(method=process_prices_list, queue='long',
-            timeout=10000000, is_async=True, kwargs=company)
+    enqueue(
+        method=process_prices_list,
+        queue="long",
+        timeout=10000000,
+        is_async=True,
+        kwargs=company,
+    )
     frappe.msgprint(_("Queued Processing NHIF price lists"), alert=True)
-    enqueue(method=process_insurance_coverages, queue='long',
-            timeout=10000000, is_async=True)
+    enqueue(
+        method=process_insurance_coverages,
+        queue="long",
+        timeout=10000000,
+        is_async=True,
+    )
     frappe.msgprint(_("Queued Processing NHIF Insurance Coverages"), alert=True)
+
 
 def process_prices_list(kwargs):
     company = kwargs
-    facility_code = frappe.get_value(
-        "Company NHIF Settings", company, "facility_code")
+    facility_code = frappe.get_value("Company NHIF Settings", company, "facility_code")
     currency = frappe.get_value("Company", company, "default_currency")
     schemeid_list = frappe.db.sql(
-        '''
+        """
             SELECT schemeid from `tabNHIF Price Package`
                 WHERE facilitycode = {0}
                 GROUP BY schemeid
-        '''.format(facility_code),
-        as_dict=1
+        """.format(
+            facility_code
+        ),
+        as_dict=1,
     )
 
     for scheme in schemeid_list:
@@ -159,13 +190,13 @@ def process_prices_list(kwargs):
             price_list_doc.save(ignore_permissions=True)
 
     item_list = frappe.db.sql(
-        '''
+        """
             SELECT icd.ref_code, icd.parent as item_code, npp.schemeid from `tabItem Customer Detail` icd
                 INNER JOIN `tabNHIF Price Package` npp ON icd.ref_code = npp.itemcode
                 WHERE icd.customer_name = 'NHIF'
                 GROUP by icd.ref_code, icd.parent, npp.schemeid
-        ''',
-        as_dict=1
+        """,
+        as_dict=1,
     )
 
     for item in item_list:
@@ -175,52 +206,64 @@ def process_prices_list(kwargs):
                 continue
             price_list_name = "NHIF-" + schemeid
             package_list = frappe.db.sql(
-                '''
+                """
                     SELECT schemeid, itemcode, unitprice, isactive
                     FROM `tabNHIF Price Package` 
                     WHERE facilitycode = {0} and schemeid = {1} and itemcode = {2}
                     GROUP BY itemcode, schemeid, facilitylevelcode
                     ORDER BY facilitylevelcode
                     LIMIT 1
-                '''.format(facility_code, schemeid, item.ref_code),
-                as_dict=1
+                """.format(
+                    facility_code, schemeid, item.ref_code
+                ),
+                as_dict=1,
             )
             if len(package_list) > 0:
                 for package in package_list:
-                    item_price_list = frappe.get_all("Item Price",
-                                                     filters={
-                                                         "price_list": price_list_name,
-                                                         "item_code": item.item_code,
-                                                         "currency": currency,
-                                                         "selling": 1
-                                                     },
-                                                     fields=[
-                                                         "name", "item_code", "price_list_rate"]
-                                                     )
+                    item_price_list = frappe.get_all(
+                        "Item Price",
+                        filters={
+                            "price_list": price_list_name,
+                            "item_code": item.item_code,
+                            "currency": currency,
+                            "selling": 1,
+                        },
+                        fields=["name", "item_code", "price_list_rate"],
+                    )
                     if len(item_price_list) > 0:
                         for price in item_price_list:
                             if int(package.isactive) == 1:
-                                if float(price.price_list_rate) != float(package.unitprice):
+                                if float(price.price_list_rate) != float(
+                                    package.unitprice
+                                ):
                                     # delete Item Price if no package.unitprice or it is 0
-                                    if not float(package.unitprice) or float(package.unitprice) == 0:
-                                        frappe.delete_doc(
-                                            "Item Price", price.name)
+                                    if (
+                                        not float(package.unitprice)
+                                        or float(package.unitprice) == 0
+                                    ):
+                                        frappe.delete_doc("Item Price", price.name)
                                     else:
                                         frappe.set_value(
-                                            "Item Price", price.name, "price_list_rate", float(package.unitprice))
+                                            "Item Price",
+                                            price.name,
+                                            "price_list_rate",
+                                            float(package.unitprice),
+                                        )
                             else:
                                 frappe.delete_doc("Item Price", price.name)
 
                     elif int(package.isactive) == 1:
                         item_price_doc = frappe.new_doc("Item Price")
-                        item_price_doc.update({
-                            "item_code": item.item_code,
-                            "price_list": price_list_name,
-                            "currency": currency,
-                            "price_list_rate": float(package.unitprice),
-                            "buying": 0,
-                            "selling": 1 
-                        })
+                        item_price_doc.update(
+                            {
+                                "item_code": item.item_code,
+                                "price_list": price_list_name,
+                                "currency": currency,
+                                "price_list_rate": float(package.unitprice),
+                                "buying": 0,
+                                "selling": 1,
+                            }
+                        )
                         item_price_doc.insert(ignore_permissions=True)
                         item_price_doc.save(ignore_permissions=True)
     frappe.db.commit()
@@ -228,7 +271,7 @@ def process_prices_list(kwargs):
 
 def get_insurance_coverage_items():
     items_list = frappe.db.sql(
-        '''
+        """
             SELECT 'Appointment Type' as dt, m.name as healthcare_service_template, icd.ref_code, icd.parent as item_code, npp.schemeid
                 FROM `tabItem Customer Detail` icd
                 INNER JOIN `tabItem` i ON i.name = icd.parent and i.disabled = 0
@@ -284,8 +327,8 @@ def get_insurance_coverage_items():
                 INNER JOIN `tabNHIF Price Package` npp ON icd.ref_code = npp.itemcode
                 WHERE icd.customer_name = 'NHIF'
                 GROUP BY dt, m.name, icd.ref_code , icd.parent, npp.schemeid
-        ''',
-        as_dict=1
+        """,
+        as_dict=1,
     )
     return items_list
 
@@ -294,10 +337,8 @@ def get_excluded_services(itemcode):
     excluded_services = None
     excluded_services_list = frappe.get_all(
         "NHIF Excluded Services",
-        filters={
-            "itemcode": itemcode
-        },
-        fields=["excludedforproducts", "schemeid"]
+        filters={"itemcode": itemcode},
+        fields=["excludedforproducts", "schemeid"],
     )
     if len(excluded_services_list) > 0:
         excluded_services = excluded_services_list[0]
@@ -308,11 +349,8 @@ def get_price_package(itemcode, schemeid):
     price_package = ""
     price_package_list = frappe.get_all(
         "NHIF Price Package",
-        filters={
-            "itemcode": itemcode,
-            "schemeid": schemeid
-        },
-        fields=["maximumquantity", "isrestricted"]
+        filters={"itemcode": itemcode, "schemeid": schemeid},
+        fields=["maximumquantity", "isrestricted"],
     )
     if len(price_package_list) > 0:
         price_package = price_package_list[0]
@@ -325,7 +363,7 @@ def process_insurance_coverages():
     coverage_plan_list = frappe.get_all(
         "Healthcare Insurance Coverage Plan",
         fields={"name", "nhif_scheme_id"},
-        filters={"insurance_company_name": "NHIF", "is_active": 1}
+        filters={"insurance_company_name": "NHIF", "is_active": 1},
     )
 
     for plan in coverage_plan_list:
@@ -353,40 +391,49 @@ def process_insurance_coverages():
             isrestricted = 0
             price_package = get_price_package(item.ref_code, item.schemeid)
             if price_package:
-                if price_package.maximumquantity and price_package.maximumquantity != "-1":
+                if (
+                    price_package.maximumquantity
+                    and price_package.maximumquantity != "-1"
+                ):
                     maximumquantity = int(price_package.maximumquantity)
                 if price_package.isrestricted:
                     isrestricted = int(price_package.isrestricted)
 
             set_new_name(doc)
 
-            insert_data.append((
-                isrestricted, # doc.approval_mandatory_for_claim,
-                doc.coverage,
-                time_stamp,
-                doc.discount,
-                doc.end_date,
-                doc.healthcare_insurance_coverage_plan,
-                doc.healthcare_service,
-                doc.healthcare_service_template,
-                doc.is_active,
-                isrestricted, # doc.manual_approval_only,
-                maximumquantity, # doc.maximum_number_of_claims,
-                time_stamp,
-                user,
-                doc.name,
-                doc.naming_series,
-                user,
-                doc.start_date,
-                1
-            ))
+            insert_data.append(
+                (
+                    isrestricted,  # doc.approval_mandatory_for_claim,
+                    doc.coverage,
+                    time_stamp,
+                    doc.discount,
+                    doc.end_date,
+                    doc.healthcare_insurance_coverage_plan,
+                    doc.healthcare_service,
+                    doc.healthcare_service_template,
+                    doc.is_active,
+                    isrestricted,  # doc.manual_approval_only,
+                    maximumquantity,  # doc.maximum_number_of_claims,
+                    time_stamp,
+                    user,
+                    doc.name,
+                    doc.naming_series,
+                    user,
+                    doc.start_date,
+                    1,
+                )
+            )
 
         if plan.name:
             frappe.db.sql(
-                "DELETE FROM `tabHealthcare Service Insurance Coverage` WHERE is_auto_generated = 1 AND healthcare_insurance_coverage_plan = '{0}'".format(plan.name))
+                "DELETE FROM `tabHealthcare Service Insurance Coverage` WHERE is_auto_generated = 1 AND healthcare_insurance_coverage_plan = '{0}'".format(
+                    plan.name
+                )
+            )
 
         if insert_data:
-            frappe.db.sql('''
+            frappe.db.sql(
+                """
                 INSERT INTO `tabHealthcare Service Insurance Coverage`
                 (
                     `approval_mandatory_for_claim`, 
@@ -409,4 +456,8 @@ def process_insurance_coverages():
                     `is_auto_generated`
                 )
                 VALUES {}
-            '''.format(', '.join(['%s'] * len(insert_data))), tuple(insert_data))
+            """.format(
+                    ", ".join(["%s"] * len(insert_data))
+                ),
+                tuple(insert_data),
+            )

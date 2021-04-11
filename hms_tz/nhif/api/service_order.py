@@ -18,7 +18,8 @@ def after_save(doc, method):
 def set_missing_values(doc, method):
     if doc.order_reference_doctype and doc.order_reference_name:
         prescribe = frappe.get_value(
-            doc.order_reference_doctype, doc.order_reference_name, "prescribe")
+            doc.order_reference_doctype, doc.order_reference_name, "prescribe"
+        )
         if not prescribe:
             if doc.insurance_subscription:
                 doc.invoiced = 1
@@ -28,8 +29,7 @@ def set_missing_values(doc, method):
 
 @frappe.whitelist()
 def clear_insurance_details(service_order):
-    service_order_doc = frappe.get_doc(
-        'Healthcare Service Order', service_order)
+    service_order_doc = frappe.get_doc("Healthcare Service Order", service_order)
     if service_order_doc.docstatus != 0:
         return
     insurance_claim = service_order_doc.insurance_claim
@@ -39,8 +39,7 @@ def clear_insurance_details(service_order):
     service_order_doc.claim_status = ""
     service_order_doc.db_update()
 
-    insurance_claim_doc = frappe.get_doc(
-        'Healthcare Insurance Claim', insurance_claim)
+    insurance_claim_doc = frappe.get_doc("Healthcare Insurance Claim", insurance_claim)
     insurance_claim_doc.cancel()
     insurance_claim_doc.db_update()
     insurance_claim_doc.reload()
@@ -53,9 +52,14 @@ def clear_insurance_details(service_order):
         "radiology_procedure_prescription": "radiology_examination_created",
         # "therapies": "",
     }
-    if service_order_doc.order_reference_doctype and service_order_doc.order_reference_name:
+    if (
+        service_order_doc.order_reference_doctype
+        and service_order_doc.order_reference_name
+    ):
         child_row_doc = frappe.get_doc(
-            service_order_doc.order_reference_doctype, service_order_doc.order_reference_name)
+            service_order_doc.order_reference_doctype,
+            service_order_doc.order_reference_name,
+        )
         parentfield = child_row_doc.get("parentfield")
         created_field = child_tables.get(parentfield)
         if not created_field:
@@ -65,13 +69,18 @@ def clear_insurance_details(service_order):
         child_row_doc.db_update()
     frappe.db.commit()
 
-    frappe.msgprint(_('Healthcare Insurance Claim {0} deleted successfully.').format(
-        frappe.bold(insurance_claim)), alert=True)
+    frappe.msgprint(
+        _("Healthcare Insurance Claim {0} deleted successfully.").format(
+            frappe.bold(insurance_claim)
+        ),
+        alert=True,
+    )
     return True
 
 
 def auto_submit(kwargs):
     import time
+
     time.sleep(5)
     doc = frappe.get_doc("Healthcare Service Order", kwargs)
     if doc.docstatus == 0 and doc.order_reference_name:
@@ -80,8 +89,7 @@ def auto_submit(kwargs):
 
 
 def real_auto_submit():
-    hso_list = frappe.get_all(
-        "Healthcare Service Order", filters={"docstatus": 0})
+    hso_list = frappe.get_all("Healthcare Service Order", filters={"docstatus": 0})
     for hso in hso_list:
         try:
             doc = frappe.get_doc("Healthcare Service Order", hso.name)

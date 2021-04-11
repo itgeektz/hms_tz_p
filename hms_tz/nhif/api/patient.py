@@ -27,8 +27,7 @@ def validate(doc, method):
     if doc.mobile[0] == "0":
         doc.mobile = "255" + doc.mobile[1:]
     if doc.next_to_kin_mobile_no:
-        doc.next_to_kin_mobile_no = remove_special_characters(
-            doc.next_to_kin_mobile_no)
+        doc.next_to_kin_mobile_no = remove_special_characters(doc.next_to_kin_mobile_no)
         if doc.next_to_kin_mobile_no[0] == "0":
             doc.next_to_kin_mobile_no = "255" + doc.next_to_kin_mobile_no[1:]
     validate_mobile_number(doc.name, doc.mobile)
@@ -41,12 +40,9 @@ def validate(doc, method):
 @frappe.whitelist()
 def validate_mobile_number(doc_name, mobile=None):
     if mobile:
-        mobile_patients_list = frappe.get_all("Patient",
-                                              filters={
-                                                  "mobile": mobile,
-                                                  "name": ['!=', doc_name]
-                                              }
-                                              )
+        mobile_patients_list = frappe.get_all(
+            "Patient", filters={"mobile": mobile, "name": ["!=", doc_name]}
+        )
         if len(mobile_patients_list) > 0:
             frappe.msgprint(_("This mobile number is used by another patient"))
 
@@ -61,20 +57,22 @@ def get_patient_info(card_no=None):
     if not company:
         company = frappe.defaults.get_user_default("Company")
     if not company:
-        company = frappe.get_list("Company NHIF Settings", fields=[
-                                  "company"], filters={"enable": 1})[0].company
+        company = frappe.get_list(
+            "Company NHIF Settings", fields=["company"], filters={"enable": 1}
+        )[0].company
     if not company:
         frappe.throw(_("No companies found to connect to NHIF"))
     token = get_nhifservice_token(company)
 
     nhifservice_url = frappe.get_value(
-        "Company NHIF Settings", company, "nhifservice_url")
-    headers = {
-        "Authorization": "Bearer " + token
-    }
-    url = str(nhifservice_url) + \
-        "/nhifservice/breeze/verification/GetCardDetails?CardNo=" + \
-        str(card_no)
+        "Company NHIF Settings", company, "nhifservice_url"
+    )
+    headers = {"Authorization": "Bearer " + token}
+    url = (
+        str(nhifservice_url)
+        + "/nhifservice/breeze/verification/GetCardDetails?CardNo="
+        + str(card_no)
+    )
     for i in range(3):
         try:
             r = requests.get(url, headers=headers, timeout=5)
@@ -85,7 +83,7 @@ def get_patient_info(card_no=None):
                     request_type="GetCardDetails",
                     request_url=url,
                     request_header=headers,
-                    response_data=json.loads(r.text)
+                    response_data=json.loads(r.text),
                 )
                 card = json.loads(r.text)
                 frappe.msgprint(_(card["Remarks"]), alert=True)
@@ -100,7 +98,10 @@ def get_patient_info(card_no=None):
                 )
                 frappe.msgprint(json.loads(r.text))
                 frappe.msgprint(
-                    _("Getting information from NHIF failed. Try again after sometime, or continue manually."))
+                    _(
+                        "Getting information from NHIF failed. Try again after sometime, or continue manually."
+                    )
+                )
         except Exception as e:
             frappe.logger().debug({"webhook_error": e, "try": i + 1})
             sleep(3 * i + 1)
@@ -131,16 +132,16 @@ def update_patient_history(doc):
     doc.medication = medication
     if doc.medical_history or doc.medication:
         frappe.msgprint(
-            _("Update patient history for medical history and chronic medications"), alert=True)
+            _("Update patient history for medical history and chronic medications"),
+            alert=True,
+        )
 
 
 @frappe.whitelist()
 def check_card_number(card_no, is_new=None, patient=None):
-    filters = {
-        "insurance_card_detail": ["like", "%" + card_no + "%"]
-    }
+    filters = {"insurance_card_detail": ["like", "%" + card_no + "%"]}
     if not is_new and patient:
-        filters["name"] = ['!=', patient]
+        filters["name"] = ["!=", patient]
     patients = frappe.get_all("Patient", filters=filters)
     if len(patients):
         return patients[0].name
@@ -151,12 +152,15 @@ def check_card_number(card_no, is_new=None, patient=None):
 def create_subscription(doc):
     if not frappe.db.exists("NHIF Product", doc.product_code):
         return
-    subscription_list = frappe.get_all("Healthcare Insurance Subscription", filters={
-                                       "patient": doc.name, "is_active": 1})
+    subscription_list = frappe.get_all(
+        "Healthcare Insurance Subscription",
+        filters={"patient": doc.name, "is_active": 1},
+    )
     if len(subscription_list) > 0 or not doc.product_code:
         return
     plan = frappe.get_value(
-        "NHIF Product", doc.product_code, "healthcare_insurance_coverage_plan")
+        "NHIF Product", doc.product_code, "healthcare_insurance_coverage_plan"
+    )
     if not plan:
         return
     plan_doc = frappe.get_doc("Healthcare Insurance Coverage Plan", plan)
@@ -168,7 +172,11 @@ def create_subscription(doc):
     sub_doc.save(ignore_permissions=True)
     sub_doc.submit()
     frappe.msgprint(
-        _("<h3>AUTO</h3> Healthcare Insurance Subscription {0} is created").format(sub_doc.name))
+        _("<h3>AUTO</h3> Healthcare Insurance Subscription {0} is created").format(
+            sub_doc.name
+        )
+    )
+
 
 def after_insert(doc, method):
     if not doc.card_no:

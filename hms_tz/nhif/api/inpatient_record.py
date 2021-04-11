@@ -24,7 +24,7 @@ def validate_inpatient_occupancies(doc):
         if not old_row.is_confirmed:
             continue
         valide = True
-        row = doc.inpatient_occupancies[count-1]
+        row = doc.inpatient_occupancies[count - 1]
         if str(row.check_in) != str(old_row.check_in):
             valide = False
         if str(row.check_out) != str(old_row.check_out):
@@ -35,22 +35,24 @@ def validate_inpatient_occupancies(doc):
             valide = False
         if not valide:
             frappe.msgprint(
-                _("In Inpatient Occupancy line '{0}' has been invoiced. It should not be modified or deleted").format(old_row.idx))
+                _(
+                    "In Inpatient Occupancy line '{0}' has been invoiced. It should not be modified or deleted"
+                ).format(old_row.idx)
+            )
 
 
 def daily_update_inpatient_occupancies():
-    occupancies = frappe.get_all(
-        "Inpatient Record", filters={"status": "Admitted"})
+    occupancies = frappe.get_all("Inpatient Record", filters={"status": "Admitted"})
 
     for item in occupancies:
         doc = frappe.get_doc("Inpatient Record", item.name)
         occupancies_len = len(doc.inpatient_occupancies)
         if occupancies_len > 0:
-            last_row = doc.inpatient_occupancies[occupancies_len-1]
+            last_row = doc.inpatient_occupancies[occupancies_len - 1]
             if not last_row.left:
                 last_row.left = 1
                 last_row.check_out = nowdate()
-                new_row = doc.append('inpatient_occupancies', {})
+                new_row = doc.append("inpatient_occupancies", {})
                 new_row.check_in = nowdate()
                 new_row.left = 0
                 new_row.service_unit = last_row.service_unit
@@ -66,32 +68,48 @@ def confirmed(row, doc):
         return
     encounter = frappe.get_doc("Patient Encounter", doc.admission_encounter)
     service_unit_type, warehouse = frappe.get_value(
-        "Healthcare Service Unit", row.service_unit, ["service_unit_type", "warehouse"])
+        "Healthcare Service Unit", row.service_unit, ["service_unit_type", "warehouse"]
+    )
     item_code = frappe.get_value(
-        "Healthcare Service Unit Type", service_unit_type, "item_code")
+        "Healthcare Service Unit Type", service_unit_type, "item_code"
+    )
     item_rate = 0
     if encounter.insurance_subscription:
         item_rate = get_item_rate(
-            item_code, encounter.company, encounter.insurance_subscription, encounter.insurance_company)
+            item_code,
+            encounter.company,
+            encounter.insurance_subscription,
+            encounter.insurance_company,
+        )
         if not item_rate:
-            frappe.throw(_("There is no price in Insurance Subscription {0} for item {1}").format(
-                encounter.insurance_subscription, item_code))
+            frappe.throw(
+                _(
+                    "There is no price in Insurance Subscription {0} for item {1}"
+                ).format(encounter.insurance_subscription, item_code)
+            )
     elif encounter.mode_of_payment:
         price_list = frappe.get_value(
-            "Mode of Payment", encounter.mode_of_payment, "price_list")
+            "Mode of Payment", encounter.mode_of_payment, "price_list"
+        )
         if not price_list:
-            frappe.throw(_("There is no in mode of payment {0}").format(
-                encounter.mode_of_payment))
+            frappe.throw(
+                _("There is no in mode of payment {0}").format(
+                    encounter.mode_of_payment
+                )
+            )
         if price_list:
-            item_rate = get_item_price(
-                item_code, price_list, encounter.company)
+            item_rate = get_item_price(item_code, price_list, encounter.company)
             if not item_rate:
-                frappe.throw(_("There is no price in price list {0} for item {1}").format(
-                    price_list, item_code))
+                frappe.throw(
+                    _("There is no price in price list {0} for item {1}").format(
+                        price_list, item_code
+                    )
+                )
 
     if item_rate:
-        delivery_note = create_delivery_note(encounter, item_code, item_rate, warehouse,
-                                             row, doc.primary_practitioner)
+        delivery_note = create_delivery_note(
+            encounter, item_code, item_rate, warehouse, row, doc.primary_practitioner
+        )
         frappe.set_value(row.doctype, row.name, "is_confirmed", 1)
         return delivery_note
 
@@ -114,29 +132,32 @@ def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practi
     item.description = "For Inpatient Record {0}".format(row.parent)
     items.append(item)
 
-    doc = frappe.get_doc(dict(
-        doctype="Delivery Note",
-        posting_date=nowdate(),
-        posting_time=nowtime(),
-        set_warehouse=warehouse,
-        company=encounter.company,
-        customer=frappe.get_value(
-            "Healthcare Insurance Company", insurance_company, "customer"),
-        currency=frappe.get_value(
-            "Company", encounter.company, "default_currency"),
-        items=items,
-        reference_doctype=row.parenttype,
-        reference_name=row.parent,
-        patient=encounter.patient,
-        patient_name=encounter.patient_name,
-        healthcare_service_unit=row.service_unit,
-        healthcare_practitioner=practitioner
-    ))
+    doc = frappe.get_doc(
+        dict(
+            doctype="Delivery Note",
+            posting_date=nowdate(),
+            posting_time=nowtime(),
+            set_warehouse=warehouse,
+            company=encounter.company,
+            customer=frappe.get_value(
+                "Healthcare Insurance Company", insurance_company, "customer"
+            ),
+            currency=frappe.get_value("Company", encounter.company, "default_currency"),
+            items=items,
+            reference_doctype=row.parenttype,
+            reference_name=row.parent,
+            patient=encounter.patient,
+            patient_name=encounter.patient_name,
+            healthcare_service_unit=row.service_unit,
+            healthcare_practitioner=practitioner,
+        )
+    )
     doc.flags.ignore_permissions = True
     doc.set_missing_values()
     doc.insert(ignore_permissions=True)
     doc.submit()
-    if doc.get('name'):
-        frappe.msgprint(_('Delivery Note {0} created successfully.').format(
-            frappe.bold(doc.name)))
-        return doc.get('name')
+    if doc.get("name"):
+        frappe.msgprint(
+            _("Delivery Note {0} created successfully.").format(frappe.bold(doc.name))
+        )
+        return doc.get("name")

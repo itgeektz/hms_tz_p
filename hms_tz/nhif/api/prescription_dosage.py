@@ -7,9 +7,10 @@ import frappe
 from frappe import _
 from frappe.utils import nowtime
 
+
 def before_insert(doc, method):
     if doc.default_strength:
-        doc.append("dosage_strength", {
-            "strength": abs(doc.default_strength),
-            "strength_time": nowtime()
-        })
+        doc.append(
+            "dosage_strength",
+            {"strength": abs(doc.default_strength), "strength_time": nowtime()},
+        )
