@@ -121,7 +121,6 @@ frappe.ui.form.on('Patient Appointment', {
                 'insurance_subscription': frm.doc.insurance_subscription,
                 'billing_item': frm.doc.billing_item,
                 'company': frm.doc.company,
-                'patient': frm.doc.patient,
                 'insurance_company': frm.doc.insurance_company,
             },
             callback: function (data) {
@@ -225,6 +224,9 @@ frappe.ui.form.on('Patient Appointment', {
     },
     invoiced: function (frm) {
         frm.trigger("mandatory_fields");
+    },
+    authorization_number: function (frm) {
+        frm.trigger("insurance_subscription");
     },
     insurance_claim: function (frm) {
         frm.trigger("mandatory_fields");
