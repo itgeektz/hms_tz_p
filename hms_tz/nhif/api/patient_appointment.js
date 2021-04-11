@@ -398,9 +398,7 @@ const add_btns = (frm) => {
 
 const add_invoice_btn = (frm) => {
     frm.add_custom_button(__('Create Sales Invoice'), function () {
-        if (frm.is_dirty()) {
-            frm.save();
-        }
+        frm.save();
         frappe.call({
             method: 'hms_tz.nhif.api.patient_appointment.invoice_appointment',
             args: {

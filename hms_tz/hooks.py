@@ -820,7 +820,8 @@ doc_events = {
         "before_insert": "hms_tz.nhif.api.service_order.set_missing_values",
     },
     "Sales Invoice": {
-        "on_submit": "hms_tz.nhif.api.sales_invoice.create_healthcare_docs",
+        "before_submit": "hms_tz.nhif.api.sales_invoice.before_submit",
+        "on_submit": "hms_tz.nhif.api.sales_invoice.on_submit",
         "validate": "hms_tz.nhif.api.sales_invoice.validate",
     },
     "Healthcare Insurance Subscription": {
