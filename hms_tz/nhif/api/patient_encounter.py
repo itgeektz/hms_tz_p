@@ -164,7 +164,6 @@ def on_submit_validation(doc, method):
         "coverage_plan_name",
     )
     for template in healthcare_service_templates:
-        coverage_info = hsic_map[template]
         if template not in hsic_map:
             msgThrow(
                 _(
@@ -175,6 +174,7 @@ def on_submit_validation(doc, method):
             )
             continue
 
+        coverage_info = hsic_map[template]
         for row in healthcare_service_templates[template]:
             row.is_restricted = coverage_info.approval_mandatory_for_claim
             if row.is_restricted:
