@@ -9,7 +9,6 @@ from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
     get_income_account,
 )
 from hms_tz.hms_tz.utils import validate_customer_created
-from hms_tz.nhif.api.patient_appointment import get_insurance_amount
 from frappe.utils import nowdate, nowtime, add_days
 import base64
 import re
