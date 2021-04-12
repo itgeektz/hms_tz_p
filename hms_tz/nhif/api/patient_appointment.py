@@ -150,29 +150,7 @@ def create_vital(appointment):
 
 
 def make_vital(appointment_doc, method):
-    filters = {
-        "name": ["!=", appointment_doc.name],
-        "insurance_subscription": appointment_doc.insurance_subscription,
-        "department": appointment_doc.department,
-    }
-    appointment = get_previous_appointment(appointment_doc.patient, filters)
-    if appointment and appointment_doc.appointment_date:
-        diff = date_diff(appointment_doc.appointment_date, appointment.appointment_date)
-        valid_days = int(
-            frappe.get_value("Healthcare Settings", "Healthcare Settings", "valid_days")
-        )
-        if diff <= valid_days:
-            appointment_doc.follow_up = 1
-            frappe.msgprint(
-                _(
-                    "Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"
-                ),
-                alert=True,
-            )
-        else:
-            appointment_doc.follow_up = 0
-            frappe.msgprint(_("This appointment requires to be paid for!"), alert=True)
-
+    set_follow_up(appointment_doc, "invoice_appointment")
     if (not appointment_doc.ref_vital_signs) and (
         appointment_doc.invoiced
         or (
@@ -350,6 +328,7 @@ def set_follow_up(appointment_doc, method):
         "name": ["!=", appointment_doc.name],
         "insurance_subscription": appointment_doc.insurance_subscription,
         "department": appointment_doc.department,
+        "status": "Closed",
     }
     appointment = get_previous_appointment(appointment_doc.patient, filters)
     if appointment and appointment_doc.appointment_date:
