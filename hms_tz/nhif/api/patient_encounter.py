@@ -25,8 +25,7 @@ from hms_tz.nhif.api.patient_appointment import get_mop_amount
 
 
 def after_insert(doc, method):
-    frappe.db.update(doc.doctype, doc.name, {
-                     "sales_invoice": "", "is_not_billable": 0})
+    frappe.db.update(doc.doctype, doc.name, {"sales_invoice": "", "is_not_billable": 0})
 
 
 def on_trash(doc, method):
@@ -799,8 +798,7 @@ def on_update_after_submit(doc, method):
 
 def enqueue_on_update_after_submit(doc_name):
     time.sleep(5)
-    on_update_after_submit(frappe.get_doc(
-        "Patient Encounter", doc_name), "enqueue")
+    on_update_after_submit(frappe.get_doc("Patient Encounter", doc_name), "enqueue")
 
 
 def before_submit(doc, method):
@@ -829,7 +827,6 @@ def before_submit(doc, method):
             )
 
 
-
 @frappe.whitelist()
 def undo_finalized_encounter(cur_encounter, ref_encounter=None):
     encounters_list = frappe.get_all(
@@ -841,8 +838,7 @@ def undo_finalized_encounter(cur_encounter, ref_encounter=None):
     if not ref_encounter:
         frappe.set_value("Patient Encounter", cur_encounter, "finalized", 0)
         return
-    frappe.set_value("Patient Encounter", cur_encounter,
-                     "encounter_type", "Ongoing")
+    frappe.set_value("Patient Encounter", cur_encounter, "encounter_type", "Ongoing")
 
 
 def set_amounts(doc):
@@ -871,20 +867,26 @@ def set_amounts(doc):
             "table": "therapies",
             "doctype": "Therapy Type",
             "item": "therapy_type",
-        }
+        },
     ]
     try:
         for child in childs_map:
             for row in doc.get(child.get("table")):
                 item_rate = 0
                 item_code = frappe.get_value(
-                    child.get("doctype"), row.get(child.get("item")), "item")
+                    child.get("doctype"), row.get(child.get("item")), "item"
+                )
                 if row.prescribe or not doc.insurance_subscription:
                     item_rate = get_mop_amount(
-                        item_code, doc.mode_of_payment, doc.company, doc.patient)
+                        item_code, doc.mode_of_payment, doc.company, doc.patient
+                    )
                 else:
                     item_rate = get_item_rate(
-                        item_code, doc.company, doc.insurance_subscription, doc.insurance_company)
-            row.amount = item_rate
-    except Exception:
-        frappe.log_error(frappe.get_traceback())
+                        item_code,
+                        doc.company,
+                        doc.insurance_subscription,
+                        doc.insurance_company,
+                    )
+                row.amount = item_rate
+    except Exception as e:
+        frappe.logger().debug({"price loop": e, "try": item_code})
