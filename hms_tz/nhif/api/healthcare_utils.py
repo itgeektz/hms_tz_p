@@ -108,7 +108,8 @@ def get_item_price(item_code, price_list, company):
     return price
 
 
-def get_item_rate(item_code, company, insurance_subscription, insurance_company):
+@frappe.whitelist()
+def get_item_rate(item_code, company, insurance_subscription, insurance_company=None):
     price_list = None
     price_list_rate = None
     if insurance_subscription:
