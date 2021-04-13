@@ -390,7 +390,7 @@ def validate_stock_item(
 def on_submit(doc, method):
     on_submit_validation(doc, method)
     create_healthcare_docs(doc)
-    create_delivery_note(doc)
+    create_delivery_note(doc, method)
     update_inpatient_record_consultancy(doc)
     # frappe.enqueue(method=enqueue_on_update_after_submit, queue='long',
     #                timeout=300, is_async=True, **{"doc_name": doc.name})
@@ -402,7 +402,7 @@ def create_healthcare_docs_from_name(patient_encounter_doc_name):
         "Patient Encounter", patient_encounter_doc_name
     )
     create_healthcare_docs(patient_encounter_doc)
-    create_delivery_note(patient_encounter_doc)
+    create_delivery_note(patient_encounter_doc, "from_button")
 
 
 def create_healthcare_docs(patient_encounter_doc):
@@ -453,7 +453,7 @@ def create_healthcare_docs(patient_encounter_doc):
                     )
 
 
-def create_delivery_note(patient_encounter_doc):
+def create_delivery_note(patient_encounter_doc, method):
     if not patient_encounter_doc.appointment:
         return
     insurance_subscription, insurance_company = frappe.get_value(
@@ -469,7 +469,7 @@ def create_delivery_note(patient_encounter_doc):
             continue
         if line.drug_prescription_created:
             continue
-        item_code = frappe.get_value("Medication", line.drug_code, "item_code")
+        item_code = frappe.get_value("Medication", line.drug_code, "item")
         is_stock = frappe.get_value("Item", item_code, "is_stock_item")
         if not is_stock:
             continue
@@ -484,7 +484,7 @@ def create_delivery_note(patient_encounter_doc):
             warehouse = get_warehouse_from_service_unit(row.healthcare_service_unit)
             if element != warehouse:
                 continue
-            item_code = frappe.get_value("Medication", row.drug_code, "item_code")
+            item_code = frappe.get_value("Medication", row.drug_code, "item")
             is_stock = frappe.get_value("Item", item_code, "is_stock_item")
             item_name = frappe.get_value("Item", item_code, "item_name")
             if not is_stock:
@@ -517,6 +517,7 @@ def create_delivery_note(patient_encounter_doc):
             )
             items.append(item)
             row.drug_prescription_created = 1
+            row.db_update()
         if len(items) == 0:
             continue
         doc = frappe.get_doc(
