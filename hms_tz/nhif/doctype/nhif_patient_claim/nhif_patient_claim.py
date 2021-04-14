@@ -21,15 +21,21 @@ from PyPDF2 import PdfFileWriter
 
 class NHIFPatientClaim(Document):
     def validate(self):
-        for item in self.nhif_patient_claim_item:
-            item.amount_claimed = item.unit_price * item.item_quantity
-        if self.allow_changes:
-            return
-        self.patient_encounters = self.get_patient_encounters()
-        from hms_tz.nhif.api.patient_encounter import finalized_encounter
+        if not self.allow_changes:
+            self.patient_encounters = self.get_patient_encounters()
+            from hms_tz.nhif.api.patient_encounter import finalized_encounter
 
-        finalized_encounter(self.patient_encounters[-1])
-        self.set_claim_values()
+            finalized_encounter(self.patient_encounters[-1])
+            self.set_claim_values()
+        self.calculate_totals()
+        if not self.is_new():
+            frappe.set_value(
+                "Patient Appointment",
+                self.patient_appointment,
+                "nhif_patient_claim",
+                self.name,
+            )
+        self.patient_file = generate_pdf(self)
 
     def on_trash(self):
         frappe.set_value(
@@ -40,14 +46,6 @@ class NHIFPatientClaim(Document):
         self.patient_encounters = self.get_patient_encounters()
         if not self.patient_signature:
             frappe.throw(_("Patient signature is required"))
-        if not self.patient_file:
-            self.patient_file = generate_pdf(self)
-        frappe.set_value(
-            "Patient Appointment",
-            self.patient_appointment,
-            "nhif_patient_claim",
-            self.name,
-        )
         self.send_nhif_claim()
 
     def set_claim_values(self):
@@ -122,7 +120,7 @@ class NHIFPatientClaim(Document):
                 new_row.folio_disease_id = str(uuid.uuid1())
                 new_row.folio_id = self.folio_id
                 new_row.medical_code = row.medical_code
-                new_row.disease_code = row.code
+                new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
                 new_row.description = row.description
                 new_row.created_by = get_fullname(row.modified_by)
                 new_row.date_created = row.modified.strftime("%Y-%m-%d")
@@ -505,6 +503,12 @@ class NHIFPatientClaim(Document):
                 )
             frappe.msgprint(_("The claim has been sent successfully"), alert=True)
 
+    def calculate_totals(self):
+        self.total_amount = 0
+        for item in self.nhif_patient_claim_item:
+            item.amount_claimed = item.unit_price * item.item_quantity
+            self.total_amount += item.amount_claimed
+
 
 def get_item_refcode(item_code):
     code_list = frappe.get_all(
@@ -522,8 +526,15 @@ def get_item_refcode(item_code):
 
 def generate_pdf(doc):
     doc_name = doc.name
-    data = doc.patient_encounters
+    from csf_tz import console
+
+    console(doc_name)
+    file_list = frappe.get_all("File", filters={"attached_to_name": doc_name})
+    console(file_list)
+    for file in file_list:
+        frappe.delete_doc("File", file.name)
     data_list = []
+    data = doc.patient_encounters
     for i in data:
         data_list.append(i.name)
     doctype = dict({"Patient Encounter": data_list})
@@ -538,7 +549,7 @@ def generate_pdf(doc):
     else:
         print_format = "Standard"
 
-    pdf = download_multi_pdf(doctype, doc_name, format=print_format, no_letterhead=0)
+    pdf = download_multi_pdf(doctype, doc_name, format=print_format, no_letterhead=1)
     if pdf:
         ret = frappe.get_doc(
             {
