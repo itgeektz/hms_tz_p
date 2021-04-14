@@ -270,9 +270,7 @@ class NHIFPatientClaim(Document):
                 new_row.folio_item_id = str(uuid.uuid1())
                 new_row.folio_id = self.folio_id
                 new_row.date_created = item.modified.strftime("%Y-%m-%d")
-                new_row.item_crt_by = frappe.get_value(
-                    "User", item.modified_by, "full_name"
-                )
+                new_row.item_crt_by = get_fullname(item.modified_by)
 
             for item in records_list:
                 if not item.is_confirmed:
