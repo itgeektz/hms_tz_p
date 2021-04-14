@@ -33,6 +33,7 @@
   "folio_no",
   "serial_no",
   "created_by",
+  "item_crt_by",
   "column_break_18",
   "practitioner_no",
   "date_discharge",
@@ -42,6 +43,8 @@
   "patient_file_no",
   "patient_file_section",
   "patient_file",
+  "claim_file_section",
+  "claim_file",
   "section_break_28",
   "nhif_patient_claim_disease",
   "section_break_30",
@@ -130,7 +133,8 @@
   {
    "fieldname": "created_by",
    "fieldtype": "Data",
-   "label": "Created By",
+   "hidden": 1,
+   "label": "Old Created By",
    "read_only": 1
   },
   {
@@ -326,12 +330,28 @@
    "label": "Total Amount",
    "precision": "0",
    "read_only": 1
+  },
+  {
+   "fieldname": "claim_file_section",
+   "fieldtype": "Section Break",
+   "label": "Claim File"
+  },
+  {
+   "fieldname": "claim_file",
+   "fieldtype": "Markdown Editor",
+   "label": "Claim File"
+  },
+  {
+   "fieldname": "item_crt_by",
+   "fieldtype": "Data",
+   "label": "Created By",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-04-14 20:45:54.856615",
+ "modified": "2021-04-14 23:24:01.626186",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim",

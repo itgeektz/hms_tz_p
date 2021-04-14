@@ -13,7 +13,11 @@ import requests
 from frappe.utils.background_jobs import enqueue
 from frappe.utils import now, now_datetime, get_fullname
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
-from hms_tz.nhif.api.healthcare_utils import get_item_rate, to_base64
+from hms_tz.nhif.api.healthcare_utils import (
+    get_item_rate,
+    to_base64,
+    get_approval_number_from_LRPMT,
+)
 import os
 from frappe.utils.pdf import get_pdf, cleanup
 from PyPDF2 import PdfFileWriter
@@ -29,13 +33,11 @@ class NHIFPatientClaim(Document):
             self.set_claim_values()
         self.calculate_totals()
         if not self.is_new():
-            frappe.set_value(
-                "Patient Appointment",
-                self.patient_appointment,
-                "nhif_patient_claim",
-                self.name,
+            frappe.db.sql(
+                "UPDATE `tabPatient Appointment` SET nhif_patient_claim = '{0}' WHERE name = '{1}'".format(
+                    self.name, self.patient_appointment
+                )
             )
-        self.patient_file = generate_pdf(self)
 
     def on_trash(self):
         frappe.set_value(
@@ -46,6 +48,7 @@ class NHIFPatientClaim(Document):
         self.patient_encounters = self.get_patient_encounters()
         if not self.patient_signature:
             frappe.throw(_("Patient signature is required"))
+        self.patient_file = generate_pdf(self)
         self.send_nhif_claim()
 
     def set_claim_values(self):
@@ -59,7 +62,7 @@ class NHIFPatientClaim(Document):
         self.claim_month = int(now_datetime().strftime("%m"))
         self.folio_no = int(self.name[-9:])
         self.serial_no = self.folio_no
-        self.created_by = get_fullname(frappe.session.user)
+        self.item_crt_by = get_fullname(frappe.session.user)
         final_patient_encounter = self.get_final_patient_encounter()
         self.practitioner_no = frappe.get_value(
             "Healthcare Practitioner",
@@ -122,7 +125,7 @@ class NHIFPatientClaim(Document):
                 new_row.medical_code = row.medical_code
                 new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
                 new_row.description = row.description
-                new_row.created_by = get_fullname(row.modified_by)
+                new_row.item_crt_by = get_fullname(row.modified_by)
                 new_row.date_created = row.modified.strftime("%Y-%m-%d")
         for encounter in self.patient_encounters:
             encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
@@ -139,7 +142,7 @@ class NHIFPatientClaim(Document):
                 new_row.medical_code = row.medical_code
                 new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
                 new_row.description = row.description
-                new_row.created_by = get_fullname(row.modified_by)
+                new_row.item_crt_by = get_fullname(row.modified_by)
                 new_row.date_created = row.modified.strftime("%Y-%m-%d")
 
     def set_patient_claim_item(self):
@@ -150,7 +153,8 @@ class NHIFPatientClaim(Document):
                 "item": "lab_test_code",
                 "item_name": "lab_test_name",
                 "comment": "lab_test_comment",
-                "quantity": "quantity",
+                "ref_doctype": "Lab Test",
+                "ref_docname": "lab_test",
             },
             {
                 "table": "radiology_procedure_prescription",
@@ -158,6 +162,8 @@ class NHIFPatientClaim(Document):
                 "item": "radiology_examination_template",
                 "item_name": "radiology_procedure_name",
                 "comment": "radiology_test_comment",
+                "ref_doctype": "Radiology Examination",
+                "ref_docname": "radiology_examination",
             },
             {
                 "table": "procedure_prescription",
@@ -165,6 +171,8 @@ class NHIFPatientClaim(Document):
                 "item": "procedure",
                 "item_name": "procedure_name",
                 "comment": "comments",
+                "ref_doctype": "Clinical Procedure",
+                "ref_docname": "clinical_procedure",
             },
             {
                 "table": "drug_prescription",
@@ -172,6 +180,8 @@ class NHIFPatientClaim(Document):
                 "item": "drug_code",
                 "item_name": "drug_name",
                 "comment": "comment",
+                "ref_doctype": "Drug Prescription",
+                "ref_docname": "name",
             },
             {
                 "table": "therapies",
@@ -179,6 +189,8 @@ class NHIFPatientClaim(Document):
                 "item": "therapy_type",
                 "item_name": "therapy_type",
                 "comment": "comment",
+                "ref_doctype": "",
+                "ref_docname": "",
             },
         ]
         self.nhif_patient_claim_item = []
@@ -209,14 +221,16 @@ class NHIFPatientClaim(Document):
                         new_row.amount_claimed = (
                             new_row.unit_price * new_row.item_quantity
                         )
-                        # new_row.approval_ref_no = row.approval_number
+                        new_row.approval_ref_no = get_approval_number_from_LRPMT(
+                            child["ref_doctype"], row.get(child["ref_docname"])
+                        )
                         new_row.patient_encounter = encounter.name
                         new_row.ref_doctype = row.doctype
                         new_row.ref_docname = row.name
                         new_row.folio_item_id = str(uuid.uuid1())
                         new_row.folio_id = self.folio_id
                         new_row.date_created = row.modified.strftime("%Y-%m-%d")
-                        new_row.created_by = get_fullname(row.modified_by)
+                        new_row.item_crt_by = get_fullname(row.modified_by)
         else:
             dates = []
             records_list = []
@@ -256,7 +270,9 @@ class NHIFPatientClaim(Document):
                 new_row.folio_item_id = str(uuid.uuid1())
                 new_row.folio_id = self.folio_id
                 new_row.date_created = item.modified.strftime("%Y-%m-%d")
-                new_row.created_by = get_fullname(item.modified_by)
+                new_row.item_crt_by = frappe.get_value(
+                    "User", item.modified_by, "full_name"
+                )
 
             for item in records_list:
                 if not item.is_confirmed:
@@ -295,7 +311,9 @@ class NHIFPatientClaim(Document):
                             new_row.item_quantity = 1
                             new_row.unit_price = row_item.rate
                             new_row.amount_claimed = row_item.rate
-                            new_row.approval_ref_no = ""
+                            new_row.approval_ref_no = get_approval_number_from_LRPMT(
+                                child["ref_doctype"], row.get(child["ref_docname"])
+                            )
                             new_row.patient_encounter = (
                                 row_item.encounter or record_doc.admission_encounter
                             )
@@ -306,7 +324,7 @@ class NHIFPatientClaim(Document):
                             new_row.date_created = row_item.modified.strftime(
                                 "%Y-%m-%d"
                             )
-                            new_row.created_by = get_fullname(row_item.modified_by)
+                            new_row.item_crt_by = get_fullname(row_item.modified_by)
                 if is_service_chargeable:
                     for encounter in self.patient_encounters:
                         encounter_doc = frappe.get_doc(
@@ -337,14 +355,18 @@ class NHIFPatientClaim(Document):
                                 new_row.amount_claimed = (
                                     new_row.unit_price * new_row.item_quantity
                                 )
-                                new_row.approval_ref_no = row.approval_number
+                                new_row.approval_ref_no = (
+                                    get_approval_number_from_LRPMT(
+                                        row.doctype, row.name, child.get("ref_docname")
+                                    )
+                                )
                                 new_row.patient_encounter = encounter.name
                                 new_row.ref_doctype = row.doctype
                                 new_row.ref_docname = row.name
                                 new_row.folio_item_id = str(uuid.uuid1())
                                 new_row.folio_id = self.folio_id
                                 new_row.date_created = row.modified.strftime("%Y-%m-%d")
-                                new_row.created_by = get_fullname(row.modified_by)
+                                new_row.item_crt_by = get_fullname(row.modified_by)
 
         sorted_patient_claim_item = sorted(
             self.nhif_patient_claim_item, key=lambda k: k.get("ref_doctype")
@@ -378,7 +400,7 @@ class NHIFPatientClaim(Document):
             new_row.folio_item_id = str(uuid.uuid1())
             new_row.folio_id = self.folio_id
             new_row.date_created = patient_appointment_doc.modified.strftime("%Y-%m-%d")
-            new_row.created_by = get_fullname(patient_appointment_doc.modified_by)
+            new_row.item_crt_by = get_fullname(patient_appointment_doc.modified_by)
             new_row.idx = 1
 
     def get_final_patient_encounter(self):
@@ -427,7 +449,7 @@ class NHIFPatientClaim(Document):
             entities.DateAdmitted = str(self.date_admitted)
             entities.DateDischarged = str(self.date_discharge)
         entities.PractitionerNo = self.practitioner_no
-        entities.CreatedBy = self.created_by
+        entities.CreatedBy = self.item_crt_by
         entities.DateCreated = str(self.posting_date)
         # entities.LastModifiedBy = self.LastModifiedBy
         # entities.LastModified = self.LastModified
@@ -439,7 +461,7 @@ class NHIFPatientClaim(Document):
             FolioDisease.DiseaseCode = disease.disease_code
             FolioDisease.FolioID = disease.folio_id
             FolioDisease.Remarks = None
-            FolioDisease.CreatedBy = disease.created_by
+            FolioDisease.CreatedBy = disease.item_crt_by
             FolioDisease.DateCreated = str(disease.date_created)
             # FolioDisease.LastModifiedBy = disease.LastModifiedBy
             # FolioDisease.LastModified = disease.LastModified
@@ -455,7 +477,7 @@ class NHIFPatientClaim(Document):
             FolioItem.UnitPrice = item.unit_price
             FolioItem.AmountClaimed = item.amount_claimed
             FolioItem.ApprovalRefNo = item.approval_ref_no or None
-            FolioItem.CreatedBy = item.created_by
+            FolioItem.CreatedBy = item.item_crt_by
             FolioItem.DateCreated = str(item.date_created)
             # FolioItem.LastModifiedBy = item.LastModifiedBy
             # FolioItem.LastModified = item.LastModified
@@ -582,11 +604,7 @@ def download_multi_pdf(doctype, name, format=None, no_letterhead=0):
                         no_letterhead=no_letterhead,
                     )
                 except Exception:
-                    frappe.log_error(
-                        "Permission Error on doc {} of doctype {}".format(
-                            doc_name, doctype_name
-                        )
-                    )
+                    frappe.log_error(frappe.get_traceback())
         frappe.local.response.filename = "{}.pdf".format(name)
 
     return read_multi_pdf(output)
