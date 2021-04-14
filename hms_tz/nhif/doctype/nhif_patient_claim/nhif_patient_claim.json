@@ -17,11 +17,13 @@
   "telephone_no",
   "date_of_birth",
   "gender",
+  "allow_changes",
   "column_break_10",
   "company",
   "posting_date",
   "cardno",
   "authorization_no",
+  "total_amount",
   "patient_signature",
   "section_break_8",
   "folio_id",
@@ -174,12 +176,13 @@
   },
   {
    "fetch_from": "patient_appointment.authorization_number",
+   "fetch_if_empty": 1,
    "fieldname": "authorization_no",
    "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Authorization No",
-   "read_only": 1,
+   "permlevel": 1,
    "reqd": 1
   },
   {
@@ -310,12 +313,25 @@
    "label": "Patient File",
    "print_hide": 1,
    "report_hide": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "allow_changes",
+   "fieldtype": "Check",
+   "label": "Allow Changes"
+  },
+  {
+   "fieldname": "total_amount",
+   "fieldtype": "Float",
+   "label": "Total Amount",
+   "precision": "0",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-04-03 14:26:25.161755",
+ "modified": "2021-04-14 20:45:54.856615",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim",
