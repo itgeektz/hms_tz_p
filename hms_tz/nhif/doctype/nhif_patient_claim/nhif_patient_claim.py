@@ -11,7 +11,7 @@ from hms_tz.nhif.api.token import get_claimsservice_token
 import json
 import requests
 from frappe.utils.background_jobs import enqueue
-from frappe.utils import now, now_datetime, nowdate
+from frappe.utils import now, now_datetime, get_fullname
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from hms_tz.nhif.api.healthcare_utils import get_item_rate, to_base64
 import os
@@ -61,7 +61,7 @@ class NHIFPatientClaim(Document):
         self.claim_month = int(now_datetime().strftime("%m"))
         self.folio_no = int(self.name[-9:])
         self.serial_no = self.folio_no
-        self.created_by = frappe.get_value("User", frappe.session.user, "full_name")
+        self.created_by = get_fullname(frappe.session.user)
         final_patient_encounter = self.get_final_patient_encounter()
         self.practitioner_no = frappe.get_value(
             "Healthcare Practitioner",
@@ -124,9 +124,7 @@ class NHIFPatientClaim(Document):
                 new_row.medical_code = row.medical_code
                 new_row.disease_code = row.code
                 new_row.description = row.description
-                new_row.created_by = frappe.get_value(
-                    "User", row.modified_by, "full_name"
-                )
+                new_row.created_by = get_fullname(row.modified_by)
                 new_row.date_created = row.modified.strftime("%Y-%m-%d")
         for encounter in self.patient_encounters:
             encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
@@ -143,9 +141,7 @@ class NHIFPatientClaim(Document):
                 new_row.medical_code = row.medical_code
                 new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
                 new_row.description = row.description
-                new_row.created_by = frappe.get_value(
-                    "User", row.modified_by, "full_name"
-                )
+                new_row.created_by = get_fullname(row.modified_by)
                 new_row.date_created = row.modified.strftime("%Y-%m-%d")
 
     def set_patient_claim_item(self):
@@ -222,9 +218,7 @@ class NHIFPatientClaim(Document):
                         new_row.folio_item_id = str(uuid.uuid1())
                         new_row.folio_id = self.folio_id
                         new_row.date_created = row.modified.strftime("%Y-%m-%d")
-                        new_row.created_by = frappe.get_value(
-                            "User", row.modified_by, "full_name"
-                        )
+                        new_row.created_by = get_fullname(row.modified_by)
         else:
             dates = []
             records_list = []
@@ -264,9 +258,7 @@ class NHIFPatientClaim(Document):
                 new_row.folio_item_id = str(uuid.uuid1())
                 new_row.folio_id = self.folio_id
                 new_row.date_created = item.modified.strftime("%Y-%m-%d")
-                new_row.created_by = frappe.get_value(
-                    "User", item.modified_by, "full_name"
-                )
+                new_row.created_by = get_fullname(item.modified_by)
 
             for item in records_list:
                 if not item.is_confirmed:
@@ -316,9 +308,7 @@ class NHIFPatientClaim(Document):
                             new_row.date_created = row_item.modified.strftime(
                                 "%Y-%m-%d"
                             )
-                            new_row.created_by = frappe.get_value(
-                                "User", row_item.modified_by, "full_name"
-                            )
+                            new_row.created_by = get_fullname(row_item.modified_by)
                 if is_service_chargeable:
                     for encounter in self.patient_encounters:
                         encounter_doc = frappe.get_doc(
@@ -356,9 +346,7 @@ class NHIFPatientClaim(Document):
                                 new_row.folio_item_id = str(uuid.uuid1())
                                 new_row.folio_id = self.folio_id
                                 new_row.date_created = row.modified.strftime("%Y-%m-%d")
-                                new_row.created_by = frappe.get_value(
-                                    "User", row.modified_by, "full_name"
-                                )
+                                new_row.created_by = get_fullname(row.modified_by)
 
         sorted_patient_claim_item = sorted(
             self.nhif_patient_claim_item, key=lambda k: k.get("ref_doctype")
@@ -392,9 +380,7 @@ class NHIFPatientClaim(Document):
             new_row.folio_item_id = str(uuid.uuid1())
             new_row.folio_id = self.folio_id
             new_row.date_created = patient_appointment_doc.modified.strftime("%Y-%m-%d")
-            new_row.created_by = frappe.get_value(
-                "User", patient_appointment_doc.modified_by, "full_name"
-            )
+            new_row.created_by = get_fullname(patient_appointment_doc.modified_by)
             new_row.idx = 1
 
     def get_final_patient_encounter(self):
