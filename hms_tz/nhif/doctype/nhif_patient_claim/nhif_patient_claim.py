@@ -75,9 +75,8 @@ class NHIFPatientClaim(Document):
                     final_patient_encounter.practitioner
                 )
             )
-        inpatient_record = (
-            frappe.get_value("Patient", self.patient, "inpatient_record") or None
-        )
+        inpatient_record = final_patient_encounter.inpatient_record
+        self.inpatient_record = inpatient_record
         self.patient_type_code = "OUT"
         if inpatient_record:
             discharge_date, date_admitted = frappe.get_value(
@@ -194,9 +193,8 @@ class NHIFPatientClaim(Document):
             },
         ]
         self.nhif_patient_claim_item = []
-        inpatient_record = (
-            frappe.get_value("Patient", self.patient, "inpatient_record") or None
-        )
+        final_patient_encounter = self.get_final_patient_encounter()
+        inpatient_record = final_patient_encounter.inpatient_record
         is_inpatient = True if inpatient_record else False
         if not is_inpatient:
             for encounter in self.patient_encounters:
@@ -276,18 +274,15 @@ class NHIFPatientClaim(Document):
                 if not item.is_confirmed:
                     continue
                 checkin_date = item.check_in.strftime("%Y-%m-%d")
-                (
-                    service_unit_type,
-                    is_service_chargeable,
-                    is_consultancy_chargeable,
-                ) = frappe.get_value(
+                service_unit_type = frappe.get_value(
                     "Healthcare Service Unit",
                     item.service_unit,
-                    [
-                        "service_unit_type",
-                        "is_service_chargeable",
-                        "is_consultancy_chargeable",
-                    ],
+                    "service_unit_type",
+                )
+                (is_service_chargeable, is_consultancy_chargeable) = frappe.get_value(
+                    "Healthcare Service Unit Type",
+                    service_unit_type,
+                    ["is_service_chargeable", "is_consultancy_chargeable"],
                 )
                 encounter_doc = frappe.get_doc(
                     "Patient Encounter", record_doc.admission_encounter
@@ -309,9 +304,7 @@ class NHIFPatientClaim(Document):
                             new_row.item_quantity = 1
                             new_row.unit_price = row_item.rate
                             new_row.amount_claimed = row_item.rate
-                            new_row.approval_ref_no = get_approval_number_from_LRPMT(
-                                child["ref_doctype"], row.get(child["ref_docname"])
-                            )
+                            new_row.approval_ref_no = ""
                             new_row.patient_encounter = (
                                 row_item.encounter or record_doc.admission_encounter
                             )
@@ -324,7 +317,9 @@ class NHIFPatientClaim(Document):
                             )
                             new_row.item_crt_by = get_fullname(row_item.modified_by)
                 if is_service_chargeable:
+                    frappe.msgprint(str(self.patient_encounters))
                     for encounter in self.patient_encounters:
+                        frappe.msgprint(str(encounter.patient_name))
                         encounter_doc = frappe.get_doc(
                             "Patient Encounter", encounter.name
                         )
