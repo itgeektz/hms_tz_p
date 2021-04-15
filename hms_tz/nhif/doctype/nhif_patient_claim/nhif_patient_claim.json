@@ -21,6 +21,7 @@
   "column_break_10",
   "company",
   "posting_date",
+  "inpatient_record",
   "cardno",
   "authorization_no",
   "total_amount",
@@ -348,12 +349,19 @@
    "fieldtype": "Data",
    "label": "Created By",
    "read_only": 1
+  },
+  {
+   "fieldname": "inpatient_record",
+   "fieldtype": "Link",
+   "label": "Inpatient Record",
+   "options": "Inpatient Record",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-04-14 23:29:16.921539",
+ "modified": "2021-04-15 09:30:53.473199",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim",
