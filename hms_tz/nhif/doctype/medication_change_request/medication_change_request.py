@@ -22,8 +22,8 @@ class MedicationChangeRequest(Document):
                     drug.quantity = get_quantity(drug)
 
     def on_submit(self):
-        self.update_encounter()
-        self.update_delivery_note()
+        encounter_doc = self.update_encounter()
+        self.update_delivery_note(encounter_doc)
 
     def update_encounter(self):
         doc = frappe.get_doc("Patient Encounter", self.patient_encounter)
@@ -31,7 +31,6 @@ class MedicationChangeRequest(Document):
             frappe.delete_doc(
                 row.doctype, row.name, force=1, ignore_permissions=True, for_reload=True
             )
-        frappe.db.commit()
         doc.reload()
         fields_to_clear = [
             "name",
@@ -49,15 +48,16 @@ class MedicationChangeRequest(Document):
             new_row = frappe.copy_doc(row).as_dict()
             for fieldname in fields_to_clear:
                 new_row[fieldname] = None
+            new_row["drug_prescription_created"] = 1
             doc.append("drug_prescription", new_row)
         doc.db_update_all()
-        frappe.db.commit()
         frappe.msgprint(
             _("Patient Encounter " + self.patient_encounter + " has been updated!"),
             alert=True,
         )
+        return doc
 
-    def update_delivery_note(self):
+    def update_delivery_note(self, encounter_doc):
         doc = frappe.get_doc("Delivery Note", self.delivery_note)
         doc.items = []
         insurance_subscription, insurance_company, service_unit = frappe.get_value(
@@ -66,10 +66,10 @@ class MedicationChangeRequest(Document):
             ["insurance_subscription", "insurance_company", "service_unit"],
         )
         warehouse = get_warehouse_from_service_unit(service_unit)
-        for row in self.drug_prescription:
+        for row in encounter_doc.drug_prescription:
             if row.prescribe:
                 continue
-            item_code = frappe.get_value("Medication", row.drug_code, "item_code")
+            item_code = frappe.get_value("Medication", row.drug_code, "item")
             is_stock, item_name = frappe.get_value(
                 "Item", item_code, ["is_stock_item", "item_name"]
             )
@@ -102,8 +102,7 @@ class MedicationChangeRequest(Document):
             doc.append("items", item)
         doc.save(ignore_permissions=True)
         frappe.msgprint(
-            _("Patient Encounter " + self.delivery_note + " has been updated!"),
-            alert=True,
+            _("Delivery Note " + self.delivery_note + " has been updated!"), alert=True
         )
 
 
