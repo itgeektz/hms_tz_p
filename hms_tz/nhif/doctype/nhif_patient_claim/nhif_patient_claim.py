@@ -231,17 +231,20 @@ class NHIFPatientClaim(Document):
                         new_row.item_crt_by = get_fullname(row.modified_by)
         else:
             dates = []
-            records_list = []
+            occupancy_list = []
             record_doc = frappe.get_doc("Inpatient Record", inpatient_record)
-            for item in record_doc.inpatient_occupancies:
-                if not item.is_confirmed:
+            for occupancy in record_doc.inpatient_occupancies:
+                if not occupancy.is_confirmed:
                     continue
-                checkin_date = item.check_in.strftime("%Y-%m-%d")
+                checkin_date = occupancy.check_in.strftime("%Y-%m-%d")
+                # Add only in occupancy once a day.
                 if checkin_date not in dates:
                     dates.append(checkin_date)
-                    records_list.append(item)
+                    occupancy_list.append(occupancy)
                 service_unit_type = frappe.get_value(
-                    "Healthcare Service Unit", item.service_unit, "service_unit_type"
+                    "Healthcare Service Unit",
+                    occupancy.service_unit,
+                    "service_unit_type",
                 )
                 item_code = frappe.get_value(
                     "Healthcare Service Unit Type", service_unit_type, "item"
@@ -256,27 +259,27 @@ class NHIFPatientClaim(Document):
                     encounter_doc.insurance_company,
                 )
                 new_row = self.append("nhif_patient_claim_item", {})
-                new_row.item_name = item.service_unit
+                new_row.item_name = occupancy.service_unit
                 new_row.item_code = get_item_refcode(item_code)
                 new_row.item_quantity = 1
                 new_row.unit_price = item_rate
                 new_row.amount_claimed = new_row.unit_price * new_row.item_quantity
                 new_row.approval_ref_no = ""
                 new_row.patient_encounter = encounter_doc.name
-                new_row.ref_doctype = item.doctype
-                new_row.ref_docname = item.name
+                new_row.ref_doctype = occupancy.doctype
+                new_row.ref_docname = occupancy.name
                 new_row.folio_item_id = str(uuid.uuid1())
                 new_row.folio_id = self.folio_id
-                new_row.date_created = item.modified.strftime("%Y-%m-%d")
-                new_row.item_crt_by = get_fullname(item.modified_by)
+                new_row.date_created = occupancy.modified.strftime("%Y-%m-%d")
+                new_row.item_crt_by = get_fullname(occupancy.modified_by)
 
-            for item in records_list:
-                if not item.is_confirmed:
+            for occupancy in occupancy_list:
+                if not occupancy.is_confirmed:
                     continue
-                checkin_date = item.check_in.strftime("%Y-%m-%d")
+                checkin_date = occupancy.check_in.strftime("%Y-%m-%d")
                 service_unit_type = frappe.get_value(
                     "Healthcare Service Unit",
-                    item.service_unit,
+                    occupancy.service_unit,
                     "service_unit_type",
                 )
                 (is_service_chargeable, is_consultancy_chargeable) = frappe.get_value(
@@ -317,9 +320,7 @@ class NHIFPatientClaim(Document):
                             )
                             new_row.item_crt_by = get_fullname(row_item.modified_by)
                 if is_service_chargeable:
-                    frappe.msgprint(str(self.patient_encounters))
                     for encounter in self.patient_encounters:
-                        frappe.msgprint(str(encounter.patient_name))
                         encounter_doc = frappe.get_doc(
                             "Patient Encounter", encounter.name
                         )
@@ -350,7 +351,8 @@ class NHIFPatientClaim(Document):
                                 )
                                 new_row.approval_ref_no = (
                                     get_approval_number_from_LRPMT(
-                                        row.doctype, row.name, child.get("ref_docname")
+                                        child["ref_doctype"],
+                                        row.get(child["ref_docname"]),
                                     )
                                 )
                                 new_row.patient_encounter = encounter.name
