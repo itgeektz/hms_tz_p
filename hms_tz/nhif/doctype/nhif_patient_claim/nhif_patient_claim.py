@@ -543,11 +543,7 @@ def get_item_refcode(item_code):
 
 def generate_pdf(doc):
     doc_name = doc.name
-    from csf_tz import console
-
-    console(doc_name)
     file_list = frappe.get_all("File", filters={"attached_to_name": doc_name})
-    console(file_list)
     for file in file_list:
         frappe.delete_doc("File", file.name)
     data_list = []
@@ -580,6 +576,7 @@ def generate_pdf(doc):
             }
         )
         ret.save(ignore_permissions=1)
+        ret.db_update()
         base64_data = to_base64(pdf)
         return base64_data
 
