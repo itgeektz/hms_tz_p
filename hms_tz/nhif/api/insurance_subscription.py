@@ -35,11 +35,10 @@ def set_insurance_card_detail_in_patient(doc):
             str_coverage_plan_card_number += card.coverage_plan_card_number + ", "
 
     if card_count > 1:
-        frappe.set_value(
-            "Patient",
-            doc.patient,
-            "insurance_card_detail",
-            str_coverage_plan_card_number,
+        frappe.db.sql(
+            "UPDATE `tabPatient` SET insurance_card_detail = '{0}' WHERE name = '{1}'".format(
+                str_coverage_plan_card_number, doc.patient
+            )
         )
 
 
