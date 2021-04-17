@@ -339,6 +339,8 @@ fixtures = [
                     "Delivery Note-medical_references",
                     "Vital Signs-medical_department",
                     "Vital Signs-practitioner",
+                    "Healthcare Insurance Coverage Plan-secondary_price_list",
+                    "Item-healthcare_service_template",
                 ),
             ]
         ],
