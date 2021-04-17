@@ -320,10 +320,6 @@ fixtures = [
                     "Patient Encounter-undo_set_as_final",
                     "Healthcare Practitioner-bypass_vitals",
                     "Patient Appointment-ref_patient_encounter",
-                    "Healthcare Service Unit-is_service_chargeable",
-                    "Healthcare Service Unit-is_consultancy_chargeable",
-                    "Inpatient Consultancy-is_confirmed",
-                    "Inpatient Occupancy-is_confirmed",
                     "Prescription Dosage-default_strength",
                     "Inpatient Record-patient_appointment",
                     "Inpatient Record-price_list",
@@ -334,6 +330,15 @@ fixtures = [
                     "Procedure Prescription-amount",
                     "Drug Prescription-amount",
                     "Therapy Plan Detail-amount",
+                    "Healthcare Service Unit Type-is_service_chargeable",
+                    "Healthcare Service Unit Type-is_consultancy_chargeable",
+                    "Healthcare Service Order-is_not_billable",
+                    "Prescription Dosage-default_strength",
+                    "Delivery Note-coverage_plan_name",
+                    "Delivery Note-column_break_21",
+                    "Delivery Note-medical_references",
+                    "Vital Signs-medical_department",
+                    "Vital Signs-practitioner",
                 ),
             ]
         ],
@@ -679,6 +684,19 @@ fixtures = [
                     "POS Profile-warehouse-depends_on",
                     "POS Profile-update_stock-default",
                     "Shift Type-last_sync_of_checkin-in_list_view",
+                    "Lab Test-main-title_field",
+                    "Fees-cost_center-fetch_from",
+                    "Fees-income_account-fetch_from",
+                    "Fees-receivable_account-fetch_from",
+                    "NHIF Patient Claim-authorization_no-read_only_depends_on",
+                    "NHIF Patient Claim Disease-disease_code-fetch_if_empty",
+                    "NHIF Patient Claim Disease-disease_code-fetch_from",
+                    "NHIF Patient Claim-allow_changes-permlevel",
+                    "NHIF Patient Claim-authorization_no-permlevel",
+                    "Journal Entry-letter_head-fetch_from",
+                    "Inpatient Consultancy-date-columns",
+                    "Inpatient Occupancy-check_in-columns",
+                    "Inpatient Consultancy-confirmed-hidden",
                 ),
             ]
         ],
@@ -891,11 +909,7 @@ scheduler_events = {
     # 	]
 }
 
-jenv = {
-	"methods": [
-		"get_item_rate:hms_tz.nhif.api.healthcare_utils.get_item_rate"
-	]
-}
+jenv = {"methods": ["get_item_rate:hms_tz.nhif.api.healthcare_utils.get_item_rate"]}
 
 
 # Testing
