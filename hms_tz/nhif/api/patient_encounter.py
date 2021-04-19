@@ -67,13 +67,54 @@ def on_submit_validation(doc, method):
 
     insurance_subscription = doc.insurance_subscription
     child_tables = {
-        "drug_prescription": "drug_code",
         "lab_test_prescription": "lab_test_code",
-        "procedure_prescription": "procedure",
         "radiology_procedure_prescription": "radiology_examination_template",
+        "procedure_prescription": "procedure",
+        "drug_prescription": "drug_code",
         "therapies": "therapy_type",
         # "diet_recommendation": "diet_plan" dosent have Healthcare Service Insurance Coverage
     }
+
+    childs_map = [
+        {
+            "table": "lab_test_prescription",
+            "doctype": "Lab Test Template",
+            "item": "lab_test_code",
+        },
+        {
+            "table": "radiology_procedure_prescription",
+            "doctype": "Radiology Examination Template",
+            "item": "radiology_examination_template",
+        },
+        {
+            "table": "procedure_prescription",
+            "doctype": "Clinical Procedure Template",
+            "item": "procedure",
+        },
+        {
+            "table": "drug_prescription",
+            "doctype": "Medication",
+            "item": "drug_code",
+        },
+        {
+            "table": "therapies",
+            "doctype": "Therapy Type",
+            "item": "therapy_type",
+        },
+    ]
+    for child in childs_map:
+        for row in doc.get(child.get("table")):
+            healthcare_doc = frappe.get_doc(
+                child.get("doctype"), row.get(child.get("item"))
+            )
+            if healthcare_doc.disabled:
+                msgThrow(
+                    _(
+                        "{0} {1} selected at {2} is disabled. Please select the correct lab test"
+                    ).format(child.get("doctype"), row.get(child.get("item")), row.idx),
+                    method,
+                )
+
     prescribed_list = ""
     for key, value in child_tables.items():
         table = doc.get(key)
