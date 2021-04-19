@@ -180,7 +180,9 @@ def make_encounter(doc, method):
             return
         source_name = doc.appointment
     elif doc.doctype == "Patient Appointment":
-        if not doc.authorization_number or doc.ref_patient_encounter:
+        if (
+            not doc.authorization_number and not doc.mode_of_payment
+        ) or doc.ref_patient_encounter:
             return
         source_name = doc.name
     target_doc = None
