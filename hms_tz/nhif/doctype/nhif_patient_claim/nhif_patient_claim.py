@@ -436,7 +436,7 @@ class NHIFPatientClaim(Document):
         # entities.TelephoneNo = self.TelephoneNo
         entities.PatientFileNo = self.patient_file_no
         entities.PatientFile = self.patient_file
-        entities.ClaimFile = "ClaimFile"
+        entities.ClaimFile = self.claim_file
         entities.ClinicalNotes = "ClinicalNotes"
         entities.AuthorizationNo = self.authorization_no
         entities.AttendanceDate = str(self.attendance_date)
@@ -617,7 +617,6 @@ def get_pdf_file(doc):
     try:
         doctype = doc.doctype
         docname = doc.name
-        print_format = "NHIF Form 2A & B"
         default_print_format = frappe.db.get_value(
             "Property Setter",
             dict(property="default_print_format", doc_type=doctype),
@@ -626,7 +625,7 @@ def get_pdf_file(doc):
         if default_print_format:
             print_format = default_print_format
         else:
-            print_format = "Standard"
+            print_format = "NHIF Form 2A & B"
 
         html = frappe.get_print(
             doctype, docname, print_format, doc=None, no_letterhead=1
