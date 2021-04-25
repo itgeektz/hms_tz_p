@@ -49,6 +49,7 @@ class NHIFPatientClaim(Document):
         if not self.patient_signature:
             frappe.throw(_("Patient signature is required"))
         self.patient_file = generate_pdf(self)
+        self.claim_file = get_pdf_file(self)
         self.send_nhif_claim()
 
     def set_claim_values(self):
@@ -435,7 +436,7 @@ class NHIFPatientClaim(Document):
         # entities.TelephoneNo = self.TelephoneNo
         entities.PatientFileNo = self.patient_file_no
         entities.PatientFile = self.patient_file
-        entities.ClaimFile = "ClaimFile"
+        entities.ClaimFile = self.claim_file
         entities.ClinicalNotes = "ClinicalNotes"
         entities.AuthorizationNo = self.authorization_no
         entities.AttendanceDate = str(self.attendance_date)
@@ -610,3 +611,46 @@ def read_multi_pdf(output):
         filedata = fileobj.read()
 
     return filedata
+
+
+def get_pdf_file(doc):
+    try:
+        doctype = doc.doctype
+        docname = doc.name
+        default_print_format = frappe.db.get_value(
+            "Property Setter",
+            dict(property="default_print_format", doc_type=doctype),
+            "value",
+        )
+        if default_print_format:
+            print_format = default_print_format
+        else:
+            print_format = "NHIF Form 2A & B"
+
+        html = frappe.get_print(
+            doctype, docname, print_format, doc=None, no_letterhead=1
+        )
+
+        filename = "{name}-claim.pdf".format(
+            name=docname.replace(" ", "-").replace("/", "-")
+        )
+        pdf = get_pdf(html)
+        if pdf:
+            ret = frappe.get_doc(
+                {
+                    "doctype": "File",
+                    "attached_to_doctype": doc.doctype,
+                    "attached_to_name": docname,
+                    "folder": "Home/Attachments",
+                    "file_name": filename + ".pdf",
+                    "file_url": "/files/" + filename + ".pdf",
+                    "content": pdf,
+                }
+            )
+            ret.save(ignore_permissions=1)
+            ret.db_update()
+            base64_data = to_base64(pdf)
+            return base64_data
+
+    except Exception:
+        frappe.log_error(frappe.get_traceback())
