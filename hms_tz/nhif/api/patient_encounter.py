@@ -110,7 +110,7 @@ def on_submit_validation(doc, method):
             if healthcare_doc.disabled:
                 msgThrow(
                     _(
-                        "{0} {1} selected at {2} is disabled. Please select the correct lab test"
+                        "{0} {1} selected at {2} is disabled. Please select an enabled item."
                     ).format(child.get("doctype"), row.get(child.get("item")), row.idx),
                     method,
                 )
