@@ -21,6 +21,7 @@ from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from hms_tz.nhif.api.healthcare_utils import get_item_rate
 from frappe.utils import date_diff, getdate
+from csf_tz import console
 
 
 @frappe.whitelist()
@@ -91,6 +92,7 @@ def invoice_appointment(name):
         and not appointment_doc.insurance_subscription
         and appointment_doc.mode_of_payment
         and not appointment_doc.invoiced
+        and not appointment_doc.ref_sales_invoice
         and not appointment_doc.follow_up
     ):
         sales_invoice = frappe.new_doc("Sales Invoice")
@@ -356,7 +358,9 @@ def make_next_doc(doc, method):
         )
     if doc.is_new():
         return
+    if doc.ref_sales_invoice:
+        doc.invoiced = 1
     if frappe.get_value("Healthcare Practitioner", doc.practitioner, "bypass_vitals"):
-        make_encounter(doc, "validate")
+        make_encounter(doc, method)
     else:
         make_vital(doc, method)
