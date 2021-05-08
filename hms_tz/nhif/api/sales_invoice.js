@@ -2,9 +2,9 @@ frappe.ui.form.on('Sales Invoice', {
 	onload: function (frm) {
 		frm.trigger('add_get_info_btn')
 	},
-	patient: function (frm) {
-		frm.clear_table("items")
-	},
+	// patient: function (frm) {
+	// 	frm.clear_table("items")
+	// },
 	refresh: function (frm) {
 		if (frappe.boot.active_domains.includes("Healthcare")) {
 			frm.set_df_property("patient", "hidden", 0);
