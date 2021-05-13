@@ -58,7 +58,7 @@ class NHIFPatientClaim(Document):
         self.facility_code = frappe.get_value(
             "Company NHIF Settings", self.company, "facility_code"
         )
-        self.posting_date = now()
+        self.posting_date = nowdate()
         self.claim_year = int(now_datetime().strftime("%Y"))
         self.claim_month = int(now_datetime().strftime("%m"))
         self.folio_no = int(self.name[-9:])
