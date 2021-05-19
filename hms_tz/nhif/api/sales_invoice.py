@@ -22,6 +22,15 @@ def validate(doc, method):
                 ).format(item.item_name)
             )
     update_dimensions(doc)
+    validate_create_delivery_note(doc)
+
+
+def validate_create_delivery_note(doc):
+    if not doc.patient:
+        return
+    inpatient_record = frappe.get_value("Patient", doc.patient, "inpatient_record")
+    if inpatient_record:
+        doc.enabled_auto_create_delivery_notes = 0
 
 
 @frappe.whitelist()
