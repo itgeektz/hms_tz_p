@@ -360,6 +360,9 @@ def make_next_doc(doc, method):
         return
     if doc.ref_sales_invoice:
         doc.invoiced = 1
+    # fix: followup appointments still require authorization number 
+    if doc.follow_up and doc.insurance_subscription and not doc.authorization_number:
+        return
     if frappe.get_value("Healthcare Practitioner", doc.practitioner, "bypass_vitals"):
         make_encounter(doc, method)
     else:
