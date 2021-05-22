@@ -878,6 +878,7 @@ doc_events = {
         "onload": "hms_tz.nhif.api.delivery_note.onload",
         "after_insert": "hms_tz.nhif.api.delivery_note.after_insert",
         "before_submit": "hms_tz.nhif.api.delivery_note.before_submit",
+        "on_submit": "hms_tz.nhif.api.delivery_note.on_submit",
     },
     "Inpatient Record": {
         "validate": "hms_tz.nhif.api.inpatient_record.validate",
