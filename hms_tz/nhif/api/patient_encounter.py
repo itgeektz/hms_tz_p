@@ -342,9 +342,11 @@ def get_item_info(item_code=None, medication_name=None):
 
 def get_stock_availability(item_code, warehouse):
     latest_sle = frappe.db.sql(
-        """SELECT SUM(qty_after_transaction) AS actual_qty
+        """SELECT qty_after_transaction AS actual_qty
         FROM `tabStock Ledger Entry`
         WHERE item_code = %s AND warehouse = %s
+          AND is_cancelled = 0
+        ORDER BY creation DESC
         LIMIT 1""",
         (item_code, warehouse),
         as_dict=1,
@@ -364,6 +366,7 @@ def validate_stock_item(
     method="throw",
 ):
     # frappe.msgprint(_("{0} warehouse passed. <br> {1} healthcare service unit passed").format(warehouse, healthcare_service_unit), alert=True)
+    # frappe.msgprint(_("{0} healthcare_service. <br>").format(healthcare_service), alert=True)
     if caller != "Drug Prescription" and not healthcare_service_unit:
         # LRPT code stock check goes here
         return
