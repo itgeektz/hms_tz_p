@@ -201,11 +201,12 @@ def on_submit_validation(doc, method):
     )
     for template in healthcare_service_templates:
         if template not in hsic_map:
+            msg = _(
+                "{0} not covered in Healthcare Insurance Coverage Plan "
+                + str(hicp_name)
+            ).format(template)
             msgThrow(
-                _(
-                    "{0} not covered in Healthcare Insurance Coverage Plan "
-                    + str(hicp_name)
-                ).format(template),
+                msg,
                 method,
             )
             continue
