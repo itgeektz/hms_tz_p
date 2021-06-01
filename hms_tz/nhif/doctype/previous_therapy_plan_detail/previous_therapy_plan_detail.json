@@ -23,7 +23,12 @@
   "replaces",
   "priority",
   "body_part",
-  "note"
+  "note",
+  "section_break_20",
+  "delivered_quantity",
+  "column_break_22",
+  "sales_invoice_number",
+  "cancelled"
  ],
  "fields": [
   {
@@ -148,11 +153,36 @@
    "fieldtype": "Check",
    "label": "Is Not Available Inhouse",
    "read_only": 1
+  },
+  {
+   "fieldname": "section_break_20",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "delivered_quantity",
+   "fieldtype": "Float",
+   "label": "Delivered Quantity"
+  },
+  {
+   "fieldname": "column_break_22",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sales_invoice_number",
+   "fieldtype": "Data",
+   "label": "Sales Invoice Number"
+  },
+  {
+   "default": "0",
+   "fieldname": "cancelled",
+   "fieldtype": "Check",
+   "label": "Cancelled"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2021-05-08 12:57:50.552091",
+ "modified": "2021-06-01 00:22:28.225999",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Previous Therapy Plan Detail",

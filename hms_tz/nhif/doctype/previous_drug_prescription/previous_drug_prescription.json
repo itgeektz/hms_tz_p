@@ -38,7 +38,11 @@
   "occurence_period",
   "note",
   "section_break_25",
-  "drug_prescription_created"
+  "drug_prescription_created",
+  "delivered_quantity",
+  "column_break_34",
+  "sales_invoice_number",
+  "cancelled"
  ],
  "fields": [
   {
@@ -261,11 +265,31 @@
    "fieldtype": "Check",
    "label": "Is Not Available Inhouse",
    "read_only": 1
+  },
+  {
+   "fieldname": "delivered_quantity",
+   "fieldtype": "Float",
+   "label": "Delivered Quantity"
+  },
+  {
+   "fieldname": "column_break_34",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sales_invoice_number",
+   "fieldtype": "Data",
+   "label": "Sales Invoice Number"
+  },
+  {
+   "default": "0",
+   "fieldname": "cancelled",
+   "fieldtype": "Check",
+   "label": "Cancelled"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2021-03-22 19:22:15.401201",
+ "modified": "2021-05-31 23:59:25.346211",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Previous Drug Prescription",
