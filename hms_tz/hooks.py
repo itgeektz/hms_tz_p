@@ -900,6 +900,7 @@ scheduler_events = {
     # 		"hms_tz.tasks.all"
     # 	],
     "cron": {"*/1 * * * *": ["hms_tz.nhif.api.service_order.real_auto_submit"]},
+    "hourly": ["hms_tz.nhif.api.healthcare_utils.set_uninvoiced_so_closed"],
     "daily": ["hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"],
     # 	"hourly": [
     # 		"hms_tz.tasks.hourly"

@@ -9,7 +9,8 @@ from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
     get_income_account,
 )
 from hms_tz.hms_tz.utils import validate_customer_created
-from frappe.utils import nowdate, nowtime, add_days
+from frappe.utils import nowdate, nowtime, add_days, now_datetime
+from datetime import timedelta
 import base64
 import re
 
@@ -142,7 +143,11 @@ def get_item_rate(item_code, company, insurance_subscription, insurance_company=
             "Healthcare Insurance Company", insurance_company, "default_price_list"
         )
     if not price_list:
-        frappe.throw(_("Could not get price for item {0} for price list in {1}. Please set Price List in Healthcare Insurance Coverage Plan {1} or Insurance Company {2}").format(item_code, hic_plan, insurance_company))
+        frappe.throw(
+            _(
+                "Could not get price for item {0} for price list in {1}. Please set Price List in Healthcare Insurance Coverage Plan {1} or Insurance Company {2}"
+            ).format(item_code, hic_plan, insurance_company)
+        )
     else:
         price_list_rate = get_item_price(item_code, price_list, company)
     if price_list_rate == (0 or None):
@@ -631,3 +636,20 @@ def get_approval_number_from_LRPMT(ref_doctype=None, ref_docname=None):
             return approval_number_list[0].approval_number
     else:
         return frappe.get_value(ref_doctype, ref_docname, "approval_number")
+
+
+def set_uninvoiced_so_closed():
+    from erpnext.selling.doctype.sales_order.sales_order import update_status
+
+    uninvoiced_so_list = frappe.get_list(
+        "Sales Order",
+        fields=("name"),
+        filters={
+            "status": ("in", ["To Bill", "To Deliver and Bill"]),
+            "docstatus": 1,
+            "creation": ("<", now_datetime() - timedelta(hours=3)),
+        },
+    )
+    for so in uninvoiced_so_list:
+        so_doc = frappe.get_doc("Sales Order", so.name)
+        so_doc.update_status("Closed")
