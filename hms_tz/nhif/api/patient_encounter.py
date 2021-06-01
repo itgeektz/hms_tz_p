@@ -565,6 +565,7 @@ def create_delivery_note(patient_encounter_doc, method):
             row.db_update()
         if len(items) == 0:
             continue
+        authorization_number = ""
         if (
             not patient_encounter_doc.insurance_subscription
             and patient_encounter_doc.inpatient_record
@@ -578,6 +579,12 @@ def create_delivery_note(patient_encounter_doc, method):
                 "Healthcare Insurance Company", insurance_company, "customer"
             )
             insurance_coverage_plan = patient_encounter_doc.insurance_coverage_plan
+            authorization_number = frappe.get_value(
+                "Patient Appointment",
+                patient_encounter_doc.appointment,
+                fieldname="authorization_number",
+            )
+
         doc = frappe.get_doc(
             dict(
                 doctype="Delivery Note",
@@ -593,6 +600,7 @@ def create_delivery_note(patient_encounter_doc, method):
                 coverage_plan_name=insurance_coverage_plan,
                 reference_doctype=patient_encounter_doc.doctype,
                 reference_name=patient_encounter_doc.name,
+                authorization_number=authorization_number,
                 patient=patient_encounter_doc.patient,
                 patient_name=patient_encounter_doc.patient_name,
                 healthcare_service_unit=patient_encounter_doc.healthcare_service_unit,
