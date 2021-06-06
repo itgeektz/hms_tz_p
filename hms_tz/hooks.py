@@ -381,6 +381,11 @@ fixtures = [
                     "Medication-ref_doctype",
                     "Medication-ref_docname",
                     "Delivery Note-column_break_21",
+                    "Therapy Plan Detail-reference_journal_entry",
+                    "Procedure Prescription-reference_journal_entry",
+                    "Radiology Procedure Prescription-reference_journal_entry",
+                    "Lab Prescription-reference_journal_entry",
+                    "Drug Prescription-reference_journal_entry",
                 ),
             ]
         ],
