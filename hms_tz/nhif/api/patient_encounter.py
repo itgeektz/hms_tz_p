@@ -934,13 +934,15 @@ def set_amounts(doc):
             "item": "therapy_type",
         },
     ]
-    try:
-        for child in childs_map:
-            for row in doc.get(child.get("table")):
-                item_rate = 0
-                item_code = frappe.get_value(
-                    child.get("doctype"), row.get(child.get("item")), "item"
-                )
+    for child in childs_map:
+        for row in doc.get(child.get("table")):
+            item_rate = 0
+            item_code = frappe.get_value(
+                child.get("doctype"), row.get(child.get("item")), "item"
+            )
+            try:
+                if row.amount:
+                    continue
                 if row.prescribe:
                     item_rate = get_mop_amount(
                         item_code, doc.mode_of_payment, doc.company, doc.patient
@@ -953,8 +955,8 @@ def set_amounts(doc):
                         doc.insurance_company,
                     )
                 row.amount = item_rate
-    except Exception as e:
-        frappe.logger().debug({"price loop": e, "try": item_code})
+            except Exception as e:
+                frappe.logger().debug({"price loop": e, "try": item_code})
 
 
 def inpatient_billing(patient_encounter_doc, method):
