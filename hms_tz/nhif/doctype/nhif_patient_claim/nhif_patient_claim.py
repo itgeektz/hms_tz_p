@@ -427,7 +427,7 @@ class NHIFPatientClaim(Document):
         entities.FolioNo = self.folio_no
         entities.SerialNo = self.serial_no
         entities.FacilityCode = self.facility_code
-        entities.CardNo = self.cardno
+        entities.CardNo = self.cardno.strip()
         entities.FirstName = self.first_name
         entities.LastName = self.last_name
         entities.Gender = self.gender
