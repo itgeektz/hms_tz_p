@@ -83,9 +83,19 @@ def get_item_price(item_code, price_list, company):
 def invoice_appointment(name):
     appointment_doc = frappe.get_doc("Patient Appointment", name)
     if appointment_doc.mode_of_payment:
-        appointment_doc.paid_amount = get_mop_amount(appointment_doc.billing_item, appointment_doc.mode_of_payment, appointment_doc.company, appointment_doc.patient)
+        appointment_doc.paid_amount = get_mop_amount(
+            appointment_doc.billing_item,
+            appointment_doc.mode_of_payment,
+            appointment_doc.company,
+            appointment_doc.patient,
+        )
     else:
-        appointment_doc.paid_amount = get_insurance_amount(appointment_doc.insurance_subscription, appointment_doc.billing_item, appointment_doc.company, appointment_doc.insurance_company)
+        appointment_doc.paid_amount = get_insurance_amount(
+            appointment_doc.insurance_subscription,
+            appointment_doc.billing_item,
+            appointment_doc.company,
+            appointment_doc.insurance_company,
+        )
     appointment_doc.save()
     appointment_doc.reload()
     set_follow_up(appointment_doc, "invoice_appointment")
@@ -158,6 +168,15 @@ def create_vital(appointment):
 
 
 def make_vital(appointment_doc, method):
+    if appointment_doc.insurance_subscription:
+        appointment_doc.paid_amount = get_insurance_amount(
+            appointment_doc.insurance_subscription,
+            appointment_doc.billing_item,
+            appointment_doc.company,
+            appointment_doc.insurance_company,
+        )
+    appointment_doc.save()
+    appointment_doc.reload()
     set_follow_up(appointment_doc, "invoice_appointment")
     if (not appointment_doc.ref_vital_signs) and (
         appointment_doc.invoiced
@@ -366,7 +385,7 @@ def make_next_doc(doc, method):
         return
     if doc.ref_sales_invoice:
         doc.invoiced = 1
-    # fix: followup appointments still require authorization number 
+    # fix: followup appointments still require authorization number
     if doc.follow_up and doc.insurance_subscription and not doc.authorization_number:
         return
     if frappe.get_value("Healthcare Practitioner", doc.practitioner, "bypass_vitals"):
