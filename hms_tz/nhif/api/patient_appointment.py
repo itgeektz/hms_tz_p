@@ -82,22 +82,23 @@ def get_item_price(item_code, price_list, company):
 @frappe.whitelist()
 def invoice_appointment(name):
     appointment_doc = frappe.get_doc("Patient Appointment", name)
-    if appointment_doc.mode_of_payment:
-        appointment_doc.paid_amount = get_mop_amount(
-            appointment_doc.billing_item,
-            appointment_doc.mode_of_payment,
-            appointment_doc.company,
-            appointment_doc.patient,
-        )
-    else:
-        appointment_doc.paid_amount = get_insurance_amount(
-            appointment_doc.insurance_subscription,
-            appointment_doc.billing_item,
-            appointment_doc.company,
-            appointment_doc.insurance_company,
-        )
-    appointment_doc.save()
-    appointment_doc.reload()
+    if appointment_doc.billing_item:
+        if appointment_doc.mode_of_payment:
+            appointment_doc.paid_amount = get_mop_amount(
+                appointment_doc.billing_item,
+                appointment_doc.mode_of_payment,
+                appointment_doc.company,
+                appointment_doc.patient,
+            )
+        else:
+            appointment_doc.paid_amount = get_insurance_amount(
+                appointment_doc.insurance_subscription,
+                appointment_doc.billing_item,
+                appointment_doc.company,
+                appointment_doc.insurance_company,
+            )
+        appointment_doc.save()
+        appointment_doc.reload()
     set_follow_up(appointment_doc, "invoice_appointment")
     automate_invoicing = frappe.db.get_single_value(
         "Healthcare Settings", "automate_appointment_invoicing"
@@ -168,15 +169,15 @@ def create_vital(appointment):
 
 
 def make_vital(appointment_doc, method):
-    if appointment_doc.insurance_subscription:
+    if appointment_doc.insurance_subscription and appointment_doc.billing_item:
         appointment_doc.paid_amount = get_insurance_amount(
             appointment_doc.insurance_subscription,
             appointment_doc.billing_item,
             appointment_doc.company,
             appointment_doc.insurance_company,
         )
-    appointment_doc.save()
-    appointment_doc.reload()
+        appointment_doc.save()
+        appointment_doc.reload()
     set_follow_up(appointment_doc, "invoice_appointment")
     if (not appointment_doc.ref_vital_signs) and (
         appointment_doc.invoiced
@@ -375,7 +376,6 @@ def set_follow_up(appointment_doc, method):
 
 
 def make_next_doc(doc, method):
-    frappe.throw(_("Make Next Doc fired"))
     if doc.inpatient_record:
         frappe.throw(
             _(
