@@ -375,6 +375,7 @@ def set_follow_up(appointment_doc, method):
 
 
 def make_next_doc(doc, method):
+    frappe.throw(_("Make Next Doc fired"))
     if doc.inpatient_record:
         frappe.throw(
             _(
