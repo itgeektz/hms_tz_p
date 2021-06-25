@@ -32,7 +32,6 @@ def onload(doc, method):
                     item.last_qty_prescribed,
                     item.stock_uom,
                 ),
-                alert=True,
             )
 
 
