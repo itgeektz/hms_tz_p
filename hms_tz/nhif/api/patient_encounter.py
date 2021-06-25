@@ -46,6 +46,7 @@ def on_trash(doc, method):
 def on_submit_validation(doc, method):
     if doc.encounter_type == "Initial":
         doc.reference_encounter = doc.name
+    show_last_prescribed(doc, method)
     submitting_healthcare_practitioner = frappe.db.get_value(
         "Healthcare Practitioner", {"user_id": frappe.session.user}, ["name"]
     )
@@ -984,3 +985,27 @@ def inpatient_billing(patient_encounter_doc, method):
                         patient_encounter_doc, child
                     )
     create_delivery_note(patient_encounter_doc, method)
+
+def show_last_prescribed(doc, method):
+    if doc.is_new():
+        return
+    if method == "validate":
+        msg = None
+        for row in doc.drug_prescription:
+            medication_list = frappe.db.sql(
+                """
+            select dn.posting_date, dni.item_code, dni.stock_qty, dni.uom from `tabDelivery Note` dn
+            inner join `tabDelivery Note Item` dni on dni.parent = dn.name
+                            where dni.item_code = %s
+                            and dn.patient = %s
+                            and dn.docstatus = 1
+                            order by posting_date desc
+                            limit 1"""
+                % ("%s", "%s"),
+                (row.drug_code, doc.patient),
+                as_dict=1,
+            )
+            if len(medication_list) > 0:
+                msg = (msg or "") + _("<strong>" + row.drug_code + "</strong>" + " qty: <strong>" + str(medication_list[0].get("stock_qty")) + "</strong>, prescribed last on: <strong>" + str(medication_list[0].get("posting_date"))) + "</strong><br>"
+        if msg:
+            frappe.msgprint(_("The below are the last related medication prescriptions:<br><br>" + msg))
