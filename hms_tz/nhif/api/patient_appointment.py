@@ -176,8 +176,6 @@ def make_vital(appointment_doc, method):
             appointment_doc.company,
             appointment_doc.insurance_company,
         )
-        appointment_doc.save()
-        appointment_doc.reload()
     set_follow_up(appointment_doc, "invoice_appointment")
     if (not appointment_doc.ref_vital_signs) and (
         appointment_doc.invoiced
