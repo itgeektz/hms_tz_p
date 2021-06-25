@@ -83,6 +83,7 @@ var get_healthcare_services_to_invoice = function (frm) {
 						filters: {
 							patient: dialog.get_value("patient"),
 							company: frm.doc.company,
+							encounter_date: [">", frappe.datetime.add_days(frappe.datetime.now_date(true), -7)],
 							is_not_billable: 0,
 							duplicated: 0,
 							docstatus: 1
