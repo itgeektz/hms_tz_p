@@ -166,6 +166,8 @@ def get_consulting_charge_item(appointment_type, practitioner):
 def create_vital(appointment):
     appointment_doc = frappe.get_doc("Patient Appointment", appointment)
     make_vital(appointment_doc, "patient_appointment")
+    appointment_doc.save()
+    appointment_doc.reload()
 
 
 def make_vital(appointment_doc, method):
