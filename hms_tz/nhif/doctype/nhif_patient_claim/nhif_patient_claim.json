@@ -90,7 +90,7 @@
    "read_only": 1
   },
   {
-   "fetch_from": "patient.card_no",
+   "fetch_from": "patient_appoitment.coverage_plan_card_number",
    "fieldname": "cardno",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -361,7 +361,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-04-15 09:30:53.473199",
+ "modified": "2021-06-26 12:32:45.298475",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim",
