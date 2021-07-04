@@ -31,9 +31,46 @@ def get_healthcare_services_to_invoice(
         return items_to_invoice
 
 
+def get_childs_map():
+    childs_map = {
+        "Lab Prescription": {
+            "table": "lab_test_prescription",
+            "doctype": "Lab Prescription",
+            "template": "Lab Test Template",
+            "item": "lab_test_code",
+        },
+        "Radiology Procedure Prescription": {
+            "table": "radiology_procedure_prescription",
+            "doctype": "Radiology Procedure Prescription",
+            "template": "Radiology Examination Template",
+            "item": "radiology_examination_template",
+        },
+        "Procedure Prescription": {
+            "table": "procedure_prescription",
+            "doctype": "Procedure Prescription",
+            "template": "Clinical Procedure Template",
+            "item": "procedure",
+        },
+        "Drug Prescription": {
+            "table": "drug_prescription",
+            "doctype": "Drug Prescription",
+            "template": "Medication",
+            "item": "drug_code",
+        },
+        "Therapy Plan Detail": {
+            "table": "therapies",
+            "doctype": "Therapy Plan Detail",
+            "template": "Therapy Type",
+            "item": "therapy_type",
+        },
+    }
+    return childs_map
+
+
 def get_healthcare_service_order_to_invoice(
     patient, company, encounter, service_order_category=None, prescribed=None
 ):
+
     reference_encounter = frappe.get_value(
         "Patient Encounter", encounter, "reference_encounter"
     )
@@ -45,48 +82,28 @@ def get_healthcare_service_order_to_invoice(
             "is_not_billable": 0,
         },
     )
-    encounter_list = [encounter]
-
+    encounter_list = []
+    encounter_list.append(frappe.get_doc("Patient Encounter", encounter))
     for i in encounter_dict:
-        encounter_list.append(i.name)
-
-    filters = {
-        "patient": patient.name,
-        "company": company,
-        "order_group": ["in", encounter_list],
-        "invoiced": 0,
-        "creation": [">", add_days(nowdate(), -5)],
-        "docstatus": 1,
-    }
-
-    if service_order_category:
-        filters["healthcare_service_order_category"] = service_order_category
-    filters["prescribed"] = 1
+        encounter_doc = frappe.get_doc("Patient Encounter", i.name)
+        encounter_list.append(encounter_doc)
+    childs_map = get_childs_map()
     services_to_invoice = []
-    services = frappe.get_list(
-        "Healthcare Service Order", fields=["*"], filters=filters
-    )
-
-    if services:
-        for service in services:
-            service_item = None
-            if service.order_doctype and service.order:
-                is_not_available_inhouse = frappe.get_value(
-                    service.order_doctype, service.order, "is_not_available_inhouse"
-                )
-                if is_not_available_inhouse:
-                    continue
-            if service.ordered_by:
-                service_item = service.billing_item
-
-            services_to_invoice.append(
-                {
-                    "reference_type": "Healthcare Service Order",
-                    "reference_name": service.name,
-                    "service": service_item,
-                    "qty": service.quantity,
-                }
-            )
+    for en in encounter_list:
+        for key, value in childs_map.items():
+            table = en.get(value.get("table"))
+            if not table:
+                continue
+            for row in table:
+                if not row.get("invoiced") and row.get("prescribe"):
+                    services_to_invoice.append(
+                        {
+                            "reference_type": row.doctype,
+                            "reference_name": row.name,
+                            "service": row.get(value.get("item")),
+                            "qty": row.get("quantity") or 1,
+                        }
+                    )
 
     return services_to_invoice
 
@@ -150,13 +167,14 @@ def get_item_rate(item_code, company, insurance_subscription, insurance_company=
         )
     else:
         price_list_rate = get_item_price(item_code, price_list, company)
-    if price_list_rate == (0 or None):
+    if price_list_rate and price_list_rate != 0:
+        return price_list_rate
+    else:
         frappe.throw(
             _("Please set Price List for item: {0} in price list {1}").format(
                 item_code, price_list
             )
         )
-    return price_list_rate
 
 
 def to_base64(value):
@@ -266,7 +284,11 @@ def get_warehouse_from_service_unit(healthcare_service_unit):
         "Healthcare Service Unit", healthcare_service_unit, "warehouse"
     )
     if not warehouse:
-        frappe.throw(_("Warehouse is missing in Healthcare Service Unit"))
+        frappe.throw(
+            _("Warehouse is missing in Healthcare Service Unit {0}").format(
+                healthcare_service_unit
+            )
+        )
     return warehouse
 
 
@@ -472,18 +494,35 @@ def set_healthcare_services(doc, checked_values):
             item_line.reference_dn = checked_item["dn"]
         if checked_item["description"]:
             item_line.description = checked_item["description"]
-        hso_doc = frappe.get_doc(item_line.reference_dt, item_line.reference_dn)
-        item_line.healthcare_practitioner = hso_doc.ordered_by
-        if hso_doc.order_doctype == "Medication":
+
+        childs_map = get_childs_map()
+        parent_encounter = frappe.get_value(
+            checked_item["dt"],
+            checked_item["dn"],
+            "parent",
+        )
+        item_line.healthcare_practitioner = frappe.get_value(
+            "Patient Encounter",
+            parent_encounter,
+            "practitioner",
+        )
+
+        if checked_item["dt"] == "Drug Prescription":
             item_line.healthcare_service_unit = frappe.get_value(
-                hso_doc.order_reference_doctype,
-                hso_doc.order_reference_name,
+                checked_item["dt"],
+                checked_item["dn"],
                 "healthcare_service_unit",
             )
+
         else:
+            map_obj = childs_map.get(checked_item["dt"])
+            template_doctype = map_obj.get("template")
             item_line.healthcare_service_unit = frappe.get_value(
-                hso_doc.order_doctype, hso_doc.order, "healthcare_service_unit"
+                template_doctype,
+                checked_item["item"],
+                "healthcare_service_unit",
             )
+
         item_line.warehouse = get_warehouse_from_service_unit(
             item_line.healthcare_service_unit
         )

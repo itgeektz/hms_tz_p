@@ -941,23 +941,20 @@ def set_amounts(doc):
             item_code = frappe.get_value(
                 child.get("doctype"), row.get(child.get("item")), "item"
             )
-            try:
-                if row.amount:
-                    continue
-                if row.prescribe:
-                    item_rate = get_mop_amount(
-                        item_code, doc.mode_of_payment, doc.company, doc.patient
-                    )
-                else:
-                    item_rate = get_item_rate(
-                        item_code,
-                        doc.company,
-                        doc.insurance_subscription,
-                        doc.insurance_company,
-                    )
-                row.amount = item_rate
-            except Exception as e:
-                frappe.logger().debug({"price loop": e, "try": item_code})
+            if row.amount:
+                continue
+            if row.prescribe:
+                item_rate = get_mop_amount(
+                    item_code, doc.mode_of_payment, doc.company, doc.patient
+                )
+            else:
+                item_rate = get_item_rate(
+                    item_code,
+                    doc.company,
+                    doc.insurance_subscription,
+                    doc.insurance_company,
+                )
+            row.amount = item_rate
 
 
 def inpatient_billing(patient_encounter_doc, method):
@@ -986,6 +983,7 @@ def inpatient_billing(patient_encounter_doc, method):
                     )
     create_delivery_note(patient_encounter_doc, method)
 
+
 def show_last_prescribed(doc, method):
     if doc.is_new():
         return
@@ -1006,6 +1004,23 @@ def show_last_prescribed(doc, method):
                 as_dict=1,
             )
             if len(medication_list) > 0:
-                msg = (msg or "") + _("<strong>" + row.drug_code + "</strong>" + " qty: <strong>" + str(medication_list[0].get("stock_qty")) + "</strong>, prescribed last on: <strong>" + str(medication_list[0].get("posting_date"))) + "</strong><br>"
+                msg = (
+                    (msg or "")
+                    + _(
+                        "<strong>"
+                        + row.drug_code
+                        + "</strong>"
+                        + " qty: <strong>"
+                        + str(medication_list[0].get("stock_qty"))
+                        + "</strong>, prescribed last on: <strong>"
+                        + str(medication_list[0].get("posting_date"))
+                    )
+                    + "</strong><br>"
+                )
         if msg:
-            frappe.msgprint(_("The below are the last related medication prescriptions:<br><br>" + msg))
+            frappe.msgprint(
+                _(
+                    "The below are the last related medication prescriptions:<br><br>"
+                    + msg
+                )
+            )
