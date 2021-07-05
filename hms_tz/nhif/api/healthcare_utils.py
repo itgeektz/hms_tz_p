@@ -83,12 +83,12 @@ def get_healthcare_service_order_to_invoice(
         },
     )
     encounter_list = []
-    encounter_list.append(frappe.get_doc("Patient Encounter", encounter))
     for i in encounter_dict:
         encounter_doc = frappe.get_doc("Patient Encounter", i.name)
         encounter_list.append(encounter_doc)
     childs_map = get_childs_map()
     services_to_invoice = []
+
     for en in encounter_list:
         for key, value in childs_map.items():
             table = en.get(value.get("table"))
