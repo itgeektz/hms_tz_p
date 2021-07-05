@@ -118,7 +118,7 @@ var get_healthcare_services_to_invoice = function (frm) {
 				encounter: encounter,
 				prescribed: 1,
 			};
-			var columns = (["service", "reference_name", "reference_type"]);
+			var columns = (["service", "reference_name", "reference_type", "item"]);
 			get_healthcare_items(frm, true, $results, $placeholder, method, args, columns);
 		}
 		else if (!patient) {

@@ -96,11 +96,41 @@ def get_healthcare_service_order_to_invoice(
                 continue
             for row in table:
                 if not row.get("invoiced") and row.get("prescribe"):
+                    if row.doctype == "Lab Prescription":
+                        item_code = frappe.get_value(
+                            "Lab Test Template", row.lab_test_code, "item"
+                        )
+                        service_item = row.lab_test_code
+                    elif row.doctype == "Radiology Procedure Prescription":
+                        item_code = frappe.get_value(
+                            "Radiology Examination Template",
+                            row.radiology_examination_template,
+                            "item",
+                        )
+                        service_item = row.radiology_examination_template
+                    elif row.doctype == "Procedure Prescription":
+                        item_code = frappe.get_value(
+                            "Clinical Procedure Template", row.procedure, "item"
+                        )
+                        service_item = row.procedure
+                    elif row.doctype == "Drug Prescription":
+                        item_code = frappe.get_value(
+                            "Medication", row.drug_code, "item"
+                        )
+                        service_item = row.drug_code
+                    elif row.doctype == "Therapy Plan Detail":
+                        item_code = frappe.get_value(
+                            "Therapy Type", row.therapy_type, "item"
+                        )
+                        service_item = row.therapy_type
+                    else:
+                        frappe.throw(_("Unhandled exception. Please contact IT Team"))
                     services_to_invoice.append(
                         {
                             "reference_type": row.doctype,
                             "reference_name": row.name,
-                            "service": row.get(value.get("item")),
+                            "service": service_item,
+                            "item": item_code,
                             "qty": row.get("quantity") or 1,
                         }
                     )
@@ -462,13 +492,34 @@ def set_healthcare_services(doc, checked_values):
     from erpnext.stock.get_item_details import get_item_details
 
     for checked_item in checked_values:
+        # frappe.msgprint(str(checked_item))
         item_line = doc.append("items", {})
         price_list, price_list_currency = frappe.db.get_values(
             "Price List", {"selling": 1}, ["name", "currency"]
         )[0]
+        if checked_item["dt"] == "Lab Prescription":
+            item_code = frappe.get_value(
+                "Lab Test Template", checked_item["item"], "item"
+            )
+        elif checked_item["dt"] == "Radiology Procedure Prescription":
+            item_code = frappe.get_value(
+                "Radiology Examination Template", checked_item["item"], "item"
+            )
+        elif checked_item["dt"] == "Procedure Prescription":
+            item_code = frappe.get_value(
+                "Clinical Procedure Template", checked_item["item"], "item"
+            )
+        elif checked_item["dt"] == "Drug Prescription":
+            item_code = frappe.get_value("Medication", checked_item["item"], "item")
+        elif checked_item["dt"] == "Therapy Plan Detail":
+            item_code = frappe.get_value("Therapy Type", checked_item["item"], "item")
+        else:
+            frappe.throw(_("Unhandled exception. Please contact IT Team"))
+        frappe.msgprint(item_code)
+        item_line.item_code = item_code
         args = {
             "doctype": "Sales Invoice",
-            "item_code": checked_item["item"],
+            "item_code": item_code,
             "company": doc.company,
             "customer": frappe.db.get_value("Patient", doc.patient, "customer"),
             "selling_price_list": price_list,
@@ -477,7 +528,7 @@ def set_healthcare_services(doc, checked_values):
             "conversion_rate": 1.0,
         }
         item_details = get_item_details(args)
-        item_line.item_code = checked_item["item"]
+
         item_line.qty = 1
         if checked_item["qty"]:
             item_line.qty = checked_item["qty"]
