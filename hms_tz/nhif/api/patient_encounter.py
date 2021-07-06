@@ -944,13 +944,15 @@ def set_amounts(doc):
             if row.amount:
                 continue
             if row.prescribe:
-                item_rate = (
-                    get_mop_amount(
-                        item_code, doc.mode_of_payment, doc.company, doc.patient
-                    )
-                    or 0
+                if doc.get("mode_of_payment"):
+                    mode_of_payment = doc.get("mode_of_payment")
+                elif doc.get("encounter_mode_of_payment"):
+                    mode_of_payment = doc.get("encounter_mode_of_payment")
+                frappe.msgprint(mode_of_payment)
+                item_rate = get_mop_amount(
+                    item_code, mode_of_payment, doc.company, doc.patient
                 )
-                if item_rate == 0:
+                if not item_rate or item_rate == 0:
                     frappe.throw(
                         _("Cannot get mode of payment rate for item {0}").format(
                             item_code
