@@ -53,12 +53,15 @@ def on_submit(doc, method):
 
 
 def create_healthcare_docs(doc, method):
-    if doc.docstatus != 1 or method != "on_submit":
+    if doc.docstatus != 1 or method not in ["on_submit", "From Front End"]:
         return
     if doc.get("items"):
         for item in doc.items:
-            if item.reference_dt and item.reference_dt in ["Lab Prescription", "Radiology Procedure Prescription", "Procedure Prescription"]:
-                frappe.msgprint("item.reference_dt is related to healthcare services")
+            if item.reference_dt and item.reference_dt in [
+                "Lab Prescription",
+                "Radiology Procedure Prescription",
+                "Procedure Prescription",
+            ]:
                 child = frappe.get_doc(item.reference_dt, item.reference_dn)
                 patient_encounter_doc = frappe.get_doc(
                     "Patient Encounter", child.parent
@@ -73,3 +76,5 @@ def create_healthcare_docs(doc, method):
                     create_individual_procedure_prescription(
                         patient_encounter_doc, child
                     )
+    if method == "From Front End":
+        frappe.db.commit()
