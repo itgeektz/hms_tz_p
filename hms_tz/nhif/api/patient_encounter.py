@@ -948,7 +948,6 @@ def set_amounts(doc):
                     mode_of_payment = doc.get("mode_of_payment")
                 elif doc.get("encounter_mode_of_payment"):
                     mode_of_payment = doc.get("encounter_mode_of_payment")
-                frappe.msgprint(mode_of_payment)
                 item_rate = get_mop_amount(
                     item_code, mode_of_payment, doc.company, doc.patient
                 )
