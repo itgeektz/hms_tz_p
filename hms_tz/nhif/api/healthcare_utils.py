@@ -38,7 +38,6 @@ def get_childs_map():
             "doctype": "Lab Prescription",
             "template": "Lab Test Template",
             "item": "lab_test_code",
-            "temp_item_code": "item",
         },
         "Radiology Procedure Prescription": {
             "table": "radiology_procedure_prescription",
@@ -515,9 +514,14 @@ def set_healthcare_services(doc, checked_values):
         else:
             map_obj = childs_map.get(checked_item["dt"])
             template_doctype = map_obj.get("template")
+            service_item = frappe.get_value(
+                checked_item["dt"],
+                checked_item["dn"],
+                map_obj.get("item"),
+            )
             item_line.healthcare_service_unit = frappe.get_value(
                 template_doctype,
-                checked_item["item"],
+                service_item,
                 "healthcare_service_unit",
             )
 
