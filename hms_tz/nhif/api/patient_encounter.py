@@ -943,7 +943,7 @@ def set_amounts(doc):
             )
             if row.amount:
                 continue
-            if row.prescribe:
+            if row.prescribe and not doc.insurance_subscription:
                 if doc.get("mode_of_payment"):
                     mode_of_payment = doc.get("mode_of_payment")
                 elif doc.get("encounter_mode_of_payment"):
@@ -957,7 +957,7 @@ def set_amounts(doc):
                             item_code
                         )
                     )
-            else:
+            elif not row.prescribe:
                 item_rate = get_item_rate(
                     item_code,
                     doc.company,
