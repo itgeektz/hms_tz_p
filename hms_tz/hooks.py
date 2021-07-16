@@ -787,6 +787,11 @@ fixtures = [
                     "Delivery Note-items-permlevel",
                     "Inpatient Consultancy-confirmed-permlevel",
                     "Radiology Examination-practitioner-in_standard_filter",
+                    "Therapy Plan Detail-invoiced-allow_on_submit",
+                    "Drug Prescription-invoiced-allow_on_submit",
+                    "Procedure Prescription-invoiced-allow_on_submit",
+                    "Radiology Procedure Prescription-invoiced-allow_on_submit",
+                    "Lab Prescription-invoiced-allow_on_submit",
                 ),
             ]
         ],
