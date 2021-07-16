@@ -474,7 +474,7 @@ def create_healthcare_docs(patient_encounter_doc):
         if patient_encounter_doc.get(child_table_field):
             child_table = patient_encounter_doc.get(child_table_field)
             for child in child_table:
-                if child.prescribe and not patient_encounter_doc.inpatient_record:
+                if patient_encounter_doc.insurance_subscription and child.prescribe:
                     continue
                 if child.doctype == "Lab Prescription":
                     create_individual_lab_test(patient_encounter_doc, child)
@@ -491,17 +491,15 @@ def create_healthcare_docs(patient_encounter_doc):
 def create_delivery_note(patient_encounter_doc, method):
     if not patient_encounter_doc.appointment:
         return
-    insurance_subscription, insurance_company = frappe.get_value(
-        "Patient Appointment",
-        patient_encounter_doc.appointment,
-        ["insurance_subscription", "insurance_company"],
-    )
-    if not insurance_subscription and not patient_encounter_doc.inpatient_record:
+    if (
+        not patient_encounter_doc.insurance_subscription
+        and not patient_encounter_doc.inpatient_record
+    ):
         return
     # Create list of warehouses to process delivery notes by warehouses
     warehouses = []
     for line in patient_encounter_doc.drug_prescription:
-        if line.prescribe and not patient_encounter_doc.inpatient_record:
+        if patient_encounter_doc.insurance_subscription and line.prescribe:
             continue
         if line.drug_prescription_created:
             continue
@@ -516,7 +514,7 @@ def create_delivery_note(patient_encounter_doc, method):
     for element in warehouses:
         items = []
         for row in patient_encounter_doc.drug_prescription:
-            if row.prescribe and not patient_encounter_doc.inpatient_record:
+            if patient_encounter_doc.insurance_subscription and row.prescribe:
                 continue
             warehouse = get_warehouse_from_service_unit(row.healthcare_service_unit)
             if element != warehouse:
@@ -577,7 +575,9 @@ def create_delivery_note(patient_encounter_doc, method):
             insurance_coverage_plan = ""
         else:
             encounter_customer = frappe.get_value(
-                "Healthcare Insurance Company", insurance_company, "customer"
+                "Healthcare Insurance Company",
+                patient_encounter_doc.insurance_company,
+                "customer",
             )
             insurance_coverage_plan = patient_encounter_doc.insurance_coverage_plan
             authorization_number = frappe.get_value(
