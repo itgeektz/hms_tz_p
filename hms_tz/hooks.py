@@ -386,6 +386,8 @@ fixtures = [
                     "Radiology Procedure Prescription-reference_journal_entry",
                     "Lab Prescription-reference_journal_entry",
                     "Drug Prescription-reference_journal_entry",
+                    "Drug Prescription-invoiced",
+                    "Therapy Plan Detail-invoiced",
                 ),
             ]
         ],
