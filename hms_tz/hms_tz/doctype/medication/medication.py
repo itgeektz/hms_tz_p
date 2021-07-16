@@ -87,6 +87,7 @@ def change_item_code_from_medication(item_code, doc):
 	if frappe.db.exists('Item', {'item_code': item_code}):
 		frappe.throw(_('Item with Item Code {0} already exists').format(item_code))
 	else:
-		rename_doc('Item', doc.item_code, item_code)
+		if not rename_doc('Item', doc.item_code, item_code):
+			frappe.throw("Could not rename the item")
 		frappe.db.set_value('Medication', doc.name, 'item_code', item_code)
 	return
