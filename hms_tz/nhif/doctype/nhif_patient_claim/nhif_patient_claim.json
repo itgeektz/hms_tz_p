@@ -97,7 +97,6 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "CardNo",
-   "read_only": 1,
    "reqd": 1
   },
   {
@@ -362,7 +361,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-07-16 22:54:48.937263",
+ "modified": "2021-07-17 11:44:17.760721",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim",
