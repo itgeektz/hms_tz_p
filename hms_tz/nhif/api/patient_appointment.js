@@ -313,6 +313,13 @@ const set_filters = function (frm) {
             }
         };
     });
+    frm.set_query('service_unit', function () {
+        return {
+            filters: {
+                'company': frm.doc.company,
+            }
+        };
+    });
 };
 
 const load_print_page = function (invoice_name, pos_profile) {
@@ -440,4 +447,4 @@ const set_auth_number_reqd = frm => {
     else {
         frm.toggle_reqd("authorization_number", false);
     }
-}
+};
