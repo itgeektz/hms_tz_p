@@ -694,3 +694,21 @@ def set_uninvoiced_so_closed():
     for so in uninvoiced_so_list:
         so_doc = frappe.get_doc("Sales Order", so.name)
         so_doc.update_status("Closed")
+
+
+def validate_hsu_healthcare_template(doc):
+    doctypes = [
+        "Lab Test Template",
+        "Therapy Type",
+        "Radiology Examination Template",
+        "Clinical Procedure Template",
+    ]
+    if doc.doctype not in doctypes:
+        return
+    companys = frappe.get_all("Company",filters={"domain":"Healthcare"})
+    companys = [i.name for i in companys]
+    for company in companys:
+        row = next((d for d in doc.service_units if d.get("company") == company), None)
+        if not row:
+            frappe.msgprint(_("Please set Healthcare Service Unit for company {0}").format(company))
+
