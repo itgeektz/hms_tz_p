@@ -21,6 +21,8 @@
   "is_billable",
   "lab_test_rate",
   "healthcare_service_unit_type",
+  "section_break_15",
+  "service_units",
   "section_break_description",
   "lab_test_description",
   "section_break_normal",
@@ -345,10 +347,21 @@
    "label": "Healthcare Service Order Category",
    "options": "Healthcare Service Order Category",
    "reqd": 1
+  },
+  {
+   "fieldname": "section_break_15",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "service_units",
+   "fieldtype": "Table",
+   "label": "Healthcare Service Units",
+   "options": "Service Unit Company",
+   "reqd": 1
   }
  ],
  "links": [],
- "modified": "2021-03-21 11:45:50.923150",
+ "modified": "2021-07-28 16:40:12.150443",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Lab Test Template",
