@@ -468,9 +468,8 @@ def on_submit(doc, method):
         on_submit_validation(doc, method)
         create_healthcare_docs(doc)
         create_delivery_note(doc, method)
+    if not doc.inpatient_record:
         update_inpatient_record_consultancy(doc)
-        # frappe.enqueue(method=enqueue_on_update_after_submit, queue='long',
-        #                timeout=300, is_async=True, **{"doc_name": doc.name})
 
 
 @frappe.whitelist()
