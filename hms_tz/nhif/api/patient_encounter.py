@@ -175,6 +175,7 @@ def on_submit_validation(doc, method):
             if row.override_subscription or row.prescribe:
                 continue
 
+            # healthcare_service_templates is like {"CBC": [cbc1_lab_prescription_line_object, cbc2_lab_prescription_line_object], "XRay Abdomen": [radiology_prescription_line_object], ["Panadol": drug_prescription_line_object]}
             rows_affected = healthcare_service_templates.setdefault(row.get(value), [])
             rows_affected.append(row)
     # hsic => Healthcare Service Insurance Coverage
@@ -194,6 +195,7 @@ def on_submit_validation(doc, method):
         },
         order_by="modified desc",
     )
+    # hsic_map is like {"CBC": HSIC_object_for_CBC, "XRay Abdomen": HSIC_object_for_xray_abdomen, "Panadol": HSIC_object_for_panadol}
     hsic_map = {hsic.healthcare_service_template: hsic for hsic in hsic_list}
     hicp_name = frappe.get_value(
         "Healthcare Insurance Coverage Plan",
@@ -223,6 +225,7 @@ def on_submit_validation(doc, method):
                 )
         if coverage_info.maximum_number_of_claims == 0:
             continue
+        # if maximum_number_of_claims is more than 12 it means more times per month. Times will be less than 1
         times = 12 / coverage_info.maximum_number_of_claims
         count = 1
         days = int(times * 30)
@@ -230,24 +233,63 @@ def on_submit_validation(doc, method):
             count = 1 / times
             days = 30
         if not coverage_info.number_of_claims:
-            coverage_info.number_of_claims = frappe.db.count(
-                "Healthcare Insurance Claim",
-                {
-                    "service_template": template,
-                    "insurance_subscription": insurance_subscription,
-                    "claim_posting_date": [
-                        "between",
-                        add_to_date(today, days=-days),
-                        today,
-                    ],
-                },
+            lrpt_names_sql = """
+                SELECT hsi.name FROM `tabLab Prescription` hsi
+                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+                WHERE pe.insurance_subscription = "{0}"
+                  AND hsi.lab_test_code = "{1}"
+                  AND hsi.prescribe = 0
+                  AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+                UNION ALL
+                SELECT hsi.name FROM `tabRadiology Procedure Prescription` hsi
+                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+                WHERE pe.insurance_subscription = "{0}"
+                  AND hsi.radiology_examination_template = "{1}"
+                  AND hsi.prescribe = 0
+                  AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+                UNION ALL
+                SELECT hsi.name FROM `tabProcedure Prescription` hsi
+                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+                WHERE pe.insurance_subscription = "{0}"
+                  AND hsi.procedure = "{1}"
+                  AND hsi.prescribe = 0
+                  AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+                UNION ALL
+                SELECT hsi.name FROM `tabTherapy Plan Detail` hsi
+                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+                WHERE pe.insurance_subscription = "{0}"
+                  AND hsi.therapy_type = "{1}"
+                  AND hsi.prescribe = 0
+                  AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+            """.format(
+                insurance_subscription, template, add_to_date(today, days=-days), today
             )
-        if coverage_info.number_of_claims > count:
-            frappe.throw(
+            lrpt_names = frappe.db.sql(lrpt_names_sql)
+            lrpt_count = len(lrpt_names) or 0
+            drug_count_sql = """
+                SELECT SUM(quantity) FROM `tabDrug Prescription` hsi
+                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+                WHERE pe.insurance_subscription = "{0}"
+                  AND hsi.drug_code = "{1}"
+                  AND hsi.prescribe = 0
+                  AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+            """.format(
+                insurance_subscription, template, add_to_date(today, days=-days), today
+            )
+            drug_count = (
+                frappe.db.sql(drug_count_sql, as_dict=0,)[
+                    0
+                ][0]
+                or 0
+            )
+            coverage_info.number_of_claims = lrpt_count + drug_count
+        if coverage_info.number_of_claims > int(count):
+            msgThrow(
                 _(
                     "Maximum Number of Claims for {0} per year is exceeded within the"
-                    " last {1} days"
-                ).format(template, days)
+                    " last {1} days. The allowed count is {2} where as past prescription count is {3}"
+                ).format(template, days, int(count), coverage_info.number_of_claims),
+                method,
             )
     validate_totals(doc)
 
