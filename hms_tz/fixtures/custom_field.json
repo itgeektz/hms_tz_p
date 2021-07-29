@@ -19343,5 +19343,20 @@
   "translatable": 0,
   "unique": 0,
   "width": null
- }
+ },
+ {
+    "name": "Patient Encounter-lab_bundle",
+    "owner": "Administrator",
+    "creation": "2021-07-27 21:50:03.159226",
+    "modified": "2021-07-27 21:50:03.159226",
+    "modified_by": "Administrator",
+    "idx": 64,
+    "dt": "Patient Encounter",
+    "label": "Lab Bundle",
+    "fieldname": "lab_bundle",
+    "insert_after": "sb_test_prescription",
+    "fieldtype": "Link",
+    "options": "Lab Bundle",
+    "doctype": "Custom Field"
+}
 ]

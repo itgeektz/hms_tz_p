@@ -291,6 +291,28 @@ frappe.ui.form.on('Patient Encounter', {
             },
         });
     },
+    lab_bundle: function(frm, cdt, cdn) {
+        var doc = locals[cdt][cdn];
+        if (doc.lab_bundle) {
+            frappe.call({
+                method: "frappe.client.get",
+                args: {
+                    name: doc.lab_bundle,
+                    doctype: "Lab Bundle"
+                },
+                callback(r) {
+                    console.log(r);
+                    if (r.message) {
+                        for (var row in r.message.lab_bundle_item) {
+                            var child = frm.add_child("lab_test_prescription");
+                            frappe.model.set_value(child.doctype, child.name, "lab_test_code", r.message.lab_bundle_item[row].lab_test_template);
+                            refresh_field("lab_test_prescription");
+                        }
+                    }
+                }
+            })
+        }
+    }
 });
 
 frappe.ui.form.on('Drug Prescription', {
