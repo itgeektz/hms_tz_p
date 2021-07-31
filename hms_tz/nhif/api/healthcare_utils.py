@@ -708,7 +708,7 @@ def validate_hsu_healthcare_template(doc):
     companys = frappe.get_all("Company",filters={"domain":"Healthcare"})
     companys = [i.name for i in companys]
     for company in companys:
-        row = next((d for d in doc.service_units if d.get("company") == company), None)
+        row = next((d for d in doc.company_options if d.get("company") == company), None)
         if not row:
             frappe.msgprint(_("Please set Healthcare Service Unit for company {0}").format(company))
 

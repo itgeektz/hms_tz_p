@@ -27,7 +27,7 @@
   "medical_department",
   "healthcare_service_unit_type",
   "section_break_16",
-  "service_units",
+  "company_options",
   "medical_coding_section",
   "medical_code_standard",
   "medical_code",
@@ -259,15 +259,15 @@
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "service_units",
+   "fieldname": "company_options",
    "fieldtype": "Table",
-   "label": "Healthcare Service Units",
-   "options": "Service Unit Company",
+   "label": "Companys Options",
+   "options": "Healthcare Company Option",
    "reqd": 1
   }
  ],
  "links": [],
- "modified": "2021-07-28 16:45:41.329557",
+ "modified": "2021-07-31 22:30:27.579928",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Clinical Procedure Template",

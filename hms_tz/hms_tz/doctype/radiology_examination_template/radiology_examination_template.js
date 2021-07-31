@@ -9,7 +9,7 @@ frappe.ui.form.on('Radiology Examination Template', {
 			frm.set_value("description", frm.doc.procedure_name);
 	},
 	refresh : function(frm) {
-		frm.fields_dict['service_units'].grid.get_field('service_unit').get_query = function (doc, cdt, cdn) {
+		frm.fields_dict['company_options'].grid.get_field('service_unit').get_query = function (doc, cdt, cdn) {
 			const child = locals[cdt][cdn];
 			return {
 				filters:

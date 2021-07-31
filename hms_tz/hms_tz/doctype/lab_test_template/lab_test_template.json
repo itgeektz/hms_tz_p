@@ -22,7 +22,7 @@
   "lab_test_rate",
   "healthcare_service_unit_type",
   "section_break_15",
-  "service_units",
+  "company_options",
   "section_break_description",
   "lab_test_description",
   "section_break_normal",
@@ -353,15 +353,15 @@
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "service_units",
+   "fieldname": "company_options",
    "fieldtype": "Table",
-   "label": "Healthcare Service Units",
-   "options": "Service Unit Company",
+   "label": "Companys Options",
+   "options": "Healthcare Company Option",
    "reqd": 1
   }
  ],
  "links": [],
- "modified": "2021-07-28 16:40:12.150443",
+ "modified": "2021-07-31 22:28:23.277810",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Lab Test Template",
