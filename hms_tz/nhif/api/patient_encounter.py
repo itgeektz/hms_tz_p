@@ -540,7 +540,9 @@ def create_delivery_note(patient_encounter_doc, method):
     # Create list of warehouses to process delivery notes by warehouses
     warehouses = []
     for line in patient_encounter_doc.drug_prescription:
-        if patient_encounter_doc.insurance_subscription and line.prescribe:
+        if line.invoiced and line.prescribe:
+            frappe.msgprint(_("Invoiced and Prescribed patient who is an inpatient"))
+        elif patient_encounter_doc.insurance_subscription and line.prescribe:
             continue
         if line.drug_prescription_created:
             continue
@@ -555,7 +557,15 @@ def create_delivery_note(patient_encounter_doc, method):
     for element in warehouses:
         items = []
         for row in patient_encounter_doc.drug_prescription:
-            if patient_encounter_doc.insurance_subscription and row.prescribe:
+            if row.drug_prescription_created:
+                continue
+            encounter_customer = ""
+            if row.invoiced and row.prescribe:
+                encounter_customer = frappe.get_value(
+                    "Patient", patient_encounter_doc.patient, "customer"
+                )
+                insurance_coverage_plan = ""
+            elif patient_encounter_doc.insurance_subscription and row.prescribe:
                 continue
             warehouse = get_warehouse_from_service_unit(row.healthcare_service_unit)
             if element != warehouse:
@@ -614,7 +624,7 @@ def create_delivery_note(patient_encounter_doc, method):
                 "Patient", patient_encounter_doc.patient, "customer"
             )
             insurance_coverage_plan = ""
-        else:
+        elif not encounter_customer:
             encounter_customer = frappe.get_value(
                 "Healthcare Insurance Company",
                 patient_encounter_doc.insurance_company,
