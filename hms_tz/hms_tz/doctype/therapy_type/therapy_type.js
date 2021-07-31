@@ -17,6 +17,15 @@ frappe.ui.form.on('Therapy Type', {
 				change_template_code(frm.doc);
 			});
 		}
+		frm.fields_dict['service_units'].grid.get_field('service_unit').get_query = function (doc, cdt, cdn) {
+			const child = locals[cdt][cdn];
+			return {
+				filters:
+				{
+					'company': child.company,
+				}
+			};
+		};
 	},
 
 	therapy_type: function(frm) {
