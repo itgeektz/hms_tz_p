@@ -720,8 +720,18 @@ def validate_hsu_healthcare_template(doc):
             )
 
 
-def get_template_comapny_option(template, company):
-    doc = frappe.get_doc(
+@frappe.whitelist()
+def get_template_comapny_option(template=None, company=None):
+    def_res = {"company": company, "service_unit": None, "is_not_available": 0}
+    if not template or not company:
+        return def_res
+    exist = frappe.db.exists(
         "Healthcare Company Option", {"company": company, "parent": template}
     )
-    return doc
+    if exist:
+        doc = frappe.get_doc(
+            "Healthcare Company Option", {"company": company, "parent": template}
+        )
+        return doc
+    else:
+        return def_res
