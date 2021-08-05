@@ -24,8 +24,8 @@ def execute():
             row.company = company
             row.service_unit = doc.healthcare_service_unit
             row.db_update()
-            doc.healthcare_service_unit = None
-            doc.db_update()
+            # doc.healthcare_service_unit = None
+            # doc.db_update()
 
     doctypes = [
         "Lab Test Template",
