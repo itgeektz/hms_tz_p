@@ -10,7 +10,7 @@ def execute():
     frappe.reload_doc("hms_tz", "doctype", "therapy_type")
     frappe.reload_doc("hms_tz", "doctype", "radiology_examination_template")
     frappe.reload_doc("hms_tz", "doctype", "clinical_procedure_template")
-    frappe.reload_doc("hms_tz", "doctype", "service_unit_company")
+    frappe.reload_doc("hms_tz", "doctype", "healthcare_company_option")
 
     def update_docs(doc_list, doctype):
         for doc_name in doc_list:
@@ -20,7 +20,7 @@ def execute():
             company = frappe.get_value(
                 "Healthcare Service Unit", doc.healthcare_service_unit, "company"
             )
-            row = doc.append("service_units", {})
+            row = doc.append("company_options", {})
             row.company = company
             row.service_unit = doc.healthcare_service_unit
             row.db_update()
