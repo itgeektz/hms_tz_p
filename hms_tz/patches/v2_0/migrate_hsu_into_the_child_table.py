@@ -23,6 +23,7 @@ def execute():
             row = doc.append("company_options", {})
             row.company = company
             row.service_unit = doc.healthcare_service_unit
+            row.is_not_available = doc.is_not_available_inhouse
             row.db_update()
             # doc.healthcare_service_unit = None
             # doc.db_update()
