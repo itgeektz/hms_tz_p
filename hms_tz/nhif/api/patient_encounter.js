@@ -690,7 +690,7 @@ const load_print_page = function (invoice_name, pos_profile) {
 
 const set_is_not_available_inhouse = function (frm, row, template) {
     return frappe.call({
-        method: 'hms_tz.nhif.api.healthcare_utils.get_template_comapny_option',
+        method: 'hms_tz.nhif.api.healthcare_utils.get_template_company_option',
         args: {
             'template': template,
             'company': frm.doc.company

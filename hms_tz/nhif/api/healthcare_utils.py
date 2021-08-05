@@ -299,7 +299,7 @@ def get_warehouse_from_service_unit(healthcare_service_unit):
 
 def get_item_form_LRPT(LRPT_doc):
     item = frappe._dict()
-    comapny_option = get_template_comapny_option(LRPT_doc.template, LRPT_doc.company)
+    comapny_option = get_template_company_option(LRPT_doc.template, LRPT_doc.company)
     item.healthcare_service_unit = comapny_option.service_unit
     if LRPT_doc.doctype == "Lab Test":
         item.item_code = frappe.get_value(
@@ -399,7 +399,7 @@ def get_healthcare_service_unit(item):
             "Clinical Procedure Template",
             "Therapy Plan Template",
         ]:
-            comapny_option = get_template_comapny_option(order, company)
+            comapny_option = get_template_company_option(order, company)
             return comapny_option.service_unit
 
         elif order_doctype == "Medication":
@@ -519,13 +519,12 @@ def set_healthcare_services(doc, checked_values):
 
         else:
             map_obj = childs_map.get(checked_item["dt"])
-            template_doctype = map_obj.get("template")
             service_item = frappe.get_value(
                 checked_item["dt"],
                 checked_item["dn"],
                 map_obj.get("item"),
             )
-            comapny_option = get_template_comapny_option(service_item, company)
+            comapny_option = get_template_company_option(service_item, company)
             item_line.healthcare_service_unit = comapny_option.service_unit
 
         item_line.warehouse = get_warehouse_from_service_unit(
@@ -721,7 +720,7 @@ def validate_hsu_healthcare_template(doc):
 
 
 @frappe.whitelist()
-def get_template_comapny_option(template=None, company=None):
+def get_template_company_option(template=None, company=None):
     def_res = {"company": company, "service_unit": None, "is_not_available": 0}
     if not template or not company:
         return def_res
