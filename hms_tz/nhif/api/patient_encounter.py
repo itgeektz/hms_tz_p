@@ -15,7 +15,7 @@ from hms_tz.nhif.api.healthcare_utils import (
     create_individual_procedure_prescription,
     msgThrow,
     msgPrint,
-    get_template_comapny_option,
+    get_template_company_option,
 )
 from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
     get_receivable_account,
@@ -375,7 +375,7 @@ def validate_stock_item(
     if caller != "Drug Prescription" and not healthcare_service_unit:
         # LRPT code stock check goes here
         return
-    comapny_option = get_template_comapny_option(healthcare_service, company)
+    comapny_option = get_template_company_option(healthcare_service, company)
     is_not_available = comapny_option.is_not_available
     if is_not_available:
         return
