@@ -524,6 +524,10 @@ def set_healthcare_services(doc, checked_values):
                 service_item,
                 "healthcare_service_unit",
             )
+            if not item_line.healthcare_service_unit:
+                company_option = get_template_company_option(service_item, doc.company)
+                item_line.healthcare_service_unit = company_option.service_unit
+
 
         item_line.warehouse = get_warehouse_from_service_unit(
             item_line.healthcare_service_unit
@@ -694,3 +698,19 @@ def set_uninvoiced_so_closed():
     for so in uninvoiced_so_list:
         so_doc = frappe.get_doc("Sales Order", so.name)
         so_doc.update_status("Closed")
+
+@frappe.whitelist()
+def get_template_company_option(template=None, company=None):
+    def_res = {"company": company, "service_unit": None, "is_not_available": 0}
+    if not template or not company:
+        return def_res
+    exist = frappe.db.exists(
+        "Healthcare Company Option", {"company": company, "parent": template}
+    )
+    if exist:
+        doc = frappe.get_doc(
+            "Healthcare Company Option", {"company": company, "parent": template}
+        )
+        return doc
+    else:
+        return def_res
