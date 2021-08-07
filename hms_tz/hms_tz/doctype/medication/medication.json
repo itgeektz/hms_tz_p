@@ -17,6 +17,8 @@
   "strength",
   "strength_uom",
   "abbr",
+  "section_break_12",
+  "company_options",
   "item_and_price_section",
   "item",
   "item_code",
@@ -305,10 +307,20 @@
    "label": "Healthcare Service Order Category",
    "options": "Healthcare Service Order Category",
    "reqd": 1
+  },
+  {
+   "fieldname": "section_break_12",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "company_options",
+   "fieldtype": "Table",
+   "label": "Companys Options",
+   "options": "Healthcare Company Option"
   }
  ],
  "links": [],
- "modified": "2020-12-24 10:25:51.444843",
+ "modified": "2021-07-31 22:35:32.049235",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Medication",
