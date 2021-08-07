@@ -19372,5 +19372,21 @@
         "insert_after": "lab_bundle",
         "fieldtype": "Button",
         "doctype": "Custom Field"
+    },
+    {
+        "name": "Medication-healthcare_service_unit",
+        "owner": "info@aakvatech.com",
+        "creation": "2021-08-06 14:50:45.513903",
+        "modified": "2021-08-06 14:50:45.513903",
+        "modified_by": "info@aakvatech.com",
+        "idx": 31,
+        "docstatus": 0,
+        "dt": "Medication",
+        "label": "Healthcare Service Unit",
+        "fieldname": "healthcare_service_unit",
+        "insert_after": "default_comments",
+        "fieldtype": "Link",
+        "options": "Healthcare Service Unit",
+        "doctype": "Custom Field"
     }
 ]
