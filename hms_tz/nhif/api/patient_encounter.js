@@ -293,7 +293,7 @@ frappe.ui.form.on('Patient Encounter', {
             },
         });
     },
-    lab_bundle: function (frm, cdt, cdn) {
+    get_lab_bundle_items: function (frm, cdt, cdn) {
         var doc = locals[cdt][cdn];
         if (doc.lab_bundle) {
             frappe.call({
