@@ -1,0 +1,79 @@
+{
+ "actions": [],
+ "autoname": "NHIFU-.YY.-.#########",
+ "creation": "2021-08-06 22:52:28.683289",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "date",
+  "company",
+  "staging_nhif_price_package_section",
+  "price_package",
+  "staging_nhif_excluded_services_section",
+  "excluded_services"
+ ],
+ "fields": [
+  {
+   "default": "Now",
+   "fieldname": "date",
+   "fieldtype": "Datetime",
+   "label": "Date",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "staging_nhif_price_package_section",
+   "fieldtype": "Section Break",
+   "label": "Staging NHIF Price Package"
+  },
+  {
+   "fieldname": "price_package",
+   "fieldtype": "Table",
+   "label": "Staging NHIF Price Package",
+   "options": "Staging NHIF Price Package"
+  },
+  {
+   "fieldname": "staging_nhif_excluded_services_section",
+   "fieldtype": "Section Break",
+   "label": "Staging NHIF Excluded Services"
+  },
+  {
+   "fieldname": "excluded_services",
+   "fieldtype": "Table",
+   "label": "Staging NHIF Excluded Services",
+   "options": "Staging NHIF Excluded Services"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2021-08-07 00:40:57.659965",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "NHIF Update",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

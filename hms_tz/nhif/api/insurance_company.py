@@ -1,6 +1,7 @@
 # get_nhif_price_package
 
 from __future__ import unicode_literals
+from codecs import ignore_errors
 import frappe
 from frappe import _
 from hms_tz.nhif.api.token import get_claimsservice_token
@@ -12,6 +13,7 @@ from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
 from frappe.utils import now
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from frappe.model.naming import set_new_name
+import ast
 
 
 @frappe.whitelist()
@@ -56,7 +58,7 @@ def get_nhif_price_package(kwargs):
                 request_type="GetPricePackageWithExcludedServices",
                 request_url=url,
                 request_header=headers,
-                response_data=json.loads(r.text),
+                response_data=r.text,
             )
             time_stamp = now()
             data = json.loads(r.text)
@@ -461,3 +463,53 @@ def process_insurance_coverages():
                 ),
                 tuple(insert_data),
             )
+
+
+def get_diff_records(current, previous):
+    current_rec = json.loads(
+        frappe.get_value("NHIF Response Log", current, "response_data")
+    )
+    previous_rec = json.loads(
+        frappe.get_value("NHIF Response Log", previous, "response_data")
+    )
+    current_price_packages = current_rec.get("PricePackage")
+    previousـprice_packages = previous_rec.get("PricePackage")
+    # current_excluded_services = current_rec.get("ExcludedServices")
+    # previous_excluded_services = previous_rec.get("ExcludedServices")
+
+    print("count current_price_packages", len(current_price_packages))
+    print("count previousـprice_packages", len(previousـprice_packages))
+
+    diff_price_packages = []
+    diff_price_packages = [
+        i
+        for i in current_price_packages + previousـprice_packages
+        if i not in current_price_packages or i not in previousـprice_packages
+    ]
+
+    doc = frappe.new_doc("NHIF Update")
+    if len(diff_price_packages) > 0:
+        print("count diff_price_packages", len(diff_price_packages))
+        for e in diff_price_packages:
+            price_row = doc.append("price_package", {})
+            price_row.itemcode = e.get("ItemCode")
+            price_row.facilitycode = e.get("FacilityCode")
+            price_row.package_item_id = e.get("PackageItemID")
+            price_row.pricecode = e.get("PriceCode")
+            price_row.levelpricecode = e.get("LevelPriceCode")
+            price_row.olditemcode = e.get("OldItemCode")
+            price_row.itemtypeid = e.get("ItemTypeID")
+            price_row.itemname = e.get("ItemName")
+            price_row.strength = e.get("Strength")
+            price_row.dosage = e.get("Dosage")
+            price_row.packageid = e.get("PackageID")
+            price_row.schemeid = e.get("SchemeID")
+            price_row.facilitylevelcode = e.get("FacilityLevelCode")
+            price_row.unitprice = e.get("UnitPrice")
+            price_row.isrestricted = e.get("IsRestricted")
+            price_row.maximumquantity = e.get("MaximumQuantity")
+            price_row.availableinlevels = e.get("AvailableInLevels")
+            price_row.practitionerqualifications = e.get("PractitionerQualifications")
+            price_row.IsActive = e.get("IsActive")
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
