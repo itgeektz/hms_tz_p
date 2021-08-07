@@ -388,6 +388,9 @@ fixtures = [
                     "Drug Prescription-reference_journal_entry",
                     "Drug Prescription-invoiced",
                     "Therapy Plan Detail-invoiced",
+                    "Medication-healthcare_service_unit",
+                    "Patient Encounter-get_lab_bundle_items",
+                    "Patient Encounter-lab_bundle"
                 ),
             ]
         ],
