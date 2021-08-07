@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 from codecs import ignore_errors
+from time import perf_counter
 import frappe
 from frappe import _
 from hms_tz.nhif.api.token import get_claimsservice_token
@@ -474,28 +475,13 @@ def get_diff_records(current, previous):
     )
     current_price_packages = current_rec.get("PricePackage")
     previousـprice_packages = previous_rec.get("PricePackage")
-    # current_excluded_services = current_rec.get("ExcludedServices")
-    # previous_excluded_services = previous_rec.get("ExcludedServices")
 
-    print("count current_price_packages", len(current_price_packages))
-    print("count previousـprice_packages", len(previousـprice_packages))
-
-    # diff_price_packages = []
     diff_price_packages_from_current = [
         i for i in current_price_packages if i not in previousـprice_packages
     ]
     diff_price_packages_from_previous = [
         i for i in previousـprice_packages if i not in current_price_packages
     ]
-
-    print(
-        "diff_price_packages_from_current",
-        len(diff_price_packages_from_current),
-    )
-    print(
-        "diff_price_packages_from_previous",
-        len(diff_price_packages_from_previous),
-    )
 
     changed_price_packages = []
     new_price_packages = []
@@ -514,9 +500,6 @@ def get_diff_records(current, previous):
         else:
             new_price_packages.append(e)
 
-    print("chaned_price_packages", len(changed_price_packages))
-    print("new_price_packages", len(new_price_packages))
-
     deleted_price_packages = []
 
     for z in diff_price_packages_from_previous:
@@ -531,7 +514,6 @@ def get_diff_records(current, previous):
         if not exist_rec:
             deleted_price_packages.append(z)
 
-    print("deleted_price_packages", len(deleted_price_packages))
     doc = frappe.new_doc("NHIF Update")
     if (
         len(changed_price_packages)
@@ -541,6 +523,58 @@ def get_diff_records(current, previous):
         add_price_packages_records(doc, changed_price_packages, "Changed")
         add_price_packages_records(doc, new_price_packages, "New")
         add_price_packages_records(doc, deleted_price_packages, "Deleted")
+
+    current_excluded_services = current_rec.get("ExcludedServices")
+    previous_excluded_services = previous_rec.get("ExcludedServices")
+
+    diff_current_excluded_services = [
+        i for i in current_excluded_services if i not in previous_excluded_services
+    ]
+    diff_previous_excluded_services = [
+        i for i in previous_excluded_services if i not in previous_excluded_services
+    ]
+
+    changed_excluded_services = []
+    new_excluded_services = []
+
+    for e in diff_current_excluded_services:
+        exist_rec = next(
+            (
+                item
+                for item in diff_previous_excluded_services
+                if item.get("ItemCode") == e.get("ItemCode")
+            ),
+            None,
+        )
+        if exist_rec:
+            changed_excluded_services.append(exist_rec)
+        else:
+            new_excluded_services.append(e)
+
+    deleted_excluded_services = []
+
+    for z in diff_previous_excluded_services:
+        exist_rec = next(
+            (
+                item
+                for item in diff_current_excluded_services
+                if item.get("ItemCode") == z.get("ItemCode")
+            ),
+            None,
+        )
+        if not exist_rec:
+            deleted_excluded_services.append(z)
+
+    if (
+        len(changed_excluded_services)
+        or len(new_excluded_services)
+        or len(deleted_excluded_services)
+    ):
+        add_excluded_services_records(doc, changed_excluded_services, "Changed")
+        add_excluded_services_records(doc, new_excluded_services, "New")
+        add_excluded_services_records(doc, deleted_excluded_services, "Deleted")
+
+    if len(doc.price_package) or len(doc.excluded_services):
         doc.save(ignore_permissions=True)
         frappe.db.commit()
 
@@ -571,4 +605,18 @@ def add_price_packages_records(doc, rec, type):
         price_row.availableinlevels = e.get("AvailableInLevels")
         price_row.practitionerqualifications = e.get("PractitionerQualifications")
         price_row.IsActive = e.get("IsActive")
+        price_row.record = json.dumps(e)
+
+
+def add_excluded_services_records(doc, rec, type):
+    if not len(rec) > 0:
+        return
+    for e in rec:
+        print(e)
+        price_row = doc.append("excluded_services", {})
+        price_row.type = type
+        price_row.itemcode = e.get("ItemCode")
+        price_row.schemeid = e.get("SchemeID")
+        price_row.schemename = e.get("SchemeName")
+        price_row.excludedforproducts = e.get("ExcludedForProducts")
         price_row.record = json.dumps(e)
