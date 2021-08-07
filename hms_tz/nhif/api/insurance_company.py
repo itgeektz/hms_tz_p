@@ -480,36 +480,95 @@ def get_diff_records(current, previous):
     print("count current_price_packages", len(current_price_packages))
     print("count previousـprice_packages", len(previousـprice_packages))
 
-    diff_price_packages = []
-    diff_price_packages = [
-        i
-        for i in current_price_packages + previousـprice_packages
-        if i not in current_price_packages or i not in previousـprice_packages
+    # diff_price_packages = []
+    diff_price_packages_from_current = [
+        i for i in current_price_packages if i not in previousـprice_packages
+    ]
+    diff_price_packages_from_previous = [
+        i for i in previousـprice_packages if i not in current_price_packages
     ]
 
+    print(
+        "diff_price_packages_from_current",
+        len(diff_price_packages_from_current),
+    )
+    print(
+        "diff_price_packages_from_previous",
+        len(diff_price_packages_from_previous),
+    )
+
+    changed_price_packages = []
+    new_price_packages = []
+
+    for e in diff_price_packages_from_current:
+        exist_rec = next(
+            (
+                item
+                for item in diff_price_packages_from_previous
+                if item.get("PriceCode") == e.get("PriceCode")
+            ),
+            None,
+        )
+        if exist_rec:
+            changed_price_packages.append(exist_rec)
+        else:
+            new_price_packages.append(e)
+
+    print("chaned_price_packages", len(changed_price_packages))
+    print("new_price_packages", len(new_price_packages))
+
+    deleted_price_packages = []
+
+    for z in diff_price_packages_from_previous:
+        exist_rec = next(
+            (
+                item
+                for item in diff_price_packages_from_current
+                if item.get("PriceCode") == z.get("PriceCode")
+            ),
+            None,
+        )
+        if not exist_rec:
+            deleted_price_packages.append(z)
+
+    print("deleted_price_packages", len(deleted_price_packages))
     doc = frappe.new_doc("NHIF Update")
-    if len(diff_price_packages) > 0:
-        print("count diff_price_packages", len(diff_price_packages))
-        for e in diff_price_packages:
-            price_row = doc.append("price_package", {})
-            price_row.itemcode = e.get("ItemCode")
-            price_row.facilitycode = e.get("FacilityCode")
-            price_row.package_item_id = e.get("PackageItemID")
-            price_row.pricecode = e.get("PriceCode")
-            price_row.levelpricecode = e.get("LevelPriceCode")
-            price_row.olditemcode = e.get("OldItemCode")
-            price_row.itemtypeid = e.get("ItemTypeID")
-            price_row.itemname = e.get("ItemName")
-            price_row.strength = e.get("Strength")
-            price_row.dosage = e.get("Dosage")
-            price_row.packageid = e.get("PackageID")
-            price_row.schemeid = e.get("SchemeID")
-            price_row.facilitylevelcode = e.get("FacilityLevelCode")
-            price_row.unitprice = e.get("UnitPrice")
-            price_row.isrestricted = e.get("IsRestricted")
-            price_row.maximumquantity = e.get("MaximumQuantity")
-            price_row.availableinlevels = e.get("AvailableInLevels")
-            price_row.practitionerqualifications = e.get("PractitionerQualifications")
-            price_row.IsActive = e.get("IsActive")
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    if (
+        len(changed_price_packages)
+        or len(new_price_packages)
+        or len(deleted_price_packages)
+    ):
+        add_price_packages_records(doc, changed_price_packages, "Changed")
+        add_price_packages_records(doc, new_price_packages, "New")
+        add_price_packages_records(doc, deleted_price_packages, "Deleted")
+        doc.save(ignore_permissions=True)
+        frappe.db.commit()
+
+
+def add_price_packages_records(doc, rec, type):
+    if not len(rec) > 0:
+        return
+    for e in rec:
+        price_row = doc.append("price_package", {})
+        price_row.itemcode = e.get("ItemCode")
+        price_row.type = type
+        price_row.facilitycode = e.get("FacilityCode")
+        price_row.package_item_id = e.get("PackageItemID")
+        price_row.pricecode = e.get("PriceCode")
+        price_row.levelpricecode = e.get("LevelPriceCode")
+        price_row.olditemcode = e.get("OldItemCode")
+        price_row.itemtypeid = e.get("ItemTypeID")
+        price_row.itemname = e.get("ItemName")
+        price_row.schemename = e.get("SchemeName")
+        price_row.strength = e.get("Strength")
+        price_row.dosage = e.get("Dosage")
+        price_row.packageid = e.get("PackageID")
+        price_row.schemeid = e.get("SchemeID")
+        price_row.facilitylevelcode = e.get("FacilityLevelCode")
+        price_row.unitprice = e.get("UnitPrice")
+        price_row.isrestricted = e.get("IsRestricted")
+        price_row.maximumquantity = e.get("MaximumQuantity")
+        price_row.availableinlevels = e.get("AvailableInLevels")
+        price_row.practitionerqualifications = e.get("PractitionerQualifications")
+        price_row.IsActive = e.get("IsActive")
+        price_row.record = json.dumps(e)
