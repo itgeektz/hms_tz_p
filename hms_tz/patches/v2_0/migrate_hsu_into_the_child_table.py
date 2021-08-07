@@ -33,6 +33,7 @@ def execute():
         "Therapy Type",
         "Radiology Examination Template",
         "Clinical Procedure Template",
+        "Medication",
     ]
 
     for doctype in doctypes:
