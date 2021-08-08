@@ -19388,5 +19388,21 @@
         "fieldtype": "Link",
         "options": "Healthcare Service Unit",
         "doctype": "Custom Field"
+    },
+    {
+        "name": "Medication-company_options",
+        "owner": "info@aakvatech.com",
+        "creation": "2021-08-09 00:35:21.147403",
+        "modified": "2021-08-09 00:35:21.147403",
+        "modified_by": "info@aakvatech.com",
+        "idx": 30,
+        "docstatus": 0,
+        "dt": "Medication",
+        "label": "Company Options",
+        "fieldname": "company_options",
+        "insert_after": "column_break_6",
+        "fieldtype": "Table",
+        "options": "Healthcare Company Option",
+        "doctype": "Custom Field"
     }
 ]
