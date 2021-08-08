@@ -15,6 +15,7 @@ from hms_tz.nhif.api.healthcare_utils import (
     create_individual_procedure_prescription,
     msgThrow,
     msgPrint,
+    get_template_company_option,
 )
 from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
     get_receivable_account,
@@ -143,6 +144,7 @@ def on_submit_validation(doc, method):
                 validate_stock_item(
                     row.get(value),
                     quantity,
+                    doc.company,
                     healthcare_service_unit=row.get("healthcare_service_unit"),
                     method=method,
                 )
@@ -404,6 +406,7 @@ def get_stock_availability(item_code, warehouse):
 def validate_stock_item(
     healthcare_service,
     qty,
+    company,
     warehouse=None,
     healthcare_service_unit=None,
     caller="Unknown",
@@ -415,7 +418,9 @@ def validate_stock_item(
         # LRPT code stock check goes here
         return
 
-    if frappe.get_value("Medication", healthcare_service, "is_not_available_inhouse"):
+    company_option = get_template_company_option(healthcare_service, company)
+    is_not_available = company_option.is_not_available
+    if is_not_available:
         return
 
     qty = float(qty)
