@@ -293,7 +293,7 @@ frappe.ui.form.on('Patient Encounter', {
             },
         });
     },
-    lab_bundle: function (frm, cdt, cdn) {
+    get_lab_bundle_items: function (frm, cdt, cdn) {
         var doc = locals[cdt][cdn];
         if (doc.lab_bundle) {
             frappe.call({
@@ -302,7 +302,7 @@ frappe.ui.form.on('Patient Encounter', {
                     name: doc.lab_bundle,
                     doctype: "Lab Bundle"
                 },
-                callback (r) {
+                callback(r) {
                     console.log(r);
                     if (r.message) {
                         for (var row in r.message.lab_bundle_item) {
@@ -331,7 +331,7 @@ frappe.ui.form.on('Codification Table', {
     medical_code: set_medical_code,
 });
 
-function get_diagnosis_list (frm, table_name) {
+function get_diagnosis_list(frm, table_name) {
     const diagnosis_list = [];
     if (frm.doc[table_name]) {
         frm.doc[table_name].forEach(element => {
@@ -355,8 +355,8 @@ const medical_code_mapping = {
     ]
 };
 
-function set_medical_code (frm, reset_columns) {
-    function set_options_for_fields (fields, from_table) {
+function set_medical_code(frm, reset_columns) {
+    function set_options_for_fields(fields, from_table) {
         const options = get_diagnosis_list(frm, from_table);
 
         for (const fieldname of fields) {
@@ -377,7 +377,7 @@ function set_medical_code (frm, reset_columns) {
     }
 };
 
-function validate_medical_code (frm) {
+function validate_medical_code(frm) {
 
     for (const [from_table, fields] of Object.entries(medical_code_mapping)) {
         const options = get_diagnosis_list(frm, from_table);
