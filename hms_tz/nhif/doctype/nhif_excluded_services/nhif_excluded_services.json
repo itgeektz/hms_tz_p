@@ -9,6 +9,8 @@
   "facilitycode",
   "log_name",
   "time_stamp",
+  "column_break_4",
+  "company",
   "section_break_3",
   "itemcode",
   "schemeid",
@@ -67,11 +69,21 @@
    "in_standard_filter": 1,
    "label": "Log Name",
    "read_only": 1
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Data",
+   "label": "Company",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-05-08 12:57:52.841756",
+ "modified": "2021-08-09 20:26:28.521953",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Excluded Services",

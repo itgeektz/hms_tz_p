@@ -92,6 +92,7 @@ def get_nhif_price_package(kwargs):
                         time_stamp,
                         user,
                         user,
+                        company,
                     )
                 )
             frappe.db.sql(
@@ -103,7 +104,7 @@ def get_nhif_price_package(kwargs):
                     `dosage`, `packageid`, `schemeid`, `facilitylevelcode`, `unitprice`, 
                     `isrestricted`, `maximumquantity`, `availableinlevels`, 
                     `practitionerqualifications`, `IsActive`, `creation`, `modified`,
-                    `modified_by`, `owner`
+                    `modified_by`, `owner`,`company`
                 )
                 VALUES {}
             """.format(
@@ -127,6 +128,7 @@ def get_nhif_price_package(kwargs):
                         time_stamp,
                         user,
                         user,
+                        company,
                     )
                 )
             frappe.db.sql(
@@ -135,7 +137,7 @@ def get_nhif_price_package(kwargs):
                 (
                     `name`, `facilitycode`, `time_stamp`, `log_name`, `itemcode`, `schemeid`,
                     `schemename`, `excludedforproducts`, `creation`, `modified`,
-                    `modified_by`, `owner`
+                    `modified_by`, `owner`, `company`
                 )
                 VALUES {}
             """.format(
@@ -164,6 +166,7 @@ def process_nhif_records(company):
         queue="long",
         timeout=10000000,
         is_async=True,
+        kwargs=company,
     )
     frappe.msgprint(_("Queued Processing NHIF Insurance Coverages"), alert=True)
 
@@ -176,9 +179,10 @@ def process_prices_list(kwargs):
         """
             SELECT schemeid from `tabNHIF Price Package`
                 WHERE facilitycode = {0}
+                AND company = '{1}'
                 GROUP BY schemeid
         """.format(
-            facility_code
+            facility_code, company
         ),
         as_dict=1,
     )
@@ -236,7 +240,7 @@ def process_prices_list(kwargs):
                     )
                     if len(item_price_list) > 0:
                         for price in item_price_list:
-                            if int(package.isactive) == 1:
+                            if package.isactive and int(package.isactive) == 1:
                                 if float(price.price_list_rate) != float(
                                     package.unitprice
                                 ):
@@ -256,7 +260,7 @@ def process_prices_list(kwargs):
                             else:
                                 frappe.delete_doc("Item Price", price.name)
 
-                    elif int(package.isactive) == 1:
+                    elif package.isactive and int(package.isactive) == 1:
                         item_price_doc = frappe.new_doc("Item Price")
                         item_price_doc.update(
                             {
@@ -337,11 +341,11 @@ def get_insurance_coverage_items():
     return items_list
 
 
-def get_excluded_services(itemcode):
+def get_excluded_services(itemcode, company):
     excluded_services = None
     excluded_services_list = frappe.get_all(
         "NHIF Excluded Services",
-        filters={"itemcode": itemcode},
+        filters={"itemcode": itemcode, "company": company},
         fields=["excludedforproducts", "schemeid"],
     )
     if len(excluded_services_list) > 0:
@@ -349,11 +353,11 @@ def get_excluded_services(itemcode):
     return excluded_services
 
 
-def get_price_package(itemcode, schemeid):
+def get_price_package(itemcode, schemeid, company):
     price_package = ""
     price_package_list = frappe.get_all(
         "NHIF Price Package",
-        filters={"itemcode": itemcode, "schemeid": schemeid},
+        filters={"itemcode": itemcode, "schemeid": schemeid, "company": company},
         fields=["maximumquantity", "isrestricted"],
     )
     if len(price_package_list) > 0:
@@ -361,13 +365,14 @@ def get_price_package(itemcode, schemeid):
     return price_package
 
 
-def process_insurance_coverages():
+def process_insurance_coverages(kwargs):
+    company = kwargs
     items_list = get_insurance_coverage_items()
 
     coverage_plan_list = frappe.get_all(
         "Healthcare Insurance Coverage Plan",
         fields={"name", "nhif_scheme_id"},
-        filters={"insurance_company_name": "NHIF", "is_active": 1},
+        filters={"insurance_company_name": "NHIF", "is_active": 1, "company": company},
     )
 
     for plan in coverage_plan_list:
@@ -377,7 +382,7 @@ def process_insurance_coverages():
         for item in items_list:
             if plan.nhif_scheme_id != item.schemeid:
                 continue
-            excluded_services = get_excluded_services(item.ref_code)
+            excluded_services = get_excluded_services(item.ref_code, company)
             if excluded_services and excluded_services.excludedforproducts:
                 if plan.name in excluded_services.excludedforproducts:
                     continue
@@ -386,6 +391,7 @@ def process_insurance_coverages():
             doc.healthcare_service = item.dt
             doc.healthcare_service_template = item.healthcare_service_template
             doc.healthcare_insurance_coverage_plan = plan.name
+            doc.company = company
             doc.coverage = 100
             doc.end_date = "2099-12-31"
             doc.is_active = 1
@@ -393,7 +399,7 @@ def process_insurance_coverages():
 
             maximumquantity = 0
             isrestricted = 0
-            price_package = get_price_package(item.ref_code, item.schemeid)
+            price_package = get_price_package(item.ref_code, item.schemeid, company)
             if price_package:
                 if (
                     price_package.maximumquantity
@@ -425,6 +431,7 @@ def process_insurance_coverages():
                     user,
                     doc.start_date,
                     1,
+                    doc.company,
                 )
             )
 
@@ -457,7 +464,8 @@ def process_insurance_coverages():
                     `naming_series`, 
                     `owner`, 
                     `start_date`,
-                    `is_auto_generated`
+                    `is_auto_generated`,
+                    `company`
                 )
                 VALUES {}
             """.format(
@@ -590,7 +598,9 @@ def set_nhif_diff_records():
         add_excluded_services_records(doc, new_excluded_services, "New")
         add_excluded_services_records(doc, deleted_excluded_services, "Deleted")
 
-    if len(doc.price_package) or len(doc.excluded_services):
+    if (doc.get("price_package") and len(doc.price_package)) or (
+        doc.get("excluded_serviceslen") and (doc.excluded_services)
+    ):
         doc.current_log = current
         doc.previous_log = previous
         doc.save(ignore_permissions=True)

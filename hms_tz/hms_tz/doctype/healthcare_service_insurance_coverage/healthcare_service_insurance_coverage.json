@@ -13,6 +13,7 @@
   "column_break_3",
   "is_active",
   "healthcare_insurance_coverage_plan",
+  "company",
   "coverage_deatils_section",
   "coverage",
   "discount",
@@ -124,11 +125,17 @@
    "fieldtype": "Select",
    "label": "Series",
    "options": "HSIC-.YYYY.-"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-03-21 11:45:53.956331",
+ "modified": "2021-08-09 20:01:51.430232",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Healthcare Service Insurance Coverage",
