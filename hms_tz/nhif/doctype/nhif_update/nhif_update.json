@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "date",
+  "datetime",
   "current_log",
   "previous_log",
   "staging_nhif_price_package_section",
@@ -16,10 +17,11 @@
  ],
  "fields": [
   {
-   "default": "Now",
+   "default": "Today",
    "fieldname": "date",
-   "fieldtype": "Datetime",
+   "fieldtype": "Date",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Date",
    "no_copy": 1,
    "read_only": 1,
@@ -52,6 +54,8 @@
   {
    "fieldname": "current_log",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Current Log",
    "options": "NHIF Response Log",
    "read_only": 1,
@@ -60,15 +64,24 @@
   {
    "fieldname": "previous_log",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Previous Log",
    "options": "NHIF Response Log",
    "read_only": 1,
    "reqd": 1
+  },
+  {
+   "default": "Now",
+   "fieldname": "datetime",
+   "fieldtype": "Datetime",
+   "label": "DateTime",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-08-09 19:28:06.311301",
+ "modified": "2021-08-09 19:48:19.312713",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Update",
