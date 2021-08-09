@@ -143,6 +143,7 @@ def get_nhif_price_package(kwargs):
                 ),
                 tuple(insert_data),
             )
+            set_nhif_diff_records()
             frappe.db.commit()
             frappe.msgprint(_("Received data from NHIF"))
             return data
@@ -466,7 +467,22 @@ def process_insurance_coverages():
             )
 
 
-def get_diff_records(current, previous):
+def set_nhif_diff_records():
+    logs = frappe.get_all(
+        "NHIF Response Log",
+        filters={
+            "request_type": "GetPricePackageWithExcludedServices",
+            "response_data": ["not in", ["", None]],
+        },
+        order_by="creation desc",
+        page_length=2,
+    )
+    if len(logs) > 1:
+        current = logs[0].name
+        previous = logs[1].name
+    else:
+        frappe.throw(_("There are not enough records in NHIF Response Log"))
+
     current_rec = json.loads(
         frappe.get_value("NHIF Response Log", current, "response_data")
     )
@@ -575,8 +591,9 @@ def get_diff_records(current, previous):
         add_excluded_services_records(doc, deleted_excluded_services, "Deleted")
 
     if len(doc.price_package) or len(doc.excluded_services):
+        doc.current_log = current
+        doc.previous_log = previous
         doc.save(ignore_permissions=True)
-        frappe.db.commit()
 
 
 def add_price_packages_records(doc, rec, type):
@@ -612,7 +629,6 @@ def add_excluded_services_records(doc, rec, type):
     if not len(rec) > 0:
         return
     for e in rec:
-        print(e)
         price_row = doc.append("excluded_services", {})
         price_row.type = type
         price_row.itemcode = e.get("ItemCode")

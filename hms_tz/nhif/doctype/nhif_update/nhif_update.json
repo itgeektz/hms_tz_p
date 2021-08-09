@@ -7,7 +7,8 @@
  "engine": "InnoDB",
  "field_order": [
   "date",
-  "company",
+  "current_log",
+  "previous_log",
   "staging_nhif_price_package_section",
   "price_package",
   "staging_nhif_excluded_services_section",
@@ -18,16 +19,11 @@
    "default": "Now",
    "fieldname": "date",
    "fieldtype": "Datetime",
+   "in_list_view": 1,
    "label": "Date",
    "no_copy": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "company",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Company",
-   "options": "Company"
+   "read_only": 1,
+   "reqd": 1
   },
   {
    "fieldname": "staging_nhif_price_package_section",
@@ -38,7 +34,8 @@
    "fieldname": "price_package",
    "fieldtype": "Table",
    "label": "Staging NHIF Price Package",
-   "options": "Staging NHIF Price Package"
+   "options": "Staging NHIF Price Package",
+   "read_only": 1
   },
   {
    "fieldname": "staging_nhif_excluded_services_section",
@@ -49,28 +46,42 @@
    "fieldname": "excluded_services",
    "fieldtype": "Table",
    "label": "Staging NHIF Excluded Services",
-   "options": "Staging NHIF Excluded Services"
+   "options": "Staging NHIF Excluded Services",
+   "read_only": 1
+  },
+  {
+   "fieldname": "current_log",
+   "fieldtype": "Link",
+   "label": "Current Log",
+   "options": "NHIF Response Log",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "previous_log",
+   "fieldtype": "Link",
+   "label": "Previous Log",
+   "options": "NHIF Response Log",
+   "read_only": 1,
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-08-07 00:40:57.659965",
+ "modified": "2021-08-09 19:28:06.311301",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Update",
  "owner": "Administrator",
  "permissions": [
   {
-   "create": 1,
-   "delete": 1,
    "email": 1,
    "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
    "role": "System Manager",
-   "share": 1,
-   "write": 1
+   "share": 1
   }
  ],
  "sort_field": "modified",
