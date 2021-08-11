@@ -599,7 +599,7 @@ def set_nhif_diff_records():
         add_excluded_services_records(doc, deleted_excluded_services, "Deleted")
 
     if (doc.get("price_package") and len(doc.price_package)) or (
-        doc.get("excluded_serviceslen") and (doc.excluded_services)
+        doc.get("excluded_services") and (doc.excluded_services)
     ):
         doc.current_log = current
         doc.previous_log = previous
