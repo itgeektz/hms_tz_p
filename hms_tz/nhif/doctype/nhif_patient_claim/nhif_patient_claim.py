@@ -29,7 +29,10 @@ class NHIFPatientClaim(Document):
         if not self.allow_changes:
             from hms_tz.nhif.api.patient_encounter import finalized_encounter
 
-            finalized_encounter(self.patient_encounters[-1])
+            if len(self.patient_encounters) > 1:
+                finalized_encounter(self.patient_encounters[-1])
+            else:
+                finalized_encounter(self.patient_encounters[0])
             self.set_claim_values()
         self.calculate_totals()
         self.set_clinical_notes()
