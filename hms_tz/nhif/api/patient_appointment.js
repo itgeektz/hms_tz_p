@@ -191,6 +191,9 @@ frappe.ui.form.on('Patient Appointment', {
             frappe.msgprint("Select Insurance Subscription to get authorization number");
             return;
         }
+        if (frm.is_dirty()) {
+            frm.save();
+        }
         frappe.call({
             method: 'hms_tz.nhif.api.patient_appointment.get_authorization_num',
             args: {

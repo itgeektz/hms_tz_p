@@ -384,6 +384,13 @@ def make_next_doc(doc, method):
         )
     if doc.is_new():
         return
+    if not doc.billing_item and doc.authorization_number:
+        frappe.msgprint(
+            _(
+                "Billing item is not set. Please save the Patient Appointment and try again to create Vitals."
+            )
+        )
+        return
     if doc.ref_sales_invoice:
         doc.invoiced = 1
     # fix: followup appointments still require authorization number
