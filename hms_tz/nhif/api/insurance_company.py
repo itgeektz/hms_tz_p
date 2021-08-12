@@ -188,7 +188,7 @@ def process_prices_list(kwargs):
     )
 
     for scheme in schemeid_list:
-        price_list_name = "NHIF-" + scheme.schemeid
+        price_list_name = "NHIF-" + scheme.packageid + "-" + scheme.facilitycode
         if not frappe.db.exists("Price List", price_list_name):
             price_list_doc = frappe.new_doc("Price List")
             price_list_doc.price_list_name = price_list_name
