@@ -387,9 +387,18 @@ def validate_stock_item(
     if caller != "Drug Prescription" and not healthcare_service_unit:
         # LRPT code stock check goes here
         return
+
     company_option = get_template_company_option(healthcare_service, company)
-    is_not_available = company_option.is_not_available
-    if is_not_available:
+    if not company_option.get("service_unit"):
+        msgThrow(
+            _(
+                "The 'Company Option' in {0} - {2} for company {1} is not setup. Open {2} and correctly define it in Company Options child table".format(
+                    caller, company, healthcare_service
+                )
+            ),
+            method=method,
+        )
+    if company_option.get("is_not_available"):
         return
 
     qty = float(qty)
