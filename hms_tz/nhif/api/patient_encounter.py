@@ -419,8 +419,15 @@ def validate_stock_item(
         return
 
     company_option = get_template_company_option(healthcare_service, company)
-    is_not_available = company_option.is_not_available
-    if is_not_available:
+    if not company_option.get("service_unit"):
+        msgThrow(
+            _(
+                "The 'Company Option' in {0} - {2} for company {1} is not setup. Open {2} and correctly define it in Company Options child table".format(
+                    caller, company, healthcare_service
+                )
+            )
+        )
+    if company_option.is_not_available:
         return
 
     qty = float(qty)
