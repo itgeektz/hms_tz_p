@@ -26,13 +26,12 @@ from PyPDF2 import PdfFileWriter
 class NHIFPatientClaim(Document):
     def validate(self):
         self.patient_encounters = self.get_patient_encounters()
+        if not self.patient_encounters:
+            frappe.throw(_("There are no submitted encounters for this application"))
         if not self.allow_changes:
             from hms_tz.nhif.api.patient_encounter import finalized_encounter
 
-            if len(self.patient_encounters) > 1:
-                finalized_encounter(self.patient_encounters[-1])
-            else:
-                finalized_encounter(self.patient_encounters[0])
+            finalized_encounter(self.patient_encounters[-1])
             self.set_claim_values()
         self.calculate_totals()
         self.set_clinical_notes()
@@ -541,9 +540,16 @@ class NHIFPatientClaim(Document):
     def set_clinical_notes(self):
         self.clinical_notes = ""
         for patient_encounter in self.patient_encounters:
-            self.clinical_notes += frappe.get_value(
-                "Patient Encounter", patient_encounter, "examination_detail"
-            )
+            if not patient_encounter.examination_detail:
+                frappe.throw(
+                    _(
+                        "Encounter {0} does not have Examination Details defined. Check the encounter.".format(
+                            patient_encounter.name
+                        )
+                    )
+                )
+                return
+            self.clinical_notes += patient_encounter.examination_detail or ""
             self.clinical_notes += "\n"
 
 
