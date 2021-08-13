@@ -540,16 +540,18 @@ class NHIFPatientClaim(Document):
     def set_clinical_notes(self):
         self.clinical_notes = ""
         for patient_encounter in self.patient_encounters:
-            if not patient_encounter.examination_detail:
-                frappe.throw(
+            examination_detail = frappe.get_value("Patient Encounter", patient_encounter.name, "examination_detail") or ""
+            if not examination_detail:
+                frappe.msgprint(
                     _(
                         "Encounter {0} does not have Examination Details defined. Check the encounter.".format(
-                            patient_encounter.name
+                            patient_encounter
                         )
-                    )
+                    ),
+                    alert=True,
                 )
-                return
-            self.clinical_notes += patient_encounter.examination_detail or ""
+                # return
+            self.clinical_notes += examination_detail or ""
             self.clinical_notes += "\n"
 
 
