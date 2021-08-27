@@ -474,10 +474,7 @@ def set_healthcare_services(doc, checked_values):
 
     for checked_item in checked_values:
         item_line = doc.append("items", {})
-        ## NOTE: we should replace price_list with owr function
-        price_list, price_list_currency = frappe.db.get_values(
-            "Price List", {"selling": 1}, ["name", "currency"]
-        )[0]
+        price_list = doc.selling_price_list
         item_line.item_code = checked_item["item"]
         item_line.qty = 1
         if checked_item["qty"]:
