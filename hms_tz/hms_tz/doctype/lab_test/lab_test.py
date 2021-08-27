@@ -378,7 +378,7 @@ def insert_lab_test_to_medical_record(doc):
 	medical_record.patient = doc.patient
 	medical_record.subject = subject
 	medical_record.status = 'Open'
-	medical_record.communication_date = doc.result_date
+	medical_record.communication_date = doc.submitted_date
 	medical_record.reference_doctype = 'Lab Test'
 	medical_record.reference_name = doc.name
 	medical_record.reference_owner = doc.owner
