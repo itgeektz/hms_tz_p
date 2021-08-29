@@ -48,7 +48,7 @@ class PatientAppointment(Document):
         appointment_date = getdate(self.appointment_date)
 
         # If appointment is created for today set status as Open else Scheduled
-        if appointment_date == today:
+        if appointment_date == today and self.status != "Closed":
             self.status = 'Open'
         elif appointment_date > today:
             self.status = 'Scheduled'
