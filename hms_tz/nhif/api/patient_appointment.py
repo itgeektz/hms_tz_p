@@ -368,6 +368,8 @@ def set_follow_up(appointment_doc, method):
         )
         if diff <= valid_days:
             appointment_doc.follow_up = 1
+            if appointment_doc.follow_up and appointment_doc.insurance_subscription and not appointment_doc.authorization_number:
+                return
             appointment_doc.invoiced = 1
             # frappe.msgprint(_("Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"), alert=True)
         else:
