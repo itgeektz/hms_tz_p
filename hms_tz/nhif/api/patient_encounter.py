@@ -796,6 +796,10 @@ def finalized_encounter(cur_encounter, ref_encounter=None):
         "Patient Encounter",
         filters={"docstatus": 1, "reference_encounter": ref_encounter},
     )
+    cur_encounter_doc = frappe.get_doc("Patient Encounter", cur_encounter)
+    inpatient_status = frappe.get_value("Patient", cur_encounter_doc.patient, "inpatient_status")
+    if inpatient_status:
+        frappe.throw(_("The patient {0} has inpatient status <strong>{1}</strong>. Please process the discharge before proceeding to finalize the encounter.".format(cur_encounter_doc.patient, inpatient_status)))
     for element in encounters_list:
         frappe.set_value("Patient Encounter", element.name, "finalized", 1)
 
