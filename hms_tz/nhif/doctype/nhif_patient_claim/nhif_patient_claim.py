@@ -62,8 +62,6 @@ class NHIFPatientClaim(Document):
             "Company NHIF Settings", self.company, "facility_code"
         )
         self.posting_date = nowdate()
-        self.claim_year = int(now_datetime().strftime("%Y"))
-        self.claim_month = int(now_datetime().strftime("%m"))
         self.folio_no = int(self.name[-9:])
         self.serial_no = self.folio_no
         self.item_crt_by = get_fullname(frappe.session.user)
@@ -94,6 +92,12 @@ class NHIFPatientClaim(Document):
         self.attendance_date = frappe.get_value(
             "Patient Appointment", self.patient_appointment, "appointment_date"
         )
+        if self.date_discharge:
+            self.claim_year = int(self.date_discharge.strftime("%Y"))
+            self.claim_month = int(self.date_discharge.strftime("%m"))
+        else:
+            self.claim_year = int(self.attendance_date.strftime("%Y"))
+            self.claim_month = int(self.attendance_date.strftime("%m"))
         self.patient_file_no = self.get_patient_file_no()
         if not self.allow_changes:
             self.set_patient_claim_disease()
@@ -112,36 +116,35 @@ class NHIFPatientClaim(Document):
 
     def set_patient_claim_disease(self):
         self.nhif_patient_claim_disease = []
-        diagnosis_list = []
+        preliminary_diagnosis_list = []
         for encounter in self.patient_encounters:
             encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
-            for row in encounter_doc.patient_encounter_final_diagnosis:
-                if row.medical_code in diagnosis_list:
+            for row in encounter_doc.patient_encounter_preliminary_diagnosis:
+                if row.medical_code in preliminary_diagnosis_list:
                     continue
-                diagnosis_list.append(row.medical_code)
+                preliminary_diagnosis_list.append(row.medical_code)
                 new_row = self.append("nhif_patient_claim_disease", {})
-                new_row.diagnosis_type = "Final Diagnosis"
+                new_row.diagnosis_type = "Provisional Diagnosis"
+                new_row.status = "Provisional"
                 new_row.patient_encounter = encounter.name
                 new_row.codification_table = row.name
-                new_row.folio_disease_id = str(uuid.uuid1())
-                new_row.folio_id = self.folio_id
                 new_row.medical_code = row.medical_code
                 new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
                 new_row.description = row.description
                 new_row.item_crt_by = get_fullname(row.modified_by)
                 new_row.date_created = row.modified.strftime("%Y-%m-%d")
+        final_diagnosis_list = []
         for encounter in self.patient_encounters:
             encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
-            for row in encounter_doc.patient_encounter_preliminary_diagnosis:
-                if row.medical_code in diagnosis_list:
+            for row in encounter_doc.patient_encounter_final_diagnosis:
+                if row.medical_code in final_diagnosis_list:
                     continue
-                diagnosis_list.append(row.medical_code)
+                final_diagnosis_list.append(row.medical_code)
                 new_row = self.append("nhif_patient_claim_disease", {})
-                new_row.diagnosis_type = "Preliminary Diagnosis"
+                new_row.diagnosis_type = "Final Diagnosis"
+                new_row.status = "Final"
                 new_row.patient_encounter = encounter.name
                 new_row.codification_table = row.name
-                new_row.folio_disease_id = str(uuid.uuid1())
-                new_row.folio_id = self.folio_id
                 new_row.medical_code = row.medical_code
                 new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
                 new_row.description = row.description
@@ -424,7 +427,6 @@ class NHIFPatientClaim(Document):
         folio_data = frappe._dict()
         folio_data.entities = []
         entities = frappe._dict()
-        entities.FolioID = self.folio_id
         entities.ClaimYear = self.claim_year
         entities.ClaimMonth = self.claim_month
         entities.FolioNo = self.folio_no
@@ -435,8 +437,6 @@ class NHIFPatientClaim(Document):
         entities.LastName = self.last_name
         entities.Gender = self.gender
         entities.DateOfBirth = str(self.date_of_birth)
-        # entities.Age = self.date_of_birth
-        # entities.TelephoneNo = self.TelephoneNo
         entities.PatientFileNo = self.patient_file_no
         entities.PatientFile = self.patient_file
         entities.ClaimFile = self.claim_file
@@ -450,27 +450,20 @@ class NHIFPatientClaim(Document):
         entities.PractitionerNo = self.practitioner_no
         entities.CreatedBy = self.item_crt_by
         entities.DateCreated = str(self.posting_date)
-        # entities.LastModifiedBy = self.LastModifiedBy
-        # entities.LastModified = self.LastModified
 
         entities.FolioDiseases = []
         for disease in self.nhif_patient_claim_disease:
             FolioDisease = frappe._dict()
-            FolioDisease.FolioDiseaseID = disease.folio_disease_id
+            FolioDisease.Status = disease.status
             FolioDisease.DiseaseCode = disease.disease_code
-            FolioDisease.FolioID = disease.folio_id
             FolioDisease.Remarks = None
             FolioDisease.CreatedBy = disease.item_crt_by
             FolioDisease.DateCreated = str(disease.date_created)
-            # FolioDisease.LastModifiedBy = disease.LastModifiedBy
-            # FolioDisease.LastModified = disease.LastModified
             entities.FolioDiseases.append(FolioDisease)
 
         entities.FolioItems = []
         for item in self.nhif_patient_claim_item:
             FolioItem = frappe._dict()
-            FolioItem.FolioItemID = item.folio_item_id
-            FolioItem.FolioID = item.folio_id
             FolioItem.ItemCode = item.item_code
             FolioItem.ItemQuantity = item.item_quantity
             FolioItem.UnitPrice = item.unit_price
@@ -478,8 +471,6 @@ class NHIFPatientClaim(Document):
             FolioItem.ApprovalRefNo = item.approval_ref_no or None
             FolioItem.CreatedBy = item.item_crt_by
             FolioItem.DateCreated = str(item.date_created)
-            # FolioItem.LastModifiedBy = item.LastModifiedBy
-            # FolioItem.LastModified = item.LastModified
             entities.FolioItems.append(FolioItem)
 
         folio_data.entities.append(entities)
@@ -540,7 +531,12 @@ class NHIFPatientClaim(Document):
     def set_clinical_notes(self):
         self.clinical_notes = ""
         for patient_encounter in self.patient_encounters:
-            examination_detail = frappe.get_value("Patient Encounter", patient_encounter.name, "examination_detail") or ""
+            examination_detail = (
+                frappe.get_value(
+                    "Patient Encounter", patient_encounter.name, "examination_detail"
+                )
+                or ""
+            )
             if not examination_detail:
                 frappe.msgprint(
                     _(
