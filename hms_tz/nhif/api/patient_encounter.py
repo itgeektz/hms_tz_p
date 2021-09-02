@@ -129,6 +129,9 @@ def on_submit_validation(doc, method):
             ):
                 row.prescribe = 1
                 prescribed_list += "-  <b>" + row.get(value) + "</b><BR>"
+                if row.is_not_available_inhouse:
+                    prescribed_list += " - THIS ITEM IS NOT AVAILABLE INHOUSE "
+                prescribed_list += "<BR>"
             elif not row.prescribe:
                 if row.get("no_of_sessions") and doc.insurance_subscription:
                     if row.no_of_sessions != 1:
