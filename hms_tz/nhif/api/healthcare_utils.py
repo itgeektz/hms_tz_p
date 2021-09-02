@@ -95,7 +95,7 @@ def get_healthcare_service_order_to_invoice(
             if not table:
                 continue
             for row in table:
-                if not row.get("invoiced") and row.get("prescribe"):
+                if not row.get("invoiced") and row.get("prescribe") and not row.get("is_not_available_inhouse"):
                     item_code = frappe.get_value(
                         value.get("template"),
                         row.get(value.get("item")),
