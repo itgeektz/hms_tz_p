@@ -640,17 +640,17 @@ def get_claim_pdf_file(doc):
     try:
         doctype = doc.doctype
         docname = doc.name
-        # default_print_format = frappe.db.get_value(
-        #     "Property Setter",
-        #     dict(property="default_print_format", doc_type=doctype),
-        #     "value",
-        # )
-        # if default_print_format:
-        #     print_format = default_print_format
-        # else:
-        #     print_format = "NHIF Form 2A & B"
+        default_print_format = frappe.db.get_value(
+            "Property Setter",
+            dict(property="default_print_format", doc_type=doctype),
+            "value",
+        )
+        if default_print_format:
+            print_format = default_print_format
+        else:
+            print_format = "NHIF Form 2A & B"
 
-        print_format = "NHIF Form 2A & B"
+        # print_format = "NHIF Form 2A & B"
 
         html = frappe.get_print(
             doctype, docname, print_format, doc=None, no_letterhead=1
