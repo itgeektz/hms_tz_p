@@ -37,7 +37,7 @@ frappe.ui.form.on('Patient Encounter', {
             };
         };
         set_medical_code(frm, true);
-        if (frm.doc.duplicated == 1 || frm.doc.finalized) {
+        if (frm.doc.duplicated == 1 || frm.doc.finalized || frm.doc.practitioner.includes("Direct")) {
             frm.remove_custom_button("Schedule Admission");
             frm.remove_custom_button("Refer Practitioner");
             frm.remove_custom_button("Vital Signs", "Create");
@@ -230,7 +230,7 @@ frappe.ui.form.on('Patient Encounter', {
     encounter_category: function (frm) {
         if (frm.doc.patient_encounter_preliminary_diagnosis && frm.doc.patient_encounter_preliminary_diagnosis.length > 0) {
             return;
-        } else if (frm.doc.encounter_category.includes("Direct Cash")) {
+        } else if (frm.doc.practitioner.includes("Direct")) {
             let preliminary_row = frappe.model.add_child(frm.doc, "Codification Table", "patient_encounter_preliminary_diagnosis");
             preliminary_row.medical_code = "ICD-10 R69";
             preliminary_row.code = "R69";
@@ -415,7 +415,7 @@ var add_btn_final = function (frm) {
 };
 
 var duplicate = function (frm) {
-    if (frm.doc.docstatus != 1 || frm.doc.encounter_type == 'Final' || frm.doc.duplicated == 1 || frm.doc.healthcare_practitioner == "Direct Cash") {
+    if (frm.doc.docstatus != 1 || frm.doc.encounter_type == 'Final' || frm.doc.duplicated == 1 || frm.doc.practitioner.includes("Direct")) {
         return;
     }
     frm.add_custom_button(__('Duplicate'), function () {
