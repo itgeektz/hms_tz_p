@@ -656,7 +656,7 @@ def get_claim_pdf_file(doc):
             doctype, docname, print_format, doc=None, no_letterhead=1
         )
 
-        filename = "{name}-claim.pdf".format(
+        filename = "{name}-claim".format(
             name=docname.replace(" ", "-").replace("/", "-")
         )
         pdf = get_pdf(html)
