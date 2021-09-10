@@ -477,6 +477,7 @@ def set_healthcare_services(doc, checked_values):
         price_list = doc.selling_price_list
         item_line.item_code = checked_item["item"]
         item_line.qty = 1
+        item_line.allow_over_sell = 1
         if checked_item["qty"]:
             item_line.qty = checked_item["qty"]
         if checked_item["rate"]:
