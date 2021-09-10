@@ -337,6 +337,7 @@ def send_vfd(invoice_name):
 def get_previous_appointment(patient, filters=None):
     the_filters = {
         "patient": patient,
+        "follow_up": 0
     }
     if filters:
         # when the function is called from frontend
