@@ -1,5 +1,3 @@
-var patient_age = null
-
 frappe.ui.form.on('Lab Test', {
     setup: function (frm) {
         frm.get_field('normal_test_items').grid.editable_fields = [
@@ -9,8 +7,7 @@ frappe.ui.form.on('Lab Test', {
             { fieldname: 'lab_test_uom', columns: 1 },
             { fieldname: 'detailed_normal_range', columns: 2 },
             { fieldname: 'result_status', columns: 1 }
-        ]
-        get_patient_age(frm)
+        ];
         frm.get_field('descriptive_test_items').grid.editable_fields = [
             { fieldname: 'lab_test_particulars', columns: 3 },
             { fieldname: 'result_component_option', columns: 4 },
@@ -25,10 +22,6 @@ frappe.ui.form.on('Lab Test', {
             };
         });
     },
-    patient: function (frm) {
-        get_patient_age(frm)
-    },
-
 });
 
 
@@ -38,6 +31,7 @@ frappe.ui.form.on('Normal Test Result', {
             return
         }
         const row = locals[cdn][cdt];
+        const patient_age = get_patient_age(frm)
         frappe.call({
             'method': 'hms_tz.nhif.api.lab_test.get_normals',
             args: {
@@ -107,6 +101,7 @@ var calc_data_normals = function (data, value) {
 }
 
 var get_patient_age = function (frm) {
+    var patient_age = 0
     if (frm.doc.patient) {
         frappe.call({
             'method': 'hms_tz.hms_tz.doctype.patient.patient.get_patient_detail',

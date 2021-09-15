@@ -9,12 +9,67 @@ from hms_tz.nhif.api.healthcare_utils import (
     create_delivery_note_from_LRPT,
     get_restricted_LRPT,
 )
+from frappe.utils import getdate
+import dateutil
 
 
-def validate(doc, methd):
+def validate(doc, method):
     is_restricted = get_restricted_LRPT(doc)
     doc.is_restricted = is_restricted
+    set_normals(doc)
 
+def set_normals(doc):
+    dob = frappe.get_value("Patient", doc.patient, "dob")
+    age = dateutil.relativedelta.relativedelta(getdate(), dob).years
+    for row in doc.normal_test_items:
+        if not row.result_value:
+            continue
+        normals = get_normals(row.lab_test_name, age, doc.patient_sex)
+        if normals:
+            row.min_normal = normals.get("min")
+            row.max_normal = normals.get("max")
+            row.text_normal = normals.get("text")
+
+            data_normals = calc_data_normals(normals, row.result_value)
+            row.detailed_normal_range = data_normals["detailed_normal_range"]
+            row.result_status = data_normals["result_status"]
+
+def calc_data_normals(data, value):
+    data = frappe._dict(data)
+    value = float(value)
+    result = {
+        "detailed_normal_range": "",
+        "result_status": ""
+    }
+
+    if (data.min and not data.max):
+        result["detailed_normal_range"] = "> " + str(data.min)
+        if (value > data.min):
+            result["result_status"] = "N"
+        else:
+            result["result_status"] = "L"
+    elif (not data.min and data.max):
+        result["detailed_normal_range"] = "< " + str(data.max)
+        if (value < data.max):
+            result["result_status"] = "N"
+        else:
+            result["result_status"] = "H"
+    elif (data.min and data.max):
+        result["detailed_normal_range"] = str(data.min) + " - " + str(data.max)
+        if (value > data.min and value < data.max):
+            result["result_status"] = "N"
+        elif (value < data.min):
+            result["result_status"] = "L"
+        elif (value > data.max):
+            result["result_status"] = "H"
+
+    if (data.text):
+        if (result["detailed_normal_range"]):
+            result["detailed_normal_range"] += " / "
+
+        result["detailed_normal_range"] += data.text
+
+    return result
 
 @frappe.whitelist()
 def get_normals(lab_test_name, patient_age, patient_sex):
