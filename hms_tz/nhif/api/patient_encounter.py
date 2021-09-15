@@ -483,7 +483,7 @@ def on_submit(doc, method):
         on_submit_validation(doc, method)
         create_healthcare_docs(doc)
         create_delivery_note(doc, method)
-    if not doc.inpatient_record:
+    if doc.inpatient_record:
         update_inpatient_record_consultancy(doc)
 
 
@@ -791,21 +791,22 @@ def validate_totals(doc):
 
 @frappe.whitelist()
 def finalized_encounter(cur_encounter, ref_encounter=None):
-    frappe.set_value("Patient Encounter", cur_encounter, "encounter_type", "Final")
-    if not ref_encounter:
-        frappe.set_value("Patient Encounter", cur_encounter, "finalized", 1)
-        return
-    encounters_list = frappe.get_all(
-        "Patient Encounter",
-        filters={"docstatus": 1, "reference_encounter": ref_encounter},
-    )
     cur_encounter_doc = frappe.get_doc("Patient Encounter", cur_encounter)
     inpatient_status = frappe.get_value("Patient", cur_encounter_doc.patient, "inpatient_status")
     if inpatient_status:
         frappe.throw(_("The patient {0} has inpatient status <strong>{1}</strong>. Please process the discharge before proceeding to finalize the encounter.".format(cur_encounter_doc.patient, inpatient_status)))
+
+    encounters_list = frappe.get_all(
+        "Patient Encounter",
+        filters={"docstatus": 1, "reference_encounter": ref_encounter},
+    )
     for element in encounters_list:
         frappe.set_value("Patient Encounter", element.name, "finalized", 1)
 
+    frappe.set_value("Patient Encounter", cur_encounter, "encounter_type", "Final")
+    if not ref_encounter:
+        frappe.set_value("Patient Encounter", cur_encounter, "finalized", 1)
+        return
 
 @frappe.whitelist()
 def create_sales_invoice(encounter, encounter_category, encounter_mode_of_payment):
