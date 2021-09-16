@@ -30,7 +30,11 @@ def validate_create_delivery_note(doc):
         return
     inpatient_record = frappe.get_value("Patient", doc.patient, "inpatient_record")
     if inpatient_record:
-        doc.enabled_auto_create_delivery_notes = 0
+        insurance_subscription = frappe.get_value(
+            "Inpatient Record", inpatient_record, "insurance_subscription"
+        )
+        if not insurance_subscription:
+            doc.enabled_auto_create_delivery_notes = 0
 
 
 @frappe.whitelist()
