@@ -925,12 +925,12 @@ doc_events = {
         "validate": "hms_tz.nhif.api.patient.validate",
         "after_insert": "hms_tz.nhif.api.patient.after_insert",
     },
-    "Healthcare Insurance Claim": {
-        "before_insert": [
-            "hms_tz.nhif.api.insurance_claim.set_patient_encounter",
-            "hms_tz.nhif.api.insurance_claim.set_price",
-        ]
-    },
+    # "Healthcare Insurance Claim": {
+    #     "before_insert": [
+    #         "hms_tz.nhif.api.insurance_claim.set_patient_encounter",
+    #         "hms_tz.nhif.api.insurance_claim.set_price",
+    #     ]
+    # },
     "Patient Encounter": {
         "before_submit": "hms_tz.nhif.api.patient_encounter.before_submit",
         "after_insert": "hms_tz.nhif.api.patient_encounter.after_insert",

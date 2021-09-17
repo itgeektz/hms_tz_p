@@ -23,7 +23,7 @@ class RadiologyExamination(Document):
 
 	def on_submit(self):
 		insert_to_medical_record(self)
-		make_insurance_claim(self)
+		# make_insurance_claim(self)
 
 	def validate(self):
 		set_title_field(self)
