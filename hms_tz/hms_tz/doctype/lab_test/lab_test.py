@@ -18,7 +18,7 @@ class LabTest(Document):
 		self.db_set('submitted_date', getdate())
 		self.db_set('status', 'Completed')
 		insert_lab_test_to_medical_record(self)
-		make_insurance_claim(self)
+		# make_insurance_claim(self)
 
 	def on_cancel(self):
 		self.db_set('status', 'Cancelled')
