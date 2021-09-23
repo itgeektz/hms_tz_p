@@ -149,7 +149,10 @@ class NHIFPatientClaim(Document):
                 new_row.patient_encounter = encounter.name
                 new_row.codification_table = row.name
                 new_row.medical_code = row.medical_code
-                new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
+                if row.code and len(row.code) > 3:
+                    new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
+                else:
+                    new_row.disease_code = row.code[:3]
                 new_row.description = row.description
                 new_row.item_crt_by = get_fullname(row.modified_by)
                 new_row.date_created = row.modified.strftime("%Y-%m-%d")
