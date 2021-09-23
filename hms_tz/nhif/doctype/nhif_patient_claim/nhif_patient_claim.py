@@ -598,8 +598,9 @@ def generate_pdf(doc):
                 "attached_to_name": doc_name,
                 "folder": "Home/Attachments",
                 "file_name": doc_name + ".pdf",
-                "file_url": "/files/" + doc_name + ".pdf",
+                "file_url": "/private/files/" + doc_name + ".pdf",
                 "content": pdf,
+                "is_private": 1,
             }
         )
         ret.save(ignore_permissions=1)
@@ -671,8 +672,9 @@ def get_claim_pdf_file(doc):
                     "attached_to_name": docname,
                     "folder": "Home/Attachments",
                     "file_name": filename + ".pdf",
-                    "file_url": "/files/" + filename + ".pdf",
+                    "file_url": "/private/files/" + filename + ".pdf",
                     "content": pdf,
+                    "is_private": 1,
                 }
             )
             ret.save(ignore_permissions=1)
