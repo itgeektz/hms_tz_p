@@ -90,6 +90,7 @@ class MedicationChangeRequest(Document):
             )
             item.reference_doctype = row.doctype
             item.reference_name = row.name
+            item.is_restricted = row.is_restricted
             item.description = (
                 row.drug_name
                 + " for "
