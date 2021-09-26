@@ -41,16 +41,15 @@
   },
   {
    "fieldname": "delivery_note",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "label": "Delivery Note",
-   "options": "Delivery Note",
    "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2021-03-04 20:05:08.854453",
+ "modified": "2021-09-21 23:56:24.390436",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Inpatient Consultancy",
