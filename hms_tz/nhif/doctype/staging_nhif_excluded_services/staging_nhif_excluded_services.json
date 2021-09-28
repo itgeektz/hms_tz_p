@@ -1,34 +1,24 @@
 {
  "actions": [],
- "autoname": "NXS-.YY.-.MM.-.DD.-.#####",
- "creation": "2020-12-11 03:17:37.800235",
+ "creation": "2021-08-06 23:17:48.781588",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "type",
   "facilitycode",
-  "log_name",
-  "time_stamp",
-  "column_break_4",
-  "company",
   "section_break_3",
   "itemcode",
   "schemeid",
   "schemename",
-  "excludedforproducts"
+  "excludedforproducts",
+  "record"
  ],
  "fields": [
   {
    "fieldname": "facilitycode",
    "fieldtype": "Data",
    "label": "FacilityCode"
-  },
-  {
-   "fieldname": "time_stamp",
-   "fieldtype": "Datetime",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Time Stamp"
   },
   {
    "fieldname": "section_break_3",
@@ -63,45 +53,26 @@
    "label": "ExcludedForProducts"
   },
   {
-   "fieldname": "log_name",
+   "fieldname": "type",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Log Name",
-   "read_only": 1
+   "label": "Type"
   },
   {
-   "fieldname": "column_break_4",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "company",
-   "fieldtype": "Data",
-   "label": "Company",
-   "read_only": 1
+   "fieldname": "record",
+   "fieldtype": "Small Text",
+   "label": "Record"
   }
  ],
  "index_web_pages_for_search": 1,
+ "istable": 1,
  "links": [],
- "modified": "2021-08-09 20:26:28.521953",
+ "modified": "2021-08-07 18:11:45.025660",
  "modified_by": "Administrator",
  "module": "NHIF",
- "name": "NHIF Excluded Services",
+ "name": "Staging NHIF Excluded Services",
  "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  }
- ],
+ "permissions": [],
  "sort_field": "modified",
  "sort_order": "DESC",
  "title_field": "itemcode"

@@ -2,13 +2,13 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('NHIF Patient Claim', {
-	setup: function(frm) {
-		frm.set_query("patient_appointment", function() {
+	setup: function (frm) {
+		frm.set_query("patient_appointment", function () {
 			return {
 				"filters": {
-                    "nhif_patient_claim": ["in", ["", "None"]],
-					"insurance_company": "NHIF",
-					"insurance_subscription": ["not in",["", "None"]]
+					"nhif_patient_claim": ["in", ["", "None"]],
+					"insurance_company": ["like", "NHIF%"],
+					"insurance_subscription": ["not in", ["", "None"]]
 				}
 			};
 		});

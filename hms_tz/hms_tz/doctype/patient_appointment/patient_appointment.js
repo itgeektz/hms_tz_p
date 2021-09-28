@@ -14,7 +14,7 @@ frappe.ui.form.on('Patient Appointment', {
 			frm.set_value('appointment_time', null);
 			frm.disable_save();
 		}
-		if(frm.doc.source){
+		if (frm.doc.source) {
 			set_source_referring_practitioner(frm)
 		}
 	},
@@ -49,15 +49,15 @@ frappe.ui.form.on('Patient Appointment', {
 			};
 		});
 
-		frm.set_query('referring_practitioner', function() {
-			if(frm.doc.source == 'External Referral'){
+		frm.set_query('referring_practitioner', function () {
+			if (frm.doc.source == 'External Referral') {
 				return {
 					filters: {
 						'healthcare_practitioner_type': 'External'
 					}
 				};
 			}
-			else{
+			else {
 				return {
 					filters: {
 						'healthcare_practitioner_type': 'Internal'
@@ -108,6 +108,13 @@ frappe.ui.form.on('Patient Appointment', {
 			frm.page.set_primary_action(__('Save'), () => frm.save());
 		}
 
+		if (frm.doc.patient && frappe.user.has_role("Healthcare Receptionist")) {
+			frm.add_custom_button(__("Itemized Bill"), function () {
+				frappe.route_options = { "patient": frm.doc.patient, "patient_appointment": frm.doc.name };
+				frappe.set_route("query-report", "Itemized Bill Report");
+			});
+		}
+
 		if (frm.doc.patient) {
 			frm.add_custom_button(__('Patient History'), function () {
 				frappe.route_options = { 'patient': frm.doc.patient };
@@ -154,9 +161,9 @@ frappe.ui.form.on('Patient Appointment', {
 				create_vital_signs(frm);
 			}, __('Create'));
 		}
-		frm.set_query('insurance_subscription', function(){
-			return{
-				filters:{
+		frm.set_query('insurance_subscription', function () {
+			return {
+				filters: {
 					'patient': frm.doc.patient,
 					'docstatus': 1
 				}
@@ -190,9 +197,9 @@ frappe.ui.form.on('Patient Appointment', {
 			frm.set_value('modality_type', '');
 			frm.set_value('patient_name', '');
 		}
-		if(frm.doc.service_unit){
-			frappe.db.get_value("Healthcare Service Unit", frm.doc.service_unit, "company", function(r) {
-				if(r && r.company){
+		if (frm.doc.service_unit) {
+			frappe.db.get_value("Healthcare Service Unit", frm.doc.service_unit, "company", function (r) {
+				if (r && r.company) {
 					frm.set_value("company", r.company)
 				}
 			});
@@ -259,8 +266,8 @@ frappe.ui.form.on('Patient Appointment', {
 		}
 	},
 
-	source: function(frm){
-		if(frm.doc.source){
+	source: function (frm) {
+		if (frm.doc.source) {
 			set_source_referring_practitioner(frm);
 		}
 	}
@@ -399,24 +406,24 @@ let check_and_set_availability = function (frm) {
 									let end_time = booked_moment.clone().add(booked.duration, 'minutes');
 									// Deal with 0 duration appointments
 									if (booked_moment.isSame(slot_start_time) || booked_moment.isBetween(slot_start_time, slot_to_time)) {
-										if(booked.duration == 0){
+										if (booked.duration == 0) {
 											disabled = true;
 											return false;
 										}
 									}
 									// Check for overlaps considering appointment duration
-									if(slot_details[i].allow_overlap != 1){
+									if (slot_details[i].allow_overlap != 1) {
 										if (slot_start_time.isBefore(end_time) && slot_to_time.isAfter(booked_moment)) {
 											// There is an overlap
 											disabled = true;
 											return false;
 										}
 									}
-									else{
-										if(slot_start_time.isBefore(end_time) && slot_to_time.isAfter(booked_moment)){
+									else {
+										if (slot_start_time.isBefore(end_time) && slot_to_time.isAfter(booked_moment)) {
 											appointment_count++
 										}
-										if(appointment_count>=slot_details[i].service_unit_capacity){
+										if (appointment_count >= slot_details[i].service_unit_capacity) {
 											// There is an overlap
 											disabled = true;
 											return false;
@@ -424,32 +431,32 @@ let check_and_set_availability = function (frm) {
 									}
 								});
 								//iterate in all absent events and disable the slots
-								slot_details[i].absent_events.forEach(function(event) {
+								slot_details[i].absent_events.forEach(function (event) {
 									let event_from_time = moment(event.from_time, 'HH:mm:ss');
 									let event_to_time = moment(event.to_time, 'HH:mm:ss');
 									// Check for overlaps considering event start and end time
-									if(slot_start_time.isBefore(event_to_time) && slot_to_time.isAfter(event_from_time)){
+									if (slot_start_time.isBefore(event_to_time) && slot_to_time.isAfter(event_from_time)) {
 										// There is an overlap
 										disabled = true;
 										return false;
 									}
 								});
-								let count=''
-								if(slot_details[i].allow_overlap==1 && slot_details[i].service_unit_capacity>1){
-									count='' - ''+(slot_details[i].service_unit_capacity - appointment_count)
+								let count = ''
+								if (slot_details[i].allow_overlap == 1 && slot_details[i].service_unit_capacity > 1) {
+									count = '' - '' + (slot_details[i].service_unit_capacity - appointment_count)
 									// document.getElementById("count").style.fontSize = "xx-large";
 								}
 								return `<button class="btn btn-default"
 									data-name=${start_str}
 									data-duration=${interval}
 									data-service-unit="${slot_details[i].service_unit || ''}"
-									style="margin: 0 10px 10px 0; width: 72px;" ${ disabled ? 'disabled="disabled"' : "" }>
+									style="margin: 0 10px 10px 0; width: 72px;" ${disabled ? 'disabled="disabled"' : ""}>
 									${start_str.substring(0, start_str.length - 3)} ${count}
 								</button>`;
 							}).join("");
 							slot_html = slot_html + `<br/>`;
 						}
-						if(data.present_events && data.present_events.length > 0){
+						if (data.present_events && data.present_events.length > 0) {
 							slot_html = slot_html + `<br/>`;
 							var present_events = data.present_events
 							for (let i = 0; i < present_events.length; i++) {
@@ -461,40 +468,40 @@ let check_and_set_availability = function (frm) {
 									let start_str = slot.from_time;
 									let slot_start_time = moment(slot.from_time, 'HH:mm:ss');
 									let slot_to_time = moment(slot.to_time, 'HH:mm:ss');
-									let interval = (slot_to_time - slot_start_time)/60000 | 0;
+									let interval = (slot_to_time - slot_start_time) / 60000 | 0;
 									//checking current time in slot
 									var today = frappe.datetime.nowdate();
-									if(today == d.get_value('appointment_date')){
+									if (today == d.get_value('appointment_date')) {
 										// disable before  current  time in current date
-										var curr_time= moment(frappe.datetime.now_time(), 'HH:mm:ss');
-										if(slot_start_time.isBefore(curr_time)){
+										var curr_time = moment(frappe.datetime.now_time(), 'HH:mm:ss');
+										if (slot_start_time.isBefore(curr_time)) {
 											disabled = true;
 										}
 									}
 									//iterate in all booked appointments, update the start time and duration
-									present_events[i].appointments.forEach(function(booked) {
+									present_events[i].appointments.forEach(function (booked) {
 										let booked_moment = moment(booked.appointment_time, 'HH:mm:ss');
 										let end_time = booked_moment.clone().add(booked.duration, 'minutes');
 										// Deal with 0 duration appointments
 										if (booked_moment.isSame(slot_start_time) || booked_moment.isBetween(slot_start_time, slot_to_time)) {
-											if(booked.duration == 0){
+											if (booked.duration == 0) {
 												disabled = true;
 												return false;
 											}
 										}
 										// Check for overlaps considering appointment duration
-										if(present_events[i].allow_overlap != 1){
+										if (present_events[i].allow_overlap != 1) {
 											if (slot_start_time.isBefore(end_time) && slot_to_time.isAfter(booked_moment)) {
 												// There is an overlap
 												disabled = true;
 												return false;
 											}
 										}
-										else{
-											if(slot_start_time.isBefore(end_time) && slot_to_time.isAfter(booked_moment)){
+										else {
+											if (slot_start_time.isBefore(end_time) && slot_to_time.isAfter(booked_moment)) {
 												appointment_count++
 											}
-											if(appointment_count>=present_events[i].service_unit_capacity){
+											if (appointment_count >= present_events[i].service_unit_capacity) {
 												// There is an overlap
 												disabled = true;
 												return false;
@@ -502,27 +509,27 @@ let check_and_set_availability = function (frm) {
 										}
 									});
 									//iterate in all absent events and disable the slots
-									present_events[i].absent_events.forEach(function(event) {
+									present_events[i].absent_events.forEach(function (event) {
 										let event_from_time = moment(event.from_time, 'HH:mm:ss');
 										let event_to_time = moment(event.to_time, 'HH:mm:ss');
 										// Check for overlaps considering event start and end time
-										if(slot_start_time.isBefore(event_to_time) && slot_to_time.isAfter(event_from_time)){
+										if (slot_start_time.isBefore(event_to_time) && slot_to_time.isAfter(event_from_time)) {
 											// There is an overlap
 											disabled = true;
 											return false;
 										}
 									});
-									let count=''
-									if(present_events[i].allow_overlap == 1 && present_events[i].service_unit_capacity > 1){
-										count=''- ''+(present_events[i].service_unit_capacity - appointment_count)
+									let count = ''
+									if (present_events[i].allow_overlap == 1 && present_events[i].service_unit_capacity > 1) {
+										count = '' - '' + (present_events[i].service_unit_capacity - appointment_count)
 									}
 									return `<button class="btn btn-default"
 										data-name=${start_str}
 										data-duration=${interval}
 										data-service-unit="${present_events[i].service_unit || ''}"
-										data-availability="${present_events[i].availability||''}"
+										data-availability="${present_events[i].availability || ''}"
 										flag-fixed-duration=${1}
-										style="margin: 0 10px 10px 0; width: 72px;" ${ disabled ? 'disabled="disabled"' : "" }>
+										style="margin: 0 10px 10px 0; width: 72px;" ${disabled ? 'disabled="disabled"' : ""}>
 										${start_str.substring(0, start_str.length - 3)} ${count}
 									</button>`;
 								}).join("");
@@ -611,11 +618,13 @@ let show_procedure_templates = function (frm, result) {
 		data-encounter="%(encounter)s" data-practitioner="%(practitioner)s"\
 		data-date="%(date)s" data-department="%(department)s" data-source="%(source)s"\
 		data-referring-practitioner="%(referring_practitioner)s"> <button class="btn btn-default btn-xs">Add\
-		</button></a></div></div><div class="col-xs-12"><hr/><div/>', {name:y[0], procedure_template: y[1],
-				encounter:y[2], consulting_practitioner:y[3], encounter_date:y[4],
-				practitioner:y[5]? y[5]:'', date: y[6]? y[6]:'', department: y[7]? y[7]:'',  source: y[8]? y[8]:'',
-				referring_practitioner: y[9]? y[9]:''})).appendTo(html_field);
-		row.find("a").click(function() {
+		</button></a></div></div><div class="col-xs-12"><hr/><div/>', {
+			name: y[0], procedure_template: y[1],
+			encounter: y[2], consulting_practitioner: y[3], encounter_date: y[4],
+			practitioner: y[5] ? y[5] : '', date: y[6] ? y[6] : '', department: y[7] ? y[7] : '', source: y[8] ? y[8] : '',
+			referring_practitioner: y[9] ? y[9] : ''
+		})).appendTo(html_field);
+		row.find("a").click(function () {
 			frm.doc.procedure_template = $(this).attr('data-procedure-template');
 			frm.doc.procedure_prescription = $(this).attr('data-name');
 			frm.doc.practitioner = $(this).attr('data-practitioner');
@@ -624,7 +633,7 @@ let show_procedure_templates = function (frm, result) {
 			frm.doc.source = $(this).attr('data-source');
 			frm.set_df_property('source', 'read_only', 1);
 			frm.doc.referring_practitioner = $(this).attr('data-referring-practitioner');
-			if(frm.doc.referring_practitioner){
+			if (frm.doc.referring_practitioner) {
 				frm.set_df_property('referring_practitioner', 'hidden', 0);
 				frm.set_df_property('referring_practitioner', 'read_only', 1);
 			}
@@ -665,9 +674,11 @@ let show_therapy_types = function (frm, result) {
 		data-encounter="%(encounter)s" data-practitioner="%(practitioner)s"\
 		data-date="%(date)s"  data-department="%(department)s" data-source="%(source)s"\
 		data-referring-practitioner="%(referring_practitioner)s"> <button class="btn btn-default btn-xs">Add\
-		</button></a></div></div><div class="col-xs-12"><hr/><div/>', {therapy:y[0],
-		name: y[1], encounter:y[2], practitioner:y[3], date:y[4],
-		department:y[6]? y[6]:'', therapy_plan:y[5],   source: y[7]? y[7]:'', referring_practitioner: y[8]? y[8]:''})).appendTo(html_field);
+		</button></a></div></div><div class="col-xs-12"><hr/><div/>', {
+			therapy: y[0],
+			name: y[1], encounter: y[2], practitioner: y[3], date: y[4],
+			department: y[6] ? y[6] : '', therapy_plan: y[5], source: y[7] ? y[7] : '', referring_practitioner: y[8] ? y[8] : ''
+		})).appendTo(html_field);
 
 		row.find("a").click(function () {
 			frm.doc.therapy_type = $(this).attr("data-therapy");
@@ -677,7 +688,7 @@ let show_therapy_types = function (frm, result) {
 			frm.doc.source = $(this).attr('data-source');
 			frm.set_df_property('source', 'read_only', 1);
 			frm.doc.referring_practitioner = $(this).attr('data-referring-practitioner');
-			if(frm.doc.referring_practitioner){
+			if (frm.doc.referring_practitioner) {
 				frm.set_df_property('referring_practitioner', 'hidden', 0);
 				frm.set_df_property('referring_practitioner', 'read_only', 1);
 			}
@@ -838,8 +849,10 @@ let show_radiology_procedure = function (frm, result) {
 		data-invoiced="%(invoiced)s" data-source="%(source)s"\
 		data-referring-practitioner="%(referring_practitioner)s" data-comments="%(comments)s" href="#">\
 		<button class="btn btn-default btn-xs">Get Radiology\
-		</button></a></div></div>', { name: y[0], radiology_procedure: y[1], encounter: y[2], invoiced: y[3], date: y[4],
-			source:y[5], referring_practitioner:y[6],comments: y[9]})).appendTo(html_field);
+		</button></a></div></div>', {
+			name: y[0], radiology_procedure: y[1], encounter: y[2], invoiced: y[3], date: y[4],
+			source: y[5], referring_practitioner: y[6], comments: y[9]
+		})).appendTo(html_field);
 		row.find('a').click(function () {
 			frm.set_value('radiology_examination_template', $(this).attr('data-radiology-procedure'));
 			frm.set_value('radiology_procedure_prescription', $(this).attr('data-name'));
@@ -877,32 +890,32 @@ let show_radiology_procedure = function (frm, result) {
 };
 
 let set_source_referring_practitioner = function (frm) {
-	if(frm.doc.source == 'Direct'){
+	if (frm.doc.source == 'Direct') {
 		frm.set_value('referring_practitioner', '');
 		frm.set_df_property('referring_practitioner', 'hidden', 1);
 		frm.set_df_property('referring_practitioner', 'reqd', 0);
 	}
-	else if(frm.doc.source == 'External Referral' || frm.doc.source == 'Referral') {
-		if(frm.doc.practitioner){
+	else if (frm.doc.source == 'External Referral' || frm.doc.source == 'Referral') {
+		if (frm.doc.practitioner) {
 			frm.set_df_property('referring_practitioner', 'hidden', 0);
-			if(frm.doc.source == 'External Referral'){
-				frappe.db.get_value('Healthcare Practitioner', frm.doc.practitioner, 'healthcare_practitioner_type', function(r) {
-					if(r && r.healthcare_practitioner_type && r.healthcare_practitioner_type == 'External'){
+			if (frm.doc.source == 'External Referral') {
+				frappe.db.get_value('Healthcare Practitioner', frm.doc.practitioner, 'healthcare_practitioner_type', function (r) {
+					if (r && r.healthcare_practitioner_type && r.healthcare_practitioner_type == 'External') {
 						frm.set_value('referring_practitioner', frm.doc.practitioner);
 					}
-					else{
+					else {
 						frm.set_value('referring_practitioner', '');
 					}
 				});
 				frm.set_df_property('referring_practitioner', 'read_only', 0);
 			}
-			else{
-				frappe.db.get_value('Healthcare Practitioner', frm.doc.practitioner, 'healthcare_practitioner_type', function(r) {
-					if(r && r.healthcare_practitioner_type && r.healthcare_practitioner_type == 'Internal'){
+			else {
+				frappe.db.get_value('Healthcare Practitioner', frm.doc.practitioner, 'healthcare_practitioner_type', function (r) {
+					if (r && r.healthcare_practitioner_type && r.healthcare_practitioner_type == 'Internal') {
 						frm.set_value('referring_practitioner', frm.doc.practitioner);
 						frm.set_df_property('referring_practitioner', 'read_only', 1);
 					}
-					else{
+					else {
 						frm.set_value('referring_practitioner', '');
 						frm.set_df_property('referring_practitioner', 'read_only', 0);
 					}
@@ -910,7 +923,7 @@ let set_source_referring_practitioner = function (frm) {
 			}
 			frm.set_df_property('referring_practitioner', 'reqd', 1);
 		}
-		else{
+		else {
 			frm.set_df_property('referring_practitioner', 'read_only', 0);
 			frm.set_df_property('referring_practitioner', 'hidden', 0);
 			frm.set_df_property('referring_practitioner', 'reqd', 1);

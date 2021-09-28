@@ -1,23 +1,21 @@
 {
  "actions": [],
- "autoname": "NPP-.YY.-.MM.-.DD.-.#####",
- "creation": "2020-12-11 02:57:54.637826",
+ "creation": "2021-08-06 23:14:43.283498",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "facilitycode",
-  "log_name",
-  "time_stamp",
-  "column_break_4",
-  "company",
+  "type",
   "section_break_3",
+  "package_item_id",
+  "facilitycode",
   "itemcode",
   "pricecode",
   "levelpricecode",
   "olditemcode",
   "itemtypeid",
   "itemname",
+  "schemename",
   "strength",
   "dosage",
   "packageid",
@@ -29,9 +27,30 @@
   "maximumquantity",
   "availableinlevels",
   "practitionerqualifications",
-  "isactive"
+  "isactive",
+  "record"
  ],
  "fields": [
+  {
+   "fieldname": "type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Change Type"
+  },
+  {
+   "fieldname": "section_break_3",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "package_item_id",
+   "fieldtype": "Data",
+   "label": "PackageItemID"
+  },
+  {
+   "fieldname": "facilitycode",
+   "fieldtype": "Data",
+   "label": "FacilityCode"
+  },
   {
    "fieldname": "itemcode",
    "fieldtype": "Data",
@@ -49,8 +68,6 @@
   {
    "fieldname": "levelpricecode",
    "fieldtype": "Data",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "LevelPriceCode"
   },
   {
@@ -61,15 +78,19 @@
   {
    "fieldname": "itemtypeid",
    "fieldtype": "Data",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "ItemTypeID"
   },
   {
    "fieldname": "itemname",
-   "fieldtype": "Small Text",
+   "fieldtype": "Data",
    "in_standard_filter": 1,
    "label": "ItemName"
+  },
+  {
+   "fieldname": "schemename",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "SchemeName"
   },
   {
    "fieldname": "strength",
@@ -87,6 +108,10 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "PackageID"
+  },
+  {
+   "fieldname": "column_break_12",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "schemeid",
@@ -136,65 +161,20 @@
    "label": "IsActive"
   },
   {
-   "fieldname": "time_stamp",
-   "fieldtype": "Datetime",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Time Stamp"
-  },
-  {
-   "fieldname": "facilitycode",
-   "fieldtype": "Data",
-   "label": "FacilityCode"
-  },
-  {
-   "fieldname": "section_break_3",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "column_break_12",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "log_name",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Log Name",
-   "read_only": 1
-  },
-  {
-   "fieldname": "company",
-   "fieldtype": "Data",
-   "label": "Company",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_4",
-   "fieldtype": "Column Break"
+   "fieldname": "record",
+   "fieldtype": "Small Text",
+   "label": "Record"
   }
  ],
  "index_web_pages_for_search": 1,
+ "istable": 1,
  "links": [],
- "modified": "2021-08-09 20:24:48.112184",
+ "modified": "2021-08-09 18:50:18.918685",
  "modified_by": "Administrator",
  "module": "NHIF",
- "name": "NHIF Price Package",
+ "name": "Staging NHIF Price Package",
  "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  }
- ],
+ "permissions": [],
  "sort_field": "modified",
  "sort_order": "DESC",
  "title_field": "itemname"

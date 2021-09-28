@@ -15,7 +15,9 @@
   "insurance_company",
   "insurance_company_name",
   "column_break_5",
+  "company",
   "is_active",
+  "is_exclusions",
   "price_list",
   "amended_from",
   "nhif_employername"
@@ -65,9 +67,9 @@
    "options": "Price List"
   },
   {
-   "label": "NHIF EmployerName",
    "fieldname": "nhif_employername",
-   "fieldtype": "Data"
+   "fieldtype": "Data",
+   "label": "NHIF EmployerName"
   },
   {
    "fieldname": "amended_from",
@@ -77,10 +79,22 @@
    "options": "Healthcare Insurance Coverage Plan",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_exclusions",
+   "fieldtype": "Check",
+   "label": "Has HSIC as Exclusions"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
   }
  ],
  "links": [],
- "modified": "2021-06-21 11:45:55.054662",
+ "modified": "2021-08-09 22:44:42.360315",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Healthcare Insurance Coverage Plan",

@@ -2,45 +2,52 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Inpatient Record', {
-	setup: function(frm) {
+	setup: function (frm) {
 		frm.get_field('drug_prescription').grid.editable_fields = [
-			{fieldname: 'drug_code', columns: 2},
-			{fieldname: 'drug_name', columns: 2},
-			{fieldname: 'dosage', columns: 2},
-			{fieldname: 'period', columns: 2}
+			{ fieldname: 'drug_code', columns: 2 },
+			{ fieldname: 'drug_name', columns: 2 },
+			{ fieldname: 'dosage', columns: 2 },
+			{ fieldname: 'period', columns: 2 }
 		];
 	},
 
-	onload:function (frm) {
-		if(frm.doc.source){
+	onload: function (frm) {
+		if (frm.doc.source) {
 			set_source_referring_practitioner(frm)
 		}
 	},
 
-	refresh: function(frm) {
+	refresh: function (frm) {
 		// if (!frm.doc.__islocal && (frm.doc.status == 'Admission Scheduled' || frm.doc.status == 'Admitted')) {
 		frm.enable_save();
 		// } else {
 		// 	frm.disable_save();
 		// }
 
+		if (frm.doc.patient && frm.doc.patient_appointment && frappe.user.has_role("Healthcare Receptionist")) {
+			frm.add_custom_button(__("Itemized Bill"), function () {
+				frappe.route_options = { "patient": frm.doc.patient, "patient_appointment": frm.doc.patient_appointment };
+				frappe.set_route("query-report", "Itemized Bill Report");
+			});
+		}
+
 		if (!frm.doc.__islocal && frm.doc.status == 'Admission Scheduled') {
-			frm.add_custom_button(__('Admit'), function() {
+			frm.add_custom_button(__('Admit'), function () {
 				admit_patient_dialog(frm);
-			} );
+			});
 		}
 
 		if (!frm.doc.__islocal && frm.doc.status == 'Discharge Scheduled') {
-			frm.add_custom_button(__('Discharge'), function() {
+			frm.add_custom_button(__('Discharge'), function () {
 				discharge_patient(frm);
-			} );
+			});
 		}
 
 		if (frm.doc.patient && frappe.user.has_role('Physician')) {
-			frm.add_custom_button(__('Patient History'), function() {
-				frappe.route_options = {'patient': frm.doc.patient};
+			frm.add_custom_button(__('Patient History'), function () {
+				frappe.route_options = { 'patient': frm.doc.patient };
 				frappe.set_route('patient_history');
-			},'View');
+			}, 'View');
 		}
 		if (!frm.doc.__islocal && frm.doc.status != 'Admitted') {
 			// frm.disable_save();
@@ -49,15 +56,15 @@ frappe.ui.form.on('Inpatient Record', {
 			frm.set_df_property('btn_transfer', 'hidden', 0);
 		}
 
-		frm.set_query('referring_practitioner', function() {
-			if(frm.doc.source == 'External Referral'){
+		frm.set_query('referring_practitioner', function () {
+			if (frm.doc.source == 'External Referral') {
 				return {
 					filters: {
 						'healthcare_practitioner_type': 'External'
 					}
 				};
 			}
-			else{
+			else {
 				return {
 					filters: {
 						'healthcare_practitioner_type': 'Internal'
@@ -65,32 +72,32 @@ frappe.ui.form.on('Inpatient Record', {
 				};
 			}
 		});
-		frm.set_query('insurance_subscription', function(){
-			return{
-				filters:{
+		frm.set_query('insurance_subscription', function () {
+			return {
+				filters: {
 					'patient': frm.doc.patient,
 					'docstatus': 1
 				}
 			};
 		});
 	},
-	btn_transfer: function(frm) {
+	btn_transfer: function (frm) {
 		transfer_patient_dialog(frm);
 	},
 
-	source: function(frm){
-		if(frm.doc.source){
+	source: function (frm) {
+		if (frm.doc.source) {
 			set_source_referring_practitioner(frm);
 		}
 	}
 
 });
 
-let discharge_patient = function(frm) {
+let discharge_patient = function (frm) {
 	frappe.call({
 		doc: frm.doc,
 		method: 'discharge',
-		callback: function(data) {
+		callback: function (data) {
 			if (!data.exc) {
 				frm.reload_doc();
 			}
@@ -100,26 +107,30 @@ let discharge_patient = function(frm) {
 	});
 };
 
-let admit_patient_dialog = function(frm) {
+let admit_patient_dialog = function (frm) {
 	let dialog = new frappe.ui.Dialog({
 		title: 'Admit Patient',
 		width: 100,
 		fields: [
-			{fieldtype: 'Link', label: 'Service Unit Type', fieldname: 'service_unit_type',
+			{
+				fieldtype: 'Link', label: 'Service Unit Type', fieldname: 'service_unit_type',
 				options: 'Healthcare Service Unit Type', default: frm.doc.admission_service_unit_type
 			},
-			{fieldtype: 'Link', label: 'Service Unit', fieldname: 'service_unit',
+			{
+				fieldtype: 'Link', label: 'Service Unit', fieldname: 'service_unit',
 				options: 'Healthcare Service Unit', reqd: 1
 			},
-			{fieldtype: 'Datetime', label: 'Admission Datetime', fieldname: 'check_in',
+			{
+				fieldtype: 'Datetime', label: 'Admission Datetime', fieldname: 'check_in',
 				reqd: 1, default: frappe.datetime.now_datetime()
 			},
-			{fieldtype: 'Date', label: 'Expected Discharge', fieldname: 'expected_discharge',
+			{
+				fieldtype: 'Date', label: 'Expected Discharge', fieldname: 'expected_discharge',
 				default: frm.doc.expected_length_of_stay ? frappe.datetime.add_days(frappe.datetime.now_datetime(), frm.doc.expected_length_of_stay) : ''
 			}
 		],
 		primary_action_label: __('Admit'),
-		primary_action : function(){
+		primary_action: function () {
 			let service_unit = dialog.get_value('service_unit');
 			let check_in = dialog.get_value('check_in');
 			let expected_discharge = null;
@@ -132,12 +143,12 @@ let admit_patient_dialog = function(frm) {
 			frappe.call({
 				doc: frm.doc,
 				method: 'admit',
-				args:{
+				args: {
 					'service_unit': service_unit,
 					'check_in': check_in,
 					'expected_discharge': expected_discharge
 				},
-				callback: function(data) {
+				callback: function (data) {
 					if (!data.exc) {
 						frm.reload_doc();
 					}
@@ -150,7 +161,7 @@ let admit_patient_dialog = function(frm) {
 		}
 	});
 
-	dialog.fields_dict['service_unit_type'].get_query = function() {
+	dialog.fields_dict['service_unit_type'].get_query = function () {
 		return {
 			filters: {
 				'inpatient_occupancy': 1,
@@ -158,13 +169,13 @@ let admit_patient_dialog = function(frm) {
 			}
 		};
 	};
-	dialog.fields_dict['service_unit'].get_query = function() {
+	dialog.fields_dict['service_unit'].get_query = function () {
 		return {
 			filters: {
 				'is_group': 0,
 				'company': frm.doc.company,
 				'service_unit_type': dialog.get_value('service_unit_type'),
-				'occupancy_status' : 'Vacant'
+				'occupancy_status': 'Vacant'
 			}
 		};
 	};
@@ -172,28 +183,28 @@ let admit_patient_dialog = function(frm) {
 	dialog.show();
 };
 
-let transfer_patient_dialog = function(frm) {
+let transfer_patient_dialog = function (frm) {
 	let dialog = new frappe.ui.Dialog({
 		title: 'Transfer Patient',
 		width: 100,
 		fields: [
-			{fieldtype: 'Link', label: 'Leave From', fieldname: 'leave_from', options: 'Healthcare Service Unit', reqd: 1, read_only:1},
-			{fieldtype: 'Link', label: 'Service Unit Type', fieldname: 'service_unit_type', options: 'Healthcare Service Unit Type'},
-			{fieldtype: 'Link', label: 'Transfer To', fieldname: 'service_unit', options: 'Healthcare Service Unit', reqd: 1},
-			{fieldtype: 'Datetime', label: 'Check In', fieldname: 'check_in', reqd: 1, default: frappe.datetime.now_datetime()}
+			{ fieldtype: 'Link', label: 'Leave From', fieldname: 'leave_from', options: 'Healthcare Service Unit', reqd: 1, read_only: 1 },
+			{ fieldtype: 'Link', label: 'Service Unit Type', fieldname: 'service_unit_type', options: 'Healthcare Service Unit Type' },
+			{ fieldtype: 'Link', label: 'Transfer To', fieldname: 'service_unit', options: 'Healthcare Service Unit', reqd: 1 },
+			{ fieldtype: 'Datetime', label: 'Check In', fieldname: 'check_in', reqd: 1, default: frappe.datetime.now_datetime() }
 		],
 		primary_action_label: __('Transfer'),
-		primary_action : function() {
+		primary_action: function () {
 			let service_unit = null;
 			let check_in = dialog.get_value('check_in');
 			let leave_from = null;
-			if(dialog.get_value('leave_from')){
+			if (dialog.get_value('leave_from')) {
 				leave_from = dialog.get_value('leave_from');
 			}
-			if(dialog.get_value('service_unit')){
+			if (dialog.get_value('service_unit')) {
 				service_unit = dialog.get_value('service_unit');
 			}
-			if(check_in > frappe.datetime.now_datetime()){
+			if (check_in > frappe.datetime.now_datetime()) {
 				frappe.msgprint({
 					title: __('Not Allowed'),
 					message: __('Check-in time cannot be greater than the current time'),
@@ -204,12 +215,12 @@ let transfer_patient_dialog = function(frm) {
 			frappe.call({
 				doc: frm.doc,
 				method: 'transfer',
-				args:{
+				args: {
 					'service_unit': service_unit,
 					'check_in': check_in,
 					'leave_from': leave_from
 				},
-				callback: function(data) {
+				callback: function (data) {
 					if (!data.exc) {
 						frm.reload_doc();
 					}
@@ -222,13 +233,13 @@ let transfer_patient_dialog = function(frm) {
 		}
 	});
 
-	dialog.fields_dict['leave_from'].get_query = function(){
+	dialog.fields_dict['leave_from'].get_query = function () {
 		return {
-			query : 'hms_tz.hms_tz.doctype.inpatient_record.inpatient_record.get_leave_from',
-			filters: {docname:frm.doc.name}
+			query: 'hms_tz.hms_tz.doctype.inpatient_record.inpatient_record.get_leave_from',
+			filters: { docname: frm.doc.name }
 		};
 	};
-	dialog.fields_dict['service_unit_type'].get_query = function(){
+	dialog.fields_dict['service_unit_type'].get_query = function () {
 		return {
 			filters: {
 				'inpatient_occupancy': 1,
@@ -236,12 +247,12 @@ let transfer_patient_dialog = function(frm) {
 			}
 		};
 	};
-	dialog.fields_dict['service_unit'].get_query = function(){
+	dialog.fields_dict['service_unit'].get_query = function () {
 		return {
 			filters: {
 				'is_group': 0,
 				'service_unit_type': dialog.get_value('service_unit_type'),
-				'occupancy_status' : 'Vacant'
+				'occupancy_status': 'Vacant'
 			}
 		};
 	};
@@ -260,32 +271,32 @@ let transfer_patient_dialog = function(frm) {
 };
 
 let set_source_referring_practitioner = function (frm) {
-	if(frm.doc.source == 'Direct'){
+	if (frm.doc.source == 'Direct') {
 		frm.set_value('referring_practitioner', '');
 		frm.set_df_property('referring_practitioner', 'hidden', 1);
 		frm.set_df_property('referring_practitioner', 'reqd', 0);
 	}
-	else if(frm.doc.source == 'External Referral' || frm.doc.source == 'Referral') {
-		if(frm.doc.primary_practitioner){
+	else if (frm.doc.source == 'External Referral' || frm.doc.source == 'Referral') {
+		if (frm.doc.primary_practitioner) {
 			frm.set_df_property('referring_practitioner', 'hidden', 0);
-			if(frm.doc.source=='External Referral'){
-				frappe.db.get_value('Healthcare Practitioner', frm.doc.primary_practitioner, 'healthcare_practitioner_type', function(r) {
-					if(r && r.healthcare_practitioner_type && r.healthcare_practitioner_type == 'External'){
+			if (frm.doc.source == 'External Referral') {
+				frappe.db.get_value('Healthcare Practitioner', frm.doc.primary_practitioner, 'healthcare_practitioner_type', function (r) {
+					if (r && r.healthcare_practitioner_type && r.healthcare_practitioner_type == 'External') {
 						frm.set_value('referring_practitioner', frm.doc.primary_practitioner);
 					}
-					else{
+					else {
 						frm.set_value('referring_practitioner', '');
 					}
 				});
 				frm.set_df_property('referring_practitioner', 'read_only', 0);
 			}
-			else{
-				frappe.db.get_value('Healthcare Practitioner', frm.doc.primary_practitioner, 'healthcare_practitioner_type', function(r) {
-					if(r && r.healthcare_practitioner_type && r.healthcare_practitioner_type == 'Internal'){
+			else {
+				frappe.db.get_value('Healthcare Practitioner', frm.doc.primary_practitioner, 'healthcare_practitioner_type', function (r) {
+					if (r && r.healthcare_practitioner_type && r.healthcare_practitioner_type == 'Internal') {
 						frm.set_value('referring_practitioner', frm.doc.primary_practitioner);
 						frm.set_df_property('referring_practitioner', 'read_only', 1);
 					}
-					else{
+					else {
 						frm.set_value('referring_practitioner', '');
 						frm.set_df_property('referring_practitioner', 'read_only', 0);
 					}
@@ -293,7 +304,7 @@ let set_source_referring_practitioner = function (frm) {
 			}
 			frm.set_df_property('referring_practitioner', 'reqd', 1);
 		}
-		else{
+		else {
 			frm.set_df_property('referring_practitioner', 'read_only', 0);
 			frm.set_df_property('referring_practitioner', 'hidden', 0);
 			frm.set_df_property('referring_practitioner', 'reqd', 1);

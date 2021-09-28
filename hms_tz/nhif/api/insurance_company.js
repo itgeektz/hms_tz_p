@@ -8,7 +8,7 @@ frappe.ui.form.on('Healthcare Insurance Company', {
 });
 
 var add_get_price_btn = function (frm) {
-    if (frm.doc.insurance_company_name != 'NHIF') { return }
+    if (!frm.doc.insurance_company_name.includes("NHIF")) { return }
     frm.add_custom_button(__('Get NHIF Price Package'), function () {
         frappe.call({
             method: 'hms_tz.nhif.api.insurance_company.enqueue_get_nhif_price_package',
@@ -20,7 +20,7 @@ var add_get_price_btn = function (frm) {
             }
         });
     });
-    if (frm.doc.insurance_company_name != 'NHIF') { return }
+    if (!frm.doc.insurance_company_name.includes("NHIF")) { return }
     frm.add_custom_button(__('Only Process NHIF Records'), function () {
         frappe.call({
             method: 'hms_tz.nhif.api.insurance_company.process_nhif_records',

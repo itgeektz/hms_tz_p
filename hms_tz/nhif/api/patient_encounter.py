@@ -202,22 +202,34 @@ def on_submit_validation(doc, method):
     )
     # hsic_map is like {"CBC": HSIC_object_for_CBC, "XRay Abdomen": HSIC_object_for_xray_abdomen, "Panadol": HSIC_object_for_panadol}
     hsic_map = {hsic.healthcare_service_template: hsic for hsic in hsic_list}
-    hicp_name = frappe.get_value(
+    hicp_name, is_exclusions = frappe.get_value(
         "Healthcare Insurance Coverage Plan",
         healthcare_insurance_coverage_plan,
-        "coverage_plan_name",
+        ["coverage_plan_name", "is_exclusions"],
     )
     for template in healthcare_service_templates:
-        if template not in hsic_map:
-            msg = _(
-                "{0} not covered in Healthcare Insurance Coverage Plan "
-                + str(hicp_name)
-            ).format(template)
-            msgThrow(
-                msg,
-                method,
-            )
-            continue
+        if not is_exclusions:
+            if template not in hsic_map:
+                msg = _(
+                    "{0} not covered in Healthcare Insurance Coverage Plan "
+                    + str(hicp_name)
+                ).format(template)
+                msgThrow(
+                    msg,
+                    method,
+                )
+                continue
+        else:
+            if template in hsic_map:
+                msg = _(
+                    "{0} not covered in Healthcare Insurance Coverage Plan "
+                    + str(hicp_name)
+                ).format(template)
+                msgThrow(
+                    msg,
+                    method,
+                )
+                continue
         coverage_info = hsic_map[template]
         for row in healthcare_service_templates[template]:
             row.is_restricted = coverage_info.approval_mandatory_for_claim
@@ -417,6 +429,7 @@ def validate_stock_item(
 ):
     # frappe.msgprint(_("{0} warehouse passed. <br> {1} healthcare service unit passed").format(warehouse, healthcare_service_unit), alert=True)
     # frappe.msgprint(_("{0} healthcare_service. <br>").format(healthcare_service), alert=True)
+
     company_option = get_template_company_option(healthcare_service, company)
     if not company_option.get("service_unit"):
         msgThrow(

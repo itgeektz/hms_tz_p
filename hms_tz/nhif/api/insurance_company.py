@@ -1,6 +1,8 @@
 # get_nhif_price_package
 
 from __future__ import unicode_literals
+from codecs import ignore_errors
+from time import perf_counter
 import frappe
 from frappe import _
 from hms_tz.nhif.api.token import get_claimsservice_token
@@ -12,6 +14,7 @@ from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
 from frappe.utils import now
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from frappe.model.naming import set_new_name
+import ast
 
 
 @frappe.whitelist()
@@ -56,7 +59,7 @@ def get_nhif_price_package(kwargs):
                 request_type="GetPricePackageWithExcludedServices",
                 request_url=url,
                 request_header=headers,
-                response_data=json.loads(r.text),
+                response_data=r.text,
             )
             time_stamp = now()
             data = json.loads(r.text)
@@ -89,6 +92,7 @@ def get_nhif_price_package(kwargs):
                         time_stamp,
                         user,
                         user,
+                        company,
                     )
                 )
             frappe.db.sql(
@@ -100,7 +104,7 @@ def get_nhif_price_package(kwargs):
                     `dosage`, `packageid`, `schemeid`, `facilitylevelcode`, `unitprice`, 
                     `isrestricted`, `maximumquantity`, `availableinlevels`, 
                     `practitionerqualifications`, `IsActive`, `creation`, `modified`,
-                    `modified_by`, `owner`
+                    `modified_by`, `owner`,`company`
                 )
                 VALUES {}
             """.format(
@@ -124,6 +128,7 @@ def get_nhif_price_package(kwargs):
                         time_stamp,
                         user,
                         user,
+                        company,
                     )
                 )
             frappe.db.sql(
@@ -132,7 +137,7 @@ def get_nhif_price_package(kwargs):
                 (
                     `name`, `facilitycode`, `time_stamp`, `log_name`, `itemcode`, `schemeid`,
                     `schemename`, `excludedforproducts`, `creation`, `modified`,
-                    `modified_by`, `owner`
+                    `modified_by`, `owner`, `company`
                 )
                 VALUES {}
             """.format(
@@ -140,6 +145,7 @@ def get_nhif_price_package(kwargs):
                 ),
                 tuple(insert_data),
             )
+            set_nhif_diff_records()
             frappe.db.commit()
             frappe.msgprint(_("Received data from NHIF"))
             return data
@@ -160,6 +166,7 @@ def process_nhif_records(company):
         queue="long",
         timeout=10000000,
         is_async=True,
+        kwargs=company,
     )
     frappe.msgprint(_("Queued Processing NHIF Insurance Coverages"), alert=True)
 
@@ -172,15 +179,16 @@ def process_prices_list(kwargs):
         """
             SELECT schemeid from `tabNHIF Price Package`
                 WHERE facilitycode = {0}
+                AND company = '{1}'
                 GROUP BY schemeid
         """.format(
-            facility_code
+            facility_code, company
         ),
         as_dict=1,
     )
 
     for scheme in schemeid_list:
-        price_list_name = "NHIF-" + scheme.schemeid
+        price_list_name = "NHIF-" + scheme.packageid + "-" + scheme.facilitycode
         if not frappe.db.exists("Price List", price_list_name):
             price_list_doc = frappe.new_doc("Price List")
             price_list_doc.price_list_name = price_list_name
@@ -232,7 +240,7 @@ def process_prices_list(kwargs):
                     )
                     if len(item_price_list) > 0:
                         for price in item_price_list:
-                            if int(package.isactive) == 1:
+                            if package.isactive and int(package.isactive) == 1:
                                 if float(price.price_list_rate) != float(
                                     package.unitprice
                                 ):
@@ -252,7 +260,7 @@ def process_prices_list(kwargs):
                             else:
                                 frappe.delete_doc("Item Price", price.name)
 
-                    elif int(package.isactive) == 1:
+                    elif package.isactive and int(package.isactive) == 1:
                         item_price_doc = frappe.new_doc("Item Price")
                         item_price_doc.update(
                             {
@@ -333,11 +341,11 @@ def get_insurance_coverage_items():
     return items_list
 
 
-def get_excluded_services(itemcode):
+def get_excluded_services(itemcode, company):
     excluded_services = None
     excluded_services_list = frappe.get_all(
         "NHIF Excluded Services",
-        filters={"itemcode": itemcode},
+        filters={"itemcode": itemcode, "company": company},
         fields=["excludedforproducts", "schemeid"],
     )
     if len(excluded_services_list) > 0:
@@ -345,11 +353,11 @@ def get_excluded_services(itemcode):
     return excluded_services
 
 
-def get_price_package(itemcode, schemeid):
+def get_price_package(itemcode, schemeid, company):
     price_package = ""
     price_package_list = frappe.get_all(
         "NHIF Price Package",
-        filters={"itemcode": itemcode, "schemeid": schemeid},
+        filters={"itemcode": itemcode, "schemeid": schemeid, "company": company},
         fields=["maximumquantity", "isrestricted"],
     )
     if len(price_package_list) > 0:
@@ -357,13 +365,14 @@ def get_price_package(itemcode, schemeid):
     return price_package
 
 
-def process_insurance_coverages():
+def process_insurance_coverages(kwargs):
+    company = kwargs
     items_list = get_insurance_coverage_items()
 
     coverage_plan_list = frappe.get_all(
         "Healthcare Insurance Coverage Plan",
         fields={"name", "nhif_scheme_id"},
-        filters={"insurance_company_name": "NHIF", "is_active": 1},
+        filters={"insurance_company_name": "NHIF", "is_active": 1, "company": company},
     )
 
     for plan in coverage_plan_list:
@@ -373,7 +382,7 @@ def process_insurance_coverages():
         for item in items_list:
             if plan.nhif_scheme_id != item.schemeid:
                 continue
-            excluded_services = get_excluded_services(item.ref_code)
+            excluded_services = get_excluded_services(item.ref_code, company)
             if excluded_services and excluded_services.excludedforproducts:
                 if plan.name in excluded_services.excludedforproducts:
                     continue
@@ -382,6 +391,7 @@ def process_insurance_coverages():
             doc.healthcare_service = item.dt
             doc.healthcare_service_template = item.healthcare_service_template
             doc.healthcare_insurance_coverage_plan = plan.name
+            doc.company = company
             doc.coverage = 100
             doc.end_date = "2099-12-31"
             doc.is_active = 1
@@ -389,7 +399,7 @@ def process_insurance_coverages():
 
             maximumquantity = 0
             isrestricted = 0
-            price_package = get_price_package(item.ref_code, item.schemeid)
+            price_package = get_price_package(item.ref_code, item.schemeid, company)
             if price_package:
                 if (
                     price_package.maximumquantity
@@ -421,6 +431,7 @@ def process_insurance_coverages():
                     user,
                     doc.start_date,
                     1,
+                    doc.company,
                 )
             )
 
@@ -453,7 +464,8 @@ def process_insurance_coverages():
                     `naming_series`, 
                     `owner`, 
                     `start_date`,
-                    `is_auto_generated`
+                    `is_auto_generated`,
+                    `company`
                 )
                 VALUES {}
             """.format(
@@ -461,3 +473,176 @@ def process_insurance_coverages():
                 ),
                 tuple(insert_data),
             )
+
+
+def set_nhif_diff_records():
+    logs = frappe.get_all(
+        "NHIF Response Log",
+        filters={
+            "request_type": "GetPricePackageWithExcludedServices",
+            "response_data": ["not in", ["", None]],
+        },
+        order_by="creation desc",
+        page_length=2,
+    )
+    if len(logs) > 1:
+        current = logs[0].name
+        previous = logs[1].name
+    else:
+        frappe.throw(_("There are not enough records in NHIF Response Log"))
+
+    current_rec = json.loads(
+        frappe.get_value("NHIF Response Log", current, "response_data")
+    )
+    previous_rec = json.loads(
+        frappe.get_value("NHIF Response Log", previous, "response_data")
+    )
+    current_price_packages = current_rec.get("PricePackage")
+    previousـprice_packages = previous_rec.get("PricePackage")
+
+    diff_price_packages_from_current = [
+        i for i in current_price_packages if i not in previousـprice_packages
+    ]
+    diff_price_packages_from_previous = [
+        i for i in previousـprice_packages if i not in current_price_packages
+    ]
+
+    changed_price_packages = []
+    new_price_packages = []
+
+    for e in diff_price_packages_from_current:
+        exist_rec = next(
+            (
+                item
+                for item in diff_price_packages_from_previous
+                if item.get("PriceCode") == e.get("PriceCode")
+            ),
+            None,
+        )
+        if exist_rec:
+            changed_price_packages.append(exist_rec)
+        else:
+            new_price_packages.append(e)
+
+    deleted_price_packages = []
+
+    for z in diff_price_packages_from_previous:
+        exist_rec = next(
+            (
+                item
+                for item in diff_price_packages_from_current
+                if item.get("PriceCode") == z.get("PriceCode")
+            ),
+            None,
+        )
+        if not exist_rec:
+            deleted_price_packages.append(z)
+
+    doc = frappe.new_doc("NHIF Update")
+    if (
+        len(changed_price_packages)
+        or len(new_price_packages)
+        or len(deleted_price_packages)
+    ):
+        add_price_packages_records(doc, changed_price_packages, "Changed")
+        add_price_packages_records(doc, new_price_packages, "New")
+        add_price_packages_records(doc, deleted_price_packages, "Deleted")
+
+    current_excluded_services = current_rec.get("ExcludedServices")
+    previous_excluded_services = previous_rec.get("ExcludedServices")
+
+    diff_current_excluded_services = [
+        i for i in current_excluded_services if i not in previous_excluded_services
+    ]
+    diff_previous_excluded_services = [
+        i for i in previous_excluded_services if i not in previous_excluded_services
+    ]
+
+    changed_excluded_services = []
+    new_excluded_services = []
+
+    for e in diff_current_excluded_services:
+        exist_rec = next(
+            (
+                item
+                for item in diff_previous_excluded_services
+                if item.get("ItemCode") == e.get("ItemCode")
+            ),
+            None,
+        )
+        if exist_rec:
+            changed_excluded_services.append(exist_rec)
+        else:
+            new_excluded_services.append(e)
+
+    deleted_excluded_services = []
+
+    for z in diff_previous_excluded_services:
+        exist_rec = next(
+            (
+                item
+                for item in diff_current_excluded_services
+                if item.get("ItemCode") == z.get("ItemCode")
+            ),
+            None,
+        )
+        if not exist_rec:
+            deleted_excluded_services.append(z)
+
+    if (
+        len(changed_excluded_services)
+        or len(new_excluded_services)
+        or len(deleted_excluded_services)
+    ):
+        add_excluded_services_records(doc, changed_excluded_services, "Changed")
+        add_excluded_services_records(doc, new_excluded_services, "New")
+        add_excluded_services_records(doc, deleted_excluded_services, "Deleted")
+
+    if (doc.get("price_package") and len(doc.price_package)) or (
+        doc.get("excluded_services") and (doc.excluded_services)
+    ):
+        doc.current_log = current
+        doc.previous_log = previous
+        doc.save(ignore_permissions=True)
+
+
+def add_price_packages_records(doc, rec, type):
+    if not len(rec) > 0:
+        return
+    for e in rec:
+        price_row = doc.append("price_package", {})
+        price_row.itemcode = e.get("ItemCode")
+        price_row.type = type
+        price_row.facilitycode = e.get("FacilityCode")
+        price_row.package_item_id = e.get("PackageItemID")
+        price_row.pricecode = e.get("PriceCode")
+        price_row.levelpricecode = e.get("LevelPriceCode")
+        price_row.olditemcode = e.get("OldItemCode")
+        price_row.itemtypeid = e.get("ItemTypeID")
+        price_row.itemname = e.get("ItemName")
+        price_row.schemename = e.get("SchemeName")
+        price_row.strength = e.get("Strength")
+        price_row.dosage = e.get("Dosage")
+        price_row.packageid = e.get("PackageID")
+        price_row.schemeid = e.get("SchemeID")
+        price_row.facilitylevelcode = e.get("FacilityLevelCode")
+        price_row.unitprice = e.get("UnitPrice")
+        price_row.isrestricted = e.get("IsRestricted")
+        price_row.maximumquantity = e.get("MaximumQuantity")
+        price_row.availableinlevels = e.get("AvailableInLevels")
+        price_row.practitionerqualifications = e.get("PractitionerQualifications")
+        price_row.IsActive = e.get("IsActive")
+        price_row.record = json.dumps(e)
+
+
+def add_excluded_services_records(doc, rec, type):
+    if not len(rec) > 0:
+        return
+    for e in rec:
+        price_row = doc.append("excluded_services", {})
+        price_row.type = type
+        price_row.itemcode = e.get("ItemCode")
+        price_row.schemeid = e.get("SchemeID")
+        price_row.schemename = e.get("SchemeName")
+        price_row.excludedforproducts = e.get("ExcludedForProducts")
+        price_row.record = json.dumps(e)
