@@ -32,8 +32,14 @@ def enqueue_get_nhif_price_package(company):
 def get_nhif_price_package(kwargs):
     company = kwargs
     user = frappe.session.user
-    frappe.db.sql("DELETE FROM `tabNHIF Price Package` WHERE name != 'ABC'")
-    frappe.db.sql("DELETE FROM `tabNHIF Excluded Services` WHERE name != 'ABC'")
+    frappe.db.sql(
+        """DELETE FROM `tabNHIF Price Package` WHERE company = '{0}' """.format(company)
+    )
+    frappe.db.sql(
+        """DELETE FROM `tabNHIF Excluded Services` WHERE company = '{0}' """.format(
+            company
+        )
+    )
     frappe.db.commit()
     token = get_claimsservice_token(company)
     claimsserver_url, facility_code = frappe.get_value(
@@ -148,7 +154,7 @@ def get_nhif_price_package(kwargs):
             set_nhif_diff_records()
             frappe.db.commit()
             frappe.msgprint(_("Received data from NHIF"))
-            return data
+            return insert_data
 
 
 @frappe.whitelist()
