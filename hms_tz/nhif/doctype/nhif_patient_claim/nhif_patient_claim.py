@@ -45,6 +45,26 @@ class NHIFPatientClaim(Document):
         )
 
     def before_submit(self):
+        authorization_no = self.authorization_no
+
+        claim_details = frappe.get_all(
+            "NHIF Patient Claim",
+            filters={"authorization_no": authorization_no, "docstatus": 0},
+            fields=["name", "patient", "patient_name"],
+        )
+
+        if len(claim_details) > 1:
+            claim_name_list = ""
+            for claim in claim_details:
+                claim_name_list += claim_details[0]["name"] + ", "
+
+                frappe.throw(
+                    "This Authorization Number {0} has used multiple times in NHIF Patient Claim: {1}. \
+                    Please merge the authorization number to Proceed".format(
+                        frappe.bold(authorization_no), frappe.bold(claim_name_list)
+                    )
+                )
+
         self.patient_encounters = self.get_patient_encounters()
         if not self.patient_signature:
             frappe.throw(_("Patient signature is required"))
