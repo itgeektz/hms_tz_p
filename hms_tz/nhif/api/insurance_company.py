@@ -32,8 +32,14 @@ def enqueue_get_nhif_price_package(company):
 def get_nhif_price_package(kwargs):
     company = kwargs
     user = frappe.session.user
-    frappe.db.sql("DELETE FROM `tabNHIF Price Package` WHERE name != 'ABC'")
-    frappe.db.sql("DELETE FROM `tabNHIF Excluded Services` WHERE name != 'ABC'")
+    frappe.db.sql(
+        """DELETE FROM `tabNHIF Price Package` WHERE company = '{0}' """.format(company)
+    )
+    frappe.db.sql(
+        """DELETE FROM `tabNHIF Excluded Services` WHERE company = '{0}' """.format(
+            company
+        )
+    )
     frappe.db.commit()
     token = get_claimsservice_token(company)
     claimsserver_url, facility_code = frappe.get_value(
@@ -148,7 +154,7 @@ def get_nhif_price_package(kwargs):
             set_nhif_diff_records()
             frappe.db.commit()
             frappe.msgprint(_("Received data from NHIF"))
-            return data
+            return insert_data
 
 
 @frappe.whitelist()
@@ -177,10 +183,10 @@ def process_prices_list(kwargs):
     currency = frappe.get_value("Company", company, "default_currency")
     schemeid_list = frappe.db.sql(
         """
-            SELECT schemeid from `tabNHIF Price Package`
+            SELECT packageid, schemeid from `tabNHIF Price Package`
                 WHERE facilitycode = {0}
                 AND company = '{1}'
-                GROUP BY schemeid
+                GROUP BY packageid, schemeid
         """.format(
             facility_code, company
         ),
@@ -188,7 +194,7 @@ def process_prices_list(kwargs):
     )
 
     for scheme in schemeid_list:
-        price_list_name = "NHIF-" + scheme.packageid + "-" + scheme.facilitycode
+        price_list_name = "NHIF-" + scheme.packageid + "-" + facility_code
         if not frappe.db.exists("Price List", price_list_name):
             price_list_doc = frappe.new_doc("Price List")
             price_list_doc.price_list_name = price_list_name
