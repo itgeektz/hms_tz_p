@@ -37,7 +37,7 @@ class PatientAppointment(Document):
         invoice_appointment(self)
         self.update_fee_validity()
         send_confirmation_msg(self)
-        make_insurance_claim(self)
+        # make_insurance_claim(self)
 
     def set_title(self):
         self.title = _('{0} with {1}').format(self.patient_name or self.patient,
@@ -48,7 +48,7 @@ class PatientAppointment(Document):
         appointment_date = getdate(self.appointment_date)
 
         # If appointment is created for today set status as Open else Scheduled
-        if appointment_date == today:
+        if appointment_date == today and self.status != "Closed":
             self.status = 'Open'
         elif appointment_date > today:
             self.status = 'Scheduled'
@@ -713,6 +713,7 @@ def update_appointment_status():
 
 
 def make_insurance_claim(doc):
+    return
     if doc.insurance_subscription:
         from hms_tz.hms_tz.utils import create_insurance_claim, get_service_item_and_practitioner_charge
         billing_item, rate = get_service_item_and_practitioner_charge(doc)

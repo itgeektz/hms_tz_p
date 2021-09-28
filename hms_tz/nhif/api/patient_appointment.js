@@ -191,6 +191,9 @@ frappe.ui.form.on('Patient Appointment', {
             frappe.msgprint("Select Insurance Subscription to get authorization number");
             return;
         }
+        if (frm.is_dirty()) {
+            frm.save();
+        }
         frappe.call({
             method: 'hms_tz.nhif.api.patient_appointment.get_authorization_num',
             args: {
@@ -310,13 +313,6 @@ const set_filters = function (frm) {
                 'is_active': 1,
                 'docstatus': 1,
                 'patient': frm.doc.patient
-            }
-        };
-    });
-    frm.set_query('service_unit', function () {
-        return {
-            filters: {
-                'company': frm.doc.company,
             }
         };
     });
@@ -447,4 +443,4 @@ const set_auth_number_reqd = frm => {
     else {
         frm.toggle_reqd("authorization_number", false);
     }
-};
+}

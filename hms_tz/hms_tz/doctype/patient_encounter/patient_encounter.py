@@ -31,7 +31,7 @@ class PatientEncounter(Document):
 		update_encounter_medical_record(self)
 		create_therapy_plan(self)
 		create_healthcare_service_order(self)
-		make_insurance_claim(self)
+		# make_insurance_claim(self)
 
 	def on_cancel(self):
 		if self.appointment:
@@ -277,6 +277,7 @@ def create_patient_referral(args):
 	patient_referral.save(ignore_permissions=True)
 
 def make_insurance_claim(doc):
+	return
 	if doc.insurance_subscription:
 		from hms_tz.hms_tz.utils import create_insurance_claim, get_service_item_and_practitioner_charge
 		billing_item, rate  = get_service_item_and_practitioner_charge(doc)

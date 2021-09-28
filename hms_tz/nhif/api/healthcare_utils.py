@@ -95,7 +95,7 @@ def get_healthcare_service_order_to_invoice(
             if not table:
                 continue
             for row in table:
-                if not row.get("invoiced") and row.get("prescribe"):
+                if not row.get("invoiced") and row.get("prescribe") and not row.get("is_not_available_inhouse"):
                     item_code = frappe.get_value(
                         value.get("template"),
                         row.get(value.get("item")),
@@ -474,12 +474,10 @@ def set_healthcare_services(doc, checked_values):
 
     for checked_item in checked_values:
         item_line = doc.append("items", {})
-        ## NOTE: we should replace price_list with owr function
-        price_list, price_list_currency = frappe.db.get_values(
-            "Price List", {"selling": 1}, ["name", "currency"]
-        )[0]
+        price_list = doc.selling_price_list
         item_line.item_code = checked_item["item"]
         item_line.qty = 1
+        item_line.allow_over_sell = 1
         if checked_item["qty"]:
             item_line.qty = checked_item["qty"]
         if checked_item["rate"]:

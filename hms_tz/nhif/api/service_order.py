@@ -10,8 +10,8 @@ from frappe.utils.background_jobs import enqueue
 
 def after_save(doc, method):
     if doc.docstatus == 0 and doc.order_reference_name:
-        enqueue(method=auto_submit, queue='short',
-                timeout=10000, is_async=True, kwargs=doc.name)
+        # enqueue(method=auto_submit, queue='short',
+        #         timeout=10000, is_async=True, kwargs=doc.name)
         return
 
 
@@ -79,6 +79,7 @@ def clear_insurance_details(service_order):
 
 
 def auto_submit(kwargs):
+    return
     import time
 
     time.sleep(5)
@@ -89,6 +90,7 @@ def auto_submit(kwargs):
 
 
 def real_auto_submit():
+    return
     hso_list = frappe.get_all("Healthcare Service Order", filters={"docstatus": 0})
     for hso in hso_list:
         try:

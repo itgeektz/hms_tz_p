@@ -388,6 +388,9 @@ fixtures = [
                     "Drug Prescription-reference_journal_entry",
                     "Drug Prescription-invoiced",
                     "Therapy Plan Detail-invoiced",
+                    "Medication-healthcare_service_unit",
+                    "Patient Encounter-get_lab_bundle_items",
+                    "Patient Encounter-lab_bundle",
                 ),
             ]
         ],
@@ -922,12 +925,12 @@ doc_events = {
         "validate": "hms_tz.nhif.api.patient.validate",
         "after_insert": "hms_tz.nhif.api.patient.after_insert",
     },
-    "Healthcare Insurance Claim": {
-        "before_insert": [
-            "hms_tz.nhif.api.insurance_claim.set_patient_encounter",
-            "hms_tz.nhif.api.insurance_claim.set_price",
-        ]
-    },
+    # "Healthcare Insurance Claim": {
+    #     "before_insert": [
+    #         "hms_tz.nhif.api.insurance_claim.set_patient_encounter",
+    #         "hms_tz.nhif.api.insurance_claim.set_price",
+    #     ]
+    # },
     "Patient Encounter": {
         "before_submit": "hms_tz.nhif.api.patient_encounter.before_submit",
         "after_insert": "hms_tz.nhif.api.patient_encounter.after_insert",
@@ -993,7 +996,7 @@ scheduler_events = {
     # 	"all": [
     # 		"hms_tz.tasks.all"
     # 	],
-    "cron": {"*/1 * * * *": ["hms_tz.nhif.api.service_order.real_auto_submit"]},
+    # "cron": {"*/1 * * * *": ["hms_tz.nhif.api.service_order.real_auto_submit"]},
     "hourly": ["hms_tz.nhif.api.healthcare_utils.set_uninvoiced_so_closed"],
     "daily": ["hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"],
     # 	"hourly": [

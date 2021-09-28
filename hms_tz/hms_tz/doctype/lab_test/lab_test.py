@@ -18,7 +18,7 @@ class LabTest(Document):
 		self.db_set('submitted_date', getdate())
 		self.db_set('status', 'Completed')
 		insert_lab_test_to_medical_record(self)
-		make_insurance_claim(self)
+		# make_insurance_claim(self)
 
 	def on_cancel(self):
 		self.db_set('status', 'Cancelled')
@@ -370,12 +370,15 @@ def insert_lab_test_to_medical_record(doc):
 		subject += '<br>' + table_row
 	if doc.lab_test_comment:
 		subject += '<br>' + cstr(doc.lab_test_comment)
+	if doc.custom_result:
+		subject += '<br>' + cstr(doc.custom_result)
+
 
 	medical_record = frappe.new_doc('Patient Medical Record')
 	medical_record.patient = doc.patient
 	medical_record.subject = subject
 	medical_record.status = 'Open'
-	medical_record.communication_date = doc.result_date
+	medical_record.communication_date = doc.submitted_date
 	medical_record.reference_doctype = 'Lab Test'
 	medical_record.reference_name = doc.name
 	medical_record.reference_owner = doc.owner

@@ -7,7 +7,6 @@ import frappe, json
 from frappe.model.document import Document
 from frappe.model.rename_doc import rename_doc
 from frappe import _
-from hms_tz.nhif.api.healthcare_utils import validate_hsu_healthcare_template
 
 class LabTestTemplate(Document):
 	def after_insert(self):
@@ -20,7 +19,6 @@ class LabTestTemplate(Document):
 
 		self.validate_conversion_factor()
 		self.enable_disable_item()
-		validate_hsu_healthcare_template(self)
 
 	def on_update(self):
 		# If change_in_item update Item and Price List

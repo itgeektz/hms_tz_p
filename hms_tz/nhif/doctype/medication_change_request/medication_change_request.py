@@ -60,12 +60,11 @@ class MedicationChangeRequest(Document):
     def update_delivery_note(self, encounter_doc):
         doc = frappe.get_doc("Delivery Note", self.delivery_note)
         doc.items = []
-        insurance_subscription, insurance_company, service_unit = frappe.get_value(
+        insurance_subscription, insurance_company = frappe.get_value(
             "Patient Appointment",
             self.appointment,
-            ["insurance_subscription", "insurance_company", "service_unit"],
+            ["insurance_subscription", "insurance_company"],
         )
-        warehouse = get_warehouse_from_service_unit(service_unit)
         for row in encounter_doc.drug_prescription:
             if row.prescribe:
                 continue
@@ -73,6 +72,7 @@ class MedicationChangeRequest(Document):
             is_stock, item_name = frappe.get_value(
                 "Item", item_code, ["is_stock_item", "item_name"]
             )
+            warehouse = get_warehouse_from_service_unit(row.healthcare_service_unit)
             if not is_stock:
                 continue
             item = frappe.new_doc("Delivery Note Item")
@@ -90,6 +90,7 @@ class MedicationChangeRequest(Document):
             )
             item.reference_doctype = row.doctype
             item.reference_name = row.name
+            item.is_restricted = row.is_restricted
             item.description = (
                 row.drug_name
                 + " for "

@@ -82,7 +82,8 @@
    "in_list_view": 1,
    "label": "Delivery Note",
    "options": "Delivery Note",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "fetch_from": "patient_encounter.practitioner",
@@ -150,7 +151,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-02-14 16:25:45.460290",
+ "modified": "2021-09-22 00:00:48.091050",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Medication Change Request",

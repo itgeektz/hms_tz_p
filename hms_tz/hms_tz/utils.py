@@ -1027,6 +1027,8 @@ def make_healthcare_service_order(args):
 
 
 def create_insurance_claim(doc, service_doctype, service, qty, billing_item):
+    # skip as we do not use this feature
+    return
     insurance_details = get_insurance_details(
         service, doc.insurance_subscription, billing_item)
     insurance_claim = frappe.new_doc('Healthcare Insurance Claim')
