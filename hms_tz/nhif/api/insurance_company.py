@@ -151,7 +151,7 @@ def get_nhif_price_package(kwargs):
                 ),
                 tuple(insert_data),
             )
-            set_nhif_diff_records()
+            set_nhif_diff_records(facility_code)
             frappe.db.commit()
             frappe.msgprint(_("Received data from NHIF"))
             return insert_data
@@ -481,12 +481,13 @@ def process_insurance_coverages(kwargs):
             )
 
 
-def set_nhif_diff_records():
+def set_nhif_diff_records(FacilityCode):
     logs = frappe.get_all(
         "NHIF Response Log",
         filters={
             "request_type": "GetPricePackageWithExcludedServices",
             "response_data": ["not in", ["", None]],
+            "request_url": ["like", "%" + FacilityCode + "%"],
         },
         order_by="creation desc",
         page_length=2,
