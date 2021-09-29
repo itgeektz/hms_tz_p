@@ -218,7 +218,7 @@ def process_prices_list(kwargs):
             schemeid = scheme.schemeid
             if item.schemeid != schemeid:
                 continue
-            price_list_name = "NHIF-" + schemeid
+            price_list_name = "NHIF-" + scheme.packageid + "-" + facility_code
             package_list = frappe.db.sql(
                 """
                     SELECT schemeid, itemcode, unitprice, isactive
