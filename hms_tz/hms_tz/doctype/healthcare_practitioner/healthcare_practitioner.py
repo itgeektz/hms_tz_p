@@ -38,9 +38,9 @@ class HealthcarePractitioner(Document):
 				frappe.permissions.remove_user_permission(
 					'Healthcare Practitioner', self.name, existing_user_id)
 
-	def on_update(self):
-		if self.user_id:
-			frappe.permissions.add_user_permission('Healthcare Practitioner', self.name, self.user_id)
+	# def on_update(self):
+	# 	if self.user_id:
+	# 		frappe.permissions.add_user_permission('Healthcare Practitioner', self.name, self.user_id)
 
 	def set_full_name(self):
 		if self.last_name:
