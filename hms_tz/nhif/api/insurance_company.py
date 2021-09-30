@@ -390,7 +390,7 @@ def process_insurance_coverages(kwargs):
                 continue
             excluded_services = get_excluded_services(item.ref_code, company)
             if excluded_services and excluded_services.excludedforproducts:
-                if plan.name in excluded_services.excludedforproducts:
+                if plan.code_for_nhif_excluded_services in excluded_services.excludedforproducts:
                     continue
 
             doc = frappe.new_doc("Healthcare Service Insurance Coverage")
