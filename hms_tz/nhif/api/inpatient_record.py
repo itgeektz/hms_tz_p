@@ -7,10 +7,13 @@ import frappe
 from frappe import _
 from frappe.utils import nowdate, nowtime
 from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_item_price
+from hms_tz.nhif.api.patient_appointment import get_mop_amount
+
 import json
 
 
 def validate(doc, method):
+    set_beds_price(doc)
     validate_inpatient_occupancies(doc)
 
 
@@ -23,17 +26,19 @@ def validate_inpatient_occupancies(doc):
         count += 1
         if not old_row.is_confirmed:
             continue
-        valide = True
+        valid = True
         row = doc.inpatient_occupancies[count - 1]
         if str(row.check_in) != str(old_row.check_in):
-            valide = False
+            valid = False
         if str(row.check_out) != str(old_row.check_out):
-            valide = False
+            valid = False
+        if str(row.amount) != str(old_row.amount):
+            valid = False
         if row.left != old_row.left:
-            valide = False
+            valid = False
         if row.service_unit != old_row.service_unit:
-            valide = False
-        if not valide:
+            valid = False
+        if not valid:
             frappe.msgprint(
                 _(
                     "In Inpatient Occupancy line '{0}' has been invoiced. It should not be modified or deleted"
@@ -161,3 +166,40 @@ def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practi
             _("Delivery Note {0} created successfully.").format(frappe.bold(doc.name))
         )
         return doc.get("name")
+
+
+def set_beds_price(self):
+    if not self.inpatient_occupancies:
+        return
+    for bed in self.inpatient_occupancies:
+        if bed.amount == 0:
+            if self.insurance_subscription:
+                service_unit_type = frappe.get_value(
+                    "Healthcare Service Unit", bed.service_unit, "service_unit_type"
+                )
+                item_code = frappe.get_value(
+                    "Healthcare Service Unit Type", service_unit_type, "item_code"
+                )
+                bed.amount = get_item_rate(
+                    item_code, self.company, self.insurance_subscription
+                )
+                payment_type = "Insurance"
+            else:
+                mode_of_payment = frappe.get_value(
+                    "Patient Encounter", self.admission_encounter, "mode_of_payment"
+                )
+                service_unit_type = frappe.get_value(
+                    "Healthcare Service Unit", bed.service_unit, "service_unit_type"
+                )
+                item_code = frappe.get_value(
+                    "Healthcare Service Unit Type", service_unit_type, "item_code"
+                )
+                bed.amount = get_mop_amount(
+                    item_code, mode_of_payment, self.company, self.patient
+                )
+                payment_type = mode_of_payment
+            frappe.msgprint(
+                _("{3} Bed prices set for {0} as of {1} for amount {2}").format(
+                    item_code, str(bed.check_in), str(bed.amount), payment_type
+                )
+            )
