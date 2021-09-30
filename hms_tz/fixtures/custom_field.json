@@ -19404,5 +19404,20 @@
         "fieldtype": "Table",
         "options": "Healthcare Company Option",
         "doctype": "Custom Field"
+    },
+    {
+        "name": "Healthcare Insurance Coverage Plan-code_for_nhif_excluded_services",
+        "owner": "info@aakvatech.com",
+        "creation": "2021-09-30 13:04:13.033644",
+        "modified": "2021-09-30 13:04:13.033644",
+        "modified_by": "info@aakvatech.com",
+        "idx": 5,
+        "dt": "Healthcare Insurance Coverage Plan",
+        "label": "Code for NHIF Excluded Services",
+        "fieldname": "code_for_nhif_excluded_services",
+        "insert_after": "daily_limit",
+        "fieldtype": "Data",
+        "translatable": 1,
+        "doctype": "Custom Field"
     }
 ]

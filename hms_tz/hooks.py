@@ -391,6 +391,7 @@ fixtures = [
                     "Medication-healthcare_service_unit",
                     "Patient Encounter-get_lab_bundle_items",
                     "Patient Encounter-lab_bundle",
+                    "Healthcare Insurance Coverage Plan-code_for_nhif_excluded_services",
                 ),
             ]
         ],
