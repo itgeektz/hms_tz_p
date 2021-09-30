@@ -494,7 +494,7 @@ def on_submit(doc, method):
         inpatient_billing(doc, method)
     else:  # insurance patient
         on_submit_validation(doc, method)
-        create_healthcare_docs(doc)
+        create_healthcare_docs(doc, method)
         create_delivery_note(doc, method)
     if doc.inpatient_record:
         update_inpatient_record_consultancy(doc)
@@ -505,11 +505,31 @@ def create_healthcare_docs_from_name(patient_encounter_doc_name):
     patient_encounter_doc = frappe.get_doc(
         "Patient Encounter", patient_encounter_doc_name
     )
-    create_healthcare_docs(patient_encounter_doc)
+    create_healthcare_docs(patient_encounter_doc, "from_button")
     create_delivery_note(patient_encounter_doc, "from_button")
 
 
-def create_healthcare_docs(patient_encounter_doc):
+def create_healthcare_docs(patient_encounter_doc, method="event"):
+    encounter_list = frappe.get_list(
+        "Patient Encounter",
+        filters={"reference_encounter": patient_encounter_doc.reference_encounter},
+    )
+    for encounter in encounter_list:
+        # frappe.msgprint(
+        #     _("Patient Encounter {0} being processed.").format(encounter.name)
+        # )
+        create_healthcare_docs_per_encounter(
+            frappe.get_doc("Patient Encounter", encounter)
+        )
+    if method == "from_button":
+        frappe.msgprint(
+            _(
+                "The {0} patient encounters were processed for creating pending healthcare docs."
+            ).format(str(len(encounter_list)))
+        )
+
+
+def create_healthcare_docs_per_encounter(patient_encounter_doc):
     if patient_encounter_doc.docstatus != 1:
         frappe.msgprint(
             _(
@@ -558,6 +578,23 @@ def create_healthcare_docs(patient_encounter_doc):
 
 
 def create_delivery_note(patient_encounter_doc, method):
+    encounter_list = frappe.get_list(
+        "Patient Encounter",
+        filters={"reference_encounter": patient_encounter_doc.reference_encounter},
+    )
+    for encounter in encounter_list:
+        create_delivery_note_per_encounter(
+            frappe.get_doc("Patient Encounter", encounter), method
+        )
+    if method == "from_button":
+        frappe.msgprint(
+            _(
+                "The {0} patient encounters were processed for creating pending delivery notes."
+            ).format(str(len(encounter_list)))
+        )
+
+
+def create_delivery_note_per_encounter(patient_encounter_doc, method):
     if not patient_encounter_doc.appointment:
         return
     if (
@@ -805,9 +842,17 @@ def validate_totals(doc):
 @frappe.whitelist()
 def finalized_encounter(cur_encounter, ref_encounter=None):
     cur_encounter_doc = frappe.get_doc("Patient Encounter", cur_encounter)
-    inpatient_status = frappe.get_value("Patient", cur_encounter_doc.patient, "inpatient_status")
+    inpatient_status = frappe.get_value(
+        "Patient", cur_encounter_doc.patient, "inpatient_status"
+    )
     if inpatient_status:
-        frappe.throw(_("The patient {0} has inpatient status <strong>{1}</strong>. Please process the discharge before proceeding to finalize the encounter.".format(cur_encounter_doc.patient, inpatient_status)))
+        frappe.throw(
+            _(
+                "The patient {0} has inpatient status <strong>{1}</strong>. Please process the discharge before proceeding to finalize the encounter.".format(
+                    cur_encounter_doc.patient, inpatient_status
+                )
+            )
+        )
 
     encounters_list = frappe.get_all(
         "Patient Encounter",
@@ -820,6 +865,7 @@ def finalized_encounter(cur_encounter, ref_encounter=None):
     if not ref_encounter:
         frappe.set_value("Patient Encounter", cur_encounter, "finalized", 1)
         return
+
 
 @frappe.whitelist()
 def create_sales_invoice(encounter, encounter_category, encounter_mode_of_payment):
