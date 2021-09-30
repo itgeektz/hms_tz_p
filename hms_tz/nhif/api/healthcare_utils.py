@@ -95,7 +95,11 @@ def get_healthcare_service_order_to_invoice(
             if not table:
                 continue
             for row in table:
-                if not row.get("invoiced") and row.get("prescribe") and not row.get("is_not_available_inhouse"):
+                if (
+                    not row.get("invoiced")
+                    and row.get("prescribe")
+                    and not row.get("is_not_available_inhouse")
+                ):
                     item_code = frappe.get_value(
                         value.get("template"),
                         row.get(value.get("item")),
@@ -141,11 +145,10 @@ def get_item_rate(item_code, company, insurance_subscription, insurance_company=
             insurance_subscription,
             "healthcare_insurance_coverage_plan",
         )
-        price_list = frappe.get_value(
-            "Healthcare Insurance Coverage Plan", hic_plan, "price_list"
-        )
-        secondary_price_list = frappe.get_value(
-            "Healthcare Insurance Coverage Plan", hic_plan, "secondary_price_list"
+        price_list, secondary_price_list, insurance_company = frappe.get_value(
+            "Healthcare Insurance Coverage Plan",
+            hic_plan,
+            ["price_list", "secondary_price_list", "insurance_company"],
         )
         if price_list:
             price_list_rate = get_item_price(item_code, price_list, company)
