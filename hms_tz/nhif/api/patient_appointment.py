@@ -335,10 +335,7 @@ def send_vfd(invoice_name):
 
 @frappe.whitelist()
 def get_previous_appointment(patient, filters=None):
-    the_filters = {
-        "patient": patient,
-        "follow_up": 0
-    }
+    the_filters = {"patient": patient, "follow_up": 0}
     if filters:
         # when the function is called from frontend
         if type(filters) == str:
@@ -369,7 +366,11 @@ def set_follow_up(appointment_doc, method):
         )
         if diff <= valid_days:
             appointment_doc.follow_up = 1
-            if appointment_doc.follow_up and appointment_doc.insurance_subscription and not appointment_doc.authorization_number:
+            if (
+                appointment_doc.follow_up
+                and appointment_doc.insurance_subscription
+                and not appointment_doc.authorization_number
+            ):
                 return
             appointment_doc.invoiced = 1
             # frappe.msgprint(_("Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"), alert=True)
@@ -388,19 +389,25 @@ def make_next_doc(doc, method):
     if doc.is_new():
         return
     if not doc.billing_item and doc.authorization_number:
-        doc.billing_item = get_consulting_charge_item(doc.appointment_type, doc.practitioner)
+        doc.billing_item = get_consulting_charge_item(
+            doc.appointment_type, doc.practitioner
+        )
         if not doc.billing_item:
             frappe.throw(
                 _(
-                    "Billing item was not set from {0} for appointment type {1}.".format(doc.practitioner, doc.appointment_type)
+                    "Billing item was not set from {0} for appointment type {1}.".format(
+                        doc.practitioner, doc.appointment_type
+                    )
                 )
             )
         else:
             frappe.msgprint(
                 _(
-                    "Billing item was set from {0} for appointment type {1}.".format(doc.practitioner, doc.appointment_type)
+                    "Billing item was set from {0} for appointment type {1}.".format(
+                        doc.practitioner, doc.appointment_type
+                    )
                 )
-        )
+            )
     if doc.ref_sales_invoice:
         doc.invoiced = 1
     # fix: followup appointments still require authorization number
