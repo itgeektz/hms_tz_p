@@ -378,7 +378,11 @@ def process_insurance_coverages(kwargs):
     coverage_plan_list = frappe.get_all(
         "Healthcare Insurance Coverage Plan",
         fields={"name", "nhif_scheme_id"},
-        filters={"insurance_company_name": "NHIF", "is_active": 1, "company": company},
+        filters={
+            "insurance_company": ["like", "NHIF%"],
+            "is_active": 1,
+            "company": company,
+        },
     )
 
     for plan in coverage_plan_list:
@@ -389,8 +393,15 @@ def process_insurance_coverages(kwargs):
             if plan.nhif_scheme_id != item.schemeid:
                 continue
             excluded_services = get_excluded_services(item.ref_code, company)
-            if excluded_services and excluded_services.excludedforproducts:
-                if plan.code_for_nhif_excluded_services in excluded_services.excludedforproducts:
+            if (
+                excluded_services
+                and excluded_services.excludedforproducts
+                and plan.code_for_nhif_excluded_services
+            ):
+                if (
+                    plan.code_for_nhif_excluded_services
+                    in excluded_services.excludedforproducts
+                ):
                     continue
 
             doc = frappe.new_doc("Healthcare Service Insurance Coverage")
@@ -479,6 +490,7 @@ def process_insurance_coverages(kwargs):
                 ),
                 tuple(insert_data),
             )
+    frappe.db.commit()
 
 
 def set_nhif_diff_records(FacilityCode):
