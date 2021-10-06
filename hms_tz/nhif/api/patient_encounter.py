@@ -767,7 +767,7 @@ def validate_totals(doc):
     if (
         not doc.insurance_company
         or not doc.insurance_subscription
-        or doc.insurance_company == "NHIF"
+        or "NHIF" in doc.insurance_company
         or not doc.daily_limit
         or doc.daily_limit == 0
     ):

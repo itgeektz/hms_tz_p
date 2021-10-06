@@ -180,7 +180,7 @@ frappe.ui.form.on('Patient Appointment', {
         frm.trigger("get_authorization_num");
     },
     get_authorization_num: function (frm) {
-        if (frm.doc.insurance_company != "NHIF") {
+        if (!frm.doc.insurance_company.includes("NHIF")) {
             frappe.show_alert({
                 message: __("This feature is not applicable for non NHIF insurance"),
                 indicator: 'orange'
