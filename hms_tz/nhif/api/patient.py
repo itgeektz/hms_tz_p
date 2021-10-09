@@ -150,26 +150,47 @@ def check_card_number(card_no, is_new=None, patient=None):
 
 
 def create_subscription(doc):
-    if not frappe.db.exists("NHIF Product", doc.product_code):
+    if not frappe.db.exists("NHIF Product", {"nhif_product_code": doc.product_code}):
         return
-    subscription_list = frappe.get_all(
+    subscription_list = frappe.get_list(
         "Healthcare Insurance Subscription",
         filters={"patient": doc.name, "is_active": 1},
     )
     if len(subscription_list) > 0 or not doc.product_code:
+        frappe.msgprint(
+            _(
+                "Existing Patient HIS was found. Create the Healthcare Insurance Subscription manually!"
+            )
+        )
         return
-    plan = frappe.get_value(
+    plan = frappe.get_list(
         "Healthcare Insurance Coverage Plan",
         {"nhif_employername": doc.nhif_employername},
         "name",
     )
-    if not plan:
-        plan = frappe.get_value(
-            "NHIF Product", doc.product_code, "healthcare_insurance_coverage_plan"
+
+    if len(plan) == 0:
+        plan = frappe.db.get_list(
+            "NHIF Product",
+            {"nhif_product_code": doc.product_code},
+            "healthcare_insurance_coverage_plan",
         )
-    if not plan:
+        if len(plan) != 0:
+            plan_name = plan[0].healthcare_insurance_coverage_plan
+    else:
+        plan_name = plan[0].name
+
+    if len(plan) == 0:
+        frappe.msgprint(
+            _(
+                "Failed to find matching plan for product code {0} and employer name {1}".format(
+                    doc.product_code, doc.nhif_employername
+                )
+            ),
+            alert=True,
+        )
         return
-    plan_doc = frappe.get_doc("Healthcare Insurance Coverage Plan", plan)
+    plan_doc = frappe.get_doc("Healthcare Insurance Coverage Plan", plan_name)
     sub_doc = frappe.new_doc("Healthcare Insurance Subscription")
     sub_doc.patient = doc.name
     sub_doc.insurance_company = plan_doc.insurance_company
@@ -178,9 +199,9 @@ def create_subscription(doc):
     sub_doc.save(ignore_permissions=True)
     sub_doc.submit()
     frappe.msgprint(
-        _("<h3>AUTO</h3> Healthcare Insurance Subscription {0} is created").format(
-            sub_doc.name
-        )
+        _(
+            "<h3>AUTO</h3> Healthcare Insurance Subscription {0} is created for {1}"
+        ).format(sub_doc.name, plan_name)
     )
 
 
