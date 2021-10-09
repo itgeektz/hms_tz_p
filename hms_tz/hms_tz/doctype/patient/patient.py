@@ -140,6 +140,7 @@ class Patient(Document):
 
             return {'invoice': sales_invoice.name}
 
+    @frappe.whitelist()
     def get_billing_info(self):
         if not frappe.defaults.get_user_default("Company"):
             return
