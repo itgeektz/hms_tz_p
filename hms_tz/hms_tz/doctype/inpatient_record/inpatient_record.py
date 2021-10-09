@@ -154,7 +154,9 @@ def check_out_inpatient(inpatient_record):
 			if inpatient_occupancy.left != 1:
 				inpatient_occupancy.left = True
 				inpatient_occupancy.check_out = now_datetime()
-				frappe.set_value("Healthcare Service Unit", inpatient_occupancy.service_unit, "occupancy_status", "Vacant")
+				hsu = frappe.get_doc("Healthcare Service Unit", inpatient_occupancy.service_unit)
+				hsu.occupancy_status = "Vacant"
+				hsu.save(ignore_permissions=True)
 
 def discharge_patient(inpatient_record):
 	validate_invoiced_inpatient(inpatient_record)
@@ -224,7 +226,9 @@ def transfer_patient(inpatient_record, service_unit, check_in):
 
 	inpatient_record.save(ignore_permissions = True)
 
-	frappe.set_value("Healthcare Service Unit", service_unit, "occupancy_status", "Occupied")
+	hsu = frappe.get_doc("Healthcare Service Unit", service_unit)
+	hsu.occupancy_status = "Occupied"
+	hsu.save(ignore_permissions=True)
 
 def patient_leave_service_unit(inpatient_record, check_out, leave_from):
 	if inpatient_record.inpatient_occupancies:
@@ -232,7 +236,10 @@ def patient_leave_service_unit(inpatient_record, check_out, leave_from):
 			if inpatient_occupancy.left != 1 and inpatient_occupancy.service_unit == leave_from:
 				inpatient_occupancy.left = True
 				inpatient_occupancy.check_out = check_out
-				frappe.set_value("Healthcare Service Unit", inpatient_occupancy.service_unit, "occupancy_status", "Vacant")
+				
+				hsu = frappe.get_doc("Healthcare Service Unit", inpatient_occupancy.service_unit)
+				hsu.occupancy_status = "Vacant"
+				hsu.save(ignore_permissions=True)
 	inpatient_record.save(ignore_permissions = True)
 
 @frappe.whitelist()
