@@ -25,10 +25,6 @@ import time
 from hms_tz.nhif.api.patient_appointment import get_mop_amount
 
 
-def after_insert(doc, method):
-    frappe.db.update(doc.doctype, doc.name, {"sales_invoice": "", "is_not_billable": 0})
-
-
 def on_trash(doc, method):
     pmr_list = frappe.get_all(
         "Patient Medical Record",
