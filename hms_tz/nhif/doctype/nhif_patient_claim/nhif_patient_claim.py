@@ -610,7 +610,7 @@ def generate_pdf(doc):
     if default_print_format:
         print_format = default_print_format
     else:
-        print_format = "Standard"
+        print_format = "Patient File"
 
     pdf = download_multi_pdf(doctype, doc_name, format=print_format, no_letterhead=1)
     if pdf:
