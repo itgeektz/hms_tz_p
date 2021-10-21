@@ -1,37 +1,27 @@
 frappe.ui.form.on('Inpatient Record', {
-
+    reset_admission_status_to_admission_scheduled: function (frm) {
+        frm.set_value("status", "Admission Scheduled")
+        frm.refresh_fields("status")
+        frm.save()
+    },
+    refresh(frm) {
+        // your code here
+        $('*[data-fieldname="inpatient_occupancies"]').find('.grid-remove-rows').hide();
+        $('*[data-fieldname="inpatient_occupancies"]').find('.grid-remove-all-rows').hide();
+    },
 });
 
 frappe.ui.form.on('Inpatient Occupancy', {
-    before_inpatient_occupancies_remove: (frm, cdt, cdn) => {
-        control_inpatient_record_permissing(frm, cdt, cdn);
-    },
-    before_inpatient_occupancies_remove_all: (frm, cdt, cdn) => {
-        control_inpatient_record_permissing(frm, cdt, cdn);
-    },
-    inpatient_occupancies_add: (frm, cdt, cdn) => {
-        control_inpatient_record_permissing(frm, cdt, cdn);
-    },
-    inpatient_occupancies_remove: (frm, cdt, cdn) => {
-        control_inpatient_record_permissing(frm, cdt, cdn);
+    form_render(frm, cdt, cdn) {
+        frm.fields_dict.inpatient_occupancies.grid.wrapper.find('.grid-delete-row').hide();
+        frm.fields_dict.inpatient_occupancies.grid.wrapper.find('.grid-duplicate-row').hide();
+        frm.fields_dict.inpatient_occupancies.grid.wrapper.find('.grid-move-row').hide();
+        frm.fields_dict.inpatient_occupancies.grid.wrapper.find('.grid-append-row').hide();
+        frm.fields_dict.inpatient_occupancies.grid.wrapper.find('.grid-insert-row-below').hide();
+        frm.fields_dict.inpatient_occupancies.grid.wrapper.find('.grid-insert-row').hide();
     },
     inpatient_occupancies_move: (frm, cdt, cdn) => {
         control_inpatient_record_move(frm, cdt, cdn);
-    },
-    check_in: (frm, cdt, cdn) => {
-        control_inpatient_record_permissing(frm, cdt, cdn);
-    },
-    check_out: (frm, cdt, cdn) => {
-        control_inpatient_record_permissing(frm, cdt, cdn);
-    },
-    invoiced: (frm, cdt, cdn) => {
-        control_inpatient_record_permissing(frm, cdt, cdn);
-    },
-    service_unit: (frm, cdt, cdn) => {
-        control_inpatient_record_permissing(frm, cdt, cdn);
-    },
-    left: (frm, cdt, cdn) => {
-        control_inpatient_record_permissing(frm, cdt, cdn);
     },
     confirmed: (frm, cdt, cdn) => {
         let row = frappe.get_doc(cdt, cdn);
@@ -54,14 +44,6 @@ frappe.ui.form.on('Inpatient Occupancy', {
         });
     },
 });
-
-const control_inpatient_record_permissing = (frm, cdt, cdn) => {
-    // let row = frappe.get_doc(cdt, cdn);
-    // if (row.invoiced) {
-    //     frm.reload_doc();
-    //     frappe.throw(__(`This line has been invoiced. It cannot be modified or deleted`));
-    // }
-};
 
 const control_inpatient_record_move = (frm, cdt, cdn) => {
     let row = frappe.get_doc(cdt, cdn);
