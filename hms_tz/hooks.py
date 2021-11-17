@@ -995,6 +995,11 @@ scheduler_events = {
     # "cron": {"*/1 * * * *": ["hms_tz.nhif.api.service_order.real_auto_submit"]},
     "hourly": ["hms_tz.nhif.api.healthcare_utils.set_uninvoiced_so_closed"],
     "daily": ["hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"],
+
+    # fire every saturday 2:30 pm at night
+    "cron": {"0 30 2 * * 6": ["hms_tz.hms_tz.doctype.patient_appointment.patient_appointment.delete_or_cancel_draft_document"]},
+
+
     # 	"hourly": [
     # 		"hms_tz.tasks.hourly"
     # 	],
