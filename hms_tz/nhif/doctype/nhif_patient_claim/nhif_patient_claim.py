@@ -692,7 +692,7 @@ def generate_pdf(doc):
     doc_name = doc.name
     file_list = frappe.get_all("File", filters={"attached_to_name": doc_name})
     for file in file_list:
-        frappe.delete_doc("File", file.name)
+        frappe.delete_doc("File", file.name, ignore_permissions=True)
     data_list = []
     data = doc.patient_encounters
     for i in data:
