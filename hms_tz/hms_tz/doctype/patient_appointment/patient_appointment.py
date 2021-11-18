@@ -737,7 +737,7 @@ def delete_or_cancel_draft_document():
         pluck="name"
     )
 
-    for doc_name in appointments:Cancelled
+    for doc_name in appointments:
         frappe.db.set_value("Patient Appointment", doc_name, "status", "Cancelled",  update_modified=False)
 
 
