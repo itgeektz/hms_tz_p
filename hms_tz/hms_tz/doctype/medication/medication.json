@@ -11,6 +11,7 @@
   "medication_name",
   "generic_name",
   "medication_class",
+  "medication_category",
   "is_generic",
   "column_break_4",
   "disabled",
@@ -305,10 +306,16 @@
    "label": "Healthcare Service Order Category",
    "options": "Healthcare Service Order Category",
    "reqd": 1
+  },
+  {
+   "fieldname": "medication_category",
+   "fieldtype": "Link",
+   "label": "Medication Category",
+   "options": "Medication Category"
   }
  ],
  "links": [],
- "modified": "2020-12-24 10:25:51.444843",
+ "modified": "2021-11-18 22:58:57.298368",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Medication",
