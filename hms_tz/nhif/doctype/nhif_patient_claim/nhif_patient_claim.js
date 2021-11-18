@@ -21,9 +21,7 @@ frappe.ui.form.on('NHIF Patient Claim', {
 					method: "hms_tz.nhif.doctype.nhif_patient_claim.nhif_patient_claim.merge_nhif_claims",
 					args: { "authorization_no": frm.doc.authorization_no },
 					callback: function (data) {
-						if (!data.exc) {
-							console.log(data)
-						}
+						frm.reload_doc()
 					}
 				})
 			})
