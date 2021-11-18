@@ -997,7 +997,7 @@ scheduler_events = {
     "daily": ["hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"],
 
     # fire every saturday 2:30 pm at night
-    "cron": {"0 30 2 * * 6": ["hms_tz.hms_tz.doctype.patient_appointment.patient_appointment.delete_or_cancel_draft_document"]},
+    "cron": {"30 2 * * 6": ["hms_tz.hms_tz.doctype.patient_appointment.patient_appointment.delete_or_cancel_draft_document"]},
 
 
     # 	"hourly": [
