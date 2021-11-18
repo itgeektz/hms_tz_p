@@ -174,6 +174,7 @@ frappe.ui.form.on('Patient Appointment', {
                 frm.toggle_display('mode_of_payment', true);
                 frm.toggle_display('paid_amount', true);
             }, 100);
+            frm.set_value("insurance_subscription", "");
         }
     },
     get_authorization_number: function (frm) {
