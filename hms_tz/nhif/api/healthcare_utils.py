@@ -5,11 +5,10 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
-    get_income_account,
-)
+import datetime
+
 from hms_tz.hms_tz.utils import validate_customer_created
-from frappe.utils import nowdate, nowtime, add_days, now_datetime
+from frappe.utils import nowdate, nowtime, now_datetime, add_to_date
 from datetime import timedelta
 import base64
 import re
@@ -735,3 +734,41 @@ def get_template_company_option(template=None, company=None):
         return doc
     else:
         return def_res
+
+
+# Cancel open appointments, delete draft vital signs and delete draft delivery note
+def delete_or_cancel_draft_document():
+    before_7_days_date = add_to_date(datetime.now(), days=-7, as_string=False)
+
+    before_45_days_date = add_to_date(datetime.now(), days=-45, as_string=False)
+
+    appointments = frappe.get_all(
+        "Patient Appointment",
+        filters={"appointment_date": ["<", before_7_days_date], "status": "Open"},
+        pluck="name",
+    )
+
+    for doc_name in appointments:
+        frappe.db.set_value(
+            "Patient Appointment",
+            doc_name,
+            "status",
+            "Cancelled",
+            update_modified=False,
+        )
+
+    vital_docs = frappe.get_all(
+        "Vital Signs",
+        filters={"signs_date": ["<", before_7_days_date], "docstatus": 0},
+        pluck="name",
+    )
+    for doc_name in vital_docs:
+        frappe.delete_doc("Vital Signs", doc_name)
+
+    delivery_documents = frappe.get_all(
+        "Delivery Note",
+        filters={"posting_date": ["<", before_7_days_date], "docstatus": 0},
+        pluck="name",
+    )
+    for doc_name in delivery_documents:
+        frappe.delete_doc("Delivery Note", doc_name)
