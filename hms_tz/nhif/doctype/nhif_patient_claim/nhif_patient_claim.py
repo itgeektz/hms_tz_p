@@ -11,7 +11,7 @@ from hms_tz.nhif.api.token import get_claimsservice_token
 import json
 import requests
 from frappe.utils.background_jobs import enqueue
-from frappe.utils import now, now_datetime, get_fullname, nowdate
+from frappe.utils import getdate, get_fullname, nowdate
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from hms_tz.nhif.api.healthcare_utils import (
     get_item_rate,
@@ -101,14 +101,18 @@ class NHIFPatientClaim(Document):
         self.inpatient_record = inpatient_record
         self.patient_type_code = "OUT"
         if inpatient_record:
-            discharge_date, date_admitted = frappe.get_value(
+            discharge_date, date_admitted, admitted_datetime = frappe.get_value(
                 "Inpatient Record",
                 inpatient_record,
-                ["discharge_date", "scheduled_date"],
+                ["discharge_date", "scheduled_date", "admitted_datetime"],
             )
+            if getdate(date_admitted) < getdate(admitted_datetime):
+                self.date_admitted = date_admitted
+            else:
+                self.date_admitted = getdate(admitted_datetime)
+
             self.patient_type_code = "IN"
             self.date_discharge = discharge_date
-            self.date_admitted = date_admitted
         self.attendance_date = frappe.get_value(
             "Patient Appointment", self.patient_appointment, "appointment_date"
         )
