@@ -3,6 +3,7 @@
 
 import frappe
 from frappe import _
+from frappe.utils import getdate
 
 def execute(filters):
 	columns = get_columns()
@@ -11,53 +12,53 @@ def execute(filters):
 
 def get_columns():
 	columns = [
-		{"fieldname": "accreditation_no", "label": _("Accreditation Number"), "fieldtype": "Data"},
-		{"fieldname": "facility_name", "label": _("Facility Name"), "fieldtype": "Data"},
-		{"fieldname": "address", "label": _("Address"), "fieldtype": "Data"},
-		{"fieldname": "region", "label": _("Region"), "fieldtype": "Data"},
-		{"fieldname": "district", "label": _("District"), "fieldtype": "Data"},
-		{"fieldname": "ownership", "label": _("Facility Ownership"), "fieldtype": "Data"},
 		{"fieldname": "facility_code", "label": _("Facility Code"), "fieldtype": "Data"},
 		{"fieldname": "male", "label": _("Male"), "fieldtype": "Data"},
 		{"fieldname": "female", "label": _("Female"), "fieldtype": "Data"},
 		{"fieldname": "amount_claimed", "label": _("Amount Claimed"), "fieldtype": "Currency"},
 		{"fieldname": "consultation", "label": _("Consultation"), "fieldtype": "Currency"},
-		{"fieldname": "examination", "label": _("Examination"), "fieldtype": "Currency"},
-		{"fieldname": "out_patient_charges", "label": _("Out Patient Charges"), "fieldtype": "Currency"},
-		{"fieldname": "in_patient_charges", "label": _("In Patient Charges"), "fieldtype": "Currency"}
+		{"fieldname": "diagnostic_examination", "label": _("Diagnostic Examination"), "fieldtype": "Currency"},
+		{"fieldname": "surgical_produceral_charge", "label": _("Surgical and Procedural Charges"), "fieldtype": "Currency"},
+		{"fieldname": "medicine", "label": _("Medication and Consumables"), "fieldtype": "Currency"},
+		{"fieldname": "inpatient_charges", "label": _("Inpatient Charges"), "fieldtype": "Currency"},
+		{"fieldname": "total_amount_for_out_patient", "label": _("Total Amount for Outpatient"), "fieldtype": "Currency"},
+		{"fieldname": "total_amount_for_inpatient", "label": _("Total Amount for Inpatient"), "fieldtype": "Currency"}
 	]
 	return columns
 
 def get_data(filters):
-	parent_list = []
 	details = []
+	parent_list = []
 
-	male_count = female_count = total_amount = consultation = examination = 0
-	total_amount_for_out_patient = total_amount_for_inpatient = 0
+	male_count = female_count = total_amount = total_amount_for_out_patient = total_amount_for_inpatient = 0 
+	consultation = diagnostic_examination = surgical_produceral_charge = medicine = inpatient_charges = 0
 
-	query = frappe.get_all("NHIF Patient Claim", 
-			filters=[["docstatus", "=", 1], ["attendance_date", "between", [filters.from_date, filters.to_date]]],
+	claims = frappe.get_all("NHIF Patient Claim", 
+			filters=[
+				["docstatus", "=", 1],
+				["company", "=", filters.company],
+				["attendance_date", "between", [filters.from_date, filters.to_date]]
+			],
 			fields=["*"]
 		)
 
-	facility_code = query[0]["facility_code"]
-	company_filter = query[0]["company"]
-	facility_name = frappe.get_value("Company", company_filter, "parent_company")
+	facility_code = claims[0]["facility_code"]
+	facility_name = claims[0]["company"]
 
-	for d in query:
-		parent_list.append(d.name)
+	for claim_doc in claims:
+		parent_list.append(claim_doc.name)
 
-		if d.gender == "Male":
+		if claim_doc.gender == "Male":
 			male_count += 1
 		else:
 			female_count += 1
 
-		total_amount += d.total_amount
+		total_amount += claim_doc.total_amount
 
-		if d.patient_type_code == "IN":
-			total_amount_for_inpatient += d.total_amount
+		if claim_doc.patient_type_code == "IN":
+			total_amount_for_inpatient += claim_doc.total_amount
 		else:
-			total_amount_for_out_patient += d.total_amount
+			total_amount_for_out_patient += claim_doc.total_amount
 
 	items = frappe.get_all("NHIF Patient Claim Item", 
 			filters={"docstatus": 1, "parent": ["in", parent_list]},
@@ -67,11 +68,21 @@ def get_data(filters):
 	for item in items:
 		if item.ref_doctype == "Patient Appointment":
 			consultation += item.amount_claimed
+		elif item.ref_doctype == "Drug Prescription":
+			medicine += item.amount_claimed
+		elif ((item.ref_doctype == "Lab Prescription") | (item.ref_doctype == "Radiology Procedure Prescription")):
+			diagnostic_examination += item.amount_claimed
+		elif ((item.ref_doctype == "Procedure Prescription") | (item.ref_doctype == "Therapy Plan Detail")):
+			surgical_produceral_charge += item.amount_claimed
 		else:
-			if item.ref_doctype != "Inpatient Occupancy":
-				examination += item.amount_claimed
+			inpatient_charges += item.amount_claimed
+	
+	from_date = getdate(filters.get("from_date")).strftime("%d-%m-%Y")
+	to_date = getdate(filters.get("to_date")).strftime("%d-%m-%Y")
 	
 	details.append({
+		"from_date": from_date,
+		"to_date": to_date,
 		"accreditation_no": "",
 		"address": "",
 		"region": "",
@@ -81,11 +92,15 @@ def get_data(filters):
 		"facility_code": facility_code,
 		"male": male_count,
 		"female": female_count,
+		"total_patient": male_count + female_count,
 		"amount_claimed": total_amount,
 		"consultation": consultation,
-		"examination": examination,
-		"out_patient_charges": total_amount_for_out_patient,
-		"in_patient_charges": total_amount_for_inpatient
+		"diagnostic_examination": diagnostic_examination,
+		"surgical_produceral_charge": surgical_produceral_charge,
+		"medicine": medicine,
+		"inpatient_charges": inpatient_charges,
+		"total_amount_for_out_patient": total_amount_for_out_patient,
+		"total_amount_for_inpatient": total_amount_for_inpatient
 	})
 	
 	return details
