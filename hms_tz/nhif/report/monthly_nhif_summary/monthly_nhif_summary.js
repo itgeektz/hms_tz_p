@@ -15,6 +15,13 @@ frappe.query_reports["Monthly NHIF Summary"] = {
 			"label": __("To Date"),
 			"fieldtype": "Date",
 			"reqd": 1
+		},
+		{
+			"fieldname": "company",
+			"label": __("Company"),
+			"fieldtype": "Link",
+			"options": "Company",
+			"reqd": 1
 		}
 
 	]
