@@ -32,14 +32,19 @@ def get_data(filters):
 	male_count = female_count = total_amount = total_amount_for_out_patient = total_amount_for_inpatient = 0 
 	consultation = diagnostic_examination = surgical_produceral_charge = medicine = inpatient_charges = 0
 
-	claims = frappe.get_all("NHIF Patient Claim", 
-			filters=[
-				["docstatus", "=", 1],
-				["company", "=", filters.company],
-				["attendance_date", "between", [filters.from_date, filters.to_date]]
-			],
-			fields=["*"]
+	nhif_doc = frappe.qb.DocType("NHIF Patient Claim")
+	
+	claims = (
+		frappe.qb.from_(nhif_doc)
+		.select(nhif_doc.name, nhif_doc.company, nhif_doc.facility_code, nhif_doc.gender, nhif_doc.total_amount)
+		.where(
+			(nhif_doc.docstatus == 1)
+			& (nhif_doc.company == filters.get("company"))
+			& (
+				(nhif_doc.attendance_date >= filters.get("from_date")) & (nhif_doc.attendance_date <= filters.get("to_date"))
+			)
 		)
+	).run(as_dict=1)
 
 	facility_code = claims[0]["facility_code"]
 	facility_name = claims[0]["company"]
