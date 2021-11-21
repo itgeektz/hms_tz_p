@@ -3,7 +3,7 @@
         padding-left: 10mm;
         padding-right: 5mm;
         padding-top: 0mm;
-        font-size: 10pt;
+        font-size: 12pt;
     }
 
     .print-format table {
@@ -49,14 +49,14 @@
         }
     }
 </style>
-<table>
+<table cellspacing=0 cellpadding=0 style="border: 0px solid black;">
     <colgroup>
-        <col style="width: auto;" >
+        <col style="width: 100%;" >
     </colgroup>
     <thead>
         <tr>
-            <td>
-                <p>MONTHLY REPORT FORM</p>
+            <td style="text-align:center; font-size: larger;">
+                <p><b><u> MONTHLY REPORT FORM </u></b></p>
             </td>
         </tr>
     </thead>
@@ -64,7 +64,7 @@
         <tr>
             <td>
                 <ol>
-                    <li>ACCREDITATION NUMBER:</li>
+                    <li>ACCREDITATION NUMBER: </li>
                     <li>NAME OF FACILITY: <b><u> {%= data[0].facility_name %} </u> </b></li>
                     <li>ADDRESS: </li>
                     <li>REGION: </li> 
@@ -88,45 +88,54 @@
                         </ul>
                     </li>
                     <br>
-                    <li>AMOUNT CLAIMED Tsh: <b><u> {%= data[0][("amount_claimed")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %} </u></b></li>
+                    <li>AMOUNT CLAIMED Tsh: <b><u style="text-align:right"> {%= data[0][("amount_claimed")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %} </u></b></li>
                 </ol>
             </td>
         </tr>
         <tr>
             <td>
-                <b><u>BREAKDOWN OF AMOUNT CLAIMED</u></b>
-                <table>
+                <p style="text-align:center; font-size: larger;">
+                    <b><u>BREAKDOWN OF AMOUNT CLAIMED</u></b>
+                </p>
+                <table class="table table-bordered" style="width: 90% !important; margin-left: 30px; font-size: medium;">
                     <colgroup>
-                        <col style="width: auto;">
-                        <col style="width: auto;">
+                        <col style="width: 6%;">
+                        <col style="width: 60%;">
+                        <col style="width: 34%;">
                     </colgroup>
                     <tr>
-                        <th>Item</th>
-                        <th>Amount Claimed</th>
+                        <th>Sr</th>
+                        <th style="text-align:center">Item</th>
+                        <th style="text-align:center">Amount Claimed</th>
                     </tr>
                     <tr>
+                        <td>i).</td>
                         <td>Registration/Consultation Charges</td>
-                        <td>{%= data[0][("consultation")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                        <td style="text-align:right">{%= data[0][("consultation")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
                     </tr>
                     <tr>
+                        <td>ii).</td>
                         <td>Diagnostic Examinations</td>
-                        <td>{%= data[0][("diagnostic_examination")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                        <td style="text-align:right">{%= data[0][("diagnostic_examination")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
                     </tr>
                     <tr>
+                        <td>iii).</td>
                         <td>Medication and Consumables</td>
-                        <td>{%= data[0][("medicine")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                        <td style="text-align:right">{%= data[0][("medicine")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
                     </tr>
                     <tr>
+                        <td>iv).</td>
                         <td>Surgical and Procedural Charges</td>
-                        <td>{%= data[0][("surgical_produceral_charge")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                        <td style="text-align:right">{%= data[0][("surgical_produceral_charge")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
                     </tr>
                     <tr>
+                        <td>v).</td>
                         <td>Inpatient Charges</td>
-                        <td>{%= data[0][("inpatient_charges")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                        <td style="text-align:right">{%= data[0][("inpatient_charges")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
                     </tr>
                     <tr>
-                        <th>Total:</th>
-                        <th>
+                        <th colspan=2>Total:</th>
+                        <th style="text-align:right">
                             {% 
                                 var total_amount_claimed = data[0][("consultation")] +  data[0][("diagnostic_examination")] +data[0][("medicine")]
                                 + data[0][("surgical_produceral_charge")] + data[0][("inpatient_charges")]; 

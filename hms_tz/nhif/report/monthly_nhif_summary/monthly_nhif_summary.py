@@ -12,7 +12,6 @@ def execute(filters):
 
 def get_columns():
 	columns = [
-		{"fieldname": "facility_code", "label": _("Facility Code"), "fieldtype": "Data"},
 		{"fieldname": "male", "label": _("Male"), "fieldtype": "Data"},
 		{"fieldname": "female", "label": _("Female"), "fieldtype": "Data"},
 		{"fieldname": "amount_claimed", "label": _("Amount Claimed"), "fieldtype": "Currency"},
