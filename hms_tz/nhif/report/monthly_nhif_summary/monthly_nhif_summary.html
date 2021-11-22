@@ -1,0 +1,150 @@
+<style>
+    .print-format {
+        padding-left: 10mm;
+        padding-right: 5mm;
+        padding-top: 0mm;
+        font-size: 12pt;
+    }
+
+    .print-format table {
+        width: 100% !important;
+        table-layout: fixed;
+    }
+
+    .print-format td,
+    .print-format th {
+        vertical-align: top !important;
+        padding: 1px !important;
+    }
+
+    hr {
+        margin-top: 10px;
+        margin-bottom: 5px;
+    }
+
+    @media screen {
+        .print-format {
+            padding-left: 10mm;
+            padding-right: 5mm;
+            padding-top: 0mm;
+            font-size: 10pt;
+            width: 8.5in;
+            height: 11in;
+        }
+
+        .print-format table {
+            width: 100% !important;
+            table-layout: fixed;
+        }
+
+        .print-format td,
+        .print-format th {
+            vertical-align: top !important;
+            padding: 1px !important;
+        }
+
+        hr {
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+    }
+</style>
+<table cellspacing=0 cellpadding=0 style="border: 0px solid black;">
+    <colgroup>
+        <col style="width: 100%;" >
+    </colgroup>
+    <thead>
+        <tr>
+            <td style="text-align:center; font-size: larger;">
+                <p><b><u> MONTHLY REPORT FORM </u></b></p>
+            </td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <ol>
+                    <li>ACCREDITATION NUMBER: </li>
+                    <li>NAME OF FACILITY: <b><u> {%= data[0].facility_name %} </u> </b></li>
+                    <li>ADDRESS: </li>
+                    <li>REGION: </li> 
+                    <li>DISTRICT: </li>
+                    <br>
+                    <li>FACILITY OWNERSHIP: </li>
+                    <li>FACILITY CODE: <b><u> {%= data[0].facility_code %} </u></b></li>
+                    <br>
+                    <li>NUMBER OF BENEFICIARIES TREATED: 
+                        <ul>
+                            <li>Male: <b><u> {%= data[0].male %} </u></b></li>
+                            <li>Female: <b><u> {%= data[0].female %} </u></b></li>
+                            <li>Total: <b><u> {%= data[0].total_patient %} </u></b></li>
+                        </ul>
+                    </li>
+                    <br>
+                    <li>DATE OF TREATMENT: 
+                        <ul>
+                            <li>From: <b><u> {%= data[0].from_date %} </u></b></li>
+                            <li>To: <b><u> {%= data[0].to_date %} </u></b></li>
+                        </ul>
+                    </li>
+                    <br>
+                    <li>AMOUNT CLAIMED Tsh: <b><u style="text-align:right"> {%= data[0][("amount_claimed")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %} </u></b></li>
+                </ol>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p style="text-align:center; font-size: larger;">
+                    <b><u>BREAKDOWN OF AMOUNT CLAIMED</u></b>
+                </p>
+                <table class="table table-bordered" style="width: 90% !important; margin-left: 30px; font-size: medium;">
+                    <colgroup>
+                        <col style="width: 6%;">
+                        <col style="width: 60%;">
+                        <col style="width: 34%;">
+                    </colgroup>
+                    <tr>
+                        <th>Sr</th>
+                        <th style="text-align:center">Item</th>
+                        <th style="text-align:center">Amount Claimed</th>
+                    </tr>
+                    <tr>
+                        <td>i).</td>
+                        <td>Registration/Consultation Charges</td>
+                        <td style="text-align:right">{%= data[0][("consultation")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                    </tr>
+                    <tr>
+                        <td>ii).</td>
+                        <td>Diagnostic Examinations</td>
+                        <td style="text-align:right">{%= data[0][("diagnostic_examination")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                    </tr>
+                    <tr>
+                        <td>iii).</td>
+                        <td>Medication and Consumables</td>
+                        <td style="text-align:right">{%= data[0][("medicine")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                    </tr>
+                    <tr>
+                        <td>iv).</td>
+                        <td>Surgical and Procedural Charges</td>
+                        <td style="text-align:right">{%= data[0][("surgical_produceral_charge")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                    </tr>
+                    <tr>
+                        <td>v).</td>
+                        <td>Inpatient Charges</td>
+                        <td style="text-align:right">{%= data[0][("inpatient_charges")].toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                    </tr>
+                    <tr>
+                        <th colspan=2>Total:</th>
+                        <th style="text-align:right">
+                            {% 
+                                var total_amount_claimed = data[0][("consultation")] +  data[0][("diagnostic_examination")] +data[0][("medicine")]
+                                + data[0][("surgical_produceral_charge")] + data[0][("inpatient_charges")]; 
+                            %}
+                            {%= total_amount_claimed.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}
+                        </th>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </tbody>
+</table>
