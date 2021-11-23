@@ -6,22 +6,34 @@ from frappe import _
 from frappe.utils import getdate
 
 def execute(filters):
+	data = []
 	columns = get_columns()
-	data = get_data(filters)
+	
+	nhif_summary = get_data(filters)
+	
+	company_info = frappe.get_all("Company", 
+		filters={"name": nhif_summary[0]["facility_name"]}, 
+		fields=["p_o_box", "city"]
+	)
+
+	nhif_summary[0]["address"] = company_info[0]["p_o_box"]
+	nhif_summary[0]["region"] = company_info[0]["city"]
+	nhif_summary[0]["district"] = "Ilala"
+
+	data += nhif_summary
+
 	return columns, data
 
 def get_columns():
 	columns = [
 		{"fieldname": "male", "label": _("Male"), "fieldtype": "Data"},
 		{"fieldname": "female", "label": _("Female"), "fieldtype": "Data"},
-		{"fieldname": "amount_claimed", "label": _("Amount Claimed"), "fieldtype": "Currency"},
+		{"fieldname": "amount_claimed", "label": _("Total Amount Claimed"), "fieldtype": "Currency"},
 		{"fieldname": "consultation", "label": _("Consultation"), "fieldtype": "Currency"},
 		{"fieldname": "diagnostic_examination", "label": _("Diagnostic Examination"), "fieldtype": "Currency"},
 		{"fieldname": "surgical_produceral_charge", "label": _("Surgical and Procedural Charges"), "fieldtype": "Currency"},
 		{"fieldname": "medicine", "label": _("Medication and Consumables"), "fieldtype": "Currency"},
-		{"fieldname": "inpatient_charges", "label": _("Inpatient Charges"), "fieldtype": "Currency"},
-		{"fieldname": "total_amount_for_out_patient", "label": _("Total Amount for Outpatient"), "fieldtype": "Currency"},
-		{"fieldname": "total_amount_for_inpatient", "label": _("Total Amount for Inpatient"), "fieldtype": "Currency"}
+		{"fieldname": "inpatient_charges", "label": _("Inpatient/Bed Charges"), "fieldtype": "Currency"},
 	]
 	return columns
 
@@ -58,16 +70,13 @@ def get_data(filters):
 			female_count += 1
 
 		total_amount += claim_doc.total_amount
-
-		if claim_doc.patient_type_code == "IN":
-			total_amount_for_inpatient += claim_doc.total_amount
-		else:
-			total_amount_for_out_patient += claim_doc.total_amount
-
-	items = frappe.get_all("NHIF Patient Claim Item", 
-			filters={"docstatus": 1, "parent": ["in", parent_list]},
-			fields=["ref_doctype", "amount_claimed"]
+	
+	claim_item = frappe.qb.DocType("NHIF Patient Claim Item")
+	items = (
+		frappe.qb.from_(claim_item).select(claim_item.ref_doctype, claim_item.amount_claimed).where(
+			(claim_item.docstatus == 1) & (claim_item.parent.isin(parent_list))
 		)
+	).run(as_dict=1)
 	
 	for item in items:
 		if item.ref_doctype == "Patient Appointment":
@@ -88,9 +97,6 @@ def get_data(filters):
 		"from_date": from_date,
 		"to_date": to_date,
 		"accreditation_no": "",
-		"address": "",
-		"region": "",
-		"district": "",
 		"ownership": "",
 		"facility_name": facility_name,
 		"facility_code": facility_code,
