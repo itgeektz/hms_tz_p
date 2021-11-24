@@ -96,8 +96,8 @@ def get_data(filters):
 	details.append({
 		"from_date": from_date,
 		"to_date": to_date,
-		"accreditation_no": "",
-		"ownership": "",
+		"accreditation_no": "01440",
+		"ownership": "Religious/NGO",
 		"facility_name": facility_name,
 		"facility_code": facility_code,
 		"male": male_count,
