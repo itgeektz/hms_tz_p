@@ -738,17 +738,17 @@ def download_multi_pdf(doctype, name, format=None, no_letterhead=0):
     if isinstance(doctype, dict):
         for doctype_name in doctype:
             for doc_name in doctype[doctype_name]:
-                try:
-                    output = frappe.get_print(
-                        doctype_name,
-                        doc_name,
-                        format,
-                        as_pdf=True,
-                        output=output,
-                        no_letterhead=no_letterhead,
-                    )
-                except Exception:
-                    frappe.log_error(frappe.get_traceback())
+                # try:
+                output = frappe.get_print(
+                    doctype_name,
+                    doc_name,
+                    format,
+                    as_pdf=True,
+                    output=output,
+                    no_letterhead=no_letterhead,
+                )
+                # except Exception:
+                #     frappe.log_error(frappe.get_traceback())
         frappe.local.response.filename = "{}.pdf".format(name)
 
     return read_multi_pdf(output)
