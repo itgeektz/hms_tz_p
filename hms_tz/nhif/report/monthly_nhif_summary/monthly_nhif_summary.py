@@ -44,19 +44,14 @@ def get_data(filters):
 	male_count = female_count = total_amount = total_amount_for_out_patient = total_amount_for_inpatient = 0 
 	consultation = diagnostic_examination = surgical_produceral_charge = medicine = inpatient_charges = 0
 
-	nhif_doc = frappe.qb.DocType("NHIF Patient Claim")
-	
-	claims = (
-		frappe.qb.from_(nhif_doc)
-		.select(nhif_doc.name, nhif_doc.company, nhif_doc.facility_code, nhif_doc.gender, nhif_doc.total_amount)
-		.where(
-			(nhif_doc.docstatus == 1)
-			& (nhif_doc.company == filters.get("company"))
-			& (
-				(nhif_doc.attendance_date >= filters.get("from_date")) & (nhif_doc.attendance_date <= filters.get("to_date"))
-			)
-		)
-	).run(as_dict=1)
+	claims = frappe.get_all(
+		"NHIF Patient Claim",
+		filters=[
+			["docstatus", "=", 1], ["company", "=", filters.get("company")],
+			["attendance_date", "between", [filters.get("from_date"), filters.get("to_date")]]
+		],
+		fields = ["name", "company", "facility_code", "gender", "total_amount"]
+	)
 
 	facility_code = claims[0]["facility_code"]
 	facility_name = claims[0]["company"]
@@ -71,12 +66,9 @@ def get_data(filters):
 
 		total_amount += claim_doc.total_amount
 	
-	claim_item = frappe.qb.DocType("NHIF Patient Claim Item")
-	items = (
-		frappe.qb.from_(claim_item).select(claim_item.ref_doctype, claim_item.amount_claimed).where(
-			(claim_item.docstatus == 1) & (claim_item.parent.isin(parent_list))
-		)
-	).run(as_dict=1)
+	items = frappe.get_all(
+		"NHIF Patient Claim Item", filters={"docstatus": 1, "parent": ['in', parent_list] }, fields=["ref_doctype", "amount_claimed"]
+	)
 	
 	for item in items:
 		if item.ref_doctype == "Patient Appointment":
