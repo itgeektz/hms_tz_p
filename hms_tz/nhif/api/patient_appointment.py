@@ -175,11 +175,13 @@ def make_vital(appointment_doc, method):
         appointment_doc.insurance_subscription
         and not appointment_doc.authorization_number
     ):
-        frappe.throw(
+        frappe.msgprint(
             _(
                 "Authorization number not set to proceed to create vitals for this appointment. Please get the authorization number first and then try again."
-            )
+            ),
+            alert=True,
         )
+        return
     if appointment_doc.insurance_subscription and appointment_doc.billing_item:
         appointment_doc.paid_amount = get_insurance_amount(
             appointment_doc.insurance_subscription,
