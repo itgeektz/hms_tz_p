@@ -171,6 +171,15 @@ def create_vital(appointment):
 
 
 def make_vital(appointment_doc, method):
+    if (
+        appointment_doc.insurance_subscription
+        and not appointment_doc.authorization_number
+    ):
+        frappe.throw(
+            _(
+                "Authorization number not set to proceed to create vitals for this appointment. Please get the authorization number first and then try again."
+            )
+        )
     if appointment_doc.insurance_subscription and appointment_doc.billing_item:
         appointment_doc.paid_amount = get_insurance_amount(
             appointment_doc.insurance_subscription,
@@ -389,9 +398,15 @@ def make_next_doc(doc, method):
     if doc.is_new():
         return
     if doc.insurance_subscription:
-        his_patient = frappe.get_value("Healthcare Insurance Subscription", doc.insurance_subscription, "patient")
+        his_patient = frappe.get_value(
+            "Healthcare Insurance Subscription", doc.insurance_subscription, "patient"
+        )
         if doc.patient != his_patient:
-            frappe.throw(_("Insurance Subscription belongs to another patient. Please select the correct Insurance Subscription."))
+            frappe.throw(
+                _(
+                    "Insurance Subscription belongs to another patient. Please select the correct Insurance Subscription."
+                )
+            )
     if not doc.billing_item and doc.authorization_number:
         doc.billing_item = get_consulting_charge_item(
             doc.appointment_type, doc.practitioner
