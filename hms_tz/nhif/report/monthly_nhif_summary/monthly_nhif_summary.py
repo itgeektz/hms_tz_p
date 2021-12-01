@@ -44,13 +44,10 @@ def get_data(filters):
 	male_count = female_count = total_amount = total_amount_for_out_patient = total_amount_for_inpatient = 0 
 	consultation = diagnostic_examination = surgical_produceral_charge = medicine = inpatient_charges = 0
 
-	claims = frappe.get_all(
-		"NHIF Patient Claim",
-		filters=[
-			["docstatus", "=", 1], ["company", "=", filters.get("company")],
+	claims = frappe.get_all("NHIF Patient Claim",
+		filters=[["docstatus", "=", 1], ["company", "=", filters.get("company")],
 			["attendance_date", "between", [filters.get("from_date"), filters.get("to_date")]]
-		],
-		fields = ["name", "company", "facility_code", "gender", "total_amount"]
+		],fields = ["name", "company", "facility_code", "gender", "total_amount"]
 	)
 
 	facility_code = claims[0]["facility_code"]
