@@ -2,8 +2,9 @@
 # For license information, please see license.txt
 
 import frappe
-from frappe import _
-from frappe.utils import flt
+from frappe import _, get_cached_value
+from frappe.utils import flt, nowdate
+from erpnext.accounts.utils import get_balance_on
 
 def execute(filters=None):
 	args = frappe._dict(filters or {})
@@ -11,7 +12,9 @@ def execute(filters=None):
 	columns = get_columns()
 	data = get_data(args)
 
-	return columns, data
+	report_summary = get_report_summary(args, data)
+
+	return columns, data, None, None, report_summary
 
 def get_columns():
 	columns = [
@@ -158,3 +161,61 @@ def get_inpatient_details(args):
 	"""%frappe.db.escape(parent), as_dict=1)
 
 	return service_unit_details
+
+def get_patient_balance(args):
+
+	customer = frappe.get_value("Patient", {"name": args.patient}, ["customer"])
+	start_date = frappe.get_value("Patient Appointment", 
+		{"name": args.appointment_no, "patient": args.patient}, ["appointment_date"]
+	)
+	discharge_date = frappe.get_value("Inpatient Record", {"name": args.inpatient_record}, ["discharge_date"])
+	
+	if discharge_date:
+		end_date = discharge_date
+	else:
+		end_date = nowdate()
+
+	customer_balances = frappe.get_all("Payment Entry", filters=[
+		["party", "=", customer], ["company", "=", args.company],
+		["posting_date", "between", [start_date, end_date]] ],
+		fields=["name", "paid_amount"]
+	)
+
+	balance = 0
+	for d in customer_balances:
+		balance += d.paid_amount
+
+	return balance
+
+def get_report_summary(args, summary_data):
+
+	balance = get_patient_balance(args)
+
+	total_amount = 0
+	for entry in summary_data:
+		total_amount += entry["grand_total"]
+	
+	current_balance = balance - total_amount
+
+	currency = frappe.get_cached_value("Company", args.company, "default_currency")
+
+	return [
+		{
+			"value": balance,
+			"label": _("Total Patient Balance"),
+			"datatype": "Currency",
+			"currency": currency
+		},
+		{
+			"value": total_amount,
+			"label": _("Total Amount Used"),
+			"datatype": "Currency",
+			"currency": currency
+		},
+		{
+			"value": current_balance,
+			"label": _("Current Balance"),
+			"datatype": "Currency",
+			"currency": currency
+		}
+	]
