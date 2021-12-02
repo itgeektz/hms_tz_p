@@ -743,10 +743,15 @@ def delete_or_cancel_draft_document():
     before_7_days_date = add_to_date(nowdate(), days=-7, as_string=False)
     before_45_days_date = add_to_date(nowdate(), days=-45, as_string=False)
 
-    appointments = frappe.db.sql("""
+    appointments = frappe.db.sql(
+        """
         SELECT name FROM `tabPatient Appointment` 
-        WHERE status = "Open" AND appointment_date < {before_7_days_date}
-    """.format(before_7_days_date=before_7_days_date), as_dict=1)
+        WHERE status = "Open" AND appointment_date < '{before_7_days_date}'
+    """.format(
+            before_7_days_date=before_7_days_date
+        ),
+        as_dict=1,
+    )
 
     for app_doc in appointments:
         frappe.db.set_value(
@@ -754,23 +759,33 @@ def delete_or_cancel_draft_document():
             app_doc.name,
             "status",
             "Cancelled",
-            update_modified=False
+            update_modified=False,
         )
-    
-    vital_docs = frappe.db.sql("""
+
+    vital_docs = frappe.db.sql(
+        """
         SELECT name FROM `tabVital Signs` 
-        WHERE docstatus = 0 AND signs_date < {before_7_days_date}
-    """.format(before_7_days_date=before_7_days_date), as_dict=1)
+        WHERE docstatus = 0 AND signs_date < '{before_7_days_date}'
+    """.format(
+            before_7_days_date=before_7_days_date
+        ),
+        as_dict=1,
+    )
 
     for vs_doc in vital_docs:
         doc = frappe.get_doc("Vital Signs", vs_doc.name)
         doc.delete()
         frappe.db.commit()
 
-    delivery_documents = frappe.db.sql("""
+    delivery_documents = frappe.db.sql(
+        """
         SELECT name FROM `tabDelivery Note` 
-        WHERE docstatus = 0 AND posting_date < {before_45_days_date}
-    """.format(before_45_days_date=before_45_days_date), as_dict=1)
+        WHERE docstatus = 0 AND posting_date < '{before_45_days_date}'
+    """.format(
+            before_45_days_date=before_45_days_date
+        ),
+        as_dict=1,
+    )
 
     for dn_doc in delivery_documents:
         dn_del = frappe.get_doc("Delivery Note", dn_doc.name)
