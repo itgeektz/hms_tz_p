@@ -99,7 +99,10 @@ class NHIFPatientClaim(Document):
             )
         inpatient_record = final_patient_encounter.inpatient_record
         self.inpatient_record = inpatient_record
+        # Reset values for every validate
         self.patient_type_code = "OUT"
+        self.date_admitted = None
+        self.date_discharge = None
         if inpatient_record:
             discharge_date, date_admitted, admitted_datetime = frappe.get_value(
                 "Inpatient Record",
@@ -111,8 +114,14 @@ class NHIFPatientClaim(Document):
             else:
                 self.date_admitted = getdate(admitted_datetime)
 
-            self.patient_type_code = "IN"
-            self.date_discharge = discharge_date
+            # If the patient is same day discharged then consider it as Outpatient
+            if self.date_admitted == getdate(discharge_date):
+                self.patient_type_code = "OUT"
+                self.date_admitted = None
+            else:
+                self.patient_type_code = "IN"
+                self.date_discharge = discharge_date
+
         self.attendance_date = frappe.get_value(
             "Patient Appointment", self.patient_appointment, "appointment_date"
         )
