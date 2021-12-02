@@ -31,6 +31,18 @@ frappe.ui.form.on('Inpatient Record', {
 			});
 		}
 
+		if (frm.doc.patient && frm.doc.patient_appointment) {
+			frm.add_custom_button(__("IPD Billing Report"), function() {
+				frappe.route_options = {
+					"inpatient_record": frm.doc.name,
+					"patient": frm.doc.patient,
+					"appointment_no": frm.doc.patient_appointment,
+					"company": frm.doc.company
+				};
+				frappe.set_route("query-report", "IPD Billing Report");
+			});
+		}
+
 		if (!frm.doc.__islocal && frm.doc.status == 'Admission Scheduled') {
 			frm.add_custom_button(__('Admit'), function () {
 				admit_patient_dialog(frm);
