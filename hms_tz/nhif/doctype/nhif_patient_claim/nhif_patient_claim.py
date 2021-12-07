@@ -37,6 +37,11 @@ class NHIFPatientClaim(Document):
         self.set_clinical_notes()
         if not self.is_new():
             frappe.db.sql(
+                "UPDATE `tabPatient Appointment` SET nhif_patient_claim = '' WHERE nhif_patient_claim = '{0}'".format(
+                    self.name
+                )
+            )
+            frappe.db.sql(
                 "UPDATE `tabPatient Appointment` SET nhif_patient_claim = '{0}' WHERE name = '{1}'".format(
                     self.name, self.patient_appointment
                 )
