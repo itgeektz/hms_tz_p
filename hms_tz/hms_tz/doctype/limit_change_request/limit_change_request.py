@@ -1,8 +1,4 @@
-# Copyright (c) 2021, Aakvatech and contributors
-# For license information, please see license.txt
-
 import frappe
-
 from frappe.model.document import Document
 
 class LimitChangeRequest(Document):
@@ -44,4 +40,6 @@ def update_fields(self):
 
 	self.appointment_no = encounters[0]["appointment"]
 	self.inpatient_record = encounters[0]["inpatient_record"]
+
+
 

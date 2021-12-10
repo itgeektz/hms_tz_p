@@ -10,6 +10,7 @@ from frappe.model.document import Document
 from frappe.utils import cstr
 from frappe import _
 from hms_tz.hms_tz.utils import make_healthcare_service_order
+from erpnext.accounts.utils import get_balance_on
 
 class PatientEncounter(Document):
 	def validate(self):
@@ -32,7 +33,7 @@ class PatientEncounter(Document):
 		create_therapy_plan(self)
 		create_healthcare_service_order(self)
 		validate_patient_balance_vs_patient_costs(self)
-		# make_insurance_claim(self)
+		# make_insurance_claim(self)  
 
 	def on_cancel(self):
 		if self.appointment:
@@ -314,9 +315,8 @@ def get_quantity(self):
 	else:
 		return 1
 
-def validate_patient_balance_vs_patient_costs(doc):
-	from erpnext.accounts.utils import get_balance_on
 
+def validate_patient_balance_vs_patient_costs(doc):
 	encounters = get_patient_encounters(doc)
 
 	total_amount_billed = 0
@@ -368,7 +368,7 @@ def validate_patient_balance_vs_patient_costs(doc):
 				plan.prescribe == 0 or
 				plan.is_not_available_inhouse == 1 or
 				plan.invoiced == 1
-			):
+			): 
 				return
 
 			total_amount_billed += plan.amount
@@ -389,7 +389,7 @@ def validate_patient_balance_vs_patient_costs(doc):
 		
 		total_amount_billed += record.rate
 
-	# get balance from payment entry after patient deposit advances
+	# get balance from payment entry after patient deposit advances 
 	deposit_balance = get_balance_on(party_type="Customer", party=doc.patient_name, company=doc.company)
 
 	patient_balance = ( -1 * deposit_balance) + cash_limit

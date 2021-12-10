@@ -1,5 +1,36 @@
 [
     {
+        "creation": "2021-12-07 16:18:50.092269",
+        "default": "2000000",
+        "dt": "Patient",
+        "fieldname": "cash_limit",
+        "fieldtype": "Currency",
+        "idx": 42,
+        "insert_after": "language",
+        "label": "Cash Limit",
+        "modified": "2021-12-07 16:18:50.092269",
+        "modified_by": "Administrator",
+        "name": "Patient-cash_limit",
+        "owner": "Administrator",
+        "precision": "2"
+    },
+    {
+        "creation": "2021-12-07 16:31:39.540025",
+        "depends_on": "doc.insurance_subscription == \"\"",
+        "dt": "Inpatient Record",
+        "fetch_from": "patient.cash_limit",
+        "fieldname": "cash_limit",
+        "fieldtype": "Currency",
+        "idx": 30,
+        "insert_after": "claim_status",
+        "label": "Cash Limit",
+        "modified": "2021-12-07 16:31:39.540025",
+        "modified_by": "Administrator",
+        "name": "Inpatient Record-cash_limit",
+        "owner": "Administrator",
+        "read_only": 1
+    },
+    {
         "allow_in_quick_entry": 0,
         "allow_on_submit": 0,
         "bold": 0,
