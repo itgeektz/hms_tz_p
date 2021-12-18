@@ -76,7 +76,6 @@ def before_insert(doc, method):
         filters={
             "patient": doc.patient,
             "docstatus": 1,
-            "is_active": 1,
             "healthcare_insurance_coverage_plan": doc.healthcare_insurance_coverage_plan,
             "coverage_plan_card_number": doc.coverage_plan_card_number,
         },
