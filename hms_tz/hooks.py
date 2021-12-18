@@ -946,6 +946,7 @@ doc_events = {
         "before_insert": "hms_tz.nhif.api.insurance_subscription.before_insert",
         "on_submit": "hms_tz.nhif.api.insurance_subscription.on_submit",
         "before_cancel": "hms_tz.nhif.api.insurance_subscription.on_cancel",
+        "on_update_after_submit": "hms_tz.nhif.api.insurance_subscription.on_update_after_submit",
     },
     "Practitioner Availability": {
         "validate": "hms_tz.nhif.api.practitioner_availability.validate",
