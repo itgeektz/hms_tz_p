@@ -83,14 +83,15 @@
    "fieldname": "naming_series",
    "fieldtype": "Select",
    "label": "Series",
-   "options": "\nHLC-LCR-.YYYY.-",
+   "options": "HLC-LCR-.YYYY.-",
+   "read_only": 1,
    "set_only_once": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-12-08 18:24:05.110379",
+ "modified": "2021-12-19 18:33:46.007412",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Limit Change Request",

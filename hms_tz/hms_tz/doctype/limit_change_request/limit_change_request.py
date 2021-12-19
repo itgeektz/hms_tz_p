@@ -3,7 +3,7 @@ from frappe.model.document import Document
 
 class LimitChangeRequest(Document):
 	def validate(self):
-		update_fields(self)
+		set_missing_values(self)
 	
 	def on_submit(self):
 		if self.inpatient_record:
@@ -23,9 +23,7 @@ class LimitChangeRequest(Document):
 		old_cash_limit = frappe.get_value("Patient", {"name": self.patient}, "cash_limit")
 		frappe.db.set_value("Inpatient Record", self.inpatient_record, "cash_limit", old_cash_limit)
 
-
-
-def update_fields(self):
+def set_missing_values(self):
 	conditions = {}
 	if self.patient:
 		conditions["patient"] = self.patient
@@ -35,11 +33,11 @@ def update_fields(self):
 		conditions["company"] = self.company
 		
 	encounters = frappe.get_all("Patient Encounter", 
-		filters=conditions, fields=["name", "encounter_date", "appointment", "inpatient_record"], order_by = "encounter_date desc"
+		filters=conditions, fields=["name", "encounter_date", "appointment", "inpatient_record"], order_by = "encounter_date desc", page_length=1
 	)
-
-	self.appointment_no = encounters[0]["appointment"]
-	self.inpatient_record = encounters[0]["inpatient_record"]
+	if encounters:
+		self.appointment_no = encounters[0]["appointment"]
+		self.inpatient_record = encounters[0]["inpatient_record"]
 
 
 
