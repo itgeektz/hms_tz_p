@@ -1,0 +1,81 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2021-12-11 12:21:06.172567",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "drug_name",
+  "quantity",
+  "reason",
+  "drug_condition",
+  "encounter_no",
+  "delivery_note_no",
+  "child_name"
+ ],
+ "fields": [
+  {
+   "bold": 1,
+   "fieldname": "drug_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Drug Name",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "quantity",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Quantity",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Reason",
+   "options": "Healthcare Return Reason"
+  },
+  {
+   "fieldname": "drug_condition",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Drug Condition",
+   "options": "Medication Condition"
+  },
+  {
+   "fieldname": "encounter_no",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Patient Encounter",
+   "options": "Patient Encounter"
+  },
+  {
+   "fieldname": "delivery_note_no",
+   "fieldtype": "Link",
+   "label": "Delivery Note",
+   "options": "Delivery Note"
+  },
+  {
+   "fieldname": "child_name",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Child Name"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2021-12-20 17:08:47.590429",
+ "modified_by": "Administrator",
+ "module": "Hms Tz",
+ "name": "Medication Return",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
