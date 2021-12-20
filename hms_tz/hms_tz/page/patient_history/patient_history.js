@@ -53,7 +53,7 @@ frappe.pages['patient_history'].on_page_load = function (wrapper) {
 			me.page.main.find('.' + docname).parent().find('.document-html').show();
 		} else {
 			if (doctype && docname) {
-				let exclude = ['patient', 'patient_name', 'patient_sex', 'encounter_date'];
+				let exclude = ['patient', 'patient_name', 'patient_sex', 'encounter_date', 'patient_signature', 'healthcare_practitioner_signature'];
 				frappe.call({
 					method: 'erpnext.healthcare.utils.render_doc_as_html',
 					args: {
