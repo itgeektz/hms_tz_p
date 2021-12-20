@@ -946,6 +946,7 @@ doc_events = {
         "before_insert": "hms_tz.nhif.api.insurance_subscription.before_insert",
         "on_submit": "hms_tz.nhif.api.insurance_subscription.on_submit",
         "before_cancel": "hms_tz.nhif.api.insurance_subscription.on_cancel",
+        "on_update_after_submit": "hms_tz.nhif.api.insurance_subscription.on_update_after_submit",
     },
     "Practitioner Availability": {
         "validate": "hms_tz.nhif.api.practitioner_availability.validate",
@@ -997,7 +998,9 @@ scheduler_events = {
     "daily": ["hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"],
     # fire every saturday 2:30 pm at night
     "cron": {
-        "30 2 * * 6": ["hms_tz.api.healthcare_utils.delete_or_cancel_draft_document"]
+        "30 2 * * 6": [
+            "hms_tz.nhif.api.healthcare_utils.delete_or_cancel_draft_document"
+        ]
     },
     # 	"hourly": [
     # 		"hms_tz.tasks.hourly"

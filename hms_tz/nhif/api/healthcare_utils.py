@@ -738,37 +738,56 @@ def get_template_company_option(template=None, company=None):
 
 # Cancel open appointments, delete draft vital signs and delete draft delivery note
 def delete_or_cancel_draft_document():
-    before_7_days_date = add_to_date(datetime.now(), days=-7, as_string=False)
+    from frappe.utils import nowdate, add_to_date
 
-    before_45_days_date = add_to_date(datetime.now(), days=-45, as_string=False)
+    before_7_days_date = add_to_date(nowdate(), days=-7, as_string=False)
+    before_45_days_date = add_to_date(nowdate(), days=-45, as_string=False)
 
-    appointments = frappe.get_all(
-        "Patient Appointment",
-        filters={"appointment_date": ["<", before_7_days_date], "status": "Open"},
-        pluck="name",
+    appointments = frappe.db.sql(
+        """
+        SELECT name FROM `tabPatient Appointment` 
+        WHERE status = "Open" AND appointment_date < '{before_7_days_date}'
+    """.format(
+            before_7_days_date=before_7_days_date
+        ),
+        as_dict=1,
     )
 
-    for doc_name in appointments:
+    for app_doc in appointments:
         frappe.db.set_value(
             "Patient Appointment",
-            doc_name,
+            app_doc.name,
             "status",
             "Cancelled",
             update_modified=False,
         )
 
-    vital_docs = frappe.get_all(
-        "Vital Signs",
-        filters={"signs_date": ["<", before_7_days_date], "docstatus": 0},
-        pluck="name",
+    vital_docs = frappe.db.sql(
+        """
+        SELECT name FROM `tabVital Signs` 
+        WHERE docstatus = 0 AND signs_date < '{before_7_days_date}'
+    """.format(
+            before_7_days_date=before_7_days_date
+        ),
+        as_dict=1,
     )
-    for doc_name in vital_docs:
-        frappe.delete_doc("Vital Signs", doc_name)
 
-    delivery_documents = frappe.get_all(
-        "Delivery Note",
-        filters={"posting_date": ["<", before_7_days_date], "docstatus": 0},
-        pluck="name",
+    for vs_doc in vital_docs:
+        doc = frappe.get_doc("Vital Signs", vs_doc.name)
+        doc.delete()
+        frappe.db.commit()
+
+    delivery_documents = frappe.db.sql(
+        """
+        SELECT name FROM `tabDelivery Note` 
+        WHERE docstatus = 0 AND posting_date < '{before_45_days_date}'
+    """.format(
+            before_45_days_date=before_45_days_date
+        ),
+        as_dict=1,
     )
-    for doc_name in delivery_documents:
-        frappe.delete_doc("Delivery Note", doc_name)
+
+    for dn_doc in delivery_documents:
+        dn_del = frappe.get_doc("Delivery Note", dn_doc.name)
+        dn_del.delete()
+        frappe.db.commit()
