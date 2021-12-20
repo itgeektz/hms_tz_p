@@ -14,6 +14,11 @@ def on_submit(doc, method):
     set_insurance_card_detail_in_patient(doc)
 
 
+def on_update_after_submit(doc, method):
+    if method != "on_submit" and doc.is_active == 1:
+        set_insurance_card_detail_in_patient(doc)
+
+
 def on_cancel(doc, method):
     set_insurance_card_detail_in_patient(doc)
 
@@ -24,8 +29,10 @@ def set_insurance_card_detail_in_patient(doc):
         filters={
             "patient": doc.patient,
             "docstatus": 1,
+            "is_active": 1,
         },
         fields=["coverage_plan_card_number"],
+        group_by="coverage_plan_card_number",
     )
     str_coverage_plan_card_number = ""
     card_count = 0
@@ -34,12 +41,14 @@ def set_insurance_card_detail_in_patient(doc):
             card_count += 1
             str_coverage_plan_card_number += card.coverage_plan_card_number + ", "
 
-    if card_count > 1:
-        frappe.db.sql(
-            "UPDATE `tabPatient` SET insurance_card_detail = '{0}' WHERE name = '{1}'".format(
-                str_coverage_plan_card_number, doc.patient
-            )
-        )
+    frappe.db.set_value(
+        "Patient",
+        doc.patient,
+        {
+            "insurance_card_detail": str_coverage_plan_card_number[:-2],
+            "card_no": doc.coverage_plan_card_number,
+        },
+    )
 
 
 @frappe.whitelist()
