@@ -400,9 +400,18 @@ def make_next_doc(doc, method):
     if doc.is_new():
         return
     if doc.insurance_subscription:
-        his_patient = frappe.get_value(
-            "Healthcare Insurance Subscription", doc.insurance_subscription, "patient"
+        is_active, his_patient = frappe.get_value(
+            "Healthcare Insurance Subscription",
+            doc.insurance_subscription,
+            ["is_active", "patient"],
         )
+        if not is_active:
+            frappe.throw(
+                _(
+                    "The Insurance Subscription is NOT ACTIVE. Please select the correct Insurance Subscription."
+                )
+            )
+
         if doc.patient != his_patient:
             frappe.throw(
                 _(
