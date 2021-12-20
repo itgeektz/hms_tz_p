@@ -1,0 +1,181 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2021-12-11 10:43:22.393583",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "patient",
+  "patient_name",
+  "appointment_no",
+  "col_break_1",
+  "company",
+  "inpatient_record",
+  "status",
+  "admitted_datetime",
+  "sec_break_1",
+  "lrpt_items",
+  "sec_break_2",
+  "drug_items",
+  "sec_break_3",
+  "requested_by",
+  "col_break_2",
+  "approved_by",
+  "naming_series",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "patient",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Patient",
+   "options": "Patient",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "patient.patient_name",
+   "fieldname": "patient_name",
+   "fieldtype": "Data",
+   "label": "Patient Name",
+   "read_only": 1,
+   "read_only_depends_on": "eval: doc.patient_name != \"\""
+  },
+  {
+   "depends_on": "eval: doc.appointment_no",
+   "fieldname": "appointment_no",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Patient Appointment",
+   "options": "Patient Appointment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval: doc.appointment_no",
+   "fetch_from": "appointment_no.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "depends_on": "eval: doc.inpatient_record",
+   "fieldname": "inpatient_record",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Inpatient Record",
+   "options": "Inpatient Record",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval: doc.status",
+   "fetch_from": "inpatient_record.status",
+   "fieldname": "status",
+   "fieldtype": "Data",
+   "label": "Status",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval: doc.admitted_datetime",
+   "fetch_from": "inpatient_record.admitted_datetime",
+   "fieldname": "admitted_datetime",
+   "fieldtype": "Datetime",
+   "label": "Admitted Datetime",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "depends_on": "eval: doc.appointment_no",
+   "fieldname": "sec_break_1",
+   "fieldtype": "Section Break",
+   "label": "LRPT Items"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Series",
+   "options": "HLC-LRPMT-R-.YYYY.-"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "LRPMT Returns",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval: doc.appointment_no",
+   "fieldname": "sec_break_2",
+   "fieldtype": "Section Break",
+   "label": "Medication Items"
+  },
+  {
+   "fieldname": "col_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Data",
+   "label": "Approved By",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval: doc.appointment_no",
+   "fieldname": "lrpt_items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Item Return"
+  },
+  {
+   "depends_on": "eval: doc.appointment_no",
+   "fieldname": "drug_items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Medication Return"
+  },
+  {
+   "fieldname": "sec_break_3",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Data",
+   "label": "Requested By",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2021-12-18 22:22:52.820210",
+ "modified_by": "Administrator",
+ "module": "Hms Tz",
+ "name": "LRPMT Returns",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
