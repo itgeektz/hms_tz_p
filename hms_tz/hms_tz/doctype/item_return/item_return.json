@@ -37,14 +37,7 @@
    "in_list_view": 1,
    "in_preview": 1,
    "label": "Reason",
-   "options": "Reason"
-  },
-  {
-   "fieldname": "reference_doctype",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Reference Doctype",
-   "options": "DocType"
+   "options": "Healthcare Return Reason"
   },
   {
    "fieldname": "encounter_no",
@@ -52,6 +45,13 @@
    "in_list_view": 1,
    "label": "Patient Encounter",
    "options": "Patient Encounter"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Reference Doctype",
+   "options": "DocType"
   },
   {
    "fieldname": "reference_docname",
@@ -70,7 +70,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2021-12-18 21:36:06.834691",
+ "modified": "2021-12-20 17:07:25.442983",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Item Return",

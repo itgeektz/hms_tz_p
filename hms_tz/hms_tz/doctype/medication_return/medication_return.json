@@ -37,7 +37,14 @@
    "in_list_view": 1,
    "in_preview": 1,
    "label": "Reason",
-   "options": "Reason"
+   "options": "Healthcare Return Reason"
+  },
+  {
+   "fieldname": "drug_condition",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Drug Condition",
+   "options": "Medication Condition"
   },
   {
    "fieldname": "encounter_no",
@@ -53,13 +60,6 @@
    "options": "Delivery Note"
   },
   {
-   "fieldname": "drug_condition",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Drug Condition",
-   "options": "Medication Condition"
-  },
-  {
    "fieldname": "child_name",
    "fieldtype": "Data",
    "hidden": 1,
@@ -69,7 +69,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2021-12-18 22:43:53.334825",
+ "modified": "2021-12-20 17:08:47.590429",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Medication Return",
