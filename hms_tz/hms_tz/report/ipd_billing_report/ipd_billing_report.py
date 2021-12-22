@@ -85,8 +85,8 @@ def get_encounter_data(args, start_date, end_date):
 	encounter_services = []
 
 	encounter_list = frappe.get_all("Patient Encounter", 
-		filters=[["patient", "=", args.patient], ["appointment", "=", args.appointment_no], 
-			["company", "=", args.company], ["encounter_date", "between",  [start_date, end_date]]], 
+		filters=[["patient", "=", args.patient], ["appointment", "=", args.appointment_no], ["company", "=", args.company],
+		["inpatient_record", "=", args.inpatient_record], ["encounter_date", "between",  [start_date, end_date]]],
 		fields=["name", "encounter_date"], order_by = "encounter_date desc"
 	)
 
@@ -95,7 +95,7 @@ def get_encounter_data(args, start_date, end_date):
 		procedure_amount = drug_amount = therapy_amount = 0
 
 		lab_transactions = frappe.get_all("Lab Prescription", 
-			filters={"prescribe": 1, "is_not_available_inhouse": 0, "parent": enc.name},
+			filters={"prescribe": 1, "is_not_available_inhouse": 0, "is_cancelled": 0, "parent": enc.name},
 			fields=["amount"]
 		)
 		 
@@ -103,21 +103,21 @@ def get_encounter_data(args, start_date, end_date):
 			lab_amount += lab.amount
 
 		radiology_transactions = frappe.get_all("Radiology Procedure Prescription",
-			filters={"prescribe": 1, "is_not_available_inhouse": 0, "parent": enc.name},
+			filters={"prescribe": 1, "is_not_available_inhouse": 0, "is_cancelled": 0, "parent": enc.name},
 			fields=["amount"]
 		)
 		for radiology in radiology_transactions:
 			radiology_amount += radiology.amount
 
 		procedure_transactions = frappe.get_list("Procedure Prescription", 
-			filters={"prescribe": 1, "is_not_available_inhouse": 0, "parent": enc.name},
+			filters={"prescribe": 1, "is_not_available_inhouse": 0, "is_cancelled": 0, "parent": enc.name},
 			fields=["amount"]
 		)
 		for procedure in procedure_transactions:
 			procedure_amount += procedure.amount
 
 		drug_transactions = frappe.get_all("Drug Prescription", 
-			filters={"prescribe": 1, "is_not_available_inhouse": 0, "parent": enc.name},
+			filters={"prescribe": 1, "is_not_available_inhouse": 0, "is_cancelled": 0, "parent": enc.name},
 			fields=["quantity", "amount"]
 		)
 		for drug in drug_transactions:
@@ -125,7 +125,7 @@ def get_encounter_data(args, start_date, end_date):
 			drug_amount += amount
 
 		therapy_transactions = frappe.get_all("Therapy Plan Detail", 
-			filters={"prescribe": 1, "is_not_available_inhouse": 0, "parent": enc.name},
+			filters={"prescribe": 1, "is_not_available_inhouse": 0, "is_cancelled": 0, "parent": enc.name},
 			fields=["amount"]
 		)
 		for therapy in therapy_transactions:
@@ -163,7 +163,7 @@ def get_inpatient_details(args):
 	return service_unit_details
 
 def get_patient_balance(args):
-
+	
 	customer = frappe.get_value("Patient", {"name": args.patient}, ["customer"])
 	start_date = frappe.get_value("Patient Appointment", 
 		{"name": args.appointment_no, "patient": args.patient}, ["appointment_date"]
