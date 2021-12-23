@@ -23,6 +23,7 @@ from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
 )
 import time
 from hms_tz.nhif.api.patient_appointment import get_mop_amount
+from erpnext.accounts.utils import get_balance_on
 
 
 def on_trash(doc, method):
@@ -495,6 +496,7 @@ def on_submit(doc, method):
         create_delivery_note(doc, method)
     if doc.inpatient_record:
         update_inpatient_record_consultancy(doc)
+        validate_patient_balance_vs_patient_costs(doc)
 
 
 @frappe.whitelist()
@@ -1161,6 +1163,102 @@ def show_last_prescribed(doc, method):
                     + msg
                 )
             )
+
+def validate_patient_balance_vs_patient_costs(doc):
+	encounters = get_patient_encounters(doc)
+
+	total_amount_billed = 0
+	for enc in encounters:
+		encounter_doc = frappe.get_doc("Patient Encounter", enc)
+
+		for lab in encounter_doc.lab_test_prescription:
+			if (
+				lab.prescribe == 0 or 
+				lab.is_not_available_inhouse ==  1 or 
+				lab.invoiced == 1 or
+				lab.is_cancelled == 1
+			):
+				continue
+		
+			total_amount_billed += lab.amount
+		
+		for radiology in encounter_doc.radiology_procedure_prescription:
+			if (
+				radiology.prescribe == 0 or
+				radiology.is_not_available_inhouse == 1 or
+				radiology.invoiced == 1 or
+				radiology.is_cancelled == 1
+			):
+				return
+			
+			total_amount_billed += radiology.amount
+
+		for procedure in encounter_doc.procedure_prescription:
+			if (
+				procedure.prescribe == 0 or
+				procedure.is_not_available_inhouse == 1 or
+				procedure.invoiced == 1 or
+				procedure.is_cancelled == 1
+			):
+				return
+
+			total_amount_billed += procedure.amount
+		
+		for drug in encounter_doc.drug_prescription:
+			if (
+				drug.prescribe == 0 or
+				drug.is_not_available_inhouse == 1 or
+				drug.invoiced == 1 or
+				drug.is_cancelled == 1
+			):
+				return
+
+			total_amount_billed += (drug.quantity * drug.amount)
+		
+		for plan in encounter_doc.therapies:
+			if (
+				plan.prescribe == 0 or
+				plan.is_not_available_inhouse == 1 or
+				plan.invoiced == 1 or
+				lab.is_cancelled == 1
+			): 
+				return
+
+			total_amount_billed += plan.amount
+
+	inpatient_record_doc = frappe.get_doc("Inpatient Record", doc.inpatient_record)
+
+	cash_limit = inpatient_record_doc.cash_limit
+
+	for record in inpatient_record_doc.inpatient_occupancies:
+		if not record.is_confirmed:
+			continue
+
+		total_amount_billed += record.amount
+	
+	for record in inpatient_record_doc.inpatient_consultancy:
+		if not record.is_confirmed:
+			continue
+		
+		total_amount_billed += record.rate
+
+	# get balance from payment entry after patient has deposit advances 
+	deposit_balance = get_balance_on(party_type="Customer", party=doc.patient_name, company=doc.company)
+
+	patient_balance = ( -1 * deposit_balance) + cash_limit
+
+	if patient_balance < total_amount_billed:
+		frappe.throw(frappe.bold("The deposit balance of this patient {0} - {1} is not enough or\
+			the patient has reached the cash limit. In order to submit this encounter,\
+			please request patient to deposit advances or request patient cash limit adjustment".format(doc.patient, doc.patient_name)))
+
+def get_patient_encounters(doc):
+	if doc.mode_of_payment != "" and doc.inpatient_record != "":
+		patient_encounters = frappe.get_all("Patient Encounter", 
+			filters={"patient": doc.patient, "appointment": doc.appointment, "inpatient_record": doc.inpatient_record},
+			fields=["name"], pluck="name"
+		)
+		return patient_encounters
 
 def show_last_prescribed_for_lrpt(doc):
     childs_map = [
