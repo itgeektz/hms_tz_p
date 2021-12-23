@@ -312,4 +312,3 @@ def get_quantity(self):
 		return quantity
 	else:
 		return 1
-
