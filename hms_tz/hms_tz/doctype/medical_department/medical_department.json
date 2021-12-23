@@ -11,7 +11,9 @@
  "engine": "InnoDB",
  "field_order": [
   "department",
-  "patient_care_type"
+  "patient_care_type",
+  "is_main",
+  "main_department"
  ],
  "fields": [
   {
@@ -27,10 +29,22 @@
    "fieldtype": "Link",
    "label": "Patient Care Type",
    "options": "Patient Care Type"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_main",
+   "fieldtype": "Check",
+   "label": "Is Main"
+  },
+  {
+   "fieldname": "main_department",
+   "fieldtype": "Link",
+   "label": "Main Department",
+   "options": "Medical Department"
   }
  ],
  "links": [],
- "modified": "2020-07-24 20:30:50.464641",
+ "modified": "2021-12-20 17:21:16.316537",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Medical Department",

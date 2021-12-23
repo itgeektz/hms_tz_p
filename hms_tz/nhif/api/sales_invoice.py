@@ -58,6 +58,13 @@ def on_submit(doc, method):
 
 def create_healthcare_docs(doc, method):
     if doc.docstatus != 1 or method not in ["on_submit", "From Front End"]:
+        frappe.msgprint(
+            _(
+                "No LRPMTs were created. Alert the IT Team!<b><br>DOCSTATUS = {0}<br>METHOD {1}</b>".format(
+                    doc.docstatus, method
+                )
+            )
+        )
         return
     if doc.get("items"):
         for item in doc.items:
