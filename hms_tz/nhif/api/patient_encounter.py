@@ -44,6 +44,7 @@ def on_submit_validation(doc, method):
     if doc.encounter_type == "Initial":
         doc.reference_encounter = doc.name
     show_last_prescribed(doc, method)
+    show_last_prescribed_for_lrpt(doc)
     submitting_healthcare_practitioner = frappe.db.get_value(
         "Healthcare Practitioner", {"user_id": frappe.session.user}, ["name"]
     )
@@ -1160,3 +1161,83 @@ def show_last_prescribed(doc, method):
                     + msg
                 )
             )
+
+def show_last_prescribed_for_lrpt(doc):
+    childs_map = [
+        {
+            "table": "lab_test_prescription",
+            "doctype": "Lab Test Template",
+            "item": "lab_test_code",
+            "ref_doc": "Lab Test",
+            "field_name": "template"
+        },
+        {
+            "table": "radiology_procedure_prescription",
+            "doctype": "Radiology Examination Template",
+            "item": "radiology_examination_template",
+            "ref_doc": "Radiology Examination",
+            "field_name": "radiology_examination_template"
+        },
+        {
+            "table": "procedure_prescription",
+            "doctype": "Clinical Procedure Template",
+            "item": "procedure",
+            "ref_doc": "Clinical Procedure",
+            "field_name": "procedure_template"
+        },
+        # {
+            # "table": "therapies",
+            # "doctype": "Therapy Type",
+            # "item": "therapy_type",
+            # "ref_doc": "Therapy Plan",
+            # "field_name": "therapy_plan_template"
+        # }
+    ]
+    
+    msg = ""
+    for child in childs_map:
+        msg_print = ""
+        for entry in doc.get(child.get("table")):
+            conditions = {
+                "patient": doc.patient,
+                child.get("field_name"): entry.get(child.get("item"))
+            }
+
+            item_doc = frappe.get_all(child.get("ref_doc"), filters=conditions, 
+                fields=[child.get("field_name"), "creation"], order_by="creation DESC", page_length=1
+            )
+            
+            if len(item_doc) > 0:
+                date = item_doc[0]["creation"].strftime("%Y-%m-%d")
+
+                msg_print += _( msg_print + "{0} prescribed last on: {1}".format(
+                        frappe.bold(entry.get(child.get("item"))),
+                        frappe.bold(date)
+                    ) 
+                    + "<br>"
+                )
+        
+        msg += msg_print
+
+    for plan in doc.therapies:
+        items = frappe.db.sql(""" 
+            SELECT tpd.therapy_type, Date(tpd.creation) AS date FROM `tabTherapy Plan Detail` tpd
+            INNER JOIN `tabTherapy Plan` tp ON tpd.parent = tp.name WHERE tp.patient = %s 
+            AND tpd.therapy_type = %s """ 
+        %(frappe.db.escape(doc.patient), frappe.db.escape(plan.therapy_type)), as_dict=1)
+
+        if items:
+            msg = _( msg + "{0} prescribed last on: {1}".format(
+                    frappe.bold(items[0]["therapy_type"]),
+                    frappe.bold(items[0]["date"])
+                ) 
+                + "<br>"
+            )
+
+    if msg:
+        frappe.msgprint(
+            _(
+                "The below are the last related Item prescribed:<br><br>"
+                + msg
+            )
+        )
