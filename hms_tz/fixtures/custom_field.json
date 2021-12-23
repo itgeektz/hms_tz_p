@@ -12,7 +12,8 @@
         "modified_by": "Administrator",
         "name": "Patient-cash_limit",
         "owner": "Administrator",
-        "precision": "2"
+        "precision": "2",
+        "doctype": "Custom Field"
     },
     {
         "creation": "2021-12-07 16:31:39.540025",
@@ -28,7 +29,8 @@
         "modified_by": "Administrator",
         "name": "Inpatient Record-cash_limit",
         "owner": "Administrator",
-        "read_only": 1
+        "read_only": 1,
+        "doctype": "Custom Field"
     },
     {
         "allow_in_quick_entry": 0,
