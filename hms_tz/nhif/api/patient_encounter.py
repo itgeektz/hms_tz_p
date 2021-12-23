@@ -1248,8 +1248,8 @@ def validate_patient_balance_vs_patient_costs(doc):
 
 	if patient_balance < total_amount_billed:
 		frappe.throw(frappe.bold("The deposit balance of this patient {0} - {1} is not enough or\
-			he/she has reached his/her cash limit, Inonrder to submit this encounter,\
-			Please request patient to deposit advances or request patient cash limit adjustment".format(doc.patient, doc.patient_name)))
+			the patient has reached the cash limit. In order to submit this encounter,\
+			please request patient to deposit advances or request patient cash limit adjustment".format(doc.patient, doc.patient_name)))
 
 def get_patient_encounters(doc):
 	if doc.mode_of_payment != "" and doc.inpatient_record != "":
