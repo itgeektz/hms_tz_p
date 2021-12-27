@@ -405,6 +405,7 @@ const add_btns = (frm) => {
 };
 
 const add_invoice_btn = (frm) => {
+    if (frm.doc.invoiced) return;
     frm.add_custom_button(__('Create Sales Invoice'), function () {
         frm.save();
         frappe.call({
@@ -444,4 +445,4 @@ const set_auth_number_reqd = frm => {
     else {
         frm.toggle_reqd("authorization_number", false);
     }
-}
+};
