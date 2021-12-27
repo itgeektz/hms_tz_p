@@ -410,6 +410,8 @@ const add_invoice_btn = (frm) => {
         frm.save();
         frappe.call({
             method: 'hms_tz.nhif.api.patient_appointment.invoice_appointment',
+            freeze: true,
+            freeze_message: __('Processing ...'),
             args: {
                 'name': frm.doc.name
             },
