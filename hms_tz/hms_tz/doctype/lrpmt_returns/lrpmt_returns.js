@@ -24,7 +24,7 @@ frappe.ui.form.on('LRPMT Returns', {
 	},
 	
 	onload: function(frm){
-		frm.validate_valid_quantity_to_return = function(frm, row) {
+		frm.val_quantity_to_return = function(frm, row) {
 			frm.doc.drug_items.forEach(data => {
 				if (data.quantity_to_return > data.quantity_prescribed) {
 					row.quantity_to_return = 0;
@@ -338,17 +338,9 @@ var add_to_drug_line = function (frm, checked_items, item) {
 	}
 };
 
-frappe.ui.form.on("Item Return", {
-	quantity: function(frm, cdt, cdn) {
-		let row = locals[cdt][cdn];
-		frm.validate_lrpt_quantity(frm, row)
-		frm.validate_lrpt_quantity(frm, row)
-	}
-});
-
 frappe.ui.form.on("Medication Return", {
 	quantity_to_return: function(frm, cdt, cdn) {
 		let row = locals[cdt][cdn];
-		frm.validate_valid_quantity_to_return(frm, row)
+		frm.val_quantity_to_return(frm, row)
 	}
 })

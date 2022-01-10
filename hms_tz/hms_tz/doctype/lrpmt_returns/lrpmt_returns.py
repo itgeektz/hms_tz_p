@@ -6,7 +6,6 @@ import json
 from frappe import bold
 from frappe.model.workflow import apply_workflow
 from frappe.utils import nowdate, nowtime, flt
-from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_return
 from frappe.model.document import Document
 
 class LRPMTReturns(Document):
@@ -41,11 +40,8 @@ def cancel_lrpt_doc(self):
 def return_drug_item(self):
 	dn_names = get_unique_delivery_notes(self)
 
-	source_doc_list = []
 	for dn in dn_names:
 		source_doc = frappe.get_doc("Delivery Note", dn.delivery_note_no)
-
-		source_doc_list.append(source_doc)
 
 		target_doc = frappe.new_doc("Delivery Note")
 		target_doc.customer = source_doc.customer
