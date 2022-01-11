@@ -24,7 +24,7 @@ frappe.ui.form.on('LRPMT Returns', {
 	},
 	
 	onload: function(frm){
-		frm.val_quantity_to_return = function(frm, row) {
+		frm.validate_quantity_to_return = function(frm, row) {
 			frm.doc.drug_items.forEach(data => {
 				if (data.quantity_to_return > data.quantity_prescribed) {
 					row.quantity_to_return = 0;
@@ -107,8 +107,7 @@ frappe.ui.form.on('LRPMT Returns', {
 		var $results;
 		var $placeholder;
 		if (frm.doc.patient, frm.doc.appointment_no, frm.doc.company) {
-			var columns = (["item_name", "encounter_no", "delivery_note"])
-			// "quantity",
+			var columns = (["item_name", "quantity", "encounter_no", "delivery_note"])
 			frappe.call({
 				method: "hms_tz.hms_tz.doctype.lrpmt_returns.lrpmt_returns.get_drug_item_list",
 				args: {
@@ -279,9 +278,10 @@ var list_row_drug_items = function (head, $row, result, item) {
 			: $row = $(`<div class="list-item-container"
 				data-child_name = "${result.child_name}"
 				data-item_name = "${result.item_name}"
-				data-quantity_prescribed = "${result.quantity_prescribed}"
+				data-quantity = "${result.quantity}"
 				data-encounter_no = "${result.encounter_no}"
 				data-delivery_note = "${result.delivery_note}"
+				data-dn_detail = "${result.dn_detail}"
 			</div>`).append($row);
 	}
 	return $row;
@@ -304,14 +304,10 @@ var get_checked_drug_items = function ($results) {
 		if ($(this).find(".list-row-check:checkbox:checked").length > 0) {
 			checked_items["child_name"] = $(this).attr("data-child_name");
 			checked_items["item_name"] = $(this).attr("data-item_name");
-			checked_items["quantity_prescribed"] = $(this).attr("data-quantity_prescribed");
+			checked_items["quantity_prescribed"] = $(this).attr("data-quantity");
 			checked_items["encounter_no"] = $(this).attr("data-encounter_no");
-			if ($(this).attr("data-delivery_note") != "undefined") {
-				checked_items["delivery_note"] = $(this).attr("data-delivery_note");
-			}
-			else {
-				checked_items["delivery_note"] = false;
-			}
+			checked_items["delivery_note"] = $(this).attr("data-delivery_note");
+			checked_items["dn_detail"] = $(this).attr("data-dn_detail");
 			return checked_items;
 		}
 	}).get();
@@ -329,7 +325,7 @@ var add_to_drug_line = function (frm, checked_items, item) {
 				frm.trigger("validate");
 				frm.refresh_fields();
 				if (frm.is_new()) {
-					frappe.set_route("Form", "LRPMT Return", r.message);
+					frappe.set_route("Form", "LRPMT Returns", r.message);
 				} else {
 					frm.reload_doc();
 				}
@@ -341,6 +337,6 @@ var add_to_drug_line = function (frm, checked_items, item) {
 frappe.ui.form.on("Medication Return", {
 	quantity_to_return: function(frm, cdt, cdn) {
 		let row = locals[cdt][cdn];
-		frm.val_quantity_to_return(frm, row)
+		frm.validate_quantity_to_return(frm, row)
 	}
 })

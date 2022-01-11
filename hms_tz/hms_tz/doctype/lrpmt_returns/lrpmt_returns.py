@@ -72,12 +72,11 @@ def return_drug_item(self):
 		
 		for item in self.drug_items:
 			if item.child_name:
-				frappe.db.set_value("Drug Prescription", item.child_name, "is_cancelled", 1)
+				frappe.db.set_value("Drug Prescription", item.child_name, "quantity_returned", item.quantity_to_return)
 
 			if dn.delivery_note_no == item.delivery_note_no:
-
 				for dni in source_doc.items:
-					if item.drug_name == dni.item_code:
+					if ((item.dn_detail == dni.name) and (item.drug_name == dni.item_code)):
 						target_doc.append("items", {
 							"item_code": item.drug_name,
 							"item_name": item.drug_name,
@@ -97,7 +96,6 @@ def return_drug_item(self):
 							"reference_doctype": dni.reference_doctype,
 							"reference_name": dni.reference_name
 						})
-			
 		target_doc.save(ignore_permissions=True)
 		target_doc.submit()
 	
@@ -339,64 +337,46 @@ def set_checked_lrpt_items(doc, checked_items):
 @frappe.whitelist()
 def get_drug_item_list(patient, appointment_no, company):
 	drug_list = []
-	invoices = []
-	delivery_note_items = []
 
-	item_list, name_list, drug_codes = get_drugs(patient, appointment_no, company)
+	item_list, dn_detail_list, drug_codes = get_drugs(patient, appointment_no, company)
 	
-	if name_list and drug_codes:
-		delivery_note_items += frappe.get_all("Delivery Note Item", filters={"item_code": ["in", drug_codes], 
-			"reference_name": ["in", name_list], "reference_doctype": "Drug Prescription"
-			}, fields=["parent", "item_code", "reference_name"]
+	if dn_detail_list and drug_codes:
+		delivery_note_items = frappe.get_all("Delivery Note Item", filters={"name": ["in", dn_detail_list],
+			"item_code": ["in", drug_codes]}, fields=["name", "parent", "item_code"]
 		)
-
-	if name_list:
-		sales_invoices = frappe.db.sql("""
-			SELECT DISTINCT(sii.parent) FROM `tabSales Invoice Item` sii, `tabSales Invoice` si
-			WHERE sii.reference_dn IN {name_list}
-			AND sii.reference_dt = "Drug Prescription"
-			AND  si.is_pos = 1
-		""".format(name_list=tuple(name_list)), as_dict=1)
-
-		if sales_invoices:
-			for invoice in sales_invoices:
-				invoices.append(invoice["parent"])
-	
-	if invoices:
-		delivery_nos = frappe.get_all("Delivery Note", 
-			filters={"form_sales_invoice": ["in", invoices]}, fields=["name"], pluck="name")
-
-		delivery_note_items += frappe.get_all("Delivery Note Item", 
-			filters={"parent": ["in", delivery_nos]}, fields=["parent", "item_code", "reference_name"])
-	
-	for item in item_list:
-		for delivery_note in delivery_note_items:
-			if (item.drug_code == delivery_note.item_code or item.name == delivery_note.reference_name):
-				drug_list.append({
-					"child_name": item.name,
-					"item_name": item.drug_code,
-					"quantity_prescribed": item.quantity,
-					"encounter_no": item.parent,
-					"delivery_note": delivery_note.parent
-				})
+	if item_list:
+		for item in item_list:
+			for delivery_note in delivery_note_items:
+				if (
+					item.dn_detail == delivery_note.name and
+					item.drug_code == delivery_note.item_code
+				):
+					drug_list.append({
+						"child_name": item.name,
+						"item_name": item.drug_code,
+						"quantity": item.quantity - item.quantity_returned,
+						"encounter_no": item.parent,
+						"delivery_note": delivery_note.parent,
+						"dn_detail": item.dn_detail
+					})
 	return drug_list
 
 def get_drugs(patient, appointment_no, company):
 	item_list = []
-	name_list = []
+	dn_detail_list = []
 	drug_code_list = []
 
 	encounter_list = get_patient_encounters(patient, appointment_no, company)
-	drugs = frappe.get_all("Drug Prescription", filters={"parent": ["in", encounter_list], "is_not_available_inhouse": 0, "is_cancelled": 0},
-		fields=["name", "drug_code", "drug_name", "quantity", "parent"]
+	drugs = frappe.get_all("Drug Prescription", filters={"parent": ["in", encounter_list], "is_not_available_inhouse": 0,},
+		fields=["name", "drug_code", "quantity", "quantity_returned", "parent", "dn_detail"]
 	)
 
 	for drug in drugs:
 		drug_code_list.append(drug.drug_code)
-		name_list.append(drug.name)
+		dn_detail_list.append(drug.dn_detail)
 		item_list.append(drug)
 	
-	return item_list, name_list, drug_code_list
+	return item_list, dn_detail_list, drug_code_list
 
 @frappe.whitelist()
 def set_checked_drug_items(doc, checked_items):
@@ -410,13 +390,9 @@ def set_checked_drug_items(doc, checked_items):
 		item_row.drug_name = checked_item["item_name"]
 		item_row.quantity_prescribed = checked_item["quantity_prescribed"]
 		item_row.encounter_no = checked_item["encounter_no"]
-
-		if checked_item["delivery_note"]:
-			item_row.delivery_note_no = checked_item["delivery_note"]
-		
+		item_row.delivery_note_no = checked_item["delivery_note"]
+		item_row.dn_detail = checked_item["dn_detail"]
 		item_row.child_name = checked_item["child_name"]
 
 	doc.save()
 	return doc.name
-
-

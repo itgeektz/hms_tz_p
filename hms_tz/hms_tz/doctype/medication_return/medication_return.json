@@ -13,6 +13,7 @@
   "drug_condition",
   "encounter_no",
   "delivery_note_no",
+  "dn_detail",
   "child_name"
  ],
  "fields": [
@@ -60,8 +61,7 @@
   {
    "fieldname": "child_name",
    "fieldtype": "Data",
-   "hidden": 1,
-   "label": "Child Name",
+   "label": "Drug Prescription",
    "read_only": 1
   },
   {
@@ -78,12 +78,18 @@
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Quantity to Return"
+  },
+  {
+   "fieldname": "dn_detail",
+   "fieldtype": "Data",
+   "label": "Delivery Note Item",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-01-10 11:47:43.019330",
+ "modified": "2022-01-11 13:26:24.637810",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Medication Return",
