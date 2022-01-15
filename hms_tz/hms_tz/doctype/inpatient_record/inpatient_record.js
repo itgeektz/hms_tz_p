@@ -31,7 +31,7 @@ frappe.ui.form.on('Inpatient Record', {
 			});
 		}
 
-		if (frm.doc.patient && frm.doc.patient_appointment) {
+		if (!frm.doc.insurance_subscription && frm.doc.patient && frm.doc.patient_appointment) {
 			frm.add_custom_button(__("IPD Billing Report"), function() {
 				frappe.route_options = {
 					"inpatient_record": frm.doc.name,
