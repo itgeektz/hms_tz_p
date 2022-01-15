@@ -490,7 +490,7 @@ def validate_schedule_discharge(inpatient_record):
             dn_doc = frappe.get_doc("Delivery Note", dni_parent)
 
             for item in dn_doc.items:
-                drug_msg = _(drug_msg + "Delivery Note: #{0} of {1} Item\
+                drug_msg = _(drug_msg + "Delivery Note: #{0} of Item: {1}\
                         was not Submitted".format(
                         frappe.bold(item["parent"]),
                         frappe.bold(item["item_code"])
@@ -514,4 +514,4 @@ def validate_schedule_discharge(inpatient_record):
     msg = lrpmt_msg + lab_msg + radiology_msg + procedure_msg + drug_msg + therapy_msg
 
     if msg:
-        frappe.msgprint(title="Notification", msg=msg, alert=True)
+        frappe.msgprint(title="Notification", msg=msg)
