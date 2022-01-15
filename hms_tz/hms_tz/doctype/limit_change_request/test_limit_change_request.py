@@ -4,5 +4,5 @@
 # import frappe
 import unittest
 
-class TestReason(unittest.TestCase):
-	pass
+class TestLimitChangeRequest(unittest.TestCase):
+	pass 

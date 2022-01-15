@@ -23,6 +23,7 @@ from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
 )
 import time
 from hms_tz.nhif.api.patient_appointment import get_mop_amount
+from erpnext.accounts.utils import get_balance_on
 
 
 def on_trash(doc, method):
@@ -44,6 +45,7 @@ def on_submit_validation(doc, method):
     if doc.encounter_type == "Initial":
         doc.reference_encounter = doc.name
     show_last_prescribed(doc, method)
+    show_last_prescribed_for_lrpt(doc)
     submitting_healthcare_practitioner = frappe.db.get_value(
         "Healthcare Practitioner", {"user_id": frappe.session.user}, ["name"]
     )
@@ -494,6 +496,7 @@ def on_submit(doc, method):
         create_delivery_note(doc, method)
     if doc.inpatient_record:
         update_inpatient_record_consultancy(doc)
+        validate_patient_balance_vs_patient_costs(doc)
 
 
 @frappe.whitelist()
@@ -1169,3 +1172,178 @@ def update_drug_prescription(patient_encounter_doc, name):
             for item in dn_doc.items:
                 if ((d.name == item.reference_name) and (d.drug_code == item.item_code)):
                     frappe.db.set_value("Drug Prescription", item.reference_name, "dn_detail", item.name)
+def validate_patient_balance_vs_patient_costs(doc):
+	encounters = get_patient_encounters(doc)
+
+	total_amount_billed = 0
+	for enc in encounters:
+		encounter_doc = frappe.get_doc("Patient Encounter", enc)
+
+		for lab in encounter_doc.lab_test_prescription:
+			if (
+				lab.prescribe == 0 or 
+				lab.is_not_available_inhouse ==  1 or 
+				lab.invoiced == 1 or
+				lab.is_cancelled == 1
+			):
+				continue
+		
+			total_amount_billed += lab.amount
+		
+		for radiology in encounter_doc.radiology_procedure_prescription:
+			if (
+				radiology.prescribe == 0 or
+				radiology.is_not_available_inhouse == 1 or
+				radiology.invoiced == 1 or
+				radiology.is_cancelled == 1
+			):
+				return
+			
+			total_amount_billed += radiology.amount
+
+		for procedure in encounter_doc.procedure_prescription:
+			if (
+				procedure.prescribe == 0 or
+				procedure.is_not_available_inhouse == 1 or
+				procedure.invoiced == 1 or
+				procedure.is_cancelled == 1
+			):
+				return
+
+			total_amount_billed += procedure.amount
+		
+		for drug in encounter_doc.drug_prescription:
+			if (
+				drug.prescribe == 0 or
+				drug.is_not_available_inhouse == 1 or
+				drug.invoiced == 1 or
+				drug.is_cancelled == 1
+			):
+				return
+
+			total_amount_billed += (drug.quantity * drug.amount)
+		
+		for plan in encounter_doc.therapies:
+			if (
+				plan.prescribe == 0 or
+				plan.is_not_available_inhouse == 1 or
+				plan.invoiced == 1 or
+				lab.is_cancelled == 1
+			): 
+				return
+
+			total_amount_billed += plan.amount
+
+	inpatient_record_doc = frappe.get_doc("Inpatient Record", doc.inpatient_record)
+
+	cash_limit = inpatient_record_doc.cash_limit
+
+	for record in inpatient_record_doc.inpatient_occupancies:
+		if not record.is_confirmed:
+			continue
+
+		total_amount_billed += record.amount
+	
+	for record in inpatient_record_doc.inpatient_consultancy:
+		if not record.is_confirmed:
+			continue
+		
+		total_amount_billed += record.rate
+
+	# get balance from payment entry after patient has deposit advances 
+	deposit_balance = get_balance_on(party_type="Customer", party=doc.patient_name, company=doc.company)
+
+	patient_balance = ( -1 * deposit_balance) + cash_limit
+
+	if patient_balance < total_amount_billed:
+		frappe.throw(frappe.bold("The deposit balance of this patient {0} - {1} is not enough or\
+			the patient has reached the cash limit. In order to submit this encounter,\
+			please request patient to deposit advances or request patient cash limit adjustment".format(doc.patient, doc.patient_name)))
+
+def get_patient_encounters(doc):
+	if doc.mode_of_payment != "" and doc.inpatient_record != "":
+		patient_encounters = frappe.get_all("Patient Encounter", 
+			filters={"patient": doc.patient, "appointment": doc.appointment, "inpatient_record": doc.inpatient_record},
+			fields=["name"], pluck="name"
+		)
+		return patient_encounters
+
+def show_last_prescribed_for_lrpt(doc):
+    childs_map = [
+        {
+            "table": "lab_test_prescription",
+            "doctype": "Lab Test Template",
+            "item": "lab_test_code",
+            "ref_doc": "Lab Test",
+            "field_name": "template"
+        },
+        {
+            "table": "radiology_procedure_prescription",
+            "doctype": "Radiology Examination Template",
+            "item": "radiology_examination_template",
+            "ref_doc": "Radiology Examination",
+            "field_name": "radiology_examination_template"
+        },
+        {
+            "table": "procedure_prescription",
+            "doctype": "Clinical Procedure Template",
+            "item": "procedure",
+            "ref_doc": "Clinical Procedure",
+            "field_name": "procedure_template"
+        },
+        # {
+            # "table": "therapies",
+            # "doctype": "Therapy Type",
+            # "item": "therapy_type",
+            # "ref_doc": "Therapy Plan",
+            # "field_name": "therapy_plan_template"
+        # }
+    ]
+    
+    msg = ""
+    for child in childs_map:
+        msg_print = ""
+        for entry in doc.get(child.get("table")):
+            conditions = {
+                "patient": doc.patient,
+                child.get("field_name"): entry.get(child.get("item"))
+            }
+
+            item_doc = frappe.get_all(child.get("ref_doc"), filters=conditions, 
+                fields=[child.get("field_name"), "creation"], order_by="creation DESC", page_length=1
+            )
+            
+            if len(item_doc) > 0:
+                date = item_doc[0]["creation"].strftime("%Y-%m-%d")
+
+                msg_print += _( msg_print + "{0} prescribed last on: {1}".format(
+                        frappe.bold(entry.get(child.get("item"))),
+                        frappe.bold(date)
+                    ) 
+                    + "<br>"
+                )
+        
+        msg += msg_print
+
+    for plan in doc.therapies:
+        items = frappe.db.sql(""" 
+            SELECT tpd.therapy_type, Date(tpd.creation) AS date FROM `tabTherapy Plan Detail` tpd
+            INNER JOIN `tabTherapy Plan` tp ON tpd.parent = tp.name WHERE tp.patient = %s 
+            AND tpd.therapy_type = %s """ 
+        %(frappe.db.escape(doc.patient), frappe.db.escape(plan.therapy_type)), as_dict=1)
+
+        if items:
+            msg = _( msg + "{0} prescribed last on: {1}".format(
+                    frappe.bold(items[0]["therapy_type"]),
+                    frappe.bold(items[0]["date"])
+                ) 
+                + "<br>"
+            )
+
+    if msg:
+        frappe.msgprint(
+            _(
+                "The below are the last related Item prescribed:<br><br>"
+                + msg
+            )
+        )

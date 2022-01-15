@@ -20,6 +20,8 @@
   "sec_break_2",
   "drug_items",
   "sec_break_3",
+  "sales_items",
+  "sec_break_4",
   "requested_by",
   "col_break_2",
   "approved_by",
@@ -144,19 +146,31 @@
   },
   {
    "fieldname": "sec_break_3",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Sales Return"
   },
   {
    "fieldname": "requested_by",
    "fieldtype": "Data",
    "label": "Requested By",
    "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval: doc.appointment_no",
+   "fieldname": "sales_items",
+   "fieldtype": "Table",
+   "options": "Sales Return"
+  },
+  {
+   "fieldname": "sec_break_4",
+   "fieldtype": "Section Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-12-18 22:22:52.820210",
+ "modified": "2022-01-09 23:36:38.797627",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "LRPMT Returns",
