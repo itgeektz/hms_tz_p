@@ -26,16 +26,59 @@ def cancel_lrpt_doc(self):
 		frappe.db.set_value("Lab Prescription", item.child_name, "is_cancelled", 1)
 		frappe.db.set_value("Radiology Procedure Prescription", item.child_name, "is_cancelled", 1)
 		frappe.db.set_value("Procedure Prescription", item.child_name, "is_cancelled", 1)
-		frappe.db.set_value("Therapy Plan Detail", item.child_name, "is_cancelled", 1)
 
-		doc = frappe.get_doc(item.reference_doctype, item.reference_docname)
-		apply_workflow(doc, "Not Serviced")
+		if item.reference_doctype == "Therapy Plan":
+			cancel_tharapy_plan_doc(self.patient, item.reference_docname)
+			frappe.db.set_value("Therapy Plan Detail", item.child_name, "is_cancelled", 1)
 
-		if doc.meta.get_field("status"):
-			doc.status = "Not Serviced"
-			doc.save(ignore_permissions=True)
+		else:
+			doc = frappe.get_doc(item.reference_doctype, item.reference_docname)
+		
+			if doc.docstatus == 0:
+				apply_workflow(doc, "Not Serviced")
+				if doc.meta.get_field("status"):
+					doc.status = "Not Serviced"
+				doc.save(ignore_permissions=True)
+				doc.reload()
+
+			if doc.docstatus == 1:
+				try:
+					doc.flags.ignore_links = True
+					doc.invoiced = 0
+					doc.cancel()
+				except Exception:
+					traceback = frappe.get_traceback()
+					frappe.log_error(traceback)
 
 	return self.name
+
+def cancel_tharapy_plan_doc(patient, therapy_plan_id):
+	therapy_sessions = frappe.get_all("Therapy Session",
+		filters={"patient": patient, "therapy_plan": therapy_plan_id},
+		fields=["name"], pluck="name")
+
+	if therapy_sessions:
+		for session in therapy_sessions:
+			therapy_session_doc = frappe.get_doc("Therapy Session", session)
+			
+			if  therapy_session_doc.docstatus == 1:
+				therapy_session_doc.cancel()
+	
+	therapy_plan_doc = frappe.get_doc("Therapy Plan", therapy_plan_id)
+
+	for entry in therapy_plan_doc.therapy_plan_details:
+		if entry.no_of_sessions:
+			entry.no_of_sessions = 0
+		if entry.sessions_completed:
+			entry.sessions_completed = 0
+
+	therapy_plan_doc.total_sessions = 0
+	therapy_plan_doc.total_sessions_completed = 0
+	therapy_plan_doc.status = "Not Serviced"
+	therapy_plan_doc.save(ignore_permissions=True)
+	therapy_plan_doc.reload()
+
+	return therapy_plan_doc.name
 
 def return_drug_item(self):
 	dn_names = get_unique_delivery_notes(self)
@@ -140,8 +183,12 @@ def validate_reason(self):
 	if self.lrpt_items:
 		for entry in self.lrpt_items:
 			if not entry.reason:
-				msg="Reason Field is Empty for Row: #{0}, please fill it to proceed"
-				frappe.throw(title="Notification", msg=msg.format(bold(entry.idx)), exc="Frappe.ValidationError")
+				msg="Reason Field is Empty for Item name: {0}, Row: #{1}, please fill it to proceed"
+				frappe.throw(
+					title="Notification",
+					msg=msg.format(bold(entry.item_name), bold(entry.idx)), 
+					exc="Frappe.ValidationError"
+				)
 
 def validate_drug_row(self):
 	if self.drug_items:
@@ -149,11 +196,14 @@ def validate_drug_row(self):
 		for row in self.drug_items:
 			msg_print = ""
 			if row.quantity_to_return == 0:
-				msg_print += "Quantity to return can not be Zero for Row: #{0}:<br>".format(bold(row.idx))
+				msg_print += "Quantity to return can not be Zero for drug name: {0},\
+							Row: #{1}:<br>".format(bold(row.drug_name), bold(row.idx))
 			if not row.reason:
-				msg_print += "Reason for Return Field can not be Empty for Row: #{0}:<br>".format(bold(row.idx))
+				msg_print += "Reason for Return Field can not be Empty for drug name: {0},\
+							Row: #{1}:<br>".format(bold(row.drug_name), bold(row.idx))
 			if not row.drug_condition:
-				msg_print += "Drug Condition Field can not Empty for Row: #{0}:<br>".format(bold(row.idx))
+				msg_print += "Drug Condition Field can not Empty for drug name: {0},\
+							Row: #{1}:<br>".format(bold(row.drug_name), bold(row.idx))
 		
 		msg = msg_print
 			
