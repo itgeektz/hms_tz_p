@@ -108,6 +108,7 @@ def get_lab_test_template(lab_test_name):
 
 
 def on_submit(doc, methd):
+    update_lab_prescription(doc)
     create_delivery_note(doc)
 
 
@@ -158,3 +159,13 @@ def create_sample_collection(doc):
     frappe.msgprint(
         _("Sample Collection created {0}").format(sample_doc.name), alert=True
     )
+
+def update_lab_prescription(doc):
+    if doc.ref_doctype == "Patient Encounter":
+        encounter_doc = frappe.get_doc("Patient Encounter", doc.ref_docname)
+        for row in encounter_doc.lab_test_prescription:
+            if row.lab_test_code == doc.template:
+                frappe.db.set_value(row.doctype, row.name, {
+                    "lab_test": doc.name,
+                    "delivered_quantity": 1
+                })
