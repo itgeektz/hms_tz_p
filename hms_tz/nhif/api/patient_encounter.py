@@ -727,7 +727,8 @@ def create_delivery_note_per_encounter(patient_encounter_doc, method):
         doc.set_missing_values()
         doc.insert(ignore_permissions=True)
         if doc.get("name"):
-            update_drug_prescription(patient_encounter_doc, doc.name)
+            # drug prescription will be updated only if delivery note is submitted
+            # update_drug_prescription(patient_encounter_doc, doc.name)
             frappe.msgprint(
                 _("Pharmacy Dispensing/Delivery Note {0} created successfully.").format(
                     frappe.bold(doc.name)
@@ -1164,14 +1165,15 @@ def show_last_prescribed(doc, method):
                 )
             )
 
-def update_drug_prescription(patient_encounter_doc, name):
-    dn_doc = frappe.get_doc("Delivery Note", name)
+# def update_drug_prescription(patient_encounter_doc, name):
+#     dn_doc = frappe.get_doc("Delivery Note", name)
 
-    for d in patient_encounter_doc.drug_prescription:
-        if d.parent == dn_doc.reference_name:
-            for item in dn_doc.items:
-                if ((d.name == item.reference_name) and (d.drug_code == item.item_code)):
-                    frappe.db.set_value("Drug Prescription", item.reference_name, "dn_detail", item.name)
+#     for d in patient_encounter_doc.drug_prescription:
+#         if d.parent == dn_doc.reference_name:
+#             for item in dn_doc.items:
+#                 if ((d.name == item.reference_name) and (d.drug_code == item.item_code)):
+#                     frappe.db.set_value("Drug Prescription", item.reference_name, "dn_detail", item.name)
+
 def validate_patient_balance_vs_patient_costs(doc):
 	encounters = get_patient_encounters(doc)
 
