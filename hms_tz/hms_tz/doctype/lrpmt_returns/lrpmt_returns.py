@@ -23,10 +23,6 @@ class LRPMTReturns(Document):
 
 def cancel_lrpt_doc(self):
 	for item in self.lrpt_items:
-		frappe.db.set_value("Lab Prescription", item.child_name, "is_cancelled", 1)
-		frappe.db.set_value("Radiology Procedure Prescription", item.child_name, "is_cancelled", 1)
-		frappe.db.set_value("Procedure Prescription", item.child_name, "is_cancelled", 1)
-
 		if item.reference_doctype == "Therapy Plan":
 			cancel_tharapy_plan_doc(self.patient, item.reference_docname)
 			frappe.db.set_value("Therapy Plan Detail", item.child_name, "is_cancelled", 1)
@@ -34,21 +30,43 @@ def cancel_lrpt_doc(self):
 		else:
 			doc = frappe.get_doc(item.reference_doctype, item.reference_docname)
 		
-			if doc.docstatus == 0:
-				apply_workflow(doc, "Not Serviced")
-				if doc.meta.get_field("status"):
-					doc.status = "Not Serviced"
-				doc.save(ignore_permissions=True)
-				doc.reload()
-
-			if doc.docstatus == 1:
+			if doc.docstatus < 2:
 				try:
-					doc.flags.ignore_links = True
-					doc.invoiced = 0
-					doc.cancel()
+					apply_workflow(doc, "Not Serviced")
+					if doc.meta.get_field("status"):
+						doc.status = "Not Serviced"
+					doc.save(ignore_permissions=True)
+					doc.reload()
+
+					if (
+						doc.workflow_state == "Not Serviced" or 
+						doc.workflow_state == "Submitted but Not Serviced"
+					):
+						frappe.db.set_value("Lab Prescription", item.child_name, "is_cancelled", 1)
+						frappe.db.set_value("Radiology Procedure Prescription", item.child_name, "is_cancelled", 1)
+						frappe.db.set_value("Procedure Prescription", item.child_name, "is_cancelled", 1)
+				
 				except Exception:
 					traceback = frappe.get_traceback()
 					frappe.log_error(traceback)
+					frappe.throw(traceback)
+			
+
+			# if doc.docstatus == 1:
+			# 	try:
+			# 		apply_workflow(doc, "Not Serviced")
+			# 		if doc.meta.get_field("status"):
+			# 			doc.status = "Not Serviced"
+			# 		doc.reload()
+
+			# 		if doc.workflow_state == "Submitted but Not Serviced":
+			# 			frappe.db.set_value("Lab Prescription", item.child_name, "is_cancelled", 1)
+			# 			frappe.db.set_value("Radiology Procedure Prescription", item.child_name, "is_cancelled", 1)
+			# 			frappe.db.set_value("Procedure Prescription", item.child_name, "is_cancelled", 1)
+
+			# 	except Exception:
+			# 		traceback = frappe.get_traceback()
+			# 		frappe.log_error(traceback)
 
 	return self.name
 
@@ -115,8 +133,8 @@ def return_drug_item(self):
 		
 		for item in self.drug_items:
 			if item.child_name:
-				frappe.db.set_value("Drug Prescription", item.child_name, "quantity_returned", item.quantity_to_return)
-
+				update_drug_prescription(item, item.child_name)
+				
 			if dn.delivery_note_no == item.delivery_note_no:
 				for dni in source_doc.items:
 					if ((item.dn_detail == dni.name) and (item.drug_name == dni.item_code)):
@@ -143,7 +161,19 @@ def return_drug_item(self):
 		target_doc.submit()
 	
 	return self.name
+	
+def update_drug_prescription(item, child_name):
+	if (item.quantity_prescribed - item.quantity_to_return) == 0:
+		item_cancelled = 1
+	else:
+		item_cancelled = 0
 
+	frappe.db.set_value("Drug Prescription", child_name, {
+		"quantity_returned": item.quantity_to_return,
+		"delivered_quantity": item.quantity_prescribed - item.quantity_to_return,
+		"is_cancelled": item_cancelled
+	})
+	
 def get_sales_return(self):
 	conditions = {
 		"patient": self.patient,
