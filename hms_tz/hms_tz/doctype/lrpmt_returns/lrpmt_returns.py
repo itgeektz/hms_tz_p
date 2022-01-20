@@ -50,23 +50,6 @@ def cancel_lrpt_doc(self):
 					traceback = frappe.get_traceback()
 					frappe.log_error(traceback)
 					frappe.throw(traceback)
-			
-
-			# if doc.docstatus == 1:
-			# 	try:
-			# 		apply_workflow(doc, "Not Serviced")
-			# 		if doc.meta.get_field("status"):
-			# 			doc.status = "Not Serviced"
-			# 		doc.reload()
-
-			# 		if doc.workflow_state == "Submitted but Not Serviced":
-			# 			frappe.db.set_value("Lab Prescription", item.child_name, "is_cancelled", 1)
-			# 			frappe.db.set_value("Radiology Procedure Prescription", item.child_name, "is_cancelled", 1)
-			# 			frappe.db.set_value("Procedure Prescription", item.child_name, "is_cancelled", 1)
-
-			# 	except Exception:
-			# 		traceback = frappe.get_traceback()
-			# 		frappe.log_error(traceback)
 
 	return self.name
 
