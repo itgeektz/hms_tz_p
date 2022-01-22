@@ -983,9 +983,9 @@ doc_events = {
     "Prescription Dosage": {
         "before_insert": "hms_tz.nhif.api.prescription_dosage.before_insert",
     },
-    "Therapy Plan": {
-        "validate": "hms_tz.nhif.api.therapy_plan.validate",
-    },
+#    "Therapy Plan": {
+#        "validate": "hms_tz.nhif.api.therapy_plan.validate",
+#    },
 }
 
 # standard_queries = {
