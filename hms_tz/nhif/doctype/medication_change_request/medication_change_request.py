@@ -20,6 +20,8 @@ class MedicationChangeRequest(Document):
             for drug in self.drug_prescription:
                 if not drug.quantity or drug.quantity == 0:
                     drug.quantity = get_quantity(drug)
+                
+                set_amount(self, drug)   
 
     def on_submit(self):
         encounter_doc = self.update_encounter()
@@ -60,11 +62,6 @@ class MedicationChangeRequest(Document):
     def update_delivery_note(self, encounter_doc):
         doc = frappe.get_doc("Delivery Note", self.delivery_note)
         doc.items = []
-        insurance_subscription, insurance_company = frappe.get_value(
-            "Patient Appointment",
-            self.appointment,
-            ["insurance_subscription", "insurance_company"],
-        )
         for row in encounter_doc.drug_prescription:
             if row.prescribe:
                 continue
@@ -83,11 +80,10 @@ class MedicationChangeRequest(Document):
             item.item_code = item_code
             item.item_name = item_name
             item.warehouse = warehouse
-            item.qty = row.quantity or 1
+            item.qty = row.delivered_quantity or 1
             item.medical_code = row.medical_code
-            item.rate = get_item_rate(
-                item_code, self.company, insurance_subscription, insurance_company
-            )
+            item.rate = row.amount
+            item.amount = row.amount * row.delivered_quantity
             item.reference_doctype = row.doctype
             item.reference_name = row.name
             item.is_restricted = row.is_restricted
@@ -131,3 +127,14 @@ def get_patient_encounter_name(delivery_note):
 def get_patient_encounter_doc(patient_encounter):
     doc = frappe.get_doc("Patient Encounter", patient_encounter)
     return doc
+
+def set_amount(self, item):
+    insurance_subscription, insurance_company = frappe.get_value(
+        "Patient Appointment", self.appointment,
+        ["insurance_subscription", "insurance_company"],
+    )
+    item_code = frappe.get_value("Medication", item.drug_code, "item")
+    item.delivered_quantity = item.quantity - (item.quantity_returned or 0)
+    item.amount = get_item_rate(
+        item_code, self.company, insurance_subscription, insurance_company
+    )
