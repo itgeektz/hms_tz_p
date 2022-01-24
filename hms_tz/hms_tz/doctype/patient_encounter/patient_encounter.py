@@ -49,6 +49,8 @@ def create_therapy_plan(encounter):
 		doc.company = encounter.company
 		doc.start_date = encounter.encounter_date
 		for entry in encounter.therapies:
+			if entry.is_not_available_inhouse:
+				continue
 			doc.append('therapy_plan_details', {
 				'therapy_type': entry.therapy_type,
 				'no_of_sessions': entry.no_of_sessions
