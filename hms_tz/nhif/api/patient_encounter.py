@@ -621,7 +621,7 @@ def create_delivery_note_per_encounter(patient_encounter_doc, method):
     for element in warehouses:
         items = []
         for row in patient_encounter_doc.drug_prescription:
-            if row.drug_prescription_created:
+            if row.drug_prescription_created or row.is_not_available_inhouse:
                 continue
             encounter_customer = ""
             if row.invoiced and row.prescribe:
