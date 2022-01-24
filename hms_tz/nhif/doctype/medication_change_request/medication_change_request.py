@@ -76,7 +76,7 @@ class MedicationChangeRequest(Document):
         doc = frappe.get_doc("Delivery Note", self.delivery_note)
         doc.items = []
         for row in encounter_doc.drug_prescription:
-            if row.prescribe:
+            if row.prescribe or row.is_not_available_inhouse:
                 continue
             item_code = frappe.get_value("Medication", row.drug_code, "item")
             is_stock, item_name = frappe.get_value(
