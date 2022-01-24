@@ -11,6 +11,8 @@ from hms_tz.nhif.api.healthcare_utils import (
     get_warehouse_from_service_unit,
 )
 from hms_tz.hms_tz.doctype.patient_encounter.patient_encounter import get_quantity
+from hms_tz.nhif.api.healthcare_utils import get_template_company_option
+from hms_tz.nhif.api.patient_encounter import validate_stock_item
 
 
 class MedicationChangeRequest(Document):
@@ -18,11 +20,22 @@ class MedicationChangeRequest(Document):
         self.title = "{0}/{1}".format(self.patient_encounter, self.delivery_note)
         if self.drug_prescription:
             for drug in self.drug_prescription:
+                set_amount(self, drug)
                 if not drug.quantity or drug.quantity == 0:
                     drug.quantity = get_quantity(drug)
-                
-                set_amount(self, drug)   
+                    drug.delivered_quantity = drug.quantity - (drug.quantity_returned or 0)
 
+                template_doc = get_template_company_option(drug.drug_code, self.company)
+                drug.is_not_available_inhouse = template_doc.is_not_available
+                if drug.is_not_available_inhouse == 1:
+                    frappe.msgprint(
+                        "NOTE: This healthcare service item, <b>"
+                         + drug.drug_code + "</b>, is not available inhouse".format(
+                             frappe.bold(drug.drug_code)
+                         ))
+                
+                validate_stock_item(drug.drug_code, drug.quantity, self.company, drug.doctype, drug.healthcare_service_unit)
+        
     def on_submit(self):
         encounter_doc = self.update_encounter()
         self.update_delivery_note(encounter_doc)
@@ -134,7 +147,6 @@ def set_amount(self, item):
         ["insurance_subscription", "insurance_company"],
     )
     item_code = frappe.get_value("Medication", item.drug_code, "item")
-    item.delivered_quantity = item.quantity - (item.quantity_returned or 0)
     item.amount = get_item_rate(
         item_code, self.company, insurance_subscription, insurance_company
     )
