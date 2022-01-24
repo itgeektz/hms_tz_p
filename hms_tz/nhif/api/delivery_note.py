@@ -79,7 +79,7 @@ def on_submit(doc, method):
     update_drug_prescription(doc)
 
 def update_drug_prescription(doc):
-    if doc.patient:
+    if doc.patient and not doc.is_return:
         if doc.form_sales_invoice:
             sales_invoice_doc = frappe.get_doc("Sales Invoice", doc.form_sales_invoice)
 
