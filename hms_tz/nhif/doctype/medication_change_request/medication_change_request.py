@@ -23,18 +23,19 @@ class MedicationChangeRequest(Document):
                 set_amount(self, drug)
                 if not drug.quantity or drug.quantity == 0:
                     drug.quantity = get_quantity(drug)
-                    drug.delivered_quantity = drug.quantity - (drug.quantity_returned or 0)
+                drug.delivered_quantity = drug.quantity - (drug.quantity_returned or 0)
 
                 template_doc = get_template_company_option(drug.drug_code, self.company)
                 drug.is_not_available_inhouse = template_doc.is_not_available
                 if drug.is_not_available_inhouse == 1:
                     frappe.msgprint(
                         "NOTE: This healthcare service item, <b>"
-                         + drug.drug_code + "</b>, is not available inhouse".format(
+                        + drug.drug_code + "</b>, is not available inhouse".format(
                              frappe.bold(drug.drug_code)
-                         ))
+                    ))
                 
                 validate_stock_item(drug.drug_code, drug.quantity, self.company, drug.doctype, drug.healthcare_service_unit)
+                validate_restricted(self, drug)
         
     def on_submit(self):
         encounter_doc = self.update_encounter()
@@ -141,12 +142,42 @@ def get_patient_encounter_doc(patient_encounter):
     doc = frappe.get_doc("Patient Encounter", patient_encounter)
     return doc
 
-def set_amount(self, item):
+def get_insurance_details(self):
     insurance_subscription, insurance_company = frappe.get_value(
         "Patient Appointment", self.appointment,
         ["insurance_subscription", "insurance_company"],
     )
+    return insurance_subscription, insurance_company
+
+def set_amount(self, item):
+    insurance_subscription, insurance_company = get_insurance_details(self)
+
     item_code = frappe.get_value("Medication", item.drug_code, "item")
     item.amount = get_item_rate(
         item_code, self.company, insurance_subscription, insurance_company
     )
+
+def validate_restricted(self, row):
+    items = {}
+    insurance_subscription, insurance_company = get_insurance_details(self)
+
+    insurance_coverage_plan = frappe.get_value(
+        "Healthcare Insurance Subscription",
+        {"name" :insurance_subscription},
+        "healthcare_insurance_coverage_plan"
+    )
+    if not insurance_coverage_plan:
+        frappe.throw(_("Healthcare Insurance Coverage Plan is Not defiend"))
+    
+    today = frappe.utils.nowdate()
+    service_coverage = frappe.get_all("Healthcare Service Insurance Coverage",
+        filters={"is_active": 1, "start_date": ["<=", today],"end_date": [">=", today],
+            "healthcare_service_template": row.drug_code, 
+            "healthcare_insurance_coverage_plan": insurance_coverage_plan,
+        }, fields=["name", "approval_mandatory_for_claim"],
+    )
+    if service_coverage:
+        row.is_restricted = service_coverage[0].approval_mandatory_for_claim
+    else:
+        row.is_restricted = 0
+    
