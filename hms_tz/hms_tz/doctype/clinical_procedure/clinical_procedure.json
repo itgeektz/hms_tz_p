@@ -15,7 +15,7 @@
   "column_break_30",
   "company",
   "invoiced",
-  "prescribed",
+  "prescribe",
   "section_break_6",
   "patient",
   "patient_name",
@@ -393,15 +393,15 @@
   },
   {
    "default": "0",
-   "fieldname": "prescribed",
+   "fieldname": "prescribe",
    "fieldtype": "Check",
    "hidden": 1,
-   "label": "Prescribed"
+   "label": "Prescribe"
   }
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2022-01-25 09:24:58.902527",
+ "modified": "2022-01-25 15:59:54.139232",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Clinical Procedure",

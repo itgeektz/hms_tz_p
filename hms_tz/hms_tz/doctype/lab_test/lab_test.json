@@ -25,7 +25,7 @@
   "expected_result_time",
   "printed_on",
   "invoiced",
-  "prescribed",
+  "prescribe",
   "sb_first",
   "patient",
   "patient_name",
@@ -629,16 +629,16 @@
   },
   {
    "default": "0",
-   "fieldname": "prescribed",
+   "fieldname": "prescribe",
    "fieldtype": "Check",
    "hidden": 1,
-   "label": "Prescribed"
+   "label": "Prescribe"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-01-25 10:16:03.553922",
+ "modified": "2022-01-25 15:58:55.159419",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Lab Test",

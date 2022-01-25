@@ -552,7 +552,7 @@ def create_individual_lab_test(source_doc, child):
         doc.practitioner = source_doc.practitioner
     doc.source = source_doc.source
     if child.prescribe:
-        doc.prescribed = 1
+        doc.prescribe = 1
     else:
         doc.insurance_subscription = source_doc.insurance_subscription
     doc.ref_doctype = source_doc.doctype
@@ -588,7 +588,7 @@ def create_individual_radiology_examination(source_doc, child):
         doc.practitioner = source_doc.practitioner
     doc.source = source_doc.source
     if child.prescribe:
-        doc.prescribed = 1
+        doc.prescribe = 1
     else:
         doc.insurance_subscription = source_doc.insurance_subscription
     doc.medical_department = frappe.get_value(
@@ -631,7 +631,7 @@ def create_individual_procedure_prescription(source_doc, child):
         doc.practitioner = source_doc.practitioner
     doc.source = source_doc.source
     if child.prescribe:
-        doc.prescribed = 1
+        doc.prescribe = 1
     else:
         doc.insurance_subscription = source_doc.insurance_subscription
     doc.patient_sex = frappe.get_value("Patient", source_doc.patient, "sex")

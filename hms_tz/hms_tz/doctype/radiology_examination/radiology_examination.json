@@ -14,7 +14,7 @@
   "patient_name",
   "inpatient_record",
   "patient_details_html",
-  "prescribed",
+  "prescribe",
   "column_break_11",
   "company",
   "practitioner",
@@ -285,16 +285,16 @@
   },
   {
    "default": "0",
-   "fieldname": "prescribed",
+   "fieldname": "prescribe",
    "fieldtype": "Check",
    "hidden": 1,
-   "label": "Prescribed"
+   "label": "Prescribe"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-01-25 09:28:59.692420",
+ "modified": "2022-01-25 15:59:23.695618",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Radiology Examination",

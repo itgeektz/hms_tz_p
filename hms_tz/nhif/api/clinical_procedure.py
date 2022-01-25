@@ -13,7 +13,7 @@ from hms_tz.nhif.api.healthcare_utils import (
 
 
 def validate(doc, methd):
-    if not doc.prescribed:
+    if not doc.prescribe:
         is_restricted = get_restricted_LRPT(doc)
         doc.is_restricted = is_restricted
 
