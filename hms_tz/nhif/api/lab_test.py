@@ -14,8 +14,9 @@ import dateutil
 
 
 def validate(doc, method):
-    is_restricted = get_restricted_LRPT(doc)
-    doc.is_restricted = is_restricted
+    if not doc.prescribed:
+        is_restricted = get_restricted_LRPT(doc)
+        doc.is_restricted = is_restricted
     set_normals(doc)
 
 def set_normals(doc):
