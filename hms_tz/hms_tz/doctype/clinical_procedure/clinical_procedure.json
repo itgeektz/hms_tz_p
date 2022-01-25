@@ -15,6 +15,7 @@
   "column_break_30",
   "company",
   "invoiced",
+  "prescribed",
   "section_break_6",
   "patient",
   "patient_name",
@@ -389,11 +390,18 @@
    "label": "Claim Status",
    "options": "\nPending\nApproved\nRejected",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "prescribed",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Prescribed"
   }
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2022-01-07 18:17:22.865027",
+ "modified": "2022-01-25 09:24:58.902527",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Clinical Procedure",

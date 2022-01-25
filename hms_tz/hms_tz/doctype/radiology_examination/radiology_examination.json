@@ -14,6 +14,7 @@
   "patient_name",
   "inpatient_record",
   "patient_details_html",
+  "prescribed",
   "column_break_11",
   "company",
   "practitioner",
@@ -281,12 +282,19 @@
    "label": "Claim Status",
    "options": "\nPending\nApproved\nRejected",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "prescribed",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Prescribed"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2020-12-24 10:26:01.752870",
+ "modified": "2022-01-25 09:28:59.692420",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Radiology Examination",

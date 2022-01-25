@@ -25,6 +25,7 @@
   "expected_result_time",
   "printed_on",
   "invoiced",
+  "prescribed",
   "sb_first",
   "patient",
   "patient_name",
@@ -625,12 +626,19 @@
    "label": "Claim Status",
    "options": "\nPending\nApproved\nRejected",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "prescribed",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Prescribed"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-01-19 16:24:52.310827",
+ "modified": "2022-01-25 10:16:03.553922",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Lab Test",
