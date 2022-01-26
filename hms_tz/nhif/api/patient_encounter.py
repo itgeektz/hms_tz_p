@@ -1167,6 +1167,8 @@ def show_last_prescribed(doc, method):
 
 def validate_patient_balance_vs_patient_costs(doc):
     encounters = get_patient_encounters(doc)
+    if not encounters or len(encounters) == 0:
+        return
 
     total_amount_billed = 0
     for enc in encounters:
@@ -1254,8 +1256,8 @@ def validate_patient_balance_vs_patient_costs(doc):
         frappe.throw(
             frappe.bold(
                 "The deposit balance of this patient {0} - {1} is not enough or\
-			the patient has reached the cash limit. In order to submit this encounter,\
-			please request patient to deposit advances or request patient cash limit adjustment".format(
+                the patient has reached the cash limit. In order to submit this encounter,\
+                please request patient to deposit advances or request patient cash limit adjustment".format(
                     doc.patient, doc.patient_name
                 )
             )
@@ -1323,7 +1325,7 @@ def show_last_prescribed_for_lrpt(doc):
                 filters=conditions,
                 fields=[child.get("field_name"), "creation"],
                 order_by="creation DESC",
-                page_length=1,
+                limit=1,
             )
 
             if len(item_doc) > 0:
