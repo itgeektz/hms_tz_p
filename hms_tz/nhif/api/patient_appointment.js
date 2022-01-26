@@ -405,10 +405,13 @@ const add_btns = (frm) => {
 };
 
 const add_invoice_btn = (frm) => {
+    if (frm.doc.invoiced) return;
     frm.add_custom_button(__('Create Sales Invoice'), function () {
         frm.save();
         frappe.call({
             method: 'hms_tz.nhif.api.patient_appointment.invoice_appointment',
+            freeze: true,
+            freeze_message: __('Processing ...'),
             args: {
                 'name': frm.doc.name
             },
@@ -444,4 +447,4 @@ const set_auth_number_reqd = frm => {
     else {
         frm.toggle_reqd("authorization_number", false);
     }
-}
+};

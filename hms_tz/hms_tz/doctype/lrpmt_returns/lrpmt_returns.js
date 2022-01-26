@@ -7,6 +7,10 @@ frappe.ui.form.on('LRPMT Returns', {
 		frm.set_value("requested_by", requested_by)
 	},
 
+	after_save: function(frm) {
+		frm.reload_doc()
+	},
+
 	refresh: function(frm) {		
 		if (frm.doc.patient && frappe.user.has_role("Healthcare Practitioner")) {
 			frm.add_custom_button(__("Get LRPT Items"), function(){
@@ -18,8 +22,22 @@ frappe.ui.form.on('LRPMT Returns', {
 			})
 		}
 	},
+	
+	onload: function(frm){
+		frm.validate_quantity_to_return = function(frm, row) {
+			frm.doc.drug_items.forEach(data => {
+				if (data.quantity_to_return > data.quantity_prescribed) {
+					row.quantity_to_return = 0;
+					frappe.msgprint(
+						"Quantity to Return can not be greater than Quantity Prescribed"
+					)
+					frm.refresh_field("drug_items")
+				}
+			})
+		}
+	},
 
-	before_submit: function(frm) {
+	on_submit: function(frm) {
 		frm.set_value("approved_by", frappe.user.full_name())
 	},
 
@@ -89,8 +107,7 @@ frappe.ui.form.on('LRPMT Returns', {
 		var $results;
 		var $placeholder;
 		if (frm.doc.patient, frm.doc.appointment_no, frm.doc.company) {
-			var columns = (["item_name", "encounter_no", "delivery_note"])
-			// "quantity",
+			var columns = (["item_name", "quantity", "encounter_no", "delivery_note"])
 			frappe.call({
 				method: "hms_tz.hms_tz.doctype.lrpmt_returns.lrpmt_returns.get_drug_item_list",
 				args: {
@@ -129,7 +146,6 @@ frappe.ui.form.on('LRPMT Returns', {
 		set_drug_primary_action(frm, d, $results, true);
 		d.show()
 	},
-
 });
 
 var make_lrpt_list_row = function (columns, item, result = {}) {
@@ -265,6 +281,7 @@ var list_row_drug_items = function (head, $row, result, item) {
 				data-quantity = "${result.quantity}"
 				data-encounter_no = "${result.encounter_no}"
 				data-delivery_note = "${result.delivery_note}"
+				data-dn_detail = "${result.dn_detail}"
 			</div>`).append($row);
 	}
 	return $row;
@@ -287,14 +304,10 @@ var get_checked_drug_items = function ($results) {
 		if ($(this).find(".list-row-check:checkbox:checked").length > 0) {
 			checked_items["child_name"] = $(this).attr("data-child_name");
 			checked_items["item_name"] = $(this).attr("data-item_name");
-			checked_items["quantity"] = $(this).attr("data-quantity");
+			checked_items["quantity_prescribed"] = $(this).attr("data-quantity");
 			checked_items["encounter_no"] = $(this).attr("data-encounter_no");
-			if ($(this).attr("data-delivery_note") != "undefined") {
-				checked_items["delivery_note"] = $(this).attr("data-delivery_note");
-			}
-			else {
-				checked_items["delivery_note"] = false;
-			}
+			checked_items["delivery_note"] = $(this).attr("data-delivery_note");
+			checked_items["dn_detail"] = $(this).attr("data-dn_detail");
 			return checked_items;
 		}
 	}).get();
@@ -312,7 +325,7 @@ var add_to_drug_line = function (frm, checked_items, item) {
 				frm.trigger("validate");
 				frm.refresh_fields();
 				if (frm.is_new()) {
-					frappe.set_route("Form", "LRPMT Return", r.message);
+					frappe.set_route("Form", "LRPMT Returns", r.message);
 				} else {
 					frm.reload_doc();
 				}
@@ -320,3 +333,10 @@ var add_to_drug_line = function (frm, checked_items, item) {
 		});
 	}
 };
+
+frappe.ui.form.on("Medication Return", {
+	quantity_to_return: function(frm, cdt, cdn) {
+		let row = locals[cdt][cdn];
+		frm.validate_quantity_to_return(frm, row)
+	}
+})
