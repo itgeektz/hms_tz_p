@@ -111,4 +111,3 @@ def update_drug_prescription(doc):
                     "drug_prescription_created": 1,
                     "invoiced": 1
                 })
-                frappe.msgprint("Done")
