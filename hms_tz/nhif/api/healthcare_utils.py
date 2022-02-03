@@ -551,7 +551,9 @@ def create_individual_lab_test(source_doc, child):
     else:
         doc.practitioner = source_doc.practitioner
     doc.source = source_doc.source
-    if not child.prescribe:
+    if child.prescribe:
+        doc.prescribe = 1
+    else:
         doc.insurance_subscription = source_doc.insurance_subscription
     doc.ref_doctype = source_doc.doctype
     doc.ref_docname = source_doc.name
@@ -586,7 +588,9 @@ def create_individual_radiology_examination(source_doc, child):
     else:
         doc.practitioner = source_doc.practitioner
     doc.source = source_doc.source
-    if not child.prescribe:
+    if child.prescribe:
+        doc.prescribe = 1
+    else:
         doc.insurance_subscription = source_doc.insurance_subscription
     doc.medical_department = frappe.get_value(
         "Radiology Examination Template",
@@ -628,7 +632,9 @@ def create_individual_procedure_prescription(source_doc, child):
     else:
         doc.practitioner = source_doc.practitioner
     doc.source = source_doc.source
-    if not child.prescribe:
+    if child.prescribe:
+        doc.prescribe = 1
+    else:
         doc.insurance_subscription = source_doc.insurance_subscription
     doc.patient_sex = frappe.get_value("Patient", source_doc.patient, "sex")
     doc.medical_department = frappe.get_value(
