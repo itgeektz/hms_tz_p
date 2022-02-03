@@ -76,6 +76,8 @@ class NHIFPatientClaim(Document):
         self.patient_encounters = self.get_patient_encounters()
         if not self.patient_signature:
             get_missing_patient_signature(self)
+            
+        validate_submit_date(self)
         self.patient_file = generate_pdf(self)
         self.claim_file = get_claim_pdf_file(self)
         self.send_nhif_claim()
@@ -698,6 +700,28 @@ def get_missing_patient_signature(self):
         if not signature:
             frappe.throw(_("Patient signature is required"))
         self.patient_signature = signature
+
+def validate_submit_date(self):
+    if self.date_discharge:
+        date = self.date_discharge
+    else:
+        date = self.attendance_date
+    
+    start_date, end_date = frappe.get_value(
+        "Company NHIF Settings", self.company, 
+        ["submit_start_date", "submit_end_date"]
+    )
+
+    if (
+        date < start_date  or 
+        date > end_date
+    ):
+        frappe.throw("Attendance/Discharge Date: {0} is not between Submit Start Date: {1}\
+            and Submit End Date: {2}".format(
+                frappe.bold(date),
+                frappe.bold(start_date),
+                frappe.bold(end_date)
+            ))
 
 def get_item_refcode(item_code):
     code_list = frappe.get_all(
