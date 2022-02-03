@@ -569,7 +569,8 @@ def create_individual_lab_test(source_doc, child):
         )
 
     child.lab_test_created = 1
-    child.lab_test = doc.name
+    # lab prescription will be updated only is lab test is submitted
+    # child.lab_test = doc.name
     child.db_update()
 
 
@@ -610,7 +611,8 @@ def create_individual_radiology_examination(source_doc, child):
         )
 
     child.radiology_examination_created = 1
-    child.radiology_examination = doc.name
+    # radiology procedure prescription will be updated only if radiology examination is submitted
+    # child.radiology_examination = doc.name
     child.db_update()
 
 
@@ -648,7 +650,8 @@ def create_individual_procedure_prescription(source_doc, child):
         )
 
     child.procedure_created = 1
-    child.clinical_procedure = doc.name
+    # procedure prescription will be updated only clinical procedure is submitted
+    # child.clinical_procedure = doc.name
     child.db_update()
 
 

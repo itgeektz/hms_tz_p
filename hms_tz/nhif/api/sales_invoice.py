@@ -54,6 +54,7 @@ def before_submit(doc, method):
 
 def on_submit(doc, method):
     create_healthcare_docs(doc, method)
+    update_drug_prescription(doc)
 
 
 def create_healthcare_docs(doc, method):
@@ -93,3 +94,20 @@ def create_healthcare_docs(doc, method):
 
     if method == "From Front End":
         frappe.db.commit()
+
+def update_drug_prescription(doc):
+    if doc.patient and doc.enabled_auto_create_delivery_notes:
+        for item in doc.items:
+            if (
+                item.reference_dn and 
+                item.reference_dt and 
+                item.reference_dt == "Drug Prescription"
+            ):
+                dn_name = frappe.get_value("Delivery Note", {"form_sales_invoice": doc.name}, "name")
+                if not dn_name:
+                    return
+                frappe.db.set_value("Drug Prescription", item.reference_dn, {
+                    "sales_invoice_number": doc.name,
+                    "drug_prescription_created": 1,
+                    "invoiced": 1
+                })
