@@ -21,7 +21,11 @@
   "claimsserver_token",
   "claimsserver_expiry",
   "section_break_15",
-  "update_patient_history"
+  "update_patient_history",
+  "section_break_16",
+  "submit_start_date",
+  "column_break_10",
+  "submit_end_date"
  ],
  "fields": [
   {
@@ -114,11 +118,32 @@
    "fieldname": "update_patient_history",
    "fieldtype": "Check",
    "label": "Update Patient history from Chronic records"
+  },
+  {
+   "fieldname": "section_break_16",
+   "fieldtype": "Section Break",
+   "label": "Submit Dates"
+  },
+  {
+   "bold": 1,
+   "fieldname": "submit_start_date",
+   "fieldtype": "Date",
+   "label": "Submit Start Date"
+  },
+  {
+   "fieldname": "column_break_10",
+   "fieldtype": "Column Break"
+  },
+  {
+   "bold": 1,
+   "fieldname": "submit_end_date",
+   "fieldtype": "Date",
+   "label": "Submit End Date"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-05-20 10:58:06.255490",
+ "modified": "2022-02-03 09:13:30.132788",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Company NHIF Settings",
