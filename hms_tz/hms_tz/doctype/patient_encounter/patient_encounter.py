@@ -52,7 +52,7 @@ def create_therapy_plan(encounter):
 			doc.append('therapy_plan_details', {
 				'therapy_type': entry.therapy_type,
 				'no_of_sessions': entry.no_of_sessions,
-				"prescribe": entry.prescribe
+				"prescribe": entry.prescribe or 0
 			})
 		doc.save(ignore_permissions=True)
 		if doc.get('name'):
