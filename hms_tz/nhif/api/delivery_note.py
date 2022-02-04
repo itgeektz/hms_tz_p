@@ -91,7 +91,7 @@ def update_drug_prescription(doc):
                             item.item_code == dni.item_code and 
                             item.parent == dni.against_sales_invoice
                         ):
-                            if item.quantity != dni.stock_qty:
+                            if item.qty != dni.stock_qty:
                                 quantity = dni.stock_qty
                             else:
                                 quantity = item.quantity
