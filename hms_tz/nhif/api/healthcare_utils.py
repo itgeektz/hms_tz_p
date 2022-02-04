@@ -363,6 +363,25 @@ def get_healthcare_practitioner(item):
     refd, refn = get_references(item)
     if not refd or not refn:
         return
+
+    ref_docs = [
+        {"reference_doc": "Lab Prescription"},
+        {"reference_doc": "Radiology Procedure Prescription"},
+        {"reference_doc": "Procedure Prescription"},
+        {"reference_doc": "Therapy Plan Detail"},
+    ]
+
+    for ref_doc in ref_docs:
+        if refd == ref_doc.get("reference_doc"):
+            parent, parenttype = frappe.get_value(
+                ref_doc.get("reference_doc"), refn, ["parent", "parenttype"]
+            )
+            if (
+                parent and 
+                parenttype == "Patient Encounter"
+            ):
+                return frappe.get_value("Patient Encounter", parent, "practitioner")
+        
     if refd == "Patient Encounter":
         return frappe.get_value("Patient Encounter", refn, "practitioner")
     elif refd == "Patient Appointment":
@@ -383,6 +402,18 @@ def get_healthcare_service_unit(item):
     refd, refn = get_references(item)
     if not refd or not refn:
         return
+
+    ref_docs = [
+        {"reference_doc": "Lab Prescription"},
+        {"reference_doc": "Radiology Procedure Prescription"},
+        {"reference_doc": "Procedure Prescription"},
+        {"reference_doc": "Therapy Plan Detail"},
+    ]
+
+    for ref_doc in ref_docs:
+        if refd == ref_doc.get("reference_doc"):
+            return frappe.get_value(ref_doc.get("reference_doc"), refn, "department_hsu")
+
     if refd == "Patient Encounter":
         return frappe.get_value("Patient Encounter", refn, "healthcare_service_unit")
     elif refd == "Patient Appointment":
@@ -536,7 +567,7 @@ def set_healthcare_services(doc, checked_values):
 
 
 def create_individual_lab_test(source_doc, child):
-    if child.lab_test_created == 1:
+    if child.lab_test_created == 1 or child.is_not_available_inhouse:
         return
     ltt_doc = frappe.get_doc("Lab Test Template", child.lab_test_code)
     patient_sex = frappe.get_value("Patient", source_doc.patient, "sex")
@@ -551,7 +582,9 @@ def create_individual_lab_test(source_doc, child):
     else:
         doc.practitioner = source_doc.practitioner
     doc.source = source_doc.source
-    if not child.prescribe:
+    if child.prescribe:
+        doc.prescribe = 1
+    else:
         doc.insurance_subscription = source_doc.insurance_subscription
     doc.ref_doctype = source_doc.doctype
     doc.ref_docname = source_doc.name
@@ -569,12 +602,13 @@ def create_individual_lab_test(source_doc, child):
         )
 
     child.lab_test_created = 1
-    child.lab_test = doc.name
+    # lab prescription will be updated only is lab test is submitted
+    # child.lab_test = doc.name
     child.db_update()
 
 
 def create_individual_radiology_examination(source_doc, child):
-    if child.radiology_examination_created == 1:
+    if child.radiology_examination_created == 1 or child.is_not_available_inhouse:
         return
     doc = frappe.new_doc("Radiology Examination")
     doc.patient = source_doc.patient
@@ -585,7 +619,9 @@ def create_individual_radiology_examination(source_doc, child):
     else:
         doc.practitioner = source_doc.practitioner
     doc.source = source_doc.source
-    if not child.prescribe:
+    if child.prescribe:
+        doc.prescribe = 1
+    else:
         doc.insurance_subscription = source_doc.insurance_subscription
     doc.medical_department = frappe.get_value(
         "Radiology Examination Template",
@@ -610,12 +646,13 @@ def create_individual_radiology_examination(source_doc, child):
         )
 
     child.radiology_examination_created = 1
-    child.radiology_examination = doc.name
+    # radiology procedure prescription will be updated only if radiology examination is submitted
+    # child.radiology_examination = doc.name
     child.db_update()
 
 
 def create_individual_procedure_prescription(source_doc, child):
-    if child.procedure_created == 1:
+    if child.procedure_created == 1 or child.is_not_available_inhouse:
         return
     doc = frappe.new_doc("Clinical Procedure")
     doc.patient = source_doc.patient
@@ -626,7 +663,9 @@ def create_individual_procedure_prescription(source_doc, child):
     else:
         doc.practitioner = source_doc.practitioner
     doc.source = source_doc.source
-    if not child.prescribe:
+    if child.prescribe:
+        doc.prescribe = 1
+    else:
         doc.insurance_subscription = source_doc.insurance_subscription
     doc.patient_sex = frappe.get_value("Patient", source_doc.patient, "sex")
     doc.medical_department = frappe.get_value(
@@ -648,7 +687,8 @@ def create_individual_procedure_prescription(source_doc, child):
         )
 
     child.procedure_created = 1
-    child.clinical_procedure = doc.name
+    # procedure prescription will be updated only clinical procedure is submitted
+    # child.clinical_procedure = doc.name
     child.db_update()
 
 
