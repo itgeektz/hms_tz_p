@@ -36,6 +36,13 @@ class MedicationChangeRequest(Document):
                 
                 validate_stock_item(drug.drug_code, drug.quantity, self.company, drug.doctype, drug.healthcare_service_unit)
                 validate_restricted(self, drug)
+    
+    def before_insert(self):
+        if self.patient_encounter:
+            encounter_doc = get_patient_encounter_doc(self.patient_encounter)
+            if not encounter_doc.insurance_coverage_plan:
+                frappe.throw(frappe.bold("Cannot create medication change request for Cash Patient,\
+                    Medication change request is only used for Insurance Patients"))
         
     def on_submit(self):
         encounter_doc = self.update_encounter()
