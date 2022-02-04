@@ -79,10 +79,51 @@ def on_submit(doc, method):
     update_drug_prescription(doc)
 
 def update_drug_prescription(doc):
-    frappe.db.sql("""
-        UPDATE `tabDrug Prescription` dp
-        INNER JOIN `tabDelivery Note Item` dni ON dp.name = dni.reference_name
-        SET dp.quantity = dni.stock_qty
-        WHERE dni.stock_qty != dp.quantity
-            AND dni.reference_doctype = "Drug Prescription"
-            AND dni.parent = '{0}'""".format(doc.name))
+    if doc.patient and not doc.is_return:
+        if doc.form_sales_invoice:
+            sales_invoice_doc = frappe.get_doc("Sales Invoice", doc.form_sales_invoice)
+
+            for item in sales_invoice_doc.items:
+                if item.reference_dt == "Drug Prescription":
+                    for dni in doc.items:
+                        if (
+                            item.name == dni.si_detail and 
+                            item.item_code == dni.item_code and 
+                            item.parent == dni.against_sales_invoice
+                        ):
+                            if item.quantity != dni.stock_qty:
+                                quantity = dni.stock_qty
+                            else:
+                                quantity = item.quantity
+
+                            frappe.db.set_value("Drug Prescription", item.reference_dn, {
+                                "dn_detail": dni.name,
+                                "quantity": quantity,
+                                "delivered_quantity": quantity - item.quantity_returned
+                            })
+        
+        else:
+            if doc.reference_doctype == "Patient Encounter":
+                patient_encounter_doc = frappe.get_doc(doc.reference_doctype, doc.reference_name)
+
+                for dni in doc.items:
+                    if dni.reference_doctype == "Drug Prescription":
+                        for item in patient_encounter_doc.drug_prescription:
+                            if (
+                                dni.item_code == item.drug_code and 
+                                dni.reference_name == item.name and 
+                                dni.reference_doctype == item.doctype
+                            ):
+                                item.dn_detail = dni.name
+                                if item.quantity != dni.stock_qty:
+                                    item.quantity = dni.stock_qty
+                                item.delivered_quantity = item.quantity - item.quantity_returned
+                                item.db_update()
+
+# frappe.db.sql("""
+#     UPDATE `tabDrug Prescription` dp
+#     INNER JOIN `tabDelivery Note Item` dni ON dp.name = dni.reference_name
+#     SET dp.quantity = dni.stock_qty, dp.dn_detail = dni.name
+#     WHERE dni.stock_qty != dp.quantity
+#         AND dni.reference_doctype = "Drug Prescription"
+#         AND dni.parent = '{0}'""".format(doc.name))

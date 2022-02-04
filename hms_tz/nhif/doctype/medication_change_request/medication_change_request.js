@@ -31,6 +31,13 @@ frappe.ui.form.on('Medication Change Request', {
 	},
 	refresh: function (frm) {
 		set_medical_code(frm);
+		frm.set_query('drug_code', 'drug_prescription', function () {
+            return {
+                filters: {
+                    disabled: 0
+                }
+            };
+        });
 	},
 	patient_encounter: (frm) => {
 		set_delivery_note(frm);

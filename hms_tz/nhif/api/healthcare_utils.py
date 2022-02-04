@@ -551,7 +551,9 @@ def create_individual_lab_test(source_doc, child):
     else:
         doc.practitioner = source_doc.practitioner
     doc.source = source_doc.source
-    if not child.prescribe:
+    if child.prescribe:
+        doc.prescribe = 1
+    else:
         doc.insurance_subscription = source_doc.insurance_subscription
     doc.ref_doctype = source_doc.doctype
     doc.ref_docname = source_doc.name
@@ -569,7 +571,8 @@ def create_individual_lab_test(source_doc, child):
         )
 
     child.lab_test_created = 1
-    child.lab_test = doc.name
+    # lab prescription will be updated only is lab test is submitted
+    # child.lab_test = doc.name
     child.db_update()
 
 
@@ -585,7 +588,9 @@ def create_individual_radiology_examination(source_doc, child):
     else:
         doc.practitioner = source_doc.practitioner
     doc.source = source_doc.source
-    if not child.prescribe:
+    if child.prescribe:
+        doc.prescribe = 1
+    else:
         doc.insurance_subscription = source_doc.insurance_subscription
     doc.medical_department = frappe.get_value(
         "Radiology Examination Template",
@@ -610,7 +615,8 @@ def create_individual_radiology_examination(source_doc, child):
         )
 
     child.radiology_examination_created = 1
-    child.radiology_examination = doc.name
+    # radiology procedure prescription will be updated only if radiology examination is submitted
+    # child.radiology_examination = doc.name
     child.db_update()
 
 
@@ -626,7 +632,9 @@ def create_individual_procedure_prescription(source_doc, child):
     else:
         doc.practitioner = source_doc.practitioner
     doc.source = source_doc.source
-    if not child.prescribe:
+    if child.prescribe:
+        doc.prescribe = 1
+    else:
         doc.insurance_subscription = source_doc.insurance_subscription
     doc.patient_sex = frappe.get_value("Patient", source_doc.patient, "sex")
     doc.medical_department = frappe.get_value(
@@ -648,7 +656,8 @@ def create_individual_procedure_prescription(source_doc, child):
         )
 
     child.procedure_created = 1
-    child.clinical_procedure = doc.name
+    # procedure prescription will be updated only clinical procedure is submitted
+    # child.clinical_procedure = doc.name
     child.db_update()
 
 
