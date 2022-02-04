@@ -49,16 +49,11 @@ def create_therapy_plan(encounter):
 		doc.company = encounter.company
 		doc.start_date = encounter.encounter_date
 		for entry in encounter.therapies:
-			if entry.prescribe:
-				row_prescribe = entry.prescribe
-			else:
-				row_prescribe = 0
 			doc.append('therapy_plan_details', {
 				'therapy_type': entry.therapy_type,
 				'no_of_sessions': entry.no_of_sessions,
-				"prescribe": row_prescribe
+				"prescribe": entry.prescribe
 			})
-		doc.prescribe = encounter.therapies[0]["prescribe"]
 		doc.save(ignore_permissions=True)
 		if doc.get('name'):
 			encounter.db_set('therapy_plan', doc.name)
