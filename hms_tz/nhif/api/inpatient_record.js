@@ -5,9 +5,13 @@ frappe.ui.form.on('Inpatient Record', {
         frm.save()
     },
     refresh(frm) {
-        // your code here
+        // hide button to delete rows of occupancy
         $('*[data-fieldname="inpatient_occupancies"]').find('.grid-remove-rows').hide();
         $('*[data-fieldname="inpatient_occupancies"]').find('.grid-remove-all-rows').hide();
+
+        //hide button to delete rows of consultancy
+        $('*[data-fieldname="inpatient_consultancy"]').find('.grid-remove-rows').hide();
+        $('*[data-fieldname="inpatient_consultancy"]').find('.grid-remove-all-rows').hide();
     },
 });
 
@@ -53,6 +57,15 @@ const control_inpatient_record_move = (frm, cdt, cdn) => {
 };
 
 frappe.ui.form.on('Inpatient Consultancy', {
+    form_render(frm, cdt, cdn) {
+        frm.fields_dict.inpatient_consultancy.grid.wrapper.find('.grid-delete-row').hide();
+        frm.fields_dict.inpatient_consultancy.grid.wrapper.find('.grid-duplicate-row').hide();
+        frm.fields_dict.inpatient_consultancy.grid.wrapper.find('.grid-move-row').hide();
+        frm.fields_dict.inpatient_consultancy.grid.wrapper.find('.grid-append-row').hide();
+        frm.fields_dict.inpatient_consultancy.grid.wrapper.find('.grid-insert-row-below').hide();
+        frm.fields_dict.inpatient_consultancy.grid.wrapper.find('.grid-insert-row').hide();
+    },
+
     confirmed: (frm, cdt, cdn) => {
         let row = frappe.get_doc(cdt, cdn);
         if (row.is_confirmed) return;
