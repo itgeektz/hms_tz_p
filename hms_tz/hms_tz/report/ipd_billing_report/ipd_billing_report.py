@@ -149,13 +149,17 @@ def get_inpatient_details(inpatient_record):
 	cons_details = get_consultancy_details(inpatient_record)
 
 	for bed in bed_details:
-		inpatient_charges1 = inpatient_charges2 = 0
-		for cons in cons_details:
-			if bed.check_in == cons.date:
-				inpatient_charges1 = bed.amount + cons.rate
-			
-			if bed.check_in != cons.date:
-				inpatient_charges2 = bed.amount or cons.rate
+		inpatient_charges1, inpatient_charges2 = 0, 0
+		if cons_details:
+			for cons in cons_details:
+				if bed.check_in == cons.date:
+					inpatient_charges1 += bed.amount + cons.rate
+				
+				if bed.check_in != cons.date:
+					inpatient_charges2 += bed.amount or cons.rate
+		else:
+			inpatient_charges1 = bed.amount
+			inpatient_charges2 = None
 		
 		inpatient_list.append({
 			"check_in": bed.check_in,
@@ -163,6 +167,7 @@ def get_inpatient_details(inpatient_record):
 			"service_unit_type": bed.service_unit_type,
 			"inpatient_charges": inpatient_charges1 or inpatient_charges2
 		})
+		
 	return inpatient_list
 
 def get_consultancy_details(inpatient_record):
@@ -175,6 +180,9 @@ def get_consultancy_details(inpatient_record):
 		filters={"parent": inpatient_record,"is_confirmed": 1},
         fields=["date", "rate"], order_by="date ASC"
     )
+
+	if not consultancies:
+		return consultancy_list
 
 	for cons in consultancies:
 		if cons.date not in date_list:
@@ -209,6 +217,9 @@ def get_occupancy_details(inpatient_record):
         ORDER BY io.check_in ASC
     """%frappe.db.escape(inpatient_record), as_dict=1)
 
+	if not service_unit_details:
+		frappe.throw(frappe.bold("Cannot show Report without any confirmed bed"))
+
 	checkin_list = []
 	occupancy_list = []
 	duplicated_checkin_list = []
@@ -223,7 +234,6 @@ def get_occupancy_details(inpatient_record):
 		d_amount = 0
 		if duplicated_checkin_list:
 			for d in duplicated_checkin_list:
-				frappe.msgprint(str(d))
 				if service.check_in == d.check_in:
 					d_amount += d.amount
         
@@ -231,6 +241,7 @@ def get_occupancy_details(inpatient_record):
             "amount": flt(service.amount) + d_amount
         })
 		unit_list.append(service)
+
 	return unit_list
 
 def get_patient_balance(patient, company):
@@ -242,12 +253,14 @@ def get_patient_balance(patient, company):
 
 def get_report_summary(args, summary_data):
 
-	balance = get_patient_balance(args.patient, args.company)
+	deposit_balance = get_patient_balance(args.patient, args.company)
 
 	total_amount = 0
 	for entry in summary_data:
 		total_amount += entry["grand_total"]
-	
+
+	balance = (-1 * deposit_balance)
+
 	current_balance = balance - total_amount
 
 	currency = frappe.get_cached_value("Company", args.company, "default_currency")
