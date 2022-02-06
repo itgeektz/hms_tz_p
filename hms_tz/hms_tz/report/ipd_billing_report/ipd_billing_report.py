@@ -149,23 +149,23 @@ def get_inpatient_details(inpatient_record):
 	cons_details = get_consultancy_details(inpatient_record)
 
 	for bed in bed_details:
-		inpatient_charges1, inpatient_charges2 = 0, 0
+		inpatient_record_charges, inpatient_record_costs = 0, 0
 		if cons_details:
 			for cons in cons_details:
 				if bed.check_in == cons.date:
-					inpatient_charges1 += bed.amount + cons.rate
+					inpatient_record_charges += bed.amount + cons.rate
 				
 				if bed.check_in != cons.date:
-					inpatient_charges2 += bed.amount or cons.rate
+					inpatient_record_costs += bed.amount or cons.rate
 		else:
-			inpatient_charges1 = bed.amount
-			inpatient_charges2 = None
+			inpatient_record_charges = bed.amount
+			inpatient_record_costs = None
 		
 		inpatient_list.append({
 			"check_in": bed.check_in,
 			"service_unit": bed.service_unit,
 			"service_unit_type": bed.service_unit_type,
-			"inpatient_charges": inpatient_charges1 or inpatient_charges2
+			"inpatient_charges": inpatient_record_charges or inpatient_record_costs
 		})
 		
 	return inpatient_list
