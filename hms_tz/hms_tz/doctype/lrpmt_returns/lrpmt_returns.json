@@ -46,13 +46,11 @@
    "read_only_depends_on": "eval: doc.patient_name != \"\""
   },
   {
-   "depends_on": "eval: doc.appointment_no",
    "fieldname": "appointment_no",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Patient Appointment",
-   "options": "Patient Appointment",
-   "read_only": 1
+   "options": "Patient Appointment"
   },
   {
    "fieldname": "col_break_1",
@@ -170,7 +168,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-01-09 23:36:38.797627",
+ "modified": "2022-02-07 12:21:44.412519",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "LRPMT Returns",
