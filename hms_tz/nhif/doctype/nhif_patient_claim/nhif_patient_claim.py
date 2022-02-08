@@ -267,7 +267,7 @@ class NHIFPatientClaim(Document):
                         new_row = self.append("nhif_patient_claim_item", {})
                         new_row.item_name = row.get(child.get("item_name"))
                         new_row.item_code = get_item_refcode(item_code)
-                        new_row.item_quantity = row.get("quantity") or 1
+                        new_row.item_quantity = row.get("delivered_quantity") or 1
                         new_row.unit_price = item_rate
                         new_row.amount_claimed = (
                             new_row.unit_price * new_row.item_quantity
