@@ -14,7 +14,8 @@ frappe.ui.form.on('Healthcare Insurance Subscription', {
         frm.set_value("daily_limit", 0)
     },
     get_patient_name: function (frm) {
-        if (!frm.doc.coverage_plan_card_number || frm.doc.insurance_company.includes("NHIF")) return
+        if (!frm.doc.insurance_company.includes("NHIF")) return
+        if (!frm.doc.coverage_plan_card_number) return
         frappe.show_alert({
             message: __("Getting patient's information from NHIF"),
             indicator: 'green'
