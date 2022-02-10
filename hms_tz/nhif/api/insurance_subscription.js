@@ -8,6 +8,14 @@ frappe.ui.form.on('Healthcare Insurance Subscription', {
     },
     coverage_plan_card_number: function (frm) {
         frm.trigger("get_patient_name")
+        if (!frm.doc.insurance_company.includes("NHIF")) {
+            if (!frm.doc.coverage_plan_card_number) return
+
+            setTimeout(() => {
+                frm.save("Submit")
+                frappe.msgprint("Healthcare Insurance Subscription is submitted")
+            }, 10000);
+        }
     },
     insurance_company: function (frm) {
         frm.trigger("get_patient_name")
