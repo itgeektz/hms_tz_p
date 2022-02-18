@@ -53,7 +53,11 @@ frappe.ui.form.on('Inpatient Record', {
 			frm.add_custom_button(__('Discharge'), function () {
 				discharge_patient(frm);
 			});
+			frm.add_custom_button(__('Add Bed'), function () {
+            	add_bed_dialog(frm);
+            });
 		}
+
 
 		if (frm.doc.patient && frappe.user.has_role('Physician')) {
 			frm.add_custom_button(__('Patient History'), function () {
@@ -194,6 +198,91 @@ let admit_patient_dialog = function (frm) {
 
 	dialog.show();
 };
+
+let add_bed_dialog = function (frm) {
+    let dialog = new frappe.ui.Dialog({
+      title: 'Add Remaining Bed',
+      width: 100,
+      fields: [
+        {
+          fieldtype: 'Link', label: 'Service Unit Type', fieldname: 'service_unit_type',
+          options: 'Healthcare Service Unit Type'
+        },
+        {
+          fieldtype: 'Link', label: 'Service Unit', fieldname: 'service_unit',
+          options: 'Healthcare Service Unit', reqd: 1
+        },
+        
+        {
+          fieldtype: 'Datetime', label: 'Check In', fieldname: 'check_in',
+          reqd: 1
+        },
+        {
+          fieldtype: 'Check', label: 'Left', fieldname: 'left',
+          reqd: 1
+        },
+              {
+          fieldtype: 'Datetime', label: 'Check Out', fieldname: 'check_out',
+          reqd: 1
+        },
+        
+      ],
+      primary_action_label: __('Add'),
+      primary_action: function () {
+        let service_unit = dialog.get_value('service_unit');
+        let check_in = dialog.get_value('check_in');
+        let check_out = dialog.get_value('check_out');
+        let left = dialog.get_value('left');
+          if (check_out && !left){
+          left = 1;
+          }
+          
+        if (!service_unit && !check_in && !check_out) {
+          return;
+        }
+        frappe.call({
+			doc: frm.doc,
+			method: 'add_bed',
+			args: {
+			  'service_unit': service_unit,
+			  'check_in': check_in,
+			  'check_out': check_out,
+			  'left': left,
+			},
+			callback: function (data) {
+			  if (!data.exc) {
+				frm.reload_doc();
+			  }
+			},
+
+      });
+        frm.reload_doc();
+        frm.refresh_fields();
+        dialog.hide();
+      }
+    });
+  
+    dialog.fields_dict['service_unit_type'].get_query = function () {
+      return {
+        filters: {
+          'inpatient_occupancy': 1,
+          'allow_appointments': 0
+        }
+      };
+    };
+    dialog.fields_dict['service_unit'].get_query = function () {
+      return {
+        filters: {
+          'is_group': 0,
+          'company': frm.doc.company,
+          'service_unit_type': dialog.get_value('service_unit_type'),
+          'occupancy_status': 'Vacant'
+        }
+      };
+    };
+  
+    dialog.show();
+  };
 
 let transfer_patient_dialog = function (frm) {
 	let dialog = new frappe.ui.Dialog({
