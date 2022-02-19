@@ -1,0 +1,23 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2022-02-19 09:51:40.221622",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "SHM-Hospital Letter Head",
+ "modified": "2022-02-19 09:51:40.221622",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "NHIF Patient Tracking Report",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "NHIF Patient Claim",
+ "report_name": "NHIF Patient Tracking Report",
+ "report_type": "Script Report",
+ "roles": []
+}
