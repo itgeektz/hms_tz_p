@@ -247,9 +247,7 @@ def get_lrpt_item_list(patient, appointment_no, company):
 		
 		for item in items:
 			if item.lab_test_code:
-				if item.lab_test:
-					name = None
-				else:
+				if not item.lab_test:
 					name = get_refdoc(
 						"Lab Prescription",
 						item.lab_test_code,
@@ -266,9 +264,7 @@ def get_lrpt_item_list(patient, appointment_no, company):
 				})
 			
 			if item.radiology_examination_template:
-				if item.radiology_examination:
-					name = None
-				else:
+				if not item.radiology_examination:
 					name = get_refdoc(
 						"Radiology Procedure Prescription", 
 						item.radiology_examination_template, 
@@ -285,9 +281,7 @@ def get_lrpt_item_list(patient, appointment_no, company):
 				})
 			
 			if item.procedure:
-				if item.clinical_procedure:
-					name = None
-				else:
+				if not item.clinical_procedure:
 					name = get_refdoc(
 						"Procedure Prescription",
 						item.procedure,
