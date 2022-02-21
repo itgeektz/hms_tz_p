@@ -377,7 +377,7 @@ def process_insurance_coverages(kwargs):
 
     coverage_plan_list = frappe.get_all(
         "Healthcare Insurance Coverage Plan",
-        fields={"name", "nhif_scheme_id"},
+        fields={"name", "nhif_scheme_id", "code_for_nhif_excluded_services"},
         filters={
             "insurance_company": ["like", "NHIF%"],
             "is_active": 1,
