@@ -365,6 +365,12 @@ def get_leave_from(doctype, txt, searchfield, start, page_len, filters):
     )
 
 def validate_schedule_discharge(inpatient_record):
+    if inpatient_record.status == "Admission Scheduled":
+        frappe.throw(frappe.bold(
+            "Cannot schedule discharge for the patient who was not admitted,<br><br>\
+            Please inform receptionist to admit a patient before discharge")
+        )
+
     patient = inpatient_record.patient
 
     conditions = {
@@ -463,4 +469,4 @@ def validate_schedule_discharge(inpatient_record):
 
         if msg:
             frappe.msgprint(title="Notification", msg=msg)
-    
+

@@ -254,7 +254,7 @@ class NHIFPatientClaim(Document):
                 encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
                 for child in childs_map:
                     for row in encounter_doc.get(child.get("table")):
-                        if row.prescribe:
+                        if row.prescribe or row.is_cancelled:
                             continue
                         item_code = frappe.get_value(
                             child.get("doctype"), row.get(child.get("item")), "item"
@@ -267,7 +267,7 @@ class NHIFPatientClaim(Document):
                         new_row = self.append("nhif_patient_claim_item", {})
                         new_row.item_name = row.get(child.get("item_name"))
                         new_row.item_code = get_item_refcode(item_code)
-                        new_row.item_quantity = row.get("quantity") or 1
+                        new_row.item_quantity = row.get("delivered_quantity") or 1
                         new_row.unit_price = item_rate
                         new_row.amount_claimed = (
                             new_row.unit_price * new_row.item_quantity
@@ -381,7 +381,7 @@ class NHIFPatientClaim(Document):
                             continue
                         for child in childs_map:
                             for row in encounter_doc.get(child.get("table")):
-                                if row.prescribe:
+                                if row.prescribe or row.is_cancelled:
                                     continue
                                 item_code = frappe.get_value(
                                     child.get("doctype"),
@@ -397,7 +397,7 @@ class NHIFPatientClaim(Document):
                                 new_row = self.append("nhif_patient_claim_item", {})
                                 new_row.item_name = row.get(child.get("item"))
                                 new_row.item_code = get_item_refcode(item_code)
-                                new_row.item_quantity = row.get("quantity") or 1
+                                new_row.item_quantity = row.get("delivered_quantity") or 1
                                 new_row.unit_price = item_rate
                                 new_row.amount_claimed = (
                                     new_row.unit_price * new_row.item_quantity
