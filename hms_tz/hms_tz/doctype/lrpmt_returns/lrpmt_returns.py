@@ -247,45 +247,67 @@ def get_lrpt_item_list(patient, appointment_no, company):
 		
 		for item in items:
 			if item.lab_test_code:
+				if not item.lab_test:
+					name = get_refdoc(
+						"Lab Prescription",
+						item.lab_test_code,
+						item.parent
+					)
+					
 				item_list.append({
 					"child_name": item.name,
 					"item_name": item.lab_test_code,
 					"quantity": 1,
 					"encounter_no": item.parent,
 					"reference_doctype": "Lab Test",
-					"reference_docname": item.lab_test
+					"reference_docname": item.lab_test or name
 				})
 			
 			if item.radiology_examination_template:
+				if not item.radiology_examination:
+					name = get_refdoc(
+						"Radiology Procedure Prescription", 
+						item.radiology_examination_template, 
+						item.parent
+					)
+					
 				item_list.append({
 					"child_name": item.name,
 					"item_name": item.radiology_examination_template,
 					"quantity": 1,
 					"encounter_no": item.parent,
 					"reference_doctype": "Radiology Examination",
-					"reference_docname": item.radiology_examination
+					"reference_docname": item.radiology_examination or name
 				})
 			
 			if item.procedure:
+				if not item.clinical_procedure:
+					name = get_refdoc(
+						"Procedure Prescription",
+						item.procedure,
+						item.parent
+					)
+
 				item_list.append({
 					"child_name": item.name,
 					"item_name": item.procedure,
 					"quantity": 1,
 					"encounter_no": item.parent,
 					"reference_doctype": "Clinical Procedure",
-					"reference_docname": item.clinical_procedure
+					"reference_docname": item.clinical_procedure or name
 				})
 			
-			if item.therapy_type:
-				therapy_plan = frappe.get_value("Patient Encounter", item.parent, "therapy_plan")
-				item_list.append({
-					"child_name": item.name,
-					"item_name": item.therapy_type,
-					"quantity": 1,
-					"encounter_no": item.parent,
-					"reference_doctype": "Therapy Plan",
-					"reference_docname": therapy_plan
-				})
+			# if item.therapy_type:
+			# 	therapy_plan = frappe.get_value("Patient Encounter", item.parent, "therapy_plan")
+			# 	item_list.append({
+			# 		"child_name": item.name,
+			# 		"item_name": item.therapy_type,
+			# 		"quantity": 1,
+			# 		"encounter_no": item.parent,
+			# 		"reference_doctype": "Therapy Plan",
+			# 		"reference_docname": therapy_plan
+			# 	})
+	
 	return item_list
 
 def get_lrpt_map():
@@ -320,16 +342,42 @@ def get_lrpt_map():
 				"parent"
 			]
 		},
-		{
-			"doctype": "Therapy Plan Detail",
-			"fields": [
-				"name",
-				"therapy_type",
-				"parent"
-			]
-		}
+		# {
+		# 	"doctype": "Therapy Plan Detail",
+		# 	"fields": [
+		# 		"name",
+		# 		"therapy_type",
+		# 		"parent"
+		# 	]
+		# }
 	]
 	return child_map
+
+def get_refdoc(doctype, template, encounter):
+	ref_docs = [
+		{
+			"ref_d": "Lab Test",
+			"table": "Lab Prescription",
+			"field": "template"
+		},
+		{
+			"ref_d": "Radiology Examination",
+			"table": "Radiology Procedure Prescription",
+			"field": "radiology_examination_template"
+		},
+		{
+			"ref_d": "Clinical Procedure",
+			"table": "Procedure Prescription",
+			"field": "procedure_template"
+		}
+	]
+
+	for refd in ref_docs:
+		if refd.get("table") == doctype:
+			docname =  frappe.get_value(refd.get("ref_d"), {"ref_doctype": "Patient Encounter",
+					"ref_docname": encounter, refd.get("field"): template}, ["name"]
+				)
+			return docname
 
 def set_missing_values(doc):
 	appointment_list = frappe.get_all("Patient Appointment", filters={"patient": doc.patient, "status": "Closed"}, 
@@ -337,7 +385,8 @@ def set_missing_values(doc):
 	)
 
 	if appointment_list:
-		doc.appointment_no = appointment_list[0]["name"]
+		if not doc.appointment_no:
+			doc.appointment_no = appointment_list[0]["name"]
 		doc.company = appointment_list[0]["company"]
 
 		record = frappe.get_all("Inpatient Record", 
@@ -402,7 +451,7 @@ def get_drug_item_list(patient, appointment_no, company):
 	drug_list = []
 
 	item_list, dn_detail_list, drug_codes = get_drugs(patient, appointment_no, company)
-	
+
 	if dn_detail_list and drug_codes:
 		delivery_note_items = frappe.get_all("Delivery Note Item", filters={"name": ["in", dn_detail_list],
 			"item_code": ["in", drug_codes]}, fields=["name", "parent", "item_code"]
@@ -435,9 +484,14 @@ def get_drugs(patient, appointment_no, company):
 	)
 
 	for drug in drugs:
-		drug_code_list.append(drug.drug_code)
-		dn_detail_list.append(drug.dn_detail)
-		item_list.append(drug)
+
+		if drug.dn_detail:
+			# 2022-02-07
+			# To get drugs of which their delivery note are submitted and affected stock 
+			# Also to get drugs of which their drug prescription has been updated with dn_detail
+			drug_code_list.append(drug.drug_code)
+			dn_detail_list.append(drug.dn_detail)
+			item_list.append(drug)
 	
 	return item_list, dn_detail_list, drug_code_list
 
