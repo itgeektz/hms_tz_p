@@ -142,6 +142,18 @@ frappe.ui.form.on('Patient Encounter', {
             }
         });
     },
+
+    add_chronic_diagnosis: function(frm) {
+        if (frm.doc.docstatus == 0) {
+            frappe.call('hms_tz.nhif.api.patient_encounter.add_chronic_diagnosis', {
+                patient: frm.doc.patient,
+                encounter: frm.doc.name
+            }).then(r => {
+                console.log(r.message)
+            })
+        }
+    },
+
     get_chronic_medications: function (frm) {
         if (frm.doc.docstatus == 1) {
             return;

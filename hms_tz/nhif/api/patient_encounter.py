@@ -757,6 +757,30 @@ def get_chronic_diagnosis(patient):
     )
     return data
 
+@frappe.whitelist()
+def add_chronic_diagnosis(patient, encounter):
+    patient_doc = frappe.get_doc("Patient", patient)
+    encounter_doc = frappe.get_doc("Patient Encounter", encounter)
+
+    prev_diagnos = len(patient_doc.codification_table)
+    medical_codes = []
+    if not patient_doc.codification_table:
+        for row in encounter_doc.patient_encounter_preliminary_diagnosis:
+            patient_doc.append("codification_table", row)
+        patient_doc.save(ignore_permissions=True)
+
+    else:
+        for d in patient_doc.codification_table:
+            medical_codes.append(d.medical_code)
+            for row in encounter_doc.patient_encounter_preliminary_diagnosis:
+                if row.medical_code not in medical_codes:
+                    patient_doc.append("codification_table", row)
+        patient_doc.save(ignore_permissions=True)
+        
+    if len(patient_doc.codification_table) > prev_diagnos:
+        frappe.msgprint("Chronic diagnosis added successfully")
+    else:
+        frappe.msgprint("Chronic diagnosis already exist")
 
 @frappe.whitelist()
 def get_chronic_medications(patient):
