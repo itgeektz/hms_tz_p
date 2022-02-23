@@ -601,10 +601,14 @@ def create_individual_lab_test(source_doc, child):
             _("Lab Test {0} created successfully.").format(frappe.bold(doc.name))
         )
 
-    child.lab_test_created = 1
-    # lab prescription will be updated only is lab test is submitted
-    # child.lab_test = doc.name
-    child.db_update()
+        child.lab_test_created = 1
+        # lab prescription will be updated only is lab test is submitted
+        # child.lab_test = doc.name
+        child.db_update()
+
+    # Will not submit sales invoice or patient encounter if lab test is not created
+    else:
+        frappe.throw(frappe.bold("Lab Test was not created, please try submitting again"))
 
 
 def create_individual_radiology_examination(source_doc, child):
@@ -645,10 +649,15 @@ def create_individual_radiology_examination(source_doc, child):
             )
         )
 
-    child.radiology_examination_created = 1
-    # radiology procedure prescription will be updated only if radiology examination is submitted
-    # child.radiology_examination = doc.name
-    child.db_update()
+        child.radiology_examination_created = 1
+        # radiology procedure prescription will be updated only if radiology examination is submitted
+        # child.radiology_examination = doc.name
+        child.db_update()
+
+    # 08-02-2022
+    # Will not submit sales invoice or patient encounter if radiology examination is not created
+    else:
+        frappe.throw(frappe.bold("Radiology Examination was not created, please try submitting again"))
 
 
 def create_individual_procedure_prescription(source_doc, child):
@@ -686,10 +695,15 @@ def create_individual_procedure_prescription(source_doc, child):
             )
         )
 
-    child.procedure_created = 1
-    # procedure prescription will be updated only clinical procedure is submitted
-    # child.clinical_procedure = doc.name
-    child.db_update()
+        child.procedure_created = 1
+        # procedure prescription will be updated only clinical procedure is submitted
+        # child.clinical_procedure = doc.name
+        child.db_update()
+
+    # 08-02-2022
+    # Will not submit sales invoice or patient encounter if clinical procedure is not created
+    else:
+        frappe.throw(frappe.bold("Clinical Procedure was not created, please try submitting again"))
 
 
 def msgThrow(msg, method="throw", alert=True):
