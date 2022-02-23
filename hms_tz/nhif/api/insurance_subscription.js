@@ -8,13 +8,22 @@ frappe.ui.form.on('Healthcare Insurance Subscription', {
     },
     coverage_plan_card_number: function (frm) {
         frm.trigger("get_patient_name")
+        if (!frm.doc.insurance_company.includes("NHIF")) {
+            if (!frm.doc.coverage_plan_card_number) return
+
+            setTimeout(() => {
+                frm.save("Submit")
+                frappe.msgprint("Healthcare Insurance Subscription is submitted")
+            }, 10000);
+        }
     },
     insurance_company: function (frm) {
         frm.trigger("get_patient_name")
         frm.set_value("daily_limit", 0)
     },
     get_patient_name: function (frm) {
-        if (!frm.doc.coverage_plan_card_number || frm.doc.insurance_company.includes("NHIF")) return
+        if (!frm.doc.insurance_company.includes("NHIF")) return
+        if (!frm.doc.coverage_plan_card_number) return
         frappe.show_alert({
             message: __("Getting patient's information from NHIF"),
             indicator: 'green'
