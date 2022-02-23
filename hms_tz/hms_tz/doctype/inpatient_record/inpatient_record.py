@@ -319,6 +319,14 @@ def transfer_patient(inpatient_record, service_unit, check_in):
     hsu.occupancy_status = "Occupied"
     hsu.save(ignore_permissions=True)
 
+def add_bed(inpatient_record, service_unit, check_in, check_out, left):
+		item_line = inpatient_record.append("inpatient_occupancies", {})
+		item_line.service_unit = service_unit
+		item_line.check_in = check_in
+		item_line.check_out = check_out
+		item_line.left = left
+
+		inpatient_record.save(ignore_permissions=True)
 
 def patient_leave_service_unit(inpatient_record, check_out, leave_from):
     if inpatient_record.inpatient_occupancies:
@@ -469,4 +477,4 @@ def validate_schedule_discharge(inpatient_record):
 
         if msg:
             frappe.msgprint(title="Notification", msg=msg)
-
+    
