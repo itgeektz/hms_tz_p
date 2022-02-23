@@ -596,6 +596,19 @@ class NHIFPatientClaim(Document):
             self.clinical_notes += examination_detail or ""
             self.clinical_notes += "\n"
 
+    def before_insert(self):
+        if frappe.db.exists({
+            "doctype": "NHIF Patient Claim",
+            "patient": self.patient,
+            "patient_appointment": self.patient_appointment,
+            "cardno": self.cardno,
+            "docstatus": 0
+        }):
+            self.reload()
+            frappe.throw("NHIF Patient Claim is already exist for patient: #{0} with appointment: #{1}".format(
+                frappe.bold(self.patient),
+                frappe.bold(self.patient_appointment)
+            ))
 
 @frappe.whitelist()
 def merge_nhif_claims(authorization_no):
