@@ -94,7 +94,7 @@ def update_drug_prescription(doc):
                             if item.qty != dni.stock_qty:
                                 quantity = dni.stock_qty
                             else:
-                                quantity = item.quantity
+                                quantity = item.qty
 
                             frappe.db.set_value("Drug Prescription", item.reference_dn, {
                                 "dn_detail": dni.name,
