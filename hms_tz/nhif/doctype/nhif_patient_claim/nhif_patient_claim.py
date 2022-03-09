@@ -264,10 +264,12 @@ class NHIFPatientClaim(Document):
                             self.company,
                             encounter_doc.insurance_subscription,
                         )
+                        delivered_quantity = row.get("quantity") - row.get("quantity_returned")
+
                         new_row = self.append("nhif_patient_claim_item", {})
                         new_row.item_name = row.get(child.get("item_name"))
                         new_row.item_code = get_item_refcode(item_code)
-                        new_row.item_quantity = row.get("delivered_quantity") or 1
+                        new_row.item_quantity = delivered_quantity or 1
                         new_row.unit_price = item_rate
                         new_row.amount_claimed = (
                             new_row.unit_price * new_row.item_quantity
@@ -394,10 +396,12 @@ class NHIFPatientClaim(Document):
                                     encounter_doc.insurance_subscription,
                                     encounter_doc.insurance_company,
                                 )
+                                delivered_quantity = row.get("quantity") - row.get("quantity_returned")
+                                
                                 new_row = self.append("nhif_patient_claim_item", {})
                                 new_row.item_name = row.get(child.get("item"))
                                 new_row.item_code = get_item_refcode(item_code)
-                                new_row.item_quantity = row.get("delivered_quantity") or 1
+                                new_row.item_quantity =  delivered_quantity or 1
                                 new_row.unit_price = item_rate
                                 new_row.amount_claimed = (
                                     new_row.unit_price * new_row.item_quantity
@@ -604,7 +608,6 @@ class NHIFPatientClaim(Document):
             "cardno": self.cardno,
             "docstatus": 0
         }):
-            self.reload()
             frappe.throw("NHIF Patient Claim is already exist for patient: #{0} with appointment: #{1}".format(
                 frappe.bold(self.patient),
                 frappe.bold(self.patient_appointment)
