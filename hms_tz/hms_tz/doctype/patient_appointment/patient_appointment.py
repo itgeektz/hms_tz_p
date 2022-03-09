@@ -725,33 +725,3 @@ def make_insurance_claim(doc):
             frappe.set_value(doc.doctype, doc.name,
                              'claim_status', claim_status)
             doc.reload()
-
-# Cancel opne appointments, delete draft vital signs and delete draft delivery note 
-def delete_or_cancel_draft_document():
-    before_7_days_date = add_to_date(datetime.now(), days=-7, as_string=False)
-
-    before_45_days_date = add_to_date(datetime.now(), days=-45, as_string=False)
-
-    appointments = frappe.get_all("Patient Appointment", 
-        filters={"appointment_date": ['<', before_7_days_date], "status": "Open"},
-        pluck="name"
-    )
-
-    for doc_name in appointments:
-        frappe.db.set_value("Patient Appointment", doc_name, "status", "Cancelled",  update_modified=False)
-
-
-    vital_docs = frappe.get_all("Vital Signs",
-        filters={"signs_date": ['<', before_7_days_date], "docstatus": 0},
-        pluck="name"
-    )
-    for doc_name in vital_docs:
-        frappe.delete_doc("Vital Signs", doc_name)
-
-
-    delivery_documents = frappe.get_all("Delivery Note", 
-        filters={"posting_date": ['<', before_7_days_date], "docstatus": 0}, 
-        pluck="name"
-    )
-    for doc_name in delivery_documents:
-        frappe.delete_doc("Delivery Note", doc_name)
