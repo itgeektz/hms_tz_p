@@ -504,7 +504,6 @@ def on_submit(doc, method):
         create_delivery_note(doc, method)
     if doc.inpatient_record:
         update_inpatient_record_consultancy(doc)
-        validate_patient_balance_vs_patient_costs(doc)
 
 
 @frappe.whitelist()
