@@ -1054,6 +1054,8 @@ def before_submit(doc, method):
                     "Cannot Submit Encounter",
                 )
             )
+    if doc.inpatient_record:
+        validate_patient_balance_vs_patient_costs(doc)
 
 
 @frappe.whitelist()
