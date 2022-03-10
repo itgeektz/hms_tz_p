@@ -264,7 +264,7 @@ class NHIFPatientClaim(Document):
                             self.company,
                             encounter_doc.insurance_subscription,
                         )
-                        delivered_quantity = row.get("quantity") - row.get("quantity_returned")
+                        delivered_quantity = (row.get("quantity") or 0) - (row.get("quantity_returned") or 0)
 
                         new_row = self.append("nhif_patient_claim_item", {})
                         new_row.item_name = row.get(child.get("item_name"))
@@ -396,7 +396,7 @@ class NHIFPatientClaim(Document):
                                     encounter_doc.insurance_subscription,
                                     encounter_doc.insurance_company,
                                 )
-                                delivered_quantity = row.get("quantity") - row.get("quantity_returned")
+                                delivered_quantity = (row.get("quantity") or 0) - (row.get("quantity_returned") or 0)
                                 
                                 new_row = self.append("nhif_patient_claim_item", {})
                                 new_row.item_name = row.get(child.get("item"))
