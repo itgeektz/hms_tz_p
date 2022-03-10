@@ -99,7 +99,7 @@ def update_drug_prescription(doc):
                             frappe.db.set_value("Drug Prescription", item.reference_dn, {
                                 "dn_detail": dni.name,
                                 "quantity": quantity,
-                                "delivered_quantity": quantity - item.quantity_returned
+                                "delivered_quantity": quantity
                             })
         
         else:
