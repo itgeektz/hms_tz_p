@@ -11,8 +11,16 @@ frappe.ui.form.on('LRPMT Returns', {
 		frm.reload_doc()
 	},
 
-	refresh: function(frm) {		
-		if (frm.doc.patient && frappe.user.has_role("Healthcare Practitioner")) {
+	refresh: function(frm) {
+		frm.set_query('appointment_no', () => {
+			return {
+				filters: {
+					'patient': frm.doc.patient
+				}
+			}
+		});
+		
+		if (frm.doc.patient && frm.doc.appointment_no) {
 			frm.add_custom_button(__("Get LRPT Items"), function(){
 				frm.trigger("get_lrpt_items")
 			}),
@@ -28,9 +36,14 @@ frappe.ui.form.on('LRPMT Returns', {
 			frm.doc.drug_items.forEach(data => {
 				if (data.quantity_to_return > data.quantity_prescribed) {
 					row.quantity_to_return = 0;
-					frappe.msgprint(
-						"Quantity to Return can not be greater than Quantity Prescribed"
-					)
+					frappe.msgprint({
+						title: __('Message'),
+						indicator: 'yellow',
+						message: __(
+							'<h4 class="text-center" style="background-color: yellow; font-weight: bold;">\
+							Quantity to Return can not be greater than Quantity Prescribed<h4>'
+						)
+					});
 					frm.refresh_field("drug_items")
 				}
 			})
@@ -65,7 +78,7 @@ frappe.ui.form.on('LRPMT Returns', {
 					company: frm.doc.company
 				},
 				callback: (data) => {
-					if (data.message) {
+					if (data.message.length > 0) {
 						$results.append(make_lrpt_list_row(columns, true));
 						for (let i = 0; i < data.message.length; i++) {
 							$results.append(make_lrpt_list_row(columns, true, data.message[i]));
@@ -116,9 +129,8 @@ frappe.ui.form.on('LRPMT Returns', {
 					company: frm.doc.company
 				},
 				callback: (r) => {
-					if (r.message) {
+					if (r.message.length > 0) {
 						var data = r.message;
-						console.log(data);
 						$results.append(make_drug_list_row(columns, true));
 						for (let i = 0; i < data.length; i++){
 							$results.append(make_drug_list_row(columns, true, data[i]));

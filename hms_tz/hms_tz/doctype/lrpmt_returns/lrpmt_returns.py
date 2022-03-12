@@ -49,7 +49,6 @@ def cancel_lrpt_doc(self):
 				except Exception:
 					traceback = frappe.get_traceback()
 					frappe.log_error(traceback)
-					frappe.throw(traceback)
 
 	return self.name
 
@@ -479,7 +478,7 @@ def get_drugs(patient, appointment_no, company):
 	drug_code_list = []
 
 	encounter_list = get_patient_encounters(patient, appointment_no, company)
-	drugs = frappe.get_all("Drug Prescription", filters={"parent": ["in", encounter_list], "is_not_available_inhouse": 0,},
+	drugs = frappe.get_all("Drug Prescription", filters={"parent": ["in", encounter_list], "is_not_available_inhouse": 0, "is_cancelled": 0},
 		fields=["name", "drug_code", "quantity", "quantity_returned", "parent", "dn_detail"]
 	)
 
