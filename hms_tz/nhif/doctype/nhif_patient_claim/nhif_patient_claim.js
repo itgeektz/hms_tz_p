@@ -15,6 +15,37 @@ frappe.ui.form.on('NHIF Patient Claim', {
 	},
 
 	refresh(frm) {
+		if (frm.doc.patient && frm.doc.patient_appointment) {
+			frappe.db.get_list('LRPMT Returns', {
+				fields:['name'],
+				filters:{
+					'patient': frm.doc.patient, 
+					'appointment_no': frm.doc.patient_appointment,
+					'docstatus': 1
+				}
+			}).then(data => {
+				if (data.length > 0) {
+					let msg_lrpmt = ``
+					data.forEach(element => {
+						msg_lrpmt += `${__(element.name)} ,`
+					});
+
+					frappe.msgprint({
+						title: __('Notification'),
+						indicator: 'orange',
+						message: __(`
+							<p class='text-left'>This Patient: <b>${__(frm.doc.patient)}</b> of appointmentNo: <b>${__(frm.doc.patient_appointment)}</b>
+							having some item(s) cancelled or some quantity of item(s) returned to stock, by <b>${__(msg_lrpmt)}</b>,
+							inorder for items and their quantities to be reflected on this claim</p>
+							<p class='text-center' style='background-color: #FFA500; font-size: 14px;'>
+							<strong><em><i>Tick allow changes then, Save this claim then, Untick allow changes and Save again</i></em></strong></p>
+							`
+						)
+					});
+				}
+			});
+		};
+
 		if (frm.doc.authorization_no) {
 			frm.add_custom_button(__("Merge Claims"), function () {
 				frappe.call({
