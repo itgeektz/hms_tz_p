@@ -53,10 +53,10 @@ def get_data(filters):
 					"patient_name": d["patient_name"],
 					"appointment_no": d["appointment_no"],
 					"appointment_status": d["appointment_status"],
-					"encounter": d["encounter"],
-					"encounter_status": d["encounter_status"],
-					"inpatient_status": d["ipd_status"],
-					"nhif_claim_no": claim["name"],
+					"encounter": d["encounter"] or "",
+					"encounter_status": d["encounter_status"] or "",
+					"inpatient_status": d["ipd_status"] or "",
+					"nhif_claim_no": claim["name"] or "",
 					"signature": signature
 				})
 
@@ -66,9 +66,9 @@ def get_data(filters):
 				"patient_name": d["patient_name"],
 				"appointment_no": d["appointment_no"],
 				"appointment_status": d["appointment_status"],
-				"encounter": d["encounter"],
-				"encounter_status": d["encounter_status"],
-				"inpatient_status": d["ipd_status"],
+				"encounter": d["encounter"] or "",
+				"encounter_status": d["encounter_status"] or "",
+				"inpatient_status": d["ipd_status"] or "",
 				"nhif_claim_no": "",
 				"signature": ""
 			})
