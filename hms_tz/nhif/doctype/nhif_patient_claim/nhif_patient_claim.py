@@ -727,16 +727,16 @@ def validate_submit_date(self):
         "Company NHIF Settings", self.company, 
         ["submit_start_date", "submit_end_date"]
     )
+
     if not (start_date or end_date):
         frappe.throw(
-            frappe.bold("Submit Start Date or Submit End Date not found,\
-                please inform IT department to set it on Company NHIF Settings")
+            frappe.bold(
+                "Submit Start Date or Submit End Date not found,\
+                please inform IT department to set it on Company NHIF Settings"
+            )
         )
 
-    if (
-        date < start_date  or 
-        date > end_date
-    ):
+    if str(date) < str(start_date) or str(date) > str(end_date):
         frappe.throw("Attendance/Discharge Date: {0} is not between Submit Start Date: {1}\
             and Submit End Date: {2}".format(
                 frappe.bold(date),
