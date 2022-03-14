@@ -19,8 +19,8 @@ def get_columns():
 		{"fieldname": "patient_name", "label": _("Patient Name"), "fieldtype": "Data"},
 		{"fieldname": "appointment_no", "label": _("AppointmentNo"), "fieldtype": "Data"},
 		{"fieldname": "appointment_status", "label": _("Appointment Status"), "fieldtype": "Data"},
-		{"fieldname": "encounter", "label": _("Final Encounter"), "fieldtype": "Data"},
-		{"fieldname": "encounter_status", "label": _("Status of Final Encounter"), "fieldtype": "Data"},
+		{"fieldname": "encounter", "label": _("Last Encounter"), "fieldtype": "Data"},
+		{"fieldname": "encounter_status", "label": _("Status of Last Encounter"), "fieldtype": "Data"},
 		{"fieldname": "inpatient_status", "label": _("Inpatient Status"), "fieldtype": "Data"},
 		{"fieldname": "nhif_claim_no", "label": _("NHIF Patient Claim"), "fieldtype": "Data"},
 		{"fieldname": "signature", "label": _("Signature Captured"), "fieldtype": "Data"},
@@ -85,7 +85,7 @@ def get_encounter_details(filters):
 		order_by="encounter_date"
 	)
 	if not encounters:		
-		return appointments
+		return appointment_nos, appointments
 
 	encounter_details = []
 	for appointment in appointments:
@@ -143,7 +143,9 @@ def get_appointment_details(filters):
 	inpatient_records = frappe.get_all("Inpatient Record", filters={"patient_appointment": ["in", name_list],
 		"insurance_company": "NHIF"}, fields=["status", "patient_appointment"]
 	)
-
+	if not inpatient_records:
+		return name_list, appointment_list
+	
 	appointment_details = []
 	for appointment in appointment_list:
 		for record in inpatient_records:
@@ -155,7 +157,7 @@ def get_appointment_details(filters):
 		if appointment["appointment_no"] not in entries:
 			appointment["ipd_status"] = ""
 			appointment_details.append(appointment)
-			
+	
 	return name_list, appointment_details
 
 def get_conditions(filters):
