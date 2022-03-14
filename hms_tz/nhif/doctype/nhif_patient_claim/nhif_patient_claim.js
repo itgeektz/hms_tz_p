@@ -15,6 +15,20 @@ frappe.ui.form.on('NHIF Patient Claim', {
 	},
 
 	refresh(frm) {
+		if (frm.doc.authorization_no) {
+			frm.add_custom_button(__("Merge Claims"), function () {
+				frappe.call({
+					method: "hms_tz.nhif.doctype.nhif_patient_claim.nhif_patient_claim.merge_nhif_claims",
+					args: { "authorization_no": frm.doc.authorization_no },
+					callback: function (data) {
+						frm.reload_doc()
+					}
+				})
+			})
+		}
+	},
+
+	onload: function(frm) {
 		if (frm.doc.patient && frm.doc.patient_appointment) {
 			frappe.db.get_list('LRPMT Returns', {
 				fields:['name'],
@@ -34,28 +48,16 @@ frappe.ui.form.on('NHIF Patient Claim', {
 						title: __('Notification'),
 						indicator: 'orange',
 						message: __(`
-							<p class='text-left'>This Patient: <b>${__(frm.doc.patient)}</b> of appointmentNo: <b>${__(frm.doc.patient_appointment)}</b>
+							<p class='text-left'>This Patient: <b>${__(frm.doc.patient)}</b> of appointment No: <b>${__(frm.doc.patient_appointment)}</b>
 							having some item(s) cancelled or some quantity of item(s) returned to stock, by <b>${__(msg_lrpmt)}</b>,
 							inorder for items and their quantities to be reflected on this claim</p>
 							<p class='text-center' style='background-color: #FFA500; font-size: 14px;'>
-							<strong><em><i>Tick allow changes then, Save this claim then, Untick allow changes and Save again</i></em></strong></p>
+							<strong><em><i>Tick allow changes, then Untick allow changes and Save again</i></em></strong></p>
 							`
 						)
 					});
 				}
 			});
 		};
-
-		if (frm.doc.authorization_no) {
-			frm.add_custom_button(__("Merge Claims"), function () {
-				frappe.call({
-					method: "hms_tz.nhif.doctype.nhif_patient_claim.nhif_patient_claim.merge_nhif_claims",
-					args: { "authorization_no": frm.doc.authorization_no },
-					callback: function (data) {
-						frm.reload_doc()
-					}
-				})
-			})
-		}
 	}
 });
