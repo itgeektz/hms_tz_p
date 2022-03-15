@@ -68,6 +68,8 @@ class MedicationChangeRequest(Document):
             "parenttype",
         ]
         for row in self.drug_prescription:
+            if row.is_not_available_inhouse == 1:
+                continue
             new_row = frappe.copy_doc(row).as_dict()
             for fieldname in fields_to_clear:
                 new_row[fieldname] = None
