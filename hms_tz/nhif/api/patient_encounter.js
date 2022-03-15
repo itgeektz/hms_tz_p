@@ -709,7 +709,7 @@ const set_is_not_available_inhouse = function (frm, row, template) {
         },
         callback: function (data) {
             if (data.message) {
-                row.is_not_available_inhouse = data.is_not_available;
+                row.is_not_available_inhouse = data.message.is_not_available;
             }
             else {
                 row.is_not_available_inhouse = 0;
