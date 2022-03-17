@@ -5,6 +5,8 @@ from hms_tz.nhif.api.healthcare_utils import update_dimensions
 
 
 def validate(doc, method):
+    if doc.docstatus != 0:
+        return
     set_prescribed(doc)
     set_missing_values(doc)
     update_dimensions(doc)
@@ -36,9 +38,6 @@ def onload(doc, method):
 
 
 def set_prescribed(doc):
-    if doc.docstatus != 0:
-        return
-
     for item in doc.items:
         items_list = frappe.db.sql(
             """
