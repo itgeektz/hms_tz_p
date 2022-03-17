@@ -76,7 +76,7 @@ class NHIFPatientClaim(Document):
         self.patient_encounters = self.get_patient_encounters()
         if not self.patient_signature:
             get_missing_patient_signature(self)
-            
+
         validate_submit_date(self)
         self.patient_file = generate_pdf(self)
         self.claim_file = get_claim_pdf_file(self)
@@ -264,7 +264,9 @@ class NHIFPatientClaim(Document):
                             self.company,
                             encounter_doc.insurance_subscription,
                         )
-                        delivered_quantity = (row.get("quantity") or 0) - (row.get("quantity_returned") or 0)
+                        delivered_quantity = (row.get("quantity") or 0) - (
+                            row.get("quantity_returned") or 0
+                        )
 
                         new_row = self.append("nhif_patient_claim_item", {})
                         new_row.item_name = row.get(child.get("item_name"))
@@ -396,12 +398,14 @@ class NHIFPatientClaim(Document):
                                     encounter_doc.insurance_subscription,
                                     encounter_doc.insurance_company,
                                 )
-                                delivered_quantity = (row.get("quantity") or 0) - (row.get("quantity_returned") or 0)
-                                
+                                delivered_quantity = (row.get("quantity") or 0) - (
+                                    row.get("quantity_returned") or 0
+                                )
+
                                 new_row = self.append("nhif_patient_claim_item", {})
                                 new_row.item_name = row.get(child.get("item"))
                                 new_row.item_code = get_item_refcode(item_code)
-                                new_row.item_quantity =  delivered_quantity or 1
+                                new_row.item_quantity = delivered_quantity or 1
                                 new_row.unit_price = item_rate
                                 new_row.amount_claimed = (
                                     new_row.unit_price * new_row.item_quantity
@@ -601,17 +605,21 @@ class NHIFPatientClaim(Document):
             self.clinical_notes += "\n"
 
     def before_insert(self):
-        if frappe.db.exists({
-            "doctype": "NHIF Patient Claim",
-            "patient": self.patient,
-            "patient_appointment": self.patient_appointment,
-            "cardno": self.cardno,
-            "docstatus": 0
-        }):
-            frappe.throw("NHIF Patient Claim is already exist for patient: #{0} with appointment: #{1}".format(
-                frappe.bold(self.patient),
-                frappe.bold(self.patient_appointment)
-            ))
+        if frappe.db.exists(
+            {
+                "doctype": "NHIF Patient Claim",
+                "patient": self.patient,
+                "patient_appointment": self.patient_appointment,
+                "cardno": self.cardno,
+                "docstatus": 0,
+            }
+        ):
+            frappe.throw(
+                "NHIF Patient Claim is already exist for patient: #{0} with appointment: #{1}".format(
+                    frappe.bold(self.patient), frappe.bold(self.patient_appointment)
+                )
+            )
+
 
 @frappe.whitelist()
 def merge_nhif_claims(authorization_no):
@@ -709,6 +717,7 @@ def merge_nhif_claims(authorization_no):
 
     # frappe.delete_doc(second_doc.doctype, second_doc.name)
 
+
 def get_missing_patient_signature(self):
     if self.patient:
         patient_doc = frappe.get_doc("Patient", self.patient)
@@ -717,15 +726,15 @@ def get_missing_patient_signature(self):
             frappe.throw(_("Patient signature is required"))
         self.patient_signature = signature
 
+
 def validate_submit_date(self):
     if self.date_discharge:
         date = self.date_discharge
     else:
         date = self.attendance_date
-    
+
     start_date, end_date = frappe.get_value(
-        "Company NHIF Settings", self.company, 
-        ["submit_start_date", "submit_end_date"]
+        "Company NHIF Settings", self.company, ["submit_start_date", "submit_end_date"]
     )
 
     if not (start_date or end_date):
@@ -737,12 +746,13 @@ def validate_submit_date(self):
         )
 
     if str(date) < str(start_date) or str(date) > str(end_date):
-        frappe.throw("Attendance/Discharge Date: {0} is not between Submit Start Date: {1}\
+        frappe.throw(
+            "Attendance/Discharge Date: {0} is not between Submit Start Date: {1}\
             and Submit End Date: {2}".format(
-                frappe.bold(date),
-                frappe.bold(start_date),
-                frappe.bold(end_date)
-            ))
+                frappe.bold(date), frappe.bold(start_date), frappe.bold(end_date)
+            )
+        )
+
 
 def get_item_refcode(item_code):
     code_list = frappe.get_all(
