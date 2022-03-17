@@ -35,7 +35,7 @@ def execute(filters=None):
 def get_appointment_consultancy(filters, visiting_rates):
 	conditions = ""
 	if filters.get("from_date") and filters.get("to_date"):
-		conditions += " AND pa.appointment_date between %(from_date)s and %(to_date)s"
+		conditions += " AND Date(pa.appointment_date) between %(from_date)s and %(to_date)s"
 
 	if filters.get("company"):
 		conditions += " AND pa.company = %(company)s"
@@ -46,14 +46,15 @@ def get_appointment_consultancy(filters, visiting_rates):
 		conditions += " AND pe.practitioner = %(practitioner)s"
 
 	records = frappe.db.sql("""
-		SELECT pa.name, count(*) AS patients, pa.billing_item, Sum(pa.paid_amount) AS paid_amount, pa.practitioner,
-			if(pa.insurance_company != "", pa.insurance_company, "CASH OPD") AS mode, "Patient Appointment" AS pa_doc
+		SELECT pa.name, COUNT(pa.patient) AS patients, pa.billing_item, SUM(pa.paid_amount) AS paid_amount,
+			pa.practitioner, if(pa.insurance_company != "", pa.insurance_company, "CASH OPD") AS mode,
+			"Patient Appointment" AS pa_doc
 		FROM `tabPatient Appointment` pa
 		INNER JOIN `tabPatient Encounter` pe ON pa.name = pe.appointment
 		WHERE pa.status = "Closed"
-		AND pe.encounter_type = "Final"
-		AND pa.follow_up = 0 {conditions}
-		GROUP BY mode, pa.billing_item, pa.practitioner
+		AND pa.follow_up = 0
+		AND pe.encounter_type = "Final" {conditions}
+		GROUP BY pa.practitioner, mode, pa.billing_item
 	""".format(conditions=conditions), filters, as_dict=1)
 
 	consultancies = []
@@ -108,6 +109,7 @@ def get_procedure_consultancy(filters, visiting_rates, excluded_service_rates):
 		FROM `tabClinical Procedure` cp
 		LEFT JOIN `tabProcedure Prescription` pp ON cp.ref_docname = pp.parent AND cp.procedure_template = pp.procedure
 		LEFT JOIN `tabSales Invoice Item` sii ON pp.name = sii.reference_dn AND sii.reference_dt = "Procedure Prescription"
+				AND sii.docstatus = 1
 		WHERE cp.status = "Completed" {conditions}
 		GROUP BY mode, cp.procedure_template, cp.practitioner
 	""".format(conditions=conditions), filters, as_dict=1)
@@ -124,12 +126,13 @@ def get_procedure_consultancy(filters, visiting_rates, excluded_service_rates):
 				procedure.cl_doc == excluded_service.document_type and
 				procedure.billing_item == excluded_service.service
 			):
-				if not procedure.paid_amount:
-					continue
-				vc_amount = flt(procedure.paid_amount * flt(excluded_service.vc_rate / 100))
-				company_amount = flt(procedure.paid_amount * flt(excluded_service.company_rate / 100))
+				paid_amount = procedure.paid_amount or 0
+
+				vc_amount = flt(paid_amount * flt(excluded_service.vc_rate / 100))
+				company_amount = flt(paid_amount * flt(excluded_service.company_rate / 100))
 
 				procedure.update({
+					"paid_amount": paid_amount,
 					"vc_amount": vc_amount,
 					"company_amount": company_amount
 				})
@@ -146,10 +149,31 @@ def get_procedure_consultancy(filters, visiting_rates, excluded_service_rates):
 					procedure.cl_doc == rate_category.document_type and
 					procedure.mode == rate_category.funding_provider
 				):
-					vc_amount = flt(procedure.paid_amount * flt(rate_category.vc_rate / 100))
-					company_amount = flt(procedure.paid_amount * flt(rate_category.company_rate / 100))
+					paid_amount = procedure.paid_amount or 0
+
+					vc_amount = flt(paid_amount * flt(rate_category.vc_rate / 100))
+					company_amount = flt(paid_amount * flt(rate_category.company_rate / 100))
 
 					procedure.update({
+						"paid_amount": paid_amount,
+						"vc_amount": vc_amount,
+						"company_amount": company_amount
+					})
+
+					service_list.append(procedure)
+				
+				if (
+					procedure.mode != "NHIF" and
+					procedure.cl_doc == rate_category.document_type and
+					rate_category.funding_provider == "Other"
+				):
+					paid_amount = procedure.paid_amount or 0
+
+					vc_amount = flt(paid_amount * flt(rate_category.vc_rate / 100))
+					company_amount = flt(paid_amount * flt(rate_category.company_rate / 100))
+
+					procedure.update({
+						"paid_amount": paid_amount,
 						"vc_amount": vc_amount,
 						"company_amount": company_amount
 					})
