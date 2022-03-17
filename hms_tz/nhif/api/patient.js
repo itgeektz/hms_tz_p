@@ -16,7 +16,10 @@ frappe.ui.form.on('Patient', {
         });
     },
     card_no: function (frm) {
-        frm.trigger('get_patient_info');
+        frm.fields_dict.card_no.$input.focusout(function() {
+            frm.trigger('get_patient_info');
+            frm.set_df_property('card_no', 'read_only', 1);
+        });
     },
     mobile: function (frm) {
         frappe.call({
