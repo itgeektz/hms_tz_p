@@ -19,7 +19,7 @@ def validate(doc, methd):
 
 
 def on_submit(doc, methd):
-    update_radiology_procedure_prescription(doc)
+    update_procedure_prescription(doc)
     create_delivery_note(doc)
 
 
@@ -28,7 +28,7 @@ def create_delivery_note(doc):
         patient_encounter_doc = frappe.get_doc(doc.ref_doctype, doc.ref_docname)
         create_delivery_note_from_LRPT(doc, patient_encounter_doc)
 
-def update_radiology_procedure_prescription(doc):
+def update_procedure_prescription(doc):
     if doc.ref_doctype == "Patient Encounter":
         encounter_doc = frappe.get_doc(doc.ref_doctype, doc.ref_docname)
         for row in encounter_doc.procedure_prescription:
