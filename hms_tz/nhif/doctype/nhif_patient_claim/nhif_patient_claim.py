@@ -82,10 +82,10 @@ class NHIFPatientClaim(Document):
             get_missing_patient_signature(self)
 
         validate_submit_date(self)
-        frappe.msgprint("Generating patient file: " + str(get_datetime()))
-        self.patient_file = generate_pdf(self)
-        frappe.msgprint("Generating claim file: " + str(get_datetime()))
-        self.claim_file = get_claim_pdf_file(self)
+        # frappe.msgprint("Generating patient file: " + str(get_datetime()))
+        # self.patient_file_mem = generate_pdf(self)
+        # frappe.msgprint("Generating claim file: " + str(get_datetime()))
+        # self.claim_file_mem = get_claim_pdf_file(self)
         frappe.msgprint("Sending NHIF Claim: " + str(get_datetime()))
         self.send_nhif_claim()
         frappe.msgprint("Got response from NHIF Claim: " + str(get_datetime()))
@@ -503,8 +503,8 @@ class NHIFPatientClaim(Document):
         entities.Gender = self.gender
         entities.DateOfBirth = str(self.date_of_birth)
         entities.PatientFileNo = self.patient_file_no
-        entities.PatientFile = self.patient_file
-        entities.ClaimFile = self.claim_file
+        entities.PatientFile = generate_pdf(self)
+        entities.ClaimFile = get_claim_pdf_file(self)
         entities.ClinicalNotes = self.clinical_notes
         entities.AuthorizationNo = self.authorization_no
         entities.AttendanceDate = str(self.attendance_date)
@@ -553,32 +553,47 @@ class NHIFPatientClaim(Document):
             "Content-Type": "application/json",
         }
         url = str(claimsserver_url) + "/claimsserver/api/v1/Claims/SubmitFolios"
-        r = requests.post(url, headers=headers, data=json_data, timeout=300)
-        if r.status_code != 200:
-            add_log(
-                request_type="SubmitFolios",
-                request_url=url,
-                request_header=headers,
-                request_body=json_data,
-                response_data=str(r.text) if r.text else str(r),
-                status_code=r.status_code,
-            )
-            if "has already been submitted." in str(r.text):
-                frappe.msgprint(str(r.text) if r.text else str(r))
-            else:
-                frappe.throw(str(r.text) if r.text else str(r))
-        else:
-            frappe.msgprint(str(r.text))
-            if r.text:
+        try:
+            r = requests.post(url, headers=headers, data=json_data, timeout=300)
+
+            if r.status_code != 200:
                 add_log(
                     request_type="SubmitFolios",
                     request_url=url,
                     request_header=headers,
                     request_body=json_data,
-                    response_data=r.text,
+                    response_data=str(r.text) if r.text else str(r),
                     status_code=r.status_code,
                 )
-            frappe.msgprint(_("The claim has been sent successfully"), alert=True)
+                if "has already been submitted." in str(r.text):
+                    frappe.msgprint(str(r.text) if r.text else str(r))
+                else:
+                    frappe.throw(str(r.text) if r.text else str(r))
+            else:
+                frappe.msgprint(str(r.text))
+                if r.text:
+                    add_log(
+                        request_type="SubmitFolios",
+                        request_url=url,
+                        request_header=headers,
+                        request_body=json_data,
+                        response_data=r.text,
+                        status_code=r.status_code,
+                    )
+                frappe.msgprint(_("The claim has been sent successfully"), alert=True)
+            
+        except Exception as e:
+            add_log(
+                    request_type="SubmitFolios",
+                    request_url=url,
+                    request_header=headers,
+                    request_body=json_data,
+                    response_data="NO RESPONSE DATA",
+                    status_code="REQUEST ERROR",
+                )
+            frappe.throw(frappe.get_traceback(),str(e)[0:140])
+            
+
 
     def calculate_totals(self):
         self.total_amount = 0
@@ -784,6 +799,7 @@ def generate_pdf(doc):
     file_list = frappe.get_all("File", filters={"attached_to_name": doc_name})
     for file in file_list:
         frappe.delete_doc("File", file.name, ignore_permissions=True)
+
     data_list = []
     data = doc.patient_encounters
     for i in data:
@@ -800,7 +816,7 @@ def generate_pdf(doc):
     else:
         print_format = "Patient File"
 
-    pdf = download_multi_pdf(doctype, doc_name, format=print_format, no_letterhead=1)
+    pdf = download_multi_pdf(doctype, doc_name, print_format=print_format, no_letterhead=1)
     if pdf:
         ret = frappe.get_doc(
             {
@@ -815,12 +831,12 @@ def generate_pdf(doc):
             }
         )
         ret.save(ignore_permissions=1)
-        ret.db_update()
+        # ret.db_update()
         base64_data = to_base64(pdf)
         return base64_data
 
 
-def download_multi_pdf(doctype, name, format=None, no_letterhead=0):
+def download_multi_pdf(doctype, name, print_format=None, no_letterhead=0):
     output = PdfFileWriter()
     if isinstance(doctype, dict):
         for doctype_name in doctype:
@@ -829,14 +845,13 @@ def download_multi_pdf(doctype, name, format=None, no_letterhead=0):
                     output = frappe.get_print(
                         doctype_name,
                         doc_name,
-                        format,
+                        print_format,
                         as_pdf=True,
                         output=output,
                         no_letterhead=no_letterhead,
                     )
                 except Exception:
                     frappe.log_error(frappe.get_traceback())
-        frappe.local.response.filename = "{}.pdf".format(name)
 
     return read_multi_pdf(output)
 
@@ -852,46 +867,48 @@ def read_multi_pdf(output):
 
 
 def get_claim_pdf_file(doc):
-    try:
-        doctype = doc.doctype
-        docname = doc.name
-        default_print_format = frappe.db.get_value(
-            "Property Setter",
-            dict(property="default_print_format", doc_type=doctype),
-            "value",
+    doctype = doc.doctype
+    docname = doc.name
+    default_print_format = frappe.db.get_value(
+        "Property Setter",
+        dict(property="default_print_format", doc_type=doctype),
+        "value",
+    )
+    if default_print_format:
+        print_format = default_print_format
+    else:
+        print_format = "NHIF Form 2A & B"
+
+    # print_format = "NHIF Form 2A & B"
+
+    html = frappe.get_print(
+        doctype, docname, print_format, doc=None, no_letterhead=1
+    )
+
+    filename = "{name}-claim".format(
+        name=docname.replace(" ", "-").replace("/", "-")
+    )
+    pdf = get_pdf(html)
+    if pdf:
+        ret = frappe.get_doc(
+            {
+                "doctype": "File",
+                "attached_to_doctype": doc.doctype,
+                "attached_to_name": docname,
+                "folder": "Home/Attachments",
+                "file_name": filename + ".pdf",
+                "file_url": "/private/files/" + filename + ".pdf",
+                "content": pdf,
+                "is_private": 1,
+            }
         )
-        if default_print_format:
-            print_format = default_print_format
-        else:
-            print_format = "NHIF Form 2A & B"
+        ret.insert(ignore_permissions=True)
+        ret.db_update()
+        if not ret.name:
+            frappe.throw("ret name not exist")
+        base64_data = to_base64(pdf)
+        return base64_data
+    else:
+        frappe.throw(_("Failed to generate pdf"))
 
-        # print_format = "NHIF Form 2A & B"
 
-        html = frappe.get_print(
-            doctype, docname, print_format, doc=None, no_letterhead=1
-        )
-
-        filename = "{name}-claim".format(
-            name=docname.replace(" ", "-").replace("/", "-")
-        )
-        pdf = get_pdf(html)
-        if pdf:
-            ret = frappe.get_doc(
-                {
-                    "doctype": "File",
-                    "attached_to_doctype": doc.doctype,
-                    "attached_to_name": docname,
-                    "folder": "Home/Attachments",
-                    "file_name": filename + ".pdf",
-                    "file_url": "/private/files/" + filename + ".pdf",
-                    "content": pdf,
-                    "is_private": 1,
-                }
-            )
-            ret.save(ignore_permissions=1)
-            ret.db_update()
-            base64_data = to_base64(pdf)
-            return base64_data
-
-    except Exception:
-        frappe.log_error(frappe.get_traceback())
