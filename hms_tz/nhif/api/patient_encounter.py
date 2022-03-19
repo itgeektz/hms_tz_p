@@ -46,11 +46,14 @@ def on_submit_validation(doc, method):
         doc.reference_encounter = doc.name
     show_last_prescribed(doc, method)
     show_last_prescribed_for_lrpt(doc)
+
+    # Run on_submit
     submitting_healthcare_practitioner = frappe.db.get_value(
         "Healthcare Practitioner", {"user_id": frappe.session.user}, ["name"]
     )
     if submitting_healthcare_practitioner:
         doc.practitioner = submitting_healthcare_practitioner
+
     checkـforـduplicate(doc, method)
     mtuha_missing = ""
     for final_diagnosis in doc.patient_encounter_final_diagnosis:
@@ -122,7 +125,8 @@ def on_submit_validation(doc, method):
                 for option in healthcare_doc.company_options:
                     if doc.company == option.company:
                         row.department_hsu = option.service_unit
-
+ 
+    # Run on_submit?
     prescribed_list = ""
     for key, value in child_tables.items():
         table = doc.get(key)
@@ -170,7 +174,6 @@ def on_submit_validation(doc, method):
         return
 
     if not doc.healthcare_service_unit:
-        # doc.healthcare_service_unit = "NW2F Room 05 OPD - SHMH-DSM"
         frappe.throw(_("Healthcare Service Unit not set"))
     healthcare_insurance_coverage_plan = frappe.get_value(
         "Healthcare Insurance Subscription",
@@ -314,6 +317,7 @@ def on_submit_validation(doc, method):
                 ).format(template, days, int(count), coverage_info.number_of_claims),
                 method,
             )
+    # Run on_submit
     validate_totals(doc)
 
 
