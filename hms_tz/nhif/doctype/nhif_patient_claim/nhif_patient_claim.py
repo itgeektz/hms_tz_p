@@ -540,10 +540,15 @@ class NHIFPatientClaim(Document):
 
         folio_data.entities.append(entities)
         jsonStr = json.dumps(folio_data)
-        return jsonStr
+
+        # Strip off the patient file
+        folio_data.entities[0].PatientFile="Stripped off"
+        folio_data.entities[0].ClaimFile="Stripped off"
+        jsonStr_wo_files = json.dumps(folio_data)
+        return jsonStr, jsonStr_wo_files
 
     def send_nhif_claim(self):
-        json_data = self.get_folio_json_data()
+        json_data, json_data_wo_files = self.get_folio_json_data()
         token = get_claimsservice_token(self.company)
         claimsserver_url = frappe.get_value(
             "Company NHIF Settings", self.company, "claimsserver_url"
@@ -553,22 +558,12 @@ class NHIFPatientClaim(Document):
             "Content-Type": "application/json",
         }
         url = str(claimsserver_url) + "/claimsserver/api/v1/Claims/SubmitFolios"
+        r = None
         try:
             r = requests.post(url, headers=headers, data=json_data, timeout=300)
 
             if r.status_code != 200:
-                add_log(
-                    request_type="SubmitFolios",
-                    request_url=url,
-                    request_header=headers,
-                    request_body=json_data,
-                    response_data=str(r.text) if r.text else str(r),
-                    status_code=r.status_code,
-                )
-                if "has already been submitted." in str(r.text):
-                    frappe.msgprint(str(r.text) if r.text else str(r))
-                else:
-                    frappe.throw(str(r.text) if r.text else str(r))
+                frappe.throw(str(r.text) if r.text else str(r))
             else:
                 frappe.msgprint(str(r.text))
                 if r.text:
@@ -576,7 +571,7 @@ class NHIFPatientClaim(Document):
                         request_type="SubmitFolios",
                         request_url=url,
                         request_header=headers,
-                        request_body=json_data,
+                        request_body=json_data_wo_files,
                         response_data=r.text,
                         status_code=r.status_code,
                     )
@@ -588,8 +583,8 @@ class NHIFPatientClaim(Document):
                     request_url=url,
                     request_header=headers,
                     request_body=json_data,
-                    response_data="NO RESPONSE DATA",
-                    status_code="REQUEST ERROR",
+                    response_data=r.get("text") if r else "NO RESPONSE",
+                    status_code=r.get("status_code") if r else "NO STATUS CODE",
                 )
             frappe.throw(frappe.get_traceback(),str(e)[0:140])
             
