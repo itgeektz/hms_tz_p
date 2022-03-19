@@ -11,7 +11,7 @@ from hms_tz.nhif.api.token import get_claimsservice_token
 import json
 import requests
 from frappe.utils.background_jobs import enqueue
-from frappe.utils import getdate, get_fullname, nowdate
+from frappe.utils import getdate, get_fullname, nowdate, get_datetime, time_diff_in_seconds
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from hms_tz.nhif.api.healthcare_utils import (
     get_item_rate,
@@ -25,6 +25,8 @@ from PyPDF2 import PdfFileWriter
 
 class NHIFPatientClaim(Document):
     def validate(self):
+        if self.docstatus != 0:
+            return
         self.patient_encounters = self.get_patient_encounters()
         if not self.patient_encounters:
             frappe.throw(_("There are no submitted encounters for this application"))
@@ -53,6 +55,8 @@ class NHIFPatientClaim(Document):
         )
 
     def before_submit(self):
+        start_datetime = get_datetime()
+        frappe.msgprint("Submit process started: " + str(get_datetime()))
         authorization_no = self.authorization_no
 
         claim_details = frappe.get_all(
@@ -78,9 +82,16 @@ class NHIFPatientClaim(Document):
             get_missing_patient_signature(self)
 
         validate_submit_date(self)
+        frappe.msgprint("Generating patient file: " + str(get_datetime()))
         self.patient_file = generate_pdf(self)
+        frappe.msgprint("Generating claim file: " + str(get_datetime()))
         self.claim_file = get_claim_pdf_file(self)
+        frappe.msgprint("Sending NHIF Claim: " + str(get_datetime()))
         self.send_nhif_claim()
+        frappe.msgprint("Got response from NHIF Claim: " + str(get_datetime()))
+        end_datetime = get_datetime()
+        time_in_seconds = time_diff_in_seconds(str(end_datetime), str(start_datetime))
+        frappe.msgprint("Total time to complete the process in seconds = " + str(time_in_seconds))
 
     def set_claim_values(self):
         if not self.folio_id:
