@@ -42,19 +42,222 @@ def on_trash(doc, method):
 
 
 def on_submit_validation(doc, method):
-    if doc.encounter_type == "Initial":
-        doc.reference_encounter = doc.name
-    show_last_prescribed(doc, method)
-    show_last_prescribed_for_lrpt(doc)
+    if doc.docstatus == 0:
+        if doc.encounter_type == "Initial":
+            doc.reference_encounter = doc.name
+        show_last_prescribed(doc, method)
+        show_last_prescribed_for_lrpt(doc)
+
+        checkـforـduplicate(doc, method)
+
+        insurance_subscription = doc.insurance_subscription
+        child_tables = {
+            "lab_test_prescription": "lab_test_code",
+            "radiology_procedure_prescription": "radiology_examination_template",
+            "procedure_prescription": "procedure",
+            "drug_prescription": "drug_code",
+            "therapies": "therapy_type",
+            # "diet_recommendation": "diet_plan" dosent have Healthcare Service Insurance Coverage
+        }
+
+        childs_map = [
+            {
+                "table": "lab_test_prescription",
+                "doctype": "Lab Test Template",
+                "item": "lab_test_code",
+            },
+            {
+                "table": "radiology_procedure_prescription",
+                "doctype": "Radiology Examination Template",
+                "item": "radiology_examination_template",
+            },
+            {
+                "table": "procedure_prescription",
+                "doctype": "Clinical Procedure Template",
+                "item": "procedure",
+            },
+            {
+                "table": "drug_prescription",
+                "doctype": "Medication",
+                "item": "drug_code",
+            },
+            {
+                "table": "therapies",
+                "doctype": "Therapy Type",
+                "item": "therapy_type",
+            },
+        ]
+        for child in childs_map:
+            for row in doc.get(child.get("table")):
+                healthcare_doc = frappe.get_doc(
+                    child.get("doctype"), row.get(child.get("item"))
+                )
+                if healthcare_doc.disabled:
+                    msgThrow(
+                        _(
+                            "{0} {1} selected at {2} is disabled. Please select an enabled item."
+                        ).format(child.get("doctype"), row.get(child.get("item")), row.idx),
+                        method,
+                    )
+                
+                if (
+                    child.get("doctype") != "Medication" and 
+                    row.doctype != "Drug Prescription"
+                ):
+                    for option in healthcare_doc.company_options:
+                        if doc.company == option.company:
+                            row.department_hsu = option.service_unit
+
+        if not insurance_subscription:
+            return
+
+        if not doc.healthcare_service_unit:
+            frappe.throw(_("Healthcare Service Unit not set"))
+        healthcare_insurance_coverage_plan = frappe.get_value(
+            "Healthcare Insurance Subscription",
+            insurance_subscription,
+            "healthcare_insurance_coverage_plan",
+        )
+        if not healthcare_insurance_coverage_plan:
+            frappe.throw(_("Healthcare Insurance Coverage Plan is Not defiend"))
+        today = nowdate()
+        healthcare_service_templates = {}
+        for key, value in child_tables.items():
+            for row in doc.get(key):
+                if row.override_subscription or row.prescribe:
+                    continue
+
+                # healthcare_service_templates is like {"CBC": [cbc1_lab_prescription_line_object, cbc2_lab_prescription_line_object], "XRay Abdomen": [radiology_prescription_line_object], ["Panadol": drug_prescription_line_object]}
+                rows_affected = healthcare_service_templates.setdefault(row.get(value), [])
+                rows_affected.append(row)
+        # hsic => Healthcare Service Insurance Coverage
+        hsic_list = frappe.get_all(
+            "Healthcare Service Insurance Coverage",
+            fields={
+                "healthcare_service_template",
+                "maximum_number_of_claims",
+                "approval_mandatory_for_claim",
+            },
+            filters={
+                "is_active": 1,
+                "healthcare_insurance_coverage_plan": healthcare_insurance_coverage_plan,
+                "start_date": ("<=", today),
+                "end_date": (">=", today),
+                "healthcare_service_template": ("in", healthcare_service_templates),
+            },
+            order_by="modified desc",
+        )
+        # hsic_map is like {"CBC": HSIC_object_for_CBC, "XRay Abdomen": HSIC_object_for_xray_abdomen, "Panadol": HSIC_object_for_panadol}
+        hsic_map = {hsic.healthcare_service_template: hsic for hsic in hsic_list}
+        hicp_name, is_exclusions = frappe.get_value(
+            "Healthcare Insurance Coverage Plan",
+            healthcare_insurance_coverage_plan,
+            ["coverage_plan_name", "is_exclusions"],
+        )
+        for template in healthcare_service_templates:
+            if not is_exclusions:
+                if template not in hsic_map:
+                    msg = _(
+                        "{0} not covered in Healthcare Insurance Coverage Plan "
+                        + str(hicp_name)
+                    ).format(template)
+                    msgThrow(
+                        msg,
+                        method,
+                    )
+                    continue
+            else:
+                if template in hsic_map:
+                    msg = _(
+                        "{0} not covered in Healthcare Insurance Coverage Plan "
+                        + str(hicp_name)
+                    ).format(template)
+                    msgThrow(
+                        msg,
+                        method,
+                    )
+                    continue
+            coverage_info = hsic_map[template]
+            for row in healthcare_service_templates[template]:
+                row.is_restricted = coverage_info.approval_mandatory_for_claim
+                if row.is_restricted:
+                    frappe.msgprint(
+                        _("{0} with template {1} requires additional authorization").format(
+                            _(row.doctype), template
+                        ),
+                        alert=True,
+                    )
+            if coverage_info.maximum_number_of_claims == 0:
+                continue
+            # if maximum_number_of_claims is more than 12 it means more times per month. Times will be less than 1
+            times = 12 / coverage_info.maximum_number_of_claims
+            count = 1
+            days = int(times * 30)
+            if times < 0.1:
+                count = 1 / times
+                days = 30
+            if not coverage_info.number_of_claims:
+                lrpt_names_sql = """
+                    SELECT hsi.name FROM `tabLab Prescription` hsi
+                    INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+                    WHERE pe.insurance_subscription = "{0}"
+                    AND hsi.lab_test_code = "{1}"
+                    AND hsi.prescribe = 0
+                    AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+                    UNION ALL
+                    SELECT hsi.name FROM `tabRadiology Procedure Prescription` hsi
+                    INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+                    WHERE pe.insurance_subscription = "{0}"
+                    AND hsi.radiology_examination_template = "{1}"
+                    AND hsi.prescribe = 0
+                    AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+                    UNION ALL
+                    SELECT hsi.name FROM `tabProcedure Prescription` hsi
+                    INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+                    WHERE pe.insurance_subscription = "{0}"
+                    AND hsi.procedure = "{1}"
+                    AND hsi.prescribe = 0
+                    AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+                    UNION ALL
+                    SELECT hsi.name FROM `tabTherapy Plan Detail` hsi
+                    INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+                    WHERE pe.insurance_subscription = "{0}"
+                    AND hsi.therapy_type = "{1}"
+                    AND hsi.prescribe = 0
+                    AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+                """.format(
+                    insurance_subscription, template, add_to_date(today, days=-days), today
+                )
+                lrpt_names = frappe.db.sql(lrpt_names_sql)
+                lrpt_count = len(lrpt_names) or 0
+                drug_count_sql = """
+                    SELECT SUM(quantity) FROM `tabDrug Prescription` hsi
+                    INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+                    WHERE pe.insurance_subscription = "{0}"
+                    AND hsi.drug_code = "{1}"
+                    AND hsi.prescribe = 0
+                    AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+                """.format(
+                    insurance_subscription, template, add_to_date(today, days=-days), today
+                )
+                drug_count = (
+                    frappe.db.sql(drug_count_sql, as_dict=0,)[
+                        0
+                    ][0]
+                    or 0
+                )
+                coverage_info.number_of_claims = lrpt_count + drug_count
+            if coverage_info.number_of_claims > int(count):
+                msgThrow(
+                    _(
+                        "Maximum Number of Claims for {0} per year is exceeded within the"
+                        " last {1} days. The allowed count is {2} where as past prescription count is {3}"
+                    ).format(template, days, int(count), coverage_info.number_of_claims),
+                    method,
+                )
+
 
     # Run on_submit
-    submitting_healthcare_practitioner = frappe.db.get_value(
-        "Healthcare Practitioner", {"user_id": frappe.session.user}, ["name"]
-    )
-    if submitting_healthcare_practitioner:
-        doc.practitioner = submitting_healthcare_practitioner
-
-    checkـforـduplicate(doc, method)
     mtuha_missing = ""
     for final_diagnosis in doc.patient_encounter_final_diagnosis:
         if not final_diagnosis.mtuha:
@@ -68,64 +271,13 @@ def on_submit_validation(doc, method):
             method,
         )
 
-    insurance_subscription = doc.insurance_subscription
-    child_tables = {
-        "lab_test_prescription": "lab_test_code",
-        "radiology_procedure_prescription": "radiology_examination_template",
-        "procedure_prescription": "procedure",
-        "drug_prescription": "drug_code",
-        "therapies": "therapy_type",
-        # "diet_recommendation": "diet_plan" dosent have Healthcare Service Insurance Coverage
-    }
+    # Run on_submit
+    submitting_healthcare_practitioner = frappe.db.get_value(
+        "Healthcare Practitioner", {"user_id": frappe.session.user}, ["name"]
+    )
+    if submitting_healthcare_practitioner:
+        doc.practitioner = submitting_healthcare_practitioner
 
-    childs_map = [
-        {
-            "table": "lab_test_prescription",
-            "doctype": "Lab Test Template",
-            "item": "lab_test_code",
-        },
-        {
-            "table": "radiology_procedure_prescription",
-            "doctype": "Radiology Examination Template",
-            "item": "radiology_examination_template",
-        },
-        {
-            "table": "procedure_prescription",
-            "doctype": "Clinical Procedure Template",
-            "item": "procedure",
-        },
-        {
-            "table": "drug_prescription",
-            "doctype": "Medication",
-            "item": "drug_code",
-        },
-        {
-            "table": "therapies",
-            "doctype": "Therapy Type",
-            "item": "therapy_type",
-        },
-    ]
-    for child in childs_map:
-        for row in doc.get(child.get("table")):
-            healthcare_doc = frappe.get_doc(
-                child.get("doctype"), row.get(child.get("item"))
-            )
-            if healthcare_doc.disabled:
-                msgThrow(
-                    _(
-                        "{0} {1} selected at {2} is disabled. Please select an enabled item."
-                    ).format(child.get("doctype"), row.get(child.get("item")), row.idx),
-                    method,
-                )
-            
-            if (
-                child.get("doctype") != "Medication" and 
-                row.doctype != "Drug Prescription"
-            ):
-                for option in healthcare_doc.company_options:
-                    if doc.company == option.company:
-                        row.department_hsu = option.service_unit
- 
     # Run on_submit?
     prescribed_list = ""
     for key, value in child_tables.items():
@@ -170,153 +322,6 @@ def on_submit_validation(doc, method):
             method,
         )
 
-    if not insurance_subscription:
-        return
-
-    if not doc.healthcare_service_unit:
-        frappe.throw(_("Healthcare Service Unit not set"))
-    healthcare_insurance_coverage_plan = frappe.get_value(
-        "Healthcare Insurance Subscription",
-        insurance_subscription,
-        "healthcare_insurance_coverage_plan",
-    )
-    if not healthcare_insurance_coverage_plan:
-        frappe.throw(_("Healthcare Insurance Coverage Plan is Not defiend"))
-    today = nowdate()
-    healthcare_service_templates = {}
-    for key, value in child_tables.items():
-        for row in doc.get(key):
-            if row.override_subscription or row.prescribe:
-                continue
-
-            # healthcare_service_templates is like {"CBC": [cbc1_lab_prescription_line_object, cbc2_lab_prescription_line_object], "XRay Abdomen": [radiology_prescription_line_object], ["Panadol": drug_prescription_line_object]}
-            rows_affected = healthcare_service_templates.setdefault(row.get(value), [])
-            rows_affected.append(row)
-    # hsic => Healthcare Service Insurance Coverage
-    hsic_list = frappe.get_all(
-        "Healthcare Service Insurance Coverage",
-        fields={
-            "healthcare_service_template",
-            "maximum_number_of_claims",
-            "approval_mandatory_for_claim",
-        },
-        filters={
-            "is_active": 1,
-            "healthcare_insurance_coverage_plan": healthcare_insurance_coverage_plan,
-            "start_date": ("<=", today),
-            "end_date": (">=", today),
-            "healthcare_service_template": ("in", healthcare_service_templates),
-        },
-        order_by="modified desc",
-    )
-    # hsic_map is like {"CBC": HSIC_object_for_CBC, "XRay Abdomen": HSIC_object_for_xray_abdomen, "Panadol": HSIC_object_for_panadol}
-    hsic_map = {hsic.healthcare_service_template: hsic for hsic in hsic_list}
-    hicp_name, is_exclusions = frappe.get_value(
-        "Healthcare Insurance Coverage Plan",
-        healthcare_insurance_coverage_plan,
-        ["coverage_plan_name", "is_exclusions"],
-    )
-    for template in healthcare_service_templates:
-        if not is_exclusions:
-            if template not in hsic_map:
-                msg = _(
-                    "{0} not covered in Healthcare Insurance Coverage Plan "
-                    + str(hicp_name)
-                ).format(template)
-                msgThrow(
-                    msg,
-                    method,
-                )
-                continue
-        else:
-            if template in hsic_map:
-                msg = _(
-                    "{0} not covered in Healthcare Insurance Coverage Plan "
-                    + str(hicp_name)
-                ).format(template)
-                msgThrow(
-                    msg,
-                    method,
-                )
-                continue
-        coverage_info = hsic_map[template]
-        for row in healthcare_service_templates[template]:
-            row.is_restricted = coverage_info.approval_mandatory_for_claim
-            if row.is_restricted:
-                frappe.msgprint(
-                    _("{0} with template {1} requires additional authorization").format(
-                        _(row.doctype), template
-                    ),
-                    alert=True,
-                )
-        if coverage_info.maximum_number_of_claims == 0:
-            continue
-        # if maximum_number_of_claims is more than 12 it means more times per month. Times will be less than 1
-        times = 12 / coverage_info.maximum_number_of_claims
-        count = 1
-        days = int(times * 30)
-        if times < 0.1:
-            count = 1 / times
-            days = 30
-        if not coverage_info.number_of_claims:
-            lrpt_names_sql = """
-                SELECT hsi.name FROM `tabLab Prescription` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                  AND hsi.lab_test_code = "{1}"
-                  AND hsi.prescribe = 0
-                  AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-                UNION ALL
-                SELECT hsi.name FROM `tabRadiology Procedure Prescription` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                  AND hsi.radiology_examination_template = "{1}"
-                  AND hsi.prescribe = 0
-                  AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-                UNION ALL
-                SELECT hsi.name FROM `tabProcedure Prescription` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                  AND hsi.procedure = "{1}"
-                  AND hsi.prescribe = 0
-                  AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-                UNION ALL
-                SELECT hsi.name FROM `tabTherapy Plan Detail` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                  AND hsi.therapy_type = "{1}"
-                  AND hsi.prescribe = 0
-                  AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-            """.format(
-                insurance_subscription, template, add_to_date(today, days=-days), today
-            )
-            lrpt_names = frappe.db.sql(lrpt_names_sql)
-            lrpt_count = len(lrpt_names) or 0
-            drug_count_sql = """
-                SELECT SUM(quantity) FROM `tabDrug Prescription` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                  AND hsi.drug_code = "{1}"
-                  AND hsi.prescribe = 0
-                  AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-            """.format(
-                insurance_subscription, template, add_to_date(today, days=-days), today
-            )
-            drug_count = (
-                frappe.db.sql(drug_count_sql, as_dict=0,)[
-                    0
-                ][0]
-                or 0
-            )
-            coverage_info.number_of_claims = lrpt_count + drug_count
-        if coverage_info.number_of_claims > int(count):
-            msgThrow(
-                _(
-                    "Maximum Number of Claims for {0} per year is exceeded within the"
-                    " last {1} days. The allowed count is {2} where as past prescription count is {3}"
-                ).format(template, days, int(count), coverage_info.number_of_claims),
-                method,
-            )
     # Run on_submit
     validate_totals(doc)
 
@@ -503,7 +508,7 @@ def on_submit(doc, method):
     ):  # Cash inpatient billing
         inpatient_billing(doc, method)
     else:  # insurance patient
-        on_submit_validation(doc, method)
+        # on_submit_validation(doc, method)
         create_healthcare_docs(doc, method)
         create_delivery_note(doc, method)
     if doc.inpatient_record:
