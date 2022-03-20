@@ -42,6 +42,14 @@ def on_trash(doc, method):
 
 
 def on_submit_validation(doc, method):
+    child_tables = {
+        "lab_test_prescription": "lab_test_code",
+        "radiology_procedure_prescription": "radiology_examination_template",
+        "procedure_prescription": "procedure",
+        "drug_prescription": "drug_code",
+        "therapies": "therapy_type",
+        # "diet_recommendation": "diet_plan" dosent have Healthcare Service Insurance Coverage
+    }
     if doc.docstatus == 0:
         if doc.encounter_type == "Initial":
             doc.reference_encounter = doc.name
@@ -51,14 +59,6 @@ def on_submit_validation(doc, method):
         checkـforـduplicate(doc, method)
 
         insurance_subscription = doc.insurance_subscription
-        child_tables = {
-            "lab_test_prescription": "lab_test_code",
-            "radiology_procedure_prescription": "radiology_examination_template",
-            "procedure_prescription": "procedure",
-            "drug_prescription": "drug_code",
-            "therapies": "therapy_type",
-            # "diet_recommendation": "diet_plan" dosent have Healthcare Service Insurance Coverage
-        }
 
         childs_map = [
             {
