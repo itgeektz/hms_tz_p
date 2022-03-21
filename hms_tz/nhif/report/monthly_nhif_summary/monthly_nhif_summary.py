@@ -11,18 +11,18 @@ def execute(filters):
     columns = get_columns()
 
     nhif_summary = get_data(filters)
+    if nhif_summary:
+        company_info = frappe.get_all(
+            "Company",
+            filters={"name": nhif_summary[0]["facility_name"]},
+            fields=["p_o_box", "city"],
+        )
 
-    company_info = frappe.get_all(
-        "Company",
-        filters={"name": nhif_summary[0]["facility_name"]},
-        fields=["p_o_box", "city"],
-    )
+        nhif_summary[0]["address"] = company_info[0]["p_o_box"]
+        nhif_summary[0]["region"] = company_info[0]["city"]
+        nhif_summary[0]["district"] = "Ilala"
 
-    nhif_summary[0]["address"] = company_info[0]["p_o_box"]
-    nhif_summary[0]["region"] = company_info[0]["city"]
-    nhif_summary[0]["district"] = "Ilala"
-
-    data += nhif_summary
+        data += nhif_summary
 
     return columns, data
 
@@ -82,13 +82,15 @@ def get_data(filters):
             ["docstatus", "=", 1],
             ["company", "=", filters.get("company")],
             [
-                "attendance_date",
+                "posting_date",
                 "between",
                 [filters.get("from_date"), filters.get("to_date")],
             ],
         ],
         fields=["name", "company", "facility_code", "gender", "total_amount"],
     )
+    if not claims:
+        return []
 
     facility_code = claims[0]["facility_code"]
     facility_name = claims[0]["company"]
