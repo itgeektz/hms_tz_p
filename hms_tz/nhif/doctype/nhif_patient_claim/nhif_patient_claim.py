@@ -749,11 +749,6 @@ def get_missing_patient_signature(self):
 
 
 def validate_submit_date(self):
-    if self.date_discharge:
-        date = self.date_discharge
-    else:
-        date = self.attendance_date
-
     start_date, end_date = frappe.get_value(
         "Company NHIF Settings", self.company, ["submit_start_date", "submit_end_date"]
     )
@@ -766,11 +761,11 @@ def validate_submit_date(self):
             )
         )
 
-    if str(date) < str(start_date) or str(date) > str(end_date):
+    if str(self.posting_date) < str(start_date) or str(self.posting_date) > str(end_date):
         frappe.throw(
-            "Attendance/Discharge Date: {0} is not between Submit Start Date: {1}\
+            "Posting Date: {0} is not between Submit Start Date: {1}\
             and Submit End Date: {2}".format(
-                frappe.bold(date), frappe.bold(start_date), frappe.bold(end_date)
+                frappe.bold(self.posting_date), frappe.bold(start_date), frappe.bold(end_date)
             )
         )
 
