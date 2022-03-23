@@ -1,0 +1,114 @@
+{
+ "add_total_row": 1,
+ "columns": [],
+ "creation": "2022-03-22 16:00:35.834679",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "SHM-Hospital Letter Head",
+ "modified": "2022-03-22 16:00:35.834679",
+ "modified_by": "Administrator",
+ "module": "Hms Tz",
+ "name": "Hospital Revenue Report with NHIF Claim",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Patient Encounter",
+ "report_name": "Hospital Revenue Report with NHIF Claim",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Physician"
+  },
+  {
+   "role": "Nursing User"
+  },
+  {
+   "role": "Laboratory User"
+  },
+  {
+   "role": "Accounts User"
+  },
+  {
+   "role": "Healthcare Nursing"
+  },
+  {
+   "role": "Healthcare Triage"
+  },
+  {
+   "role": "Healthcare Invoicing"
+  },
+  {
+   "role": "Healthcare Head Pharmacist"
+  },
+  {
+   "role": "Healthcare Pharmacist"
+  },
+  {
+   "role": "Healthcare Physiotherapy"
+  },
+  {
+   "role": "Healthcare Receptionist"
+  },
+  {
+   "role": "Healthcare Lab Tech"
+  },
+  {
+   "role": "Healthcare Head Lab Tech"
+  },
+  {
+   "role": "Healthcare Radiographer"
+  },
+  {
+   "role": "Healthcare Practitioner"
+  },
+  {
+   "role": "Healthcare Clinical Procedures"
+  },
+  {
+   "role": "Healthcare Head Receptionist"
+  },
+  {
+   "role": "HR Manager (Accounts)"
+  },
+  {
+   "role": "Healthcare Head Invoicing"
+  },
+  {
+   "role": "SHM Store"
+  },
+  {
+   "role": "Direct Cash"
+  },
+  {
+   "role": "Healthcare Pre-Operative"
+  },
+  {
+   "role": "Lab Reports-TV"
+  },
+  {
+   "role": "Hemo Department"
+  },
+  {
+   "role": "Visting Consultant Reports"
+  },
+  {
+   "role": "Insurance Head and NHIF Patient Claim"
+  },
+  {
+   "role": "Kunduchi Store"
+  },
+  {
+   "role": "SHMH Statistician"
+  },
+  {
+   "role": "Accounts Manager"
+  }
+ ]
+}
