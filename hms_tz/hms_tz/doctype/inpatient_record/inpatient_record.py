@@ -80,7 +80,8 @@ class InpatientRecord(Document):
                 )
             )
             frappe.throw(msg)
-
+            
+    @frappe.whitelist()
     def admit(self, service_unit, check_in, expected_discharge=None):
         admit_patient(self, service_unit, check_in, expected_discharge)
 
