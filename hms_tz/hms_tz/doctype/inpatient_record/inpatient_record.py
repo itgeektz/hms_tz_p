@@ -89,6 +89,7 @@ class InpatientRecord(Document):
     def discharge(self):
         discharge_patient(self)
 
+    @frappe.whitelist()
     def transfer(self, service_unit, check_in, leave_from):
         if leave_from:
             patient_leave_service_unit(self, check_in, leave_from)
