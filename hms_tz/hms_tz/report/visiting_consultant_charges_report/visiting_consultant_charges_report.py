@@ -14,7 +14,7 @@ def execute(filters=None):
 		{"fieldname": "billing_item", "fieldtype": "Data", "label": _("Item")},
 		{"fieldname": "patients", "fieldtype": "Data", "label": _("Patients")},
 		{"fieldname": "mode", "fieldtype": "Data", "label": _("Mode")},
-		{"fieldname": "paid_amount", "fieldtype": "Currency", "label": _("Amount")},
+		{"fieldname": "paid_amount", "fieldtype": "Currency", "label": _("Paid Amount")},
 		{"fieldname": "vc_amount", "fieldtype": "Currency", "label": _("Vc Amount")},
 		{"fieldname": "company_amount", "fieldtype": "Currency", "label": _("Company Amount")},
 	]
@@ -46,14 +46,15 @@ def get_appointment_consultancy(filters, visiting_rates):
 		conditions += " AND pe.practitioner = %(practitioner)s"
 
 	records = frappe.db.sql("""
-		SELECT pa.name, COUNT(pa.patient) AS patients, pa.billing_item, SUM(pa.paid_amount) AS paid_amount,
+		SELECT COUNT(pa.patient) AS patients, pa.billing_item, SUM(pa.paid_amount) AS paid_amount,
 			pa.practitioner, if(pa.insurance_company != "", pa.insurance_company, "CASH OPD") AS mode,
 			"Patient Appointment" AS pa_doc
 		FROM `tabPatient Appointment` pa
 		INNER JOIN `tabPatient Encounter` pe ON pa.name = pe.appointment
 		WHERE pa.status = "Closed"
 		AND pa.follow_up = 0
-		AND pe.encounter_type = "Final" {conditions}
+		AND pe.encounter_type = "Final"
+		AND pe.duplicated = 0 {conditions}
 		GROUP BY pa.practitioner, mode, pa.billing_item
 	""".format(conditions=conditions), filters, as_dict=1)
 
@@ -102,16 +103,27 @@ def get_procedure_consultancy(filters, visiting_rates, excluded_service_rates):
 		conditions += " AND cp.practitioner = %(practitioner)s"
 
 	procedures = frappe.db.sql("""
-		SELECT cp.practitioner, cp.procedure_template AS billing_item, 
-		IF(cp.insurance_company is not null, cp.insurance_company, "CASH PROCEDURE") AS mode,
-		SUM(IF(cp.insurance_company is not null, pp.amount, sii.amount)) AS paid_amount, 
-		COUNT(cp.patient) AS patients, "Clinical Procedure" AS cl_doc, pp.name
+		SELECT cp.practitioner, cp.procedure_template AS billing_item,
+		cp.insurance_company AS mode, SUM(pp.amount) AS paid_amount,
+		COUNT(cp.patient) AS patients, "Clinical Procedure" AS cl_doc
 		FROM `tabClinical Procedure` cp
-		LEFT JOIN `tabProcedure Prescription` pp ON cp.ref_docname = pp.parent AND cp.procedure_template = pp.procedure
-		LEFT JOIN `tabSales Invoice Item` sii ON pp.name = sii.reference_dn AND sii.reference_dt = "Procedure Prescription"
-				AND sii.docstatus = 1
-		WHERE cp.status = "Completed" {conditions}
+		INNER JOIN `tabProcedure Prescription` pp ON cp.ref_docname = pp.parent
+			AND cp.procedure_template = pp.procedure AND pp.prescribe = 0
+		WHERE cp.insurance_company != ""
+		AND cp.status = "Completed" {conditions}
 		GROUP BY mode, cp.procedure_template, cp.practitioner
+
+		UNION ALL
+
+		SELECT cp.practitioner, cp.procedure_template AS billing_item,
+		"CASH PROCEDURE" AS mode, SUM(pp.amount) AS paid_amount,
+		COUNT(cp.patient) AS patients, "Clinical Procedure" AS cl_doc
+		FROM `tabClinical Procedure` cp
+		INNER JOIN `tabProcedure Prescription` pp ON cp.ref_docname = pp.parent
+			AND cp.procedure_template = pp.procedure AND pp.prescribe = 1
+		WHERE cp.insurance_company is null
+		AND cp.status = "Completed"  {conditions}
+		GROUP BY cp.practitioner, mode, cp.procedure_template
 	""".format(conditions=conditions), filters, as_dict=1)
 	
 	service_list = []
