@@ -79,9 +79,8 @@ def get_insurance_appointment_transactions(filters):
     if filters.get("company"):
         conditions += "AND pa.company = %(company)s"
     
-    data = frappe.db.sql(
-        """
-	    SELECT 
+    data = frappe.db.sql("""
+        SELECT 
 			YEAR(pa.appointment_date) AS year,
 			MONTHNAME(pa.appointment_date) AS month,
 			pa.practitioner AS healthcare_practitioner,
@@ -96,10 +95,11 @@ def get_insurance_appointment_transactions(filters):
 			"Submitted" AS status
 		FROM `tabPatient Appointment` pa 
 			INNER JOIN `tabHealthcare Practitioner` hp ON pa.practitioner = hp.name
+            INNER JOIN `tabHealthcare Insurance Coverage Plan` hicp ON pa.coverage_plan_name = hicp.coverage_plan_name
 			LEFT JOIN `tabMedical Department` md ON hp.department = md.name
-		WHERE pa.status = 'Closed' 
-        AND pa.insurance_company != ""
-        AND pa.insurance_company NOT LIKE "%%NHIF%%"
+		WHERE pa.insurance_company != ""
+        AND hicp.hms_tz_has_nhif_coverage = 0 
+        AND  pa.status = 'Closed' 
 		AND pa.follow_up = 0 {conditions}
 		GROUP BY 
 			YEAR(pa.appointment_date), 
@@ -119,9 +119,8 @@ def get_insurance_appointment_transactions(filters):
 def get_insurance_lab_transactions(filters):
     conditions = get_conditions(filters)
 
-    data = frappe.db.sql(
-        """
-	    SELECT 
+    data = frappe.db.sql("""
+        SELECT 
 			YEAR(pe.encounter_date) AS year, 
 			MONTHNAME(pe.encounter_date) AS month, 
 			pe.practitioner AS healthcare_practitioner,
@@ -136,12 +135,13 @@ def get_insurance_lab_transactions(filters):
 			IF(MAX(hs_doc.docstatus) = 1, "Submitted", "Draft") AS status
 		FROM `tabLab Prescription` hsp
 			INNER JOIN `tabPatient Encounter` pe ON hsp.parent = pe.name
+            INNER JOIN `tabHealthcare Insurance Coverage Plan` hicp ON pe.insurance_coverage_plan = hicp.coverage_plan_name
 			INNER JOIN `tabHealthcare Practitioner` hp ON pe.practitioner = hp.name
 			LEFT JOIN `tabMedical Department` md ON hp.department = md.name
 			LEFT OUTER JOIN `tabLab Test` hs_doc ON hsp.lab_test = hs_doc.name 
                 AND hs_doc.docstatus IN (0, 1)
 		WHERE pe.insurance_company != ""
-        AND pe.insurance_company NOT LIKE "%%NHIF%%"
+        AND hicp.hms_tz_has_nhif_coverage = 0
 		AND hsp.docstatus = 1 
 		AND hsp.prescribe = 0
         AND hsp.is_not_available_inhouse = 0 
@@ -166,9 +166,8 @@ def get_insurance_lab_transactions(filters):
 def get_insurance_radiology_transactions(filters):
     conditions = get_conditions(filters)
 
-    data = frappe.db.sql(
-        """
-	    SELECT 
+    data = frappe.db.sql("""
+        SELECT 
 			YEAR(pe.encounter_date) AS year, 
 			MONTHNAME(pe.encounter_date) AS month, 
 			pe.practitioner AS healthcare_practitioner,
@@ -183,12 +182,13 @@ def get_insurance_radiology_transactions(filters):
 			IF(MAX(hs_doc.docstatus) = 1, "Submitted", "Draft") AS status
 		FROM `tabRadiology Procedure Prescription` hsp
 			INNER JOIN `tabPatient Encounter` pe ON hsp.parent = pe.name
+            INNER JOIN `tabHealthcare Insurance Coverage Plan` hicp ON pe.insurance_coverage_plan = hicp.coverage_plan_name
 			INNER JOIN `tabHealthcare Practitioner` hp ON pe.practitioner = hp.name
 			LEFT JOIN `tabMedical Department` md ON hp.department = md.name
 			LEFT OUTER JOIN `tabRadiology Examination` hs_doc ON hsp.radiology_examination = hs_doc.name
                 AND hs_doc.docstatus IN (0, 1)
 		WHERE pe.insurance_company != ""
-        AND pe.insurance_company NOT LIKE "%%NHIF%%"
+        AND hicp.hms_tz_has_nhif_coverage = 0
 		AND hsp.docstatus = 1 
 		AND hsp.prescribe = 0
         AND hsp.is_not_available_inhouse = 0 
@@ -230,12 +230,13 @@ def get_insurance_procedure_transactions(filters):
 			IF(MAX(hs_doc.docstatus) = 1, "Submitted", "Draft") AS status
 		FROM `tabProcedure Prescription` hsp
 			INNER JOIN `tabPatient Encounter` pe ON pe.name = hsp.parent
+            INNER JOIN `tabHealthcare Insurance Coverage Plan` hicp ON pe.insurance_coverage_plan = hicp.coverage_plan_name
 			INNER JOIN `tabHealthcare Practitioner` hp ON pe.practitioner = hp.name
 			LEFT JOIN `tabMedical Department` md ON hp.department = md.name
 			LEFT OUTER JOIN `tabClinical Procedure` hs_doc ON hsp.clinical_procedure = hs_doc.name
-		        AND hs_doc.docstatus IN (0, 1)
+                AND hs_doc.docstatus IN (0, 1)
 		WHERE pe.insurance_company != ""
-        AND pe.insurance_company NOT LIKE "%%NHIF%%"
+        AND hicp.hms_tz_has_nhif_coverage = 0
 		AND hsp.docstatus = 1 
 		AND hsp.prescribe = 0
         AND hsp.is_not_available_inhouse = 0 
@@ -276,7 +277,7 @@ def get_insurance_drug_transactions(filters):
 			IF(MAX(hs_doc.docstatus) = 1, "Submitted", "Draft") AS status
 		FROM `tabDrug Prescription` hsp
 			INNER JOIN `tabPatient Encounter` pe ON pe.name = hsp.parent
-			INNER JOIN `tabMedication` hst ON hst.name = hsp.drug_code
+            INNER JOIN `tabHealthcare Insurance Coverage Plan` hicp ON pe.insurance_coverage_plan = hicp.coverage_plan_name
 			INNER JOIN `tabHealthcare Practitioner` hp ON pe.practitioner = hp.name
 			LEFT JOIN `tabMedical Department` md ON hp.department = md.name
             LEFT OUTER JOIN `tabDelivery Note Item` hs_doc ON hsp.name = hs_doc.reference_name 
@@ -284,7 +285,7 @@ def get_insurance_drug_transactions(filters):
             LEFT OUTER JOIN `tabDelivery Note` dn ON hs_doc.parent = dn.name AND dn.docstatus IN (0, 1)
                 AND dn.is_return = 0 
 		WHERE pe.insurance_company != ""
-        AND pe.insurance_company NOT LIKE "%%NHIF%%"
+        AND hicp.hms_tz_has_nhif_coverage = 0
 		AND hsp.docstatus = 1 
 		AND hsp.prescribe = 0
         AND hsp.is_not_available_inhouse = 0 
@@ -326,10 +327,11 @@ def get_insurance_therapy_transactions(filters):
 			IF(1 = 1, "Submitted", "Draft") AS status
 		FROM `tabTherapy Plan Detail` hsp
 			INNER JOIN `tabPatient Encounter` pe ON pe.name = hsp.parent
+            INNER JOIN `tabHealthcare Insurance Coverage Plan` hicp ON pe.insurance_coverage_plan = hicp.coverage_plan_name
 			INNER JOIN `tabHealthcare Practitioner` hp ON pe.practitioner = hp.name
 			LEFT JOIN `tabMedical Department` md ON hp.department = md.name
 		WHERE pe.insurance_company != ""
-        AND pe.insurance_company NOT LIKE "%%NHIF%%"
+        AND hicp.hms_tz_has_nhif_coverage = 0
 		AND hsp.docstatus = 1 
 		AND hsp.prescribe = 0
         AND hsp.is_not_available_inhouse = 0 
@@ -384,12 +386,13 @@ def get_insurance_transactions_for_inpatient_occupancy(filters):
 			"Confirmed" AS status
 		FROM `tabInpatient Occupancy` ipd_occ
 			INNER JOIN `tabInpatient Record` ipd_rec ON ipd_occ.parent = ipd_rec.name
+            INNER JOIN `tabHealthcare Insurance Coverage Plan` hicp ON ipd_rec.insurance_coverage_plan = hicp.coverage_plan_name
 			INNER JOIN `tabHealthcare Service Unit` hsu ON ipd_occ.service_unit = hsu.name
 			INNER JOIN `tabHealthcare Service Unit Type` hsut ON hsu.service_unit_type = hsut.name
 			INNER JOIN `tabPatient Appointment` pa ON ipd_rec.patient_appointment = pa.name
 		WHERE ipd_rec.company = %(company)s
 		AND ipd_rec.insurance_subscription != ""
-        AND ipd_rec.insurance_company NOT LIKE "%%NHIF%%"
+        AND hicp.hms_tz_has_nhif_coverage = 0
 		AND ipd_occ.check_in BETWEEN %(from_date)s AND %(to_date)s
 		AND ipd_occ.is_confirmed = 1
 		GROUP BY 
@@ -423,13 +426,14 @@ def get_insurance_transactions_for_inpatient_consultancy(filters):
 			null AS main_department, "Confirmed" AS status
 		FROM `tabInpatient Consultancy` ipd_cons
 			INNER JOIN `tabInpatient Record` ipd_rec ON ipd_cons.parent = ipd_rec.name
+            INNER JOIN `tabHealthcare Insurance Coverage Plan` hicp ON ipd_rec.insurance_coverage_plan = hicp.coverage_plan_name
 			INNER JOIN `tabPatient Appointment` pa ON ipd_rec.patient_appointment = pa.name
 			INNER JOIN `tabItem` it ON ipd_cons.consultation_item = it.item_name
 			LEFT OUTER JOIN `tabPatient Encounter` pe ON ipd_cons.encounter = pe.name
 			LEFT OUTER JOIN `tabHealthcare Practitioner` hp ON pe.practitioner = hp.name
 		WHERE ipd_rec.company = %(company)s
 		AND ipd_rec.insurance_subscription != ""
-        AND ipd_rec.insurance_company NOT LIKE "%%NHIF%%"
+        AND hicp.hms_tz_has_nhif_coverage = 0
 		AND ipd_cons.date BETWEEN %(from_date)s AND %(to_date)s
 		AND ipd_cons.is_confirmed = 1
 		GROUP BY 
