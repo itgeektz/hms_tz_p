@@ -154,11 +154,45 @@ class NHIFPatientClaim(Document):
             self.set_patient_claim_disease()
             self.set_patient_claim_item()
 
+    @frappe.whitelist()
+    def get_appointments(self):
+        appointments = frappe.get_all('NHIF Patient Claim',
+            filters={'patient': self.patient, 'authorization_no': self.authorization_no, 'cardno': self.cardno},
+            fields=['name', 'patient_appointment']
+        )
+        
+        if len(appointments) == 1:
+            frappe.throw(_("<p style='text-align: center; font-size: 12pt; background-color: #FFD700;'>\
+                <strong>This Authorization no: {0} was used only once on <br> NHIF Patient Claim: {1} </strong>\
+                </p>".format(frappe.bold(self.authorization_no), frappe.bold(self.name))))
+            
+        appointment_string = ''
+
+        for d in appointments:
+            appointment_string += d['patient_appointment'] + ','
+            frappe.db.set_value('Patient Appointment', d['patient_appointment'], 'nhif_patient_claim', self.name)
+        
+        self.allow_changes = 0
+        self.hms_tz_appointment_string = appointment_string
+        
+        self.save(ignore_permissions=True)
+
     def get_patient_encounters(self):
+        if not self.hms_tz_appointment_string:
+            patient_appointment = self.patient_appointment
+        
+        else:
+            appointment_list = []
+            for app_name in self.hms_tz_appointment_string.split(','):
+                if app_name != '':
+                    appointment_list.append(app_name)
+            
+            patient_appointment = ['in', appointment_list]
+        
         patient_encounters = frappe.get_all(
             "Patient Encounter",
             filters={
-                "appointment": self.patient_appointment,
+                "appointment": patient_appointment,
                 "docstatus": 1,
             },
             order_by="`creation` ASC",
@@ -640,104 +674,6 @@ class NHIFPatientClaim(Document):
                     frappe.bold(self.patient), frappe.bold(self.patient_appointment)
                 )
             )
-
-
-@frappe.whitelist()
-def merge_nhif_claims(authorization_no):
-    claim_details = frappe.get_all(
-        "NHIF Patient Claim",
-        filters={"authorization_no": authorization_no, "docstatus": 0},
-        fields=["name"],
-    )
-
-    if len(claim_details) == 1:
-        frappe.throw(
-            "This Authorization No.: {0} was used only once on NHIF Patient Claim: {1}".format(
-                frappe.bold(authorization_no), frappe.bold(claim_details[0]["name"])
-            )
-        )
-
-    first_doc = frappe.get_doc("NHIF Patient Claim", claim_details[0]["name"])
-    second_doc = frappe.get_doc("NHIF Patient Claim", claim_details[1]["name"])
-
-    diseases_no = len(first_doc.nhif_patient_claim_disease)
-    items_no = len(first_doc.nhif_patient_claim_item)
-
-    if second_doc.nhif_patient_claim_disease:
-        for row in second_doc.nhif_patient_claim_disease:
-            first_doc.append(
-                "nhif_patient_claim_disease",
-                {
-                    "diagnosis_type": row.diagnosis_type,
-                    "status": row.status,
-                    "medical_code": row.medical_code,
-                    "disease_code": row.disease_code,
-                    "description": row.description,
-                    "patient_encounter": row.patient_encounter,
-                    "codification_table": row.codification_table,
-                    "folio_id": row.folio_id,
-                    "folio_disease_id": row.folio_disease_id,
-                    "created_by": row.created_by,
-                    "item_crt_by": row.item_crt_by,
-                    "date_created": row.date_created,
-                    "parent": first_doc.name,
-                    "parenttype": row.parenttype,
-                },
-            )
-
-    if second_doc.nhif_patient_claim_item:
-        for row in second_doc.nhif_patient_claim_item:
-            first_doc.append(
-                "nhif_patient_claim_item",
-                {
-                    "ref_doctype": row.ref_doctype,
-                    "item_name": row.item_name,
-                    "item_code": row.item_code,
-                    "item_quantity": row.item_quantity,
-                    "unit_price": row.unit_price,
-                    "amount_claimed": row.amount_claimed,
-                    "created_by": row.created_by,
-                    "item_crt_by": row.item_crt_by,
-                    "patient_encounter": row.patient_encounter,
-                    "ref_docname": row.ref_docname,
-                    "approval_ref_no": row.approval_ref_no,
-                    "folio_item_id": row.folio_item_id,
-                    "folio_id": row.folio_id,
-                    "date_created": row.date_created,
-                    "claim_status": row.claim_status,
-                    "claim_closed": row.claim_closed,
-                    "reference_doctype": row.reference_doctype,
-                    "reference_docname": row.reference_docname,
-                    "claim_status_modification_notes": row.claim_status_modification_notes,
-                    "parent": first_doc.name,
-                    "parenttype": row.parenttype,
-                },
-            )
-
-    first_doc.allow_changes = 1
-    first_doc.save(ignore_permissions=True)
-    frappe.db.commit()
-
-    if len(first_doc.nhif_patient_claim_disease) > diseases_no:
-        frappe.msgprint(
-            "NHIF Patient Claim Diseases merged successfully \
-            from Claim: {0} to Claim: {1}".format(
-                frappe.bold(second_doc.name), frappe.bold(first_doc.name)
-            )
-        )
-
-    if len(first_doc.nhif_patient_claim_item) > items_no:
-        frappe.msgprint(
-            "NHIF Patient Claim Items merged successfully \
-            from Claim: {0} to Claim: {1}".format(
-                frappe.bold(second_doc.name), frappe.bold(first_doc.name)
-            )
-        )
-
-    first_doc.reload()
-
-    # frappe.delete_doc(second_doc.doctype, second_doc.name)
-
 
 def get_missing_patient_signature(self):
     if self.patient:
