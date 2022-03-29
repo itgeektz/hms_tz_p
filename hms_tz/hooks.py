@@ -48,6 +48,7 @@ doctype_js = {
     "Inpatient Record": "nhif/api/inpatient_record.js",
     "Healthcare Service Unit": "nhif/api/service_unit.js",
     "Therapy Plan": "nhif/api/therapy_plan.js",
+    "Clinical Procedure": "nhif/api/clinical_procedure.js",
 }
 # csf_tz.nhif.api.patient_appointment
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
