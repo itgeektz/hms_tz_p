@@ -158,22 +158,19 @@ class NHIFPatientClaim(Document):
     def get_appointments(self):
         appointments = frappe.get_all('NHIF Patient Claim',
             filters={'patient': self.patient, 'authorization_no': self.authorization_no, 'cardno': self.cardno},
-            fields=['name', 'patient_appointment']
+            fields=['patient_appointment'], pluck='patient_appointment'
         )
         
         if len(appointments) == 1:
             frappe.throw(_("<p style='text-align: center; font-size: 12pt; background-color: #FFD700;'>\
                 <strong>This Authorization no: {0} was used only once on <br> NHIF Patient Claim: {1} </strong>\
                 </p>".format(frappe.bold(self.authorization_no), frappe.bold(self.name))))
-            
-        appointment_string = ''
-
-        for d in appointments:
-            appointment_string += d['patient_appointment'] + ','
-            frappe.db.set_value('Patient Appointment', d['patient_appointment'], 'nhif_patient_claim', self.name)
+        
+        for app_name in appointments:
+            frappe.db.set_value('Patient Appointment', app_name, 'nhif_patient_claim', self.name)
         
         self.allow_changes = 0
-        self.hms_tz_appointment_string = appointment_string
+        self.hms_tz_appointment_string = json.dumps(appointments)
         
         self.save(ignore_permissions=True)
 
@@ -182,12 +179,7 @@ class NHIFPatientClaim(Document):
             patient_appointment = self.patient_appointment
         
         else:
-            appointment_list = []
-            for app_name in self.hms_tz_appointment_string.split(','):
-                if app_name != '':
-                    appointment_list.append(app_name)
-            
-            patient_appointment = ['in', appointment_list]
+            patient_appointment = ['in', json.loads(self.hms_tz_appointment_string)]
         
         patient_encounters = frappe.get_all(
             "Patient Encounter",
