@@ -15,16 +15,15 @@ frappe.ui.form.on('NHIF Patient Claim', {
 	},
 
 	refresh(frm) {
-		if (frm.doc.authorization_no) {
+		if (frm.doc.docstatus === 0 && frm.doc.authorization_no) {
 			frm.add_custom_button(__("Merge Claims"), function () {
-				frappe.call({
-					method: "hms_tz.nhif.doctype.nhif_patient_claim.nhif_patient_claim.merge_nhif_claims",
-					args: { "authorization_no": frm.doc.authorization_no },
-					callback: function (data) {
-						frm.reload_doc()
-					}
-				})
-			})
+				frm.dirty()
+				frm.call('get_appointments', {self: frm.doc})
+				.then(r => {
+					frm.save()
+					frm.refresh()
+				});
+			});
 		}
 	},
 
