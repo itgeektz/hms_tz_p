@@ -344,7 +344,8 @@ let check_and_set_availability = function (frm) {
 				d.fields_dict.practitioner.get_query = function () {
 					return {
 						filters: {
-							'department': department
+							'department': department,
+							'status': 'Active'
 						}
 					};
 				};
