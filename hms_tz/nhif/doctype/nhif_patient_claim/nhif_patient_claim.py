@@ -470,31 +470,60 @@ class NHIFPatientClaim(Document):
             idx += 1
         self.nhif_patient_claim_item = sorted_patient_claim_item
 
-        patient_appointment_doc = frappe.get_doc(
-            "Patient Appointment", self.patient_appointment
-        )
-        if not is_inpatient and not patient_appointment_doc.follow_up:
-            item_code = patient_appointment_doc.billing_item
-            item_rate = get_item_rate(
-                item_code,
-                self.company,
-                patient_appointment_doc.insurance_subscription,
-                patient_appointment_doc.insurance_company,
+        if not self.hms_tz_appointment_string:
+            patient_appointment_doc = frappe.get_doc(
+                "Patient Appointment", self.patient_appointment
             )
-            new_row = self.append("nhif_patient_claim_item", {})
-            new_row.item_name = patient_appointment_doc.billing_item
-            new_row.item_code = get_item_refcode(item_code)
-            new_row.item_quantity = 1
-            new_row.unit_price = item_rate
-            new_row.amount_claimed = item_rate
-            new_row.approval_ref_no = ""
-            new_row.ref_doctype = patient_appointment_doc.doctype
-            new_row.ref_docname = patient_appointment_doc.name
-            new_row.folio_item_id = str(uuid.uuid1())
-            new_row.folio_id = self.folio_id
-            new_row.date_created = patient_appointment_doc.modified.strftime("%Y-%m-%d")
-            new_row.item_crt_by = get_fullname(patient_appointment_doc.modified_by)
-            new_row.idx = 1
+            if not is_inpatient and not patient_appointment_doc.follow_up:
+                item_code = patient_appointment_doc.billing_item
+                item_rate = get_item_rate(
+                    item_code,
+                    self.company,
+                    patient_appointment_doc.insurance_subscription,
+                    patient_appointment_doc.insurance_company,
+                )
+                new_row = self.append("nhif_patient_claim_item", {})
+                new_row.item_name = patient_appointment_doc.billing_item
+                new_row.item_code = get_item_refcode(item_code)
+                new_row.item_quantity = 1
+                new_row.unit_price = item_rate
+                new_row.amount_claimed = item_rate
+                new_row.approval_ref_no = ""
+                new_row.ref_doctype = patient_appointment_doc.doctype
+                new_row.ref_docname = patient_appointment_doc.name
+                new_row.folio_item_id = str(uuid.uuid1())
+                new_row.folio_id = self.folio_id
+                new_row.date_created = patient_appointment_doc.modified.strftime("%Y-%m-%d")
+                new_row.item_crt_by = get_fullname(patient_appointment_doc.modified_by)
+                new_row.idx = 1
+        
+        else:
+            for patient_appointment in json.loads(self.hms_tz_appointment_string):
+                patient_appointment_doc = frappe.get_doc(
+                    "Patient Appointment", patient_appointment
+                )
+                if not is_inpatient and not patient_appointment_doc.follow_up:
+                    item_code = patient_appointment_doc.billing_item
+                    item_rate = get_item_rate(
+                        item_code,
+                        self.company,
+                        patient_appointment_doc.insurance_subscription,
+                        patient_appointment_doc.insurance_company,
+                    )
+                    new_row = self.append("nhif_patient_claim_item", {})
+                    new_row.item_name = patient_appointment_doc.billing_item
+                    new_row.item_code = get_item_refcode(item_code)
+                    new_row.item_quantity = 1
+                    new_row.unit_price = item_rate
+                    new_row.amount_claimed = item_rate
+                    new_row.approval_ref_no = ""
+                    new_row.ref_doctype = patient_appointment_doc.doctype
+                    new_row.ref_docname = patient_appointment_doc.name
+                    new_row.folio_item_id = str(uuid.uuid1())
+                    new_row.folio_id = self.folio_id
+                    new_row.date_created = patient_appointment_doc.modified.strftime("%Y-%m-%d")
+                    new_row.item_crt_by = get_fullname(patient_appointment_doc.modified_by)
+                    new_row.idx = 1
 
     def get_final_patient_encounter(self):
         patient_encounter_list = frappe.get_all(
