@@ -143,16 +143,15 @@ def get_appointment_details(filters):
 	inpatient_records = frappe.get_all("Inpatient Record", filters={"patient_appointment": ["in", name_list],
 		"insurance_company": "NHIF"}, fields=["status", "patient_appointment"]
 	)
-	if not inpatient_records:
-		return name_list, appointment_list
 	
 	appointment_details = []
 	for appointment in appointment_list:
-		for record in inpatient_records:
-			if appointment["appointment_no"] == record.patient_appointment:
-				entries.append(appointment["appointment_no"])
-				appointment["ipd_status"] = record.status
-				appointment_details.append(appointment)
+		if inpatient_records:
+			for record in inpatient_records:
+				if appointment["appointment_no"] == record.patient_appointment:
+					entries.append(appointment["appointment_no"])
+					appointment["ipd_status"] = record.status
+					appointment_details.append(appointment)
 
 		if appointment["appointment_no"] not in entries:
 			appointment["ipd_status"] = ""

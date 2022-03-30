@@ -85,7 +85,24 @@ frappe.ui.form.on('Patient Encounter', {
                 }
             };
         });
+        frm.set_query("default_healthcare_service_unit", function(){
+            return {
+                filters:{
+                    "company": frm.doc.company,
+                    "name": ["like", "%Pharmacy%"]
+                    }
+            }
+        });
+        if (!frm.doc.practitioner.includes("Direct")) {
+            frm.toggle_reqd("examination_detail", 1)
+        }
     },
+    
+    clear_history: function(frm) {
+        frm.set_value("examination_detail", "")
+        frm.refresh_field("examination_detail")
+    },
+
     default_healthcare_service_unit: function (frm) {
         if (frm.doc.default_healthcare_service_unit) {
             frm.doc.drug_prescription.forEach(row => {
