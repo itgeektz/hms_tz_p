@@ -246,7 +246,9 @@ def get_lrpt_item_list(patient, appointment_no, company):
 		
 		for item in items:
 			if item.lab_test_code:
+				lab_status = None
 				if not item.lab_test:
+					lab_status = 'Draft'
 					name = get_refdoc(
 						"Lab Prescription",
 						item.lab_test_code,
@@ -259,11 +261,14 @@ def get_lrpt_item_list(patient, appointment_no, company):
 					"quantity": 1,
 					"encounter_no": item.parent,
 					"reference_doctype": "Lab Test",
-					"reference_docname": item.lab_test or name
+					"reference_docname": item.lab_test or name,
+					"status": lab_status or "Submitted"
 				})
 			
 			if item.radiology_examination_template:
+				radiology_status = None
 				if not item.radiology_examination:
+					radiology_status = 'Draft'
 					name = get_refdoc(
 						"Radiology Procedure Prescription", 
 						item.radiology_examination_template, 
@@ -276,11 +281,14 @@ def get_lrpt_item_list(patient, appointment_no, company):
 					"quantity": 1,
 					"encounter_no": item.parent,
 					"reference_doctype": "Radiology Examination",
-					"reference_docname": item.radiology_examination or name
+					"reference_docname": item.radiology_examination or name,
+					"status": radiology_status or "Submitted"
 				})
 			
 			if item.procedure:
+				procedure_status = None
 				if not item.clinical_procedure:
+					procedure_status = 'Draft'
 					name = get_refdoc(
 						"Procedure Prescription",
 						item.procedure,
@@ -293,7 +301,8 @@ def get_lrpt_item_list(patient, appointment_no, company):
 					"quantity": 1,
 					"encounter_no": item.parent,
 					"reference_doctype": "Clinical Procedure",
-					"reference_docname": item.clinical_procedure or name
+					"reference_docname": item.clinical_procedure or name,
+					"status": procedure_status or "Submitted"
 				})
 			
 			# if item.therapy_type:

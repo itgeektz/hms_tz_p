@@ -68,7 +68,7 @@ frappe.ui.form.on('LRPMT Returns', {
 		var $results;
 		var $placeholder;
 		if (frm.doc.patient && frm.doc.appointment_no && frm.doc.company) {
-			var columns = (["item_name", "encounter_no", "reference_doctype"])
+			var columns = (["item_name", "encounter_no", "reference_docname", "reference_doctype", "status"])
 
 			frappe.call({
 				method: "hms_tz.hms_tz.doctype.lrpmt_returns.lrpmt_returns.get_lrpt_item_list",
@@ -103,7 +103,8 @@ frappe.ui.form.on('LRPMT Returns', {
 				.prop("checked", ($(e.target).is(':checked')));
 		});
 		set_lrpt_primary_action(frm, d, $results, true);
-		d.show()
+		d.$wrapper.find('.modal-content').css('width', '900px');
+		d.show();
 	},
 
 	get_drug_items: function (frm){
@@ -156,7 +157,8 @@ frappe.ui.form.on('LRPMT Returns', {
 				.prop("checked", ($(e.target).is(':checked')));
 		});
 		set_drug_primary_action(frm, d, $results, true);
-		d.show()
+		d.$wrapper.find('.modal-content').css('width', '800px');
+		d.show();
 	},
 });
 
@@ -195,7 +197,8 @@ var list_row_lrpt_items = function (head, $row, result, item) {
 				data-quantity = "${result.quantity}"
 				data-encounter = "${result.encounter_no}"
 				data-reference_doctype = "${result.reference_doctype}"
-				data-reference_docname = "${result.reference_docname}"
+				data-reference_docname = "${result.reference_docname}",
+				data-status = "${result.status}"
 			</div>`).append($row);
 	}
 	return $row;
