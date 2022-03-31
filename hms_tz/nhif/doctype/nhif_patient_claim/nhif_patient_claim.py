@@ -170,16 +170,16 @@ class NHIFPatientClaim(Document):
             frappe.db.set_value('Patient Appointment', app_name, 'nhif_patient_claim', self.name)
         
         self.allow_changes = 0
-        self.claim_appointment_list = json.dumps(appointments)
+        self.hms_tz_claim_appointment_list = json.dumps(appointments)
         
         self.save(ignore_permissions=True)
 
     def get_patient_encounters(self):
-        if not self.claim_appointment_list:
+        if not self.hms_tz_claim_appointment_list:
             patient_appointment = self.patient_appointment
         
         else:
-            patient_appointment = ['in', json.loads(self.claim_appointment_list)]
+            patient_appointment = ['in', json.loads(self.hms_tz_claim_appointment_list)]
         
         patient_encounters = frappe.get_all(
             "Patient Encounter",
@@ -471,10 +471,10 @@ class NHIFPatientClaim(Document):
         self.nhif_patient_claim_item = sorted_patient_claim_item
 
         patient_appointment_list = []
-        if not self.claim_appointment_list:
+        if not self.hms_tz_claim_appointment_list:
             patient_appointment_list.append(self.patient_appointment)
         else:
-            patient_appointment_list = json.loads(self.claim_appointment_list)
+            patient_appointment_list = json.loads(self.hms_tz_claim_appointment_list)
             
         for appointment_no in patient_appointment_list:
             patient_appointment_doc = frappe.get_doc(
