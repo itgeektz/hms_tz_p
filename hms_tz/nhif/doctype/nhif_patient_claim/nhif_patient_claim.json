@@ -286,7 +286,7 @@
   },
   {
    "fieldname": "posting_date",
-   "fieldtype": "Datetime",
+   "fieldtype": "Date",
    "label": "Posting Date",
    "read_only": 1
   },
