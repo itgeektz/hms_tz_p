@@ -51,7 +51,8 @@
   "section_break_28",
   "nhif_patient_claim_disease",
   "section_break_30",
-  "nhif_patient_claim_item"
+  "nhif_patient_claim_item",
+  "hms_tz_appointment_string"
  ],
  "fields": [
   {
@@ -368,12 +369,18 @@
    "fieldtype": "Long Text",
    "label": "Clinical Notes",
    "read_only": 1
+  },
+  {
+   "fieldname": "hms_tz_appointment_string",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Appointment String"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-07-29 13:22:30.799642",
+ "modified": "2022-03-31 09:50:15.010459",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim",
