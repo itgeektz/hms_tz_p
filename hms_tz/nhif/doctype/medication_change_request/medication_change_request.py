@@ -31,10 +31,9 @@ class MedicationChangeRequest(Document):
                     frappe.msgprint(
                         "NOTE: This healthcare service item, <b>"
                         + drug.drug_code + "</b>, is not available inhouse".format(
-                             frappe.bold(drug.drug_code)
+                            frappe.bold(drug.drug_code)
                     ))
                 
-                validate_stock_item(drug.drug_code, drug.quantity, self.company, drug.doctype, drug.healthcare_service_unit)
                 validate_restricted(self, drug)
     
     def before_insert(self):
@@ -44,6 +43,18 @@ class MedicationChangeRequest(Document):
                 frappe.throw(frappe.bold("Cannot create medication change request for Cash Patient,\
                     Medication change request is only used for Insurance Patients"))
         
+    def before_submit(self):
+        for item in self.drug_prescription:
+            validate_stock_item(
+                    item.drug_code, 
+                    item.quantity, 
+                    self.company, 
+                    item.doctype, 
+                    item.healthcare_service_unit,
+                    caller="unknown",
+                    method="throw"
+                )
+    
     def on_submit(self):
         encounter_doc = self.update_encounter()
         self.update_delivery_note(encounter_doc)
