@@ -23,9 +23,9 @@
   "section_break_15",
   "update_patient_history",
   "section_break_16",
-  "submit_start_date",
+  "submit_claim_month",
   "column_break_10",
-  "submit_end_date"
+  "submit_claim_year"
  ],
  "fields": [
   {
@@ -125,25 +125,25 @@
    "label": "Submit Dates"
   },
   {
-   "bold": 1,
-   "fieldname": "submit_start_date",
-   "fieldtype": "Date",
-   "label": "Submit Start Date"
-  },
-  {
    "fieldname": "column_break_10",
    "fieldtype": "Column Break"
   },
   {
    "bold": 1,
-   "fieldname": "submit_end_date",
-   "fieldtype": "Date",
-   "label": "Submit End Date"
+   "fieldname": "submit_claim_month",
+   "fieldtype": "Int",
+   "label": "Submit Claim Month"
+  },
+  {
+   "bold": 1,
+   "fieldname": "submit_claim_year",
+   "fieldtype": "Int",
+   "label": "Submit Claim Year"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-02-03 09:13:30.132788",
+ "modified": "2022-04-01 10:54:38.993905",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Company NHIF Settings",
