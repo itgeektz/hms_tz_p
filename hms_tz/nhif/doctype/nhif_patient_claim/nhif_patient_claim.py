@@ -677,26 +677,34 @@ def get_missing_patient_signature(self):
 
 
 def validate_submit_date(self):
-    start_date, end_date = frappe.get_value(
-        "Company NHIF Settings", self.company, ["submit_start_date", "submit_end_date"]
+    import calendar
+
+    submit_claim_month, submit_claim_year = frappe.get_value(
+        "Company NHIF Settings", self.company, ["submit_claim_month", "submit_claim_year"]
     )
 
-    if not (start_date or end_date):
+    if not (submit_claim_month or submit_claim_year):
         frappe.throw(
             frappe.bold(
-                "Submit Start Date or Submit End Date not found,\
+                "Submit Claim Month or Submit Claim Year not found,\
                 please inform IT department to set it on Company NHIF Settings"
             )
         )
 
-    if str(self.posting_date) < str(start_date) or str(self.posting_date) > str(end_date):
+    if (
+        self.claim_month != submit_claim_month or
+        self.claim_year != submit_claim_year
+    ):
         frappe.throw(
-            "Posting Date: {0} is not between Submit Start Date: {1}\
-            and Submit End Date: {2}".format(
-                frappe.bold(self.posting_date), frappe.bold(start_date), frappe.bold(end_date)
+            "Claim Month: {0} or Claim Year: {1} of this document is not same to Submit Claim Month: {2}\
+                or Submit Claim Year: {3} on Company NHIF Settings".format(
+                frappe.bold(calendar.month_name[self.claim_month]),
+                frappe.bold(self.claim_year),
+                frappe.bold(calendar.month_name[submit_claim_month]),
+                frappe.bold(submit_claim_year)
             )
         )
-
+# 
 
 def get_item_refcode(item_code):
     code_list = frappe.get_all(
