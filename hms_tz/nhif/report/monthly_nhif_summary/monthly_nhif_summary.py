@@ -4,6 +4,7 @@
 import frappe
 from frappe import _
 from frappe.utils import getdate
+import calendar
 
 
 def execute(filters):
@@ -81,11 +82,8 @@ def get_data(filters):
         filters=[
             ["docstatus", "=", 1],
             ["company", "=", filters.get("company")],
-            [
-                "posting_date",
-                "between",
-                [filters.get("from_date"), filters.get("to_date")],
-            ],
+            ["claim_month", "=", filters.get("submit_claim_month")],
+            ["claim_year", "=", filters.get("submit_claim_year")]
         ],
         fields=["name", "company", "facility_code", "gender", "total_amount"],
     )
@@ -133,13 +131,18 @@ def get_data(filters):
         + inpatient_charges
     )
 
-    from_date = getdate(filters.get("from_date")).strftime("%d-%m-%Y")
-    to_date = getdate(filters.get("to_date")).strftime("%d-%m-%Y")
+    first_day_of_month = getdate(
+        str(filters.get('submit_claim_month')) + '-' + str(filters.get('submit_claim_year'))
+    )
 
+    last_day_of_month = first_day_of_month.replace(
+        day = calendar.monthrange(first_day_of_month.year, first_day_of_month.month)[1]
+    )
+    
     details.append(
         {
-            "from_date": from_date,
-            "to_date": to_date,
+            "from_date": first_day_of_month,
+            "to_date": last_day_of_month,
             "accreditation_no": "01440",
             "ownership": "Religious/NGO",
             "facility_name": facility_name,
