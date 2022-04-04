@@ -63,6 +63,16 @@ def set_missing_values(doc):
             doc.patient = frappe.get_value(
                 "Patient Encounter", doc.reference_name, "patient"
             )
+            
+    if not doc.hms_tz_phone_no:
+        doc.hms_tz_phone_no = frappe.get_value('Patient', doc.patient, 'mobile')
+    
+    if doc.form_sales_invoice and not doc.hms_tz_appointment_no:
+        si_reference_dn = frappe.get_value('Sales Invoice Item', doc.items[0].si_detail, 'reference_dn')
+
+        if si_reference_dn:
+            parent_encounter = frappe.get_value('Drug Prescription', si_reference_dn, 'parent')
+            doc.hms_tz_appointment_no = frappe.get_value('Patient Encounter', parent_encounter, 'appointment')
 
 
 def before_submit(doc, method):
