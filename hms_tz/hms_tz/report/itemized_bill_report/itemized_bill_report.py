@@ -154,9 +154,9 @@ def execute(filters=None):
 			last_row["printed_by"] = print_person
 			
 			data.append(last_row)
-			summary_view = get_report_summary(filters, total_amount)
+			# summary_view = get_report_summary(filters, total_amount)
 
-			return columns, data, None, None, summary_view
+			return columns, data #, None, None, summary_view
 
 def get_columns(filters):
 	columns = [
