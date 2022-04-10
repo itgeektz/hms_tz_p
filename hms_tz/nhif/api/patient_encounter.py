@@ -157,26 +157,17 @@ def on_submit_validation(doc, method):
         for template in healthcare_service_templates:
             if not is_exclusions:
                 if template not in hsic_map:
-                    msg = _(
+                    frappe.throw(_(
                         "{0} not covered in Healthcare Insurance Coverage Plan "
-                        + str(hicp_name)
-                    ).format(template)
-                    msgThrow(
-                        msg,
-                        method,
-                    )
-                    continue
+                        + str({1})
+                    ).format(frappe.bold(template), frappe.bold(hicp_name)))
             else:
                 if template in hsic_map:
-                    msg = _(
+                    frappe.throw(_(
                         "{0} not covered in Healthcare Insurance Coverage Plan "
-                        + str(hicp_name)
-                    ).format(template)
-                    msgThrow(
-                        msg,
-                        method,
-                    )
-                    continue
+                        + str({1})
+                    ).format(frappe.bold(template), frappe.bold(hicp_name)))
+            
             coverage_info = hsic_map[template]
             for row in healthcare_service_templates[template]:
                 row.is_restricted = coverage_info.approval_mandatory_for_claim
