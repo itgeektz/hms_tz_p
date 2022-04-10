@@ -15,6 +15,7 @@ from frappe.utils import now
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from frappe.model.naming import set_new_name
 import ast
+from hms_tz.nhif.doctype.nhif_custom_excluded_services.nhif_custom_excluded_services import get_custom_excluded_services
 
 
 @frappe.whitelist()
@@ -403,6 +404,14 @@ def process_insurance_coverages(kwargs):
                     in excluded_services.excludedforproducts
                 ):
                     continue
+            
+            user_excluded_products = get_custom_excluded_services(company, item.ref_code)
+            if (
+                user_excluded_products and 
+                plan.code_for_nhif_excluded_services and 
+                plan.code_for_nhif_excluded_services in user_excluded_products
+            ):
+                continue
 
             doc = frappe.new_doc("Healthcare Service Insurance Coverage")
             doc.healthcare_service = item.dt
