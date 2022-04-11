@@ -5,12 +5,17 @@
 frappe.query_reports["NHIF Patient Tracking Report"] = {
 	"filters": [
 		{
-			"fieldname": "date",
-			"label": __("Date"),
-			"fieldtype": "Date",
-			"default": frappe.datetime.get_today(),
-			"reqd": 1
-		},
+            "fieldname": "from_date",
+            "label": __("From Date"),
+            "fieldtype": "Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "to_date",
+            "label": __("To Date"),
+            "fieldtype": "Date",
+            "reqd": 1
+        },
 		{
 			"fieldname": "company",
 			"label": __("Company"),
@@ -27,5 +32,14 @@ frappe.query_reports["NHIF Patient Tracking Report"] = {
 			"default": "",
 			"reqd": 0,
 		}
-	]
+	],
+	'formatter': (value, row, column, data, default_formatter) => {
+		value = default_formatter(value, row, column, data);
+		
+		if (data.nhif_claim_no != '' && data.signature == '') {
+			value = `<div style='color:red'>${data[column.fieldname]}</div>`;
+		}
+
+		return value
+	}
 };
