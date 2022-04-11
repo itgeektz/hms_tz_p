@@ -160,16 +160,15 @@ def get_appointment_details(filters):
 	return name_list, appointment_details
 
 def get_conditions(filters):
-	if filters:
-		conditions = {}
-		if filters.date:
-			conditions["appointment_date"] = filters.date
-		if filters.company:
-			conditions["company"] = filters.company
-			conditions["insurance_company"] = "NHIF"
-		if filters.status == "Open":
-			conditions["status"] = "Open"
-		if filters.status == "Closed":
-			conditions["status"] = "Closed"
-
-		return conditions
+    if filters:
+        conditions = []
+        if filters.from_date and filters.to_date:
+            conditions.append(['appointment_date', 'between', [filters.get('from_date'), filters.get('to_date')]])
+        if filters.company:
+            conditions.append(['company', '=', filters.company])
+            conditions.append(['insurance_company', '=', 'NHIF'])
+        if filters.status == 'Open':
+            conditions.append(['status', '=', 'Open'])
+        if filters.status == 'Closed':
+            conditions.append(['status', '=', 'Closed'])
+        return conditions
