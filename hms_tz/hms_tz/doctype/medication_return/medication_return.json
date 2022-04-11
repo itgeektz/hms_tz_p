@@ -13,6 +13,7 @@
   "drug_condition",
   "encounter_no",
   "delivery_note_no",
+  "status",
   "dn_detail",
   "child_name"
  ],
@@ -53,9 +54,8 @@
   {
    "bold": 1,
    "fieldname": "delivery_note_no",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "label": "Delivery Note",
-   "options": "Delivery Note",
    "read_only": 1
   },
   {
@@ -84,12 +84,18 @@
    "fieldtype": "Data",
    "label": "Delivery Note Item",
    "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Data",
+   "label": "Delivery Note Status",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-01-11 13:26:24.637810",
+ "modified": "2022-04-05 11:00:30.856037",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Medication Return",

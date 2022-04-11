@@ -160,7 +160,7 @@ frappe.ui.form.on('Patient Encounter', {
         });
     },
 
-    add_chronic_diagnosis: function(frm) {
+    hms_tz_add_chronic_diagnosis: function(frm) {
         if (frm.doc.docstatus == 0) {
             frappe.call('hms_tz.nhif.api.patient_encounter.add_chronic_diagnosis', {
                 patient: frm.doc.patient,

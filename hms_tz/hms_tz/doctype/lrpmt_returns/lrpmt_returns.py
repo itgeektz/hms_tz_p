@@ -3,7 +3,7 @@
 
 import frappe
 import json
-from frappe import bold
+from frappe import bold, _
 from frappe.model.workflow import apply_workflow
 from frappe.utils import nowdate, nowtime, flt
 from frappe.model.document import Document
@@ -15,10 +15,10 @@ class LRPMTReturns(Document):
 	def before_submit(self):
 		validate_reason(self)
 		validate_drug_row(self)
-	
-	def on_submit(self):
 		cancel_lrpt_doc(self)
 		return_drug_item(self)
+	
+	def on_submit(self):
 		get_sales_return(self)
 
 def cancel_lrpt_doc(self):
@@ -28,6 +28,13 @@ def cancel_lrpt_doc(self):
 			frappe.db.set_value("Therapy Plan Detail", item.child_name, "is_cancelled", 1)
 
 		else:
+			if not item.reference_docname:
+				frappe.db.set_value("Lab Prescription", item.child_name, "is_cancelled", 1)
+				frappe.db.set_value("Radiology Procedure Prescription", item.child_name, "is_cancelled", 1)
+				frappe.db.set_value("Procedure Prescription", item.child_name, "is_cancelled", 1)
+				
+				continue
+			
 			doc = frappe.get_doc(item.reference_doctype, item.reference_docname)
 		
 			if doc.docstatus < 2:
@@ -83,6 +90,11 @@ def cancel_tharapy_plan_doc(patient, therapy_plan_id):
 def return_drug_item(self):
 	dn_names = get_unique_delivery_notes(self)
 
+	if not dn_names:
+		for item in self.drug_items:
+			if item.child_name:
+				update_drug_prescription(item, item.child_name)
+
 	for dn in dn_names:
 		source_doc = frappe.get_doc("Delivery Note", dn.delivery_note_no)
 
@@ -116,6 +128,14 @@ def return_drug_item(self):
 		for item in self.drug_items:
 			if item.child_name:
 				update_drug_prescription(item, item.child_name)
+			
+			if (
+				not item.dn_detail or 
+				not item.delivery_note_no or 
+				not item.status or 
+				item.status == "Draft"
+			):
+				continue
 				
 			if dn.delivery_note_no == item.delivery_note_no:
 				for dni in source_doc.items:
@@ -145,16 +165,55 @@ def return_drug_item(self):
 	return self.name
 	
 def update_drug_prescription(item, child_name):
-	if (item.quantity_prescribed - item.quantity_to_return) == 0:
-		item_cancelled = 1
-	else:
-		item_cancelled = 0
+	if (
+		not item.dn_detail or 
+		not item.delivery_note_no or 
+		not item.status or 
+		item.status == "Draft"
+	):
+		frappe.db.set_value("Drug Prescription", child_name, "is_cancelled", 1)
 
-	frappe.db.set_value("Drug Prescription", child_name, {
-		"quantity_returned": item.quantity_to_return,
-		"delivered_quantity": item.quantity_prescribed - item.quantity_to_return,
-		"is_cancelled": item_cancelled
-	})
+		delete_draft_delivery_note(item)
+
+	if (
+		item.dn_detail and 
+		item.delivery_note_no and 
+		item.status == "Submitted"
+	):
+		if (item.quantity_prescribed - item.quantity_to_return) == 0:
+			item_cancelled = 1
+		else:
+			item_cancelled = 0
+
+		frappe.db.set_value("Drug Prescription", child_name, {
+			"quantity_returned": item.quantity_to_return,
+			"delivered_quantity": item.quantity_prescribed - item.quantity_to_return,
+			"is_cancelled": item_cancelled
+		})
+
+def delete_draft_delivery_note(item):
+	"""Delete draft delivery note to avoid resubmission of delivery note if its item is cancelled"""
+
+	if (
+		item.delivery_note_no and
+		item.status == "Draft" and
+		frappe.db.exists("Delivery Note", {"name": item.delivery_note_no})
+	):
+		try:
+			frappe.delete_doc("Delivery Note", item.delivery_note_no, force=True)
+
+			if not frappe.get_value("Delivery Note", item.delivery_note_no):
+				frappe.msgprint(_("<p style='text-align: center: font-size: 16pt;'>Draft Delivery Note: {0}\
+					was deleted successfully.<br></p>".format(bold(item.delivery_note_no))\
+					+ "<p style='text-align: center; background-color: #DCDCDC; font-size: 10pt; font-weight: bold;'>\
+						<i><em>Deleting of this draft delivery note aim to avoid\
+						submitting of this delivery note when it's item was cancelled</em></i>\
+					</p>"
+				))
+		except Exception:
+			frappe.log_error(frappe.get_traceback())
+		
+		frappe.db.commit()
 	
 def get_sales_return(self):
 	conditions = {
@@ -226,7 +285,9 @@ def get_unique_delivery_notes(self):
 	return frappe.db.sql("""SELECT DISTINCT(md.delivery_note_no)
 		FROM `tabMedication Return` md
 		INNER JOIN `tabLRPMT Returns` lrpmt ON lrpmt.name = md.parent
-		WHERE lrpmt.patient = %s
+		WHERE md.status NOT IN ("", "Null", "Draft")
+		AND md.dn_detail != ""
+		AND lrpmt.patient = %s
 		AND lrpmt.appointment_no = %s
 		AND lrpmt.name = %s
 	"""%(frappe.db.escape(self.patient), frappe.db.escape(self.appointment_no), frappe.db.escape(self.name)), as_dict=1)
@@ -246,14 +307,13 @@ def get_lrpt_item_list(patient, appointment_no, company):
 		
 		for item in items:
 			if item.lab_test_code:
-				lab_status = None
+				lab_status = "Submitted"
 				if not item.lab_test:
-					lab_status = 'Draft'
-					name = get_refdoc(
-						"Lab Prescription",
-						item.lab_test_code,
-						item.parent
-					)
+					name = get_refdoc("Lab Prescription", item.lab_test_code, item.parent)
+					if name:
+						lab_status = 'Draft'
+					else:
+						lab_status = ""
 					
 				item_list.append({
 					"child_name": item.name,
@@ -262,18 +322,18 @@ def get_lrpt_item_list(patient, appointment_no, company):
 					"encounter_no": item.parent,
 					"reference_doctype": "Lab Test",
 					"reference_docname": item.lab_test or name,
-					"status": lab_status or "Submitted"
+					"status": lab_status
 				})
 			
 			if item.radiology_examination_template:
-				radiology_status = None
+				radiology_status = "Submitted"
 				if not item.radiology_examination:
-					radiology_status = 'Draft'
-					name = get_refdoc(
-						"Radiology Procedure Prescription", 
-						item.radiology_examination_template, 
-						item.parent
-					)
+					name = get_refdoc("Radiology Procedure Prescription", item.radiology_examination_template, item.parent)
+					if name:
+						radiology_status = 'Draft'
+					else:
+						radiology_status = ''
+
 					
 				item_list.append({
 					"child_name": item.name,
@@ -282,18 +342,17 @@ def get_lrpt_item_list(patient, appointment_no, company):
 					"encounter_no": item.parent,
 					"reference_doctype": "Radiology Examination",
 					"reference_docname": item.radiology_examination or name,
-					"status": radiology_status or "Submitted"
+					"status": radiology_status
 				})
 			
 			if item.procedure:
-				procedure_status = None
+				procedure_status = 'Submitted'
 				if not item.clinical_procedure:
-					procedure_status = 'Draft'
-					name = get_refdoc(
-						"Procedure Prescription",
-						item.procedure,
-						item.parent
-					)
+					name = get_refdoc("Procedure Prescription", item.procedure, item.parent)
+					if name:
+						procedure_status = 'Draft'
+					else:
+						procedure_status = ''
 
 				item_list.append({
 					"child_name": item.name,
@@ -302,7 +361,7 @@ def get_lrpt_item_list(patient, appointment_no, company):
 					"encounter_no": item.parent,
 					"reference_doctype": "Clinical Procedure",
 					"reference_docname": item.clinical_procedure or name,
-					"status": procedure_status or "Submitted"
+					"status": procedure_status
 				})
 			
 			# if item.therapy_type:
@@ -385,7 +444,7 @@ def get_refdoc(doctype, template, encounter):
 			docname =  frappe.get_value(refd.get("ref_d"), {"ref_doctype": "Patient Encounter",
 					"ref_docname": encounter, refd.get("field"): template}, ["name"]
 				)
-			return docname
+			return docname or ""
 
 def set_missing_values(doc):
 	appointment_list = frappe.get_all("Patient Appointment", filters={"patient": doc.patient, "status": "Closed"}, 
@@ -443,13 +502,8 @@ def set_checked_lrpt_items(doc, checked_items):
 		item_row.item_name = checked_item["item"]
 		item_row.quantity = checked_item["quantity"]
 		item_row.encounter_no = checked_item["encounter"]
-
-		if checked_item["reference_doctype"]:
-			item_row.reference_doctype = checked_item["reference_doctype"]
-
-		if checked_item["reference_docname"]:
-			item_row.reference_docname = checked_item["reference_docname"]
-		
+		item_row.reference_doctype = checked_item["reference_doctype"] or ""
+		item_row.reference_docname = checked_item["reference_docname"] or ""
 		item_row.child_name = checked_item["child_name"]
 	doc.save()
 	return doc.name
@@ -457,34 +511,111 @@ def set_checked_lrpt_items(doc, checked_items):
 @frappe.whitelist()
 def get_drug_item_list(patient, appointment_no, company):
 	drug_list = []
+	delivery_note_items = []
 
-	item_list, dn_detail_list, drug_codes = get_drugs(patient, appointment_no, company)
+	item_list, name_list = get_drugs(patient, appointment_no, company)
 
-	if dn_detail_list and drug_codes:
-		delivery_note_items = frappe.get_all("Delivery Note Item", filters={"name": ["in", dn_detail_list],
-			"item_code": ["in", drug_codes]}, fields=["name", "parent", "item_code"]
+	if name_list:
+		delivery_note_items += frappe.get_all("Delivery Note Item", filters={
+			"reference_name": ["in", name_list], 
+			'reference_doctype': "Drug Prescription", 'docstatus': ['!=', 2]
+			}, fields=["name", "parent", "item_code", 'docstatus', 'reference_name', 'si_detail']
 		)
+	
+		si_parent = frappe.get_all('Sales Invoice Item', filters={
+				'reference_dn': ['in', name_list],
+				'reference_dt': 'Drug Prescription'
+			}, fields=['parent'], pluck='parent'
+		)
+		if si_parent:
+			delivery_note_items += frappe.get_all("Delivery Note Item", filters={
+				"against_sales_invoice": ["in", si_parent], 'docstatus': ['!=', 2]
+				}, fields=["name", "parent", "item_code", 'docstatus', 'reference_name', 'si_detail']
+			)
+
+	avoid_duplicate_list = []
 	if item_list:
 		for item in item_list:
 			for delivery_note in delivery_note_items:
 				if (
-					item.dn_detail == delivery_note.name and
-					item.drug_code == delivery_note.item_code
-				):
+					item.dn_detail and
+					item.dn_detail == delivery_note.name
+				):				
+					if delivery_note.docstatus == 0:
+						status = 'Draft'
+					else:
+						status = 'Submitted'
+					
 					drug_list.append({
 						"child_name": item.name,
 						"item_name": item.drug_code,
 						"quantity": item.quantity - item.quantity_returned,
 						"encounter_no": item.parent,
 						"delivery_note": delivery_note.parent,
-						"dn_detail": item.dn_detail
+						"dn_detail": item.dn_detail,
+						'status': status
 					})
+					avoid_duplicate_list.append(item.drug_code)
+				
+				elif (
+					not item.dn_detail and 
+					delivery_note.reference_name and 
+					item.name == delivery_note.reference_name and
+					not delivery_note.si_detail
+				):
+					if delivery_note.docstatus == 0:
+						status = 'Draft'
+					else:
+						status = 'Submitted'
+					
+					drug_list.append({
+						"child_name": item.name,
+						"item_name": item.drug_code,
+						"quantity": item.quantity - item.quantity_returned,
+						"encounter_no": item.parent,
+						"delivery_note": delivery_note.parent,
+						"dn_detail": item.dn_detail or "",
+						'status': status
+					})
+					avoid_duplicate_list.append(item.drug_code)
+
+				elif (
+					not item.dn_detail and 
+					not delivery_note.reference_name and 
+					delivery_note.si_detail
+				):
+					if delivery_note.docstatus == 0:
+						status = 'Draft'
+					else:
+						status = 'Submitted'
+					
+					drug_list.append({
+						"child_name": item.name,
+						"item_name": item.drug_code,
+						"quantity": item.quantity - item.quantity_returned,
+						"encounter_no": item.parent,
+						"delivery_note": delivery_note.parent,
+						"dn_detail": item.dn_detail or "",
+						'status': status
+					})
+					avoid_duplicate_list.append(item.drug_code)
+
+			if item.drug_code not in avoid_duplicate_list:
+				drug_list.append({
+					"child_name": item.name,
+					"item_name": item.drug_code,
+					"quantity": item.quantity - item.quantity_returned,
+					"encounter_no": item.parent,
+					"delivery_note": "",
+					"dn_detail": "",
+					"status": ""
+				})
+	
 	return drug_list
 
 def get_drugs(patient, appointment_no, company):
 	item_list = []
-	dn_detail_list = []
-	drug_code_list = []
+	name_list = []
 
 	encounter_list = get_patient_encounters(patient, appointment_no, company)
 	drugs = frappe.get_all("Drug Prescription", filters={"parent": ["in", encounter_list], "is_not_available_inhouse": 0, "is_cancelled": 0},
@@ -492,16 +623,9 @@ def get_drugs(patient, appointment_no, company):
 	)
 
 	for drug in drugs:
-
-		if drug.dn_detail:
-			# 2022-02-07
-			# To get drugs of which their delivery note are submitted and affected stock 
-			# Also to get drugs of which their drug prescription has been updated with dn_detail
-			drug_code_list.append(drug.drug_code)
-			dn_detail_list.append(drug.dn_detail)
-			item_list.append(drug)
-	
-	return item_list, dn_detail_list, drug_code_list
+		item_list.append(drug)
+		name_list.append(drug.name)
+	return item_list, name_list
 
 @frappe.whitelist()
 def set_checked_drug_items(doc, checked_items):
@@ -515,8 +639,9 @@ def set_checked_drug_items(doc, checked_items):
 		item_row.drug_name = checked_item["item_name"]
 		item_row.quantity_prescribed = checked_item["quantity_prescribed"]
 		item_row.encounter_no = checked_item["encounter_no"]
-		item_row.delivery_note_no = checked_item["delivery_note"]
-		item_row.dn_detail = checked_item["dn_detail"]
+		item_row.delivery_note_no = checked_item["delivery_note"] or ""
+		item_row.status = checked_item["status"] or ""
+		item_row.dn_detail = checked_item["dn_detail"] or ""
 		item_row.child_name = checked_item["child_name"]
 
 	doc.save()
