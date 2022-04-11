@@ -121,7 +121,7 @@ frappe.ui.form.on('LRPMT Returns', {
 		var $results;
 		var $placeholder;
 		if (frm.doc.patient, frm.doc.appointment_no, frm.doc.company) {
-			var columns = (["item_name", "quantity", "encounter_no", "delivery_note"])
+			var columns = (["item_name", "quantity", "encounter_no", "delivery_note", 'status'])
 			frappe.call({
 				method: "hms_tz.hms_tz.doctype.lrpmt_returns.lrpmt_returns.get_drug_item_list",
 				args: {
@@ -157,7 +157,7 @@ frappe.ui.form.on('LRPMT Returns', {
 				.prop("checked", ($(e.target).is(':checked')));
 		});
 		set_drug_primary_action(frm, d, $results, true);
-		d.$wrapper.find('.modal-content').css('width', '800px');
+		d.$wrapper.find('.modal-content').css('width', '950px');
 		d.show();
 	},
 });
@@ -296,7 +296,8 @@ var list_row_drug_items = function (head, $row, result, item) {
 				data-quantity = "${result.quantity}"
 				data-encounter_no = "${result.encounter_no}"
 				data-delivery_note = "${result.delivery_note}"
-				data-dn_detail = "${result.dn_detail}"
+				data-dn_detail = "${result.dn_detail}",
+				data-status = "${result.status}"
 			</div>`).append($row);
 	}
 	return $row;
@@ -323,6 +324,7 @@ var get_checked_drug_items = function ($results) {
 			checked_items["encounter_no"] = $(this).attr("data-encounter_no");
 			checked_items["delivery_note"] = $(this).attr("data-delivery_note");
 			checked_items["dn_detail"] = $(this).attr("data-dn_detail");
+			checked_items["status"] = $(this).attr("data-status");
 			return checked_items;
 		}
 	}).get();
