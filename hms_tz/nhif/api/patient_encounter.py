@@ -580,6 +580,8 @@ def create_healthcare_docs_per_encounter(patient_encounter_doc):
             for child in child_table:
                 if patient_encounter_doc.insurance_subscription and child.prescribe:
                     continue
+                if child.is_cancelled:
+                    continue
                 if child.doctype == "Lab Prescription":
                     create_individual_lab_test(patient_encounter_doc, child)
                 elif child.doctype == "Radiology Procedure Prescription":
@@ -624,7 +626,7 @@ def create_delivery_note_per_encounter(patient_encounter_doc, method):
             frappe.msgprint(_("Invoiced and Prescribed patient who is an inpatient"))
         elif patient_encounter_doc.insurance_subscription and line.prescribe:
             continue
-        if line.drug_prescription_created:
+        if line.drug_prescription_created or line.is_not_available_inhouse or line.is_cancelled:
             continue
         item_code = frappe.get_value("Medication", line.drug_code, "item")
         is_stock = frappe.get_value("Item", item_code, "is_stock_item")
@@ -637,7 +639,7 @@ def create_delivery_note_per_encounter(patient_encounter_doc, method):
     for element in warehouses:
         items = []
         for row in patient_encounter_doc.drug_prescription:
-            if row.drug_prescription_created or row.is_not_available_inhouse:
+            if row.drug_prescription_created or row.is_not_available_inhouse or row.is_cancelled:
                 continue
             encounter_customer = ""
             if row.invoiced and row.prescribe:
@@ -1154,6 +1156,8 @@ def inpatient_billing(patient_encounter_doc, method):
         if patient_encounter_doc.get(child_table_field):
             child_table = patient_encounter_doc.get(child_table_field)
             for child in child_table:
+                if child.is_cancelled:
+                    continue
                 if child.doctype == "Lab Prescription":
                     create_individual_lab_test(patient_encounter_doc, child)
                 elif child.doctype == "Radiology Procedure Prescription":
