@@ -1156,6 +1156,8 @@ def inpatient_billing(patient_encounter_doc, method):
         if patient_encounter_doc.get(child_table_field):
             child_table = patient_encounter_doc.get(child_table_field)
             for child in child_table:
+                if child.is_cancelled:
+                    continue
                 if child.doctype == "Lab Prescription":
                     create_individual_lab_test(patient_encounter_doc, child)
                 elif child.doctype == "Radiology Procedure Prescription":
