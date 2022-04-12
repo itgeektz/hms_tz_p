@@ -176,7 +176,8 @@ def on_submit_validation(doc, method):
                         msg,
                         method,
                     )
-                    continue
+                continue
+            
             coverage_info = hsic_map[template]
             for row in healthcare_service_templates[template]:
                 row.is_restricted = coverage_info.approval_mandatory_for_claim
