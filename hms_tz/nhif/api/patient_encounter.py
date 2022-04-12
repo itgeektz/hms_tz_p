@@ -508,7 +508,7 @@ def on_submit(doc, method):
     ):  # Cash inpatient billing
         inpatient_billing(doc, method)
     else:  # insurance patient
-        # on_submit_validation(doc, method)
+        on_submit_validation(doc, method)
         create_healthcare_docs(doc, method)
         create_delivery_note(doc, method)
     if doc.inpatient_record:
