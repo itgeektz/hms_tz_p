@@ -30,6 +30,8 @@ frappe.ui.form.on('Patient Encounter', {
 				} else if (frm.doc.inpatient_status != 'Discharge Scheduled') {
 					frm.add_custom_button(__('Schedule Admission'), function() {
 						schedule_inpatient(frm);
+					}).removeClass('btn-default').addClass('btn-warning').css({
+						'font-size': '14px', 'font-weight': 'bolder'
 					});
 				}
 				frm.add_custom_button(__('Refer Practitioner'), function() {
