@@ -99,6 +99,7 @@ def on_submit_validation(doc, method):
                     method,
                 )
 
+
             if (
                 child.get("doctype") != "Medication"
                 and row.doctype != "Drug Prescription"
