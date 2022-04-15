@@ -1,259 +1,209 @@
-# Copyright (c) 2013, Aakvatech and contributors
-# For license information, please see license.txt
-
 import frappe
 from frappe import _, get_cached_value
-from frappe.utils import flt, nowdate
+from frappe.utils import flt, nowdate, getdate
 from erpnext.accounts.utils import get_balance_on
 
 def execute(filters=None):
 	args = frappe._dict(filters or {})
 	
 	columns = get_columns()
-	data = get_data(args)
+	data, dashboard = get_data(args)
 
-	report_summary = get_report_summary(args, data)
-
-	return columns, data, None, None, report_summary
+	return columns, data, None, None, dashboard
 
 def get_columns():
 	columns = [
-		{"fieldname": "checkin_date", "fieldtype": "Date", "label": _("Checkin Date")},
-		{"fieldname": "service_unit", "fieldtype": "Data", "label": _("Service Unit")},
-		{"fieldname": "service_unit_type", "fieldtype": "Data", "label": _("Service Unit Type")},
-		{"fieldname": "inpatient_charges", "fieldtype": "Currency", "label": _("Inpatient Charges")},
-		{"fieldname": "total_lab_amount", "fieldtype": "Currency", "label": _("Lab Amount")},
-		{"fieldname": "total_radiology_amount", "fieldtype": "Currency", "label": _("Radiology Amount")},
-		{"fieldname": "total_procedure_amount", "fieldtype": "Currency", "label": _("Procedure Amount")},
-		{"fieldname": "total_drug_amount", "fieldtype": "Currency", "label": _("Medication Amount")},
-		{"fieldname": "total_therapy_amount", "fieldtype": "Currency", "label": _("Therapies Amount")},
-		{"fieldname": "grand_total", "fieldtype": "Currency", "label": _("Amount Used Per Day")}
+		{"fieldname": "date", "fieldtype": "date", "label": _("Date"), "width": 120},
+		{"fieldname": "service_unit", "fieldtype": "Data", "label": _("Service Unit"), "width": 120},
+		{"fieldname": "total_bed_charges", "fieldtype": "Currency", "label": _("Bed Charges"), "width": 120},
+		{"fieldname": "total_cons_charges", "fieldtype": "Currency", "label": _("Consultation Charges"), "width": 120},
+		{"fieldname": "total_lab_amount", "fieldtype": "Currency", "label": _("Lab Amount"), "width": 120},
+		{"fieldname": "total_radiology_amount", "fieldtype": "Currency", "label": _("Radiology Amount"), "width": 120},
+		{"fieldname": "total_procedure_amount", "fieldtype": "Currency", "label": _("Procedure Amount"), "width": 120},
+		{"fieldname": "total_drug_amount", "fieldtype": "Currency", "label": _("Medication Amount"), "width": 120},
+		{"fieldname": "total_therapy_amount", "fieldtype": "Currency", "label": _("Therapies Amount"), "width": 120},
+		{"fieldname": "grand_total", "fieldtype": "Currency", "label": _("Amount Used Per Day"), "width": 120}
 	]
 	
 	return columns
 
 def get_data(args):
 	service_list = []
-
-	service_units = get_inpatient_details(args["inpatient_record"])
-	
-	start_date = service_units[0]["check_in"].strftime("%Y-%m-%d")
-	end_date = service_units[-1]["check_in"].strftime("%Y-%m-%d")
-
-	encouter_transactions = get_encounter_data(args, start_date, end_date)
-
-	for service in service_units:
-		total_amount = total_lab_amount = total_radiology_amount = 0
-		total_procedure_amount = total_drug_amount = total_therapy_amount = 0
-
-		checkin_date = service["check_in"].strftime("%Y-%m-%d")
-
-		for encounter in encouter_transactions:
-			encounter_date = encounter["encounter_date"].strftime("%Y-%m-%d")
-
-			if checkin_date == encounter_date:
-				total_lab_amount += encounter["lab_amount"]
-				total_radiology_amount += encounter["radiology_amount"]
-				total_procedure_amount += encounter["procedure_amount"]
-				total_drug_amount += encounter["drug_amount"]
-				total_therapy_amount += encounter["therapy_amount"]
-				total_amount += encounter["total_amount"]
-		
-		grand_total = total_amount + service["inpatient_charges"]
-				
-		service_list.append({
-			"checkin_date": checkin_date,
-			"service_unit": service["service_unit"],
-			"service_unit_type": service["service_unit_type"],
-			"inpatient_charges": service["inpatient_charges"],
-			"total_lab_amount": total_lab_amount,
-			"total_radiology_amount": total_radiology_amount,
-			"total_procedure_amount": total_procedure_amount,
-			"total_drug_amount": total_drug_amount,
-			"total_therapy_amount": total_therapy_amount,
-			"grand_total": grand_total
-		})
-
-	return service_list
-
-def get_encounter_data(args, start_date, end_date):
-	
-	encounter_services = []
-
-	encounter_list = frappe.get_all("Patient Encounter", 
-		filters=[["patient", "=", args.patient], ["appointment", "=", args.appointment_no], ["company", "=", args.company],
-		["inpatient_record", "=", args.inpatient_record], ["encounter_date", "between",  [start_date, end_date]]],
-		fields=["name", "encounter_date"], order_by = "encounter_date desc"
-	)
-
-	for enc in encounter_list:
-		total_amount = lab_amount = radiology_amount = 0
-		procedure_amount = drug_amount = therapy_amount = 0
-
-		lab_transactions = frappe.get_all("Lab Prescription", 
-			filters={"prescribe": 1, "is_not_available_inhouse": 0, "is_cancelled": 0,
-			"invoiced": 0, "parent": enc.name}, fields=["amount"]
-		)
-		 
-		for lab in lab_transactions:
-			lab_amount += lab.amount
-
-		radiology_transactions = frappe.get_all("Radiology Procedure Prescription",
-			filters={"prescribe": 1, "is_not_available_inhouse": 0, "is_cancelled": 0,
-			"invoiced": 0, "parent": enc.name}, fields=["amount"]
-		)
-		for radiology in radiology_transactions:
-			radiology_amount += radiology.amount
-
-		procedure_transactions = frappe.get_list("Procedure Prescription", 
-			filters={"prescribe": 1, "is_not_available_inhouse": 0, "is_cancelled": 0,
-			"invoiced": 0, "parent": enc.name}, fields=["amount"]
-		)
-		for procedure in procedure_transactions:
-			procedure_amount += procedure.amount
-
-		drug_transactions = frappe.get_all("Drug Prescription", 
-			filters={"prescribe": 1, "is_not_available_inhouse": 0, "is_cancelled": 0,
-			"invoiced": 0, "parent": enc.name},
-			fields=["quantity", "quantity_returned", "amount"]
-		)
-		for drug in drug_transactions:
-			amount = (drug.quantity - drug.quantity_returned) * drug.amount
-			drug_amount += amount
-
-		therapy_transactions = frappe.get_all("Therapy Plan Detail", 
-			filters={"prescribe": 1, "is_not_available_inhouse": 0, "is_cancelled": 0, "parent": enc.name},
-			fields=["amount"]
-		)
-		for therapy in therapy_transactions:
-			therapy_amount += therapy.amount
-	
-		total_amount += lab_amount + radiology_amount + procedure_amount + drug_amount + therapy_amount
-		
-		encounter_services.append({
-			"encounter_date": enc.encounter_date,
-			"lab_amount": lab_amount,
-			"radiology_amount": radiology_amount,
-			"procedure_amount": procedure_amount,
-			"drug_amount": drug_amount,
-			"therapy_amount": therapy_amount,
-			"total_amount": total_amount
-		})
-
-	return encounter_services
-
-def get_inpatient_details(inpatient_record):
-	inpatient_list = []	
-
-	bed_details = get_occupancy_details(inpatient_record)
-	cons_details = get_consultancy_details(inpatient_record)
-
-	for bed in bed_details:
-		inpatient_record_charges, inpatient_record_costs = 0, 0
-		if cons_details:
-			for cons in cons_details:
-				if bed.check_in == cons.date:
-					inpatient_record_charges += bed.amount + cons.rate
-				
-				if bed.check_in != cons.date:
-					inpatient_record_costs += bed.amount or cons.rate
-		else:
-			inpatient_record_charges = bed.amount
-			inpatient_record_costs = None
-		
-		inpatient_list.append({
-			"check_in": bed.check_in,
-			"service_unit": bed.service_unit,
-			"service_unit_type": bed.service_unit_type,
-			"inpatient_charges": inpatient_record_charges or inpatient_record_costs
-		})
-		
-	return inpatient_list
-
-def get_consultancy_details(inpatient_record):
 	date_list = []
-	cons_list = []
-	consultancy_list = []
-	duplicated_date_list = []
-	
-	consultancies = frappe.get_all("Inpatient Consultancy", 
-		filters={"parent": inpatient_record,"is_confirmed": 1},
-        fields=["date", "rate"], order_by="date ASC"
-    )
-
-	if not consultancies:
-		return consultancy_list
-
-	for cons in consultancies:
-		if cons.date not in date_list:
-			date_list.append(cons.date)
-			cons_list.append(cons)
+	single_transaction_per_day = []
+	mult_transaction_per_day = []
+	transactions = get_transaction_data(args)
+	for record in transactions:
+		total_amount = flt(record['bed_charges']) + flt(record['cons_charges']) + flt(record['lab_amount']) +\
+				flt(record['radiology_amount']) + flt(record['procedure_amount']) + flt(record['drug_amount']) +\
+					flt(record['therapy_amount'])
+		
+		date_d = record['date'].strftime('%Y-%m-%d')
+		if date_d not in date_list:
+			date_list.append(date_d)
+			record.update({'total_amount': total_amount})
+			single_transaction_per_day.append(record)
 		else:
-			duplicated_date_list.append(cons)
+			record.update({'total_amount': total_amount})
+			mult_transaction_per_day.append(record)
 	
-	for item in cons_list:
-		rate = 0
-		if duplicated_date_list:
-			for d in duplicated_date_list:
-				if item.date == d.date:
-					rate += d.rate
-		item.update({
-			"rate": flt(item.rate) + rate
+	for single_transaction in single_transaction_per_day:
+		service_unit = ""
+		mult_bed_charges = mult_cons_charges = mult_lab_amount = mult_radiology_amount =\
+			mult_procedure_amount = mult_drug_amount = mult_therapy_amount = mult_total_amount = 0
+		
+		single_transaction_date = single_transaction['date'].strftime('%Y-%m-%d')
+		
+		for mult_transaction in mult_transaction_per_day:
+			mult_transaction_date = mult_transaction['date'].strftime('%Y-%m-%d')
+
+			if single_transaction_date == mult_transaction_date:
+				mult_bed_charges += flt(mult_transaction['bed_charges'])
+				mult_cons_charges += flt(mult_transaction['cons_charges'])
+				mult_lab_amount += flt(mult_transaction['lab_amount'])
+				mult_radiology_amount += flt(mult_transaction['radiology_amount'])
+				mult_procedure_amount += flt(mult_transaction['procedure_amount'])
+				mult_drug_amount += flt(mult_transaction['drug_amount'])
+				mult_therapy_amount += flt(mult_transaction['therapy_amount'])
+				mult_total_amount += flt(mult_transaction['total_amount'])
+
+				service_unit += mult_transaction['service_unit']
+		
+		service_list.append({
+			'date': single_transaction_date,
+			'service_unit': single_transaction['service_unit'] or service_unit,
+			'total_bed_charges': flt(single_transaction['bed_charges']) + mult_bed_charges,
+			'total_cons_charges': flt(single_transaction['cons_charges']) + mult_cons_charges,
+			'total_lab_amount': flt(single_transaction['lab_amount']) + mult_lab_amount,
+			'total_radiology_amount': flt(single_transaction['radiology_amount']) + mult_radiology_amount,
+			'total_procedure_amount': flt(single_transaction['procedure_amount']) + mult_procedure_amount,
+			'total_drug_amount': flt(single_transaction['drug_amount']) + mult_drug_amount,
+			'total_therapy_amount': flt(single_transaction['therapy_amount']) + mult_therapy_amount,
+			'grand_total': flt(single_transaction['total_amount']) + mult_total_amount
 		})
-		consultancy_list.append(item)
+	
+	return get_last_row(args, service_list)
 
-	return consultancy_list
+def get_transaction_data(args):
+	services = frappe.db.sql("""
+		select sum(lrpmt.amount) as lab_amount, 0 as radiology_amount, 0 as procedure_amount, 0 as drug_amount,
+			0 as therapy_amount, date(pe.encounter_date) as date, "" as service_unit,
+			0 as bed_charges, 0 as cons_charges
+		from `tabLab Prescription` lrpmt
+		inner join `tabPatient Encounter` pe on lrpmt.parent = pe.name
+		where pe.inpatient_record = %(inpatient_record)s
+		and pe.appointment = %(appointment_no)s
+		and pe.patient = %(patient)s
+		and pe.company = %(company)s
+		and pe.docstatus = 1
+		and lrpmt.prescribe = 1
+		and lrpmt.is_not_available_inhouse = 0
+		and lrpmt.is_cancelled = 0
+		and lrpmt.invoiced = 0
+		group by pe.encounter_date
 
-def get_occupancy_details(inpatient_record):
-	unit_list = []
+		union all
 
-	service_unit_details = frappe.db.sql("""
-        SELECT io.service_unit, Date(io.check_in) AS check_in, io.amount AS amount, 
-                hsu.service_unit_type
-        FROM `tabInpatient Occupancy` io
-        INNER JOIN `tabHealthcare Service Unit` hsu ON io.service_unit = hsu.name
-        WHERE io.is_confirmed = 1
-        AND io.parent = %s
-        ORDER BY io.check_in ASC
-    """%frappe.db.escape(inpatient_record), as_dict=1)
+		select 0 as lab_amount, sum(lrpmt.amount) as radiology_amount, 0 as procedure_amount, 0 as drug_amount,
+			0 as therapy_amount, date(pe.encounter_date) as date, "" as service_unit,
+			0 as bed_charges, 0 as cons_charges
+		from `tabRadiology Procedure Prescription` lrpmt
+		inner join `tabPatient Encounter` pe on lrpmt.parent = pe.name
+		where pe.inpatient_record = %(inpatient_record)s
+		and pe.appointment = %(appointment_no)s
+		and pe.patient = %(patient)s
+		and pe.company = %(company)s
+		and pe.docstatus = 1
+		and lrpmt.prescribe = 1
+		and lrpmt.is_not_available_inhouse = 0
+		and lrpmt.is_cancelled = 0
+		and lrpmt.invoiced = 0
+		group by pe.encounter_date
 
-	if not service_unit_details:
-		frappe.throw(frappe.bold("Cannot show Report without any confirmed bed"))
+		union all
 
-	checkin_list = []
-	occupancy_list = []
-	duplicated_checkin_list = []
-	for unit in service_unit_details:
-		if unit.check_in not in checkin_list:
-			checkin_list.append(unit.check_in)
-			occupancy_list.append(unit)
-		else:
-			duplicated_checkin_list.append(unit)
-    
-	for service in occupancy_list:
-		d_amount = 0
-		if duplicated_checkin_list:
-			for d in duplicated_checkin_list:
-				if service.check_in == d.check_in:
-					d_amount += d.amount
-        
-		service.update({
-            "amount": flt(service.amount) + d_amount
-        })
-		unit_list.append(service)
+		select 0 as lab_amount, 0 as radiology_amount, sum(lrpmt.amount) as procedure_amount,
+			0 as drug_amount, 0 as therapy_amount, date(pe.encounter_date) as date, "" as service_unit,
+			0 as bed_charges, 0 as cons_charges
+		from `tabProcedure Prescription` lrpmt
+		inner join `tabPatient Encounter` pe on lrpmt.parent = pe.name
+		where pe.inpatient_record = %(inpatient_record)s
+		and pe.appointment = %(appointment_no)s
+		and pe.patient = %(patient)s
+		and pe.company = %(company)s
+		and pe.docstatus = 1
+		and lrpmt.prescribe = 1
+		and lrpmt.is_not_available_inhouse = 0
+		and lrpmt.is_cancelled = 0
+		and lrpmt.invoiced = 0
+		group by pe.encounter_date
+		
+		union all
 
-	return unit_list
+		select 0 as lab_amount, 0 as radiology_amount, 0 as procedure_amount,
+			sum(lrpmt.amount * (lrpmt.quantity - lrpmt.quantity_returned)) as drug_amount,
+			0 as therapy_amount, date(pe.encounter_date) as date, "" as service_unit,
+			0 as bed_charges, 0 as cons_charges
+		from `tabDrug Prescription` lrpmt
+		inner join `tabPatient Encounter` pe on lrpmt.parent = pe.name
+		where pe.inpatient_record = %(inpatient_record)s
+		and pe.appointment = %(appointment_no)s
+		and pe.patient = %(patient)s
+		and pe.company = %(company)s
+		and pe.docstatus = 1
+		and lrpmt.prescribe = 1
+		and lrpmt.is_not_available_inhouse = 0
+		and lrpmt.is_cancelled = 0
+		and lrpmt.invoiced = 0
+		group by pe.encounter_date
 
-def get_patient_balance(patient, company):
-	customer = frappe.get_value("Patient", {"name": patient}, ["customer"])
+		union all
 
-	balance = get_balance_on(party_type="Customer", party=customer, company=company)
+		select 0 as lab_amount, 0 as radiology_amount, 0 as procedure_amount, 0 as drug_amount,
+			sum(lrpmt.amount) as therapy_amount, date(pe.encounter_date) as date, "" as service_unit,
+			0 as bed_charges, 0 as cons_charges
+		from `tabTherapy Plan Detail` lrpmt
+		inner join `tabPatient Encounter` pe on lrpmt.parent = pe.name
+		where pe.inpatient_record = %(inpatient_record)s
+		and pe.appointment = %(appointment_no)s
+		and pe.patient = %(patient)s
+		and pe.company = %(company)s
+		and pe.docstatus = 1
+		and lrpmt.prescribe = 1
+		and lrpmt.is_not_available_inhouse = 0
+		and lrpmt.is_cancelled = 0
+		and lrpmt.invoiced = 0
+		group by pe.encounter_date
 
-	return balance
+		union all
+
+		select 0 as lab_amount, 0 as radiology_amount, 0 as procedure_amount, 0 as drug_amount,
+			0 as therapy_amount, date(ipd.check_in) AS date, ipd.service_unit as service_unit, 
+			sum(ipd.amount) as bed_charges, 0 as cons_charges
+        from `tabInpatient Occupancy` ipd
+        where ipd.is_confirmed = 1
+		and ipd.invoiced = 0
+        and ipd.parent = %(inpatient_record)s
+		group by date(ipd.check_in)
+
+		union all
+
+		select 0 as lab_amount, 0 as radiology_amount, 0 as procedure_amount, 0 as drug_amount,
+			0 as therapy_amount, date(ipd.date) AS date, "" as service_unit, 
+			0 as bed_charges, sum(ipd.rate) as cons_charges
+		from `tabInpatient Consultancy` ipd
+		where ipd.is_confirmed = 1
+		and ipd.hms_tz_invoiced = 0
+        and ipd.parent = %(inpatient_record)s
+		group by date(ipd.date)
+	""", args, as_dict=True)
+
+	return services
 
 def get_report_summary(args, summary_data):
+	customer = frappe.get_value("Patient", {"name": args.patient}, ["customer"])
 
-	deposit_balance = get_patient_balance(args.patient, args.company)
+	deposit_balance = get_balance_on(party_type="Customer", party=customer, company=args.company)
 
 	total_amount = 0
 	for entry in summary_data:
@@ -268,7 +218,7 @@ def get_report_summary(args, summary_data):
 	return [
 		{
 			"value": balance,
-			"label": _("Total Patient Balance"),
+			"label": _("Total Deposited Amount"),
 			"datatype": "Currency",
 			"currency": currency
 		},
@@ -285,3 +235,27 @@ def get_report_summary(args, summary_data):
 			"currency": currency
 		}
 	]
+
+def get_last_row(args, data):
+	total_beds = total_cons = total_labs = total_radiology = 0
+	total_procedure = total_drug = total_therapy = total_grand = 0
+
+	sorted_data = sorted(data, key=lambda x: x['date'])
+	report_summary = get_report_summary(args, sorted_data)
+
+	for n in range(0, len(sorted_data)):
+		total_beds += sorted_data[n]['total_bed_charges']
+		total_cons += sorted_data[n]['total_cons_charges']
+		total_labs += sorted_data[n]['total_lab_amount']
+		total_radiology += sorted_data[n]['total_radiology_amount']
+		total_procedure += sorted_data[n]['total_procedure_amount']
+		total_drug += sorted_data[n]['total_drug_amount']
+		total_therapy += sorted_data[n]['total_therapy_amount']
+		total_grand += sorted_data[n]['grand_total']
+	
+	sorted_data.append({
+		'date': 'Total', 'service_unit': '', 'total_bed_charges': total_beds, 'total_cons_charges': total_cons,
+		'total_lab_amount': total_labs, 'total_radiology_amount': total_radiology, 'total_procedure_amount': total_procedure,
+		'total_drug_amount': total_drug, 'total_therapy_amount': total_therapy, 'grand_total': total_grand
+	})
+	return sorted_data, report_summary
