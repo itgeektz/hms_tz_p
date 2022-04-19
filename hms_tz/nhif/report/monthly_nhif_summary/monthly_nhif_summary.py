@@ -132,7 +132,7 @@ def get_data(filters):
     )
 
     first_day_of_month = getdate(
-        str(filters.get('submit_claim_month')) + '-' + str(filters.get('submit_claim_year'))
+        str(filters.get('submit_claim_year')) + '-' + str(filters.get('submit_claim_month')) + '-1'
     )
 
     last_day_of_month = first_day_of_month.replace(
