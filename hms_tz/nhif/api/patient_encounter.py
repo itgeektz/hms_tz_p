@@ -57,8 +57,6 @@ def on_submit_validation(doc, method):
 
     checkـforـduplicate(doc, method)
 
-    insurance_subscription = doc.insurance_subscription
-
     childs_map = [
         {
             "table": "lab_test_prescription",
@@ -107,6 +105,74 @@ def on_submit_validation(doc, method):
                 for option in healthcare_doc.company_options:
                     if doc.company == option.company:
                         row.department_hsu = option.service_unit
+    
+    # Run on_submit
+    submitting_healthcare_practitioner = frappe.db.get_value(
+        "Healthcare Practitioner", {"user_id": frappe.session.user}, ["name"]
+    )
+    if submitting_healthcare_practitioner:
+        doc.practitioner = submitting_healthcare_practitioner
+
+    # Run on_submit?
+    prescribed_list = ""
+    for key, value in child_tables.items():
+        table = doc.get(key)
+        for row in table:
+            quantity = row.get("quantity") or row.get("no_of_sessions")
+            if (
+                (not doc.insurance_subscription)
+                or row.prescribe
+                or row.is_not_available_inhouse
+            ):
+                row.prescribe = 1
+                prescribed_list += "-  <b>" + row.get(value) + "</b><BR>"
+                if row.is_not_available_inhouse:
+                    prescribed_list += " - THIS ITEM IS NOT AVAILABLE INHOUSE "
+                prescribed_list += "<BR>"
+            elif not row.prescribe:
+                if row.get("no_of_sessions") and doc.insurance_subscription:
+                    if row.no_of_sessions != 1:
+                        row.no_of_sessions = 1
+                        frappe.msgprint(
+                            _(
+                                "No of sessions have been set to 1 for {0} as per"
+                                " insurance rules."
+                            ).format(row.get(value)),
+                            alert=True,
+                        )
+            if not row.is_not_available_inhouse:
+                validate_stock_item(
+                    row.get(value),
+                    quantity,
+                    doc.company,
+                    healthcare_service_unit=row.get("healthcare_service_unit"),
+                    method=method,
+                )
+    if prescribed_list:
+        msgPrint(
+            _(
+                "{0}<BR>The above been prescribed. <b>Request the patient to visit the"
+                " cashier for billing/cash payment</b> or prescription printout."
+            ).format(prescribed_list),
+            method,
+        )
+
+    # Run on_submit
+    mtuha_missing = ""
+    for final_diagnosis in doc.patient_encounter_final_diagnosis:
+        if not final_diagnosis.mtuha:
+            mtuha_missing += "-  <b>" + final_diagnosis.medical_code + "</b><br>"
+
+    if mtuha_missing:
+        msgThrow(
+            _("{0}<br>MTUHA Code not defined for the above diagnosis").format(
+                mtuha_missing
+            ),
+            method,
+        )
+
+
+    insurance_subscription = doc.insurance_subscription
 
     if not insurance_subscription:
         return
@@ -256,71 +322,6 @@ def on_submit_validation(doc, method):
                 ).format(template, days, int(count), coverage_info.number_of_claims),
                 method,
             )
-
-    # Run on_submit
-    mtuha_missing = ""
-    for final_diagnosis in doc.patient_encounter_final_diagnosis:
-        if not final_diagnosis.mtuha:
-            mtuha_missing += "-  <b>" + final_diagnosis.medical_code + "</b><br>"
-
-    if mtuha_missing:
-        msgThrow(
-            _("{0}<br>MTUHA Code not defined for the above diagnosis").format(
-                mtuha_missing
-            ),
-            method,
-        )
-
-    # Run on_submit
-    submitting_healthcare_practitioner = frappe.db.get_value(
-        "Healthcare Practitioner", {"user_id": frappe.session.user}, ["name"]
-    )
-    if submitting_healthcare_practitioner:
-        doc.practitioner = submitting_healthcare_practitioner
-
-    # Run on_submit?
-    prescribed_list = ""
-    for key, value in child_tables.items():
-        table = doc.get(key)
-        for row in table:
-            quantity = row.get("quantity") or row.get("no_of_sessions")
-            if (
-                (not doc.insurance_subscription)
-                or row.prescribe
-                or row.is_not_available_inhouse
-            ):
-                row.prescribe = 1
-                prescribed_list += "-  <b>" + row.get(value) + "</b><BR>"
-                if row.is_not_available_inhouse:
-                    prescribed_list += " - THIS ITEM IS NOT AVAILABLE INHOUSE "
-                prescribed_list += "<BR>"
-            elif not row.prescribe:
-                if row.get("no_of_sessions") and doc.insurance_subscription:
-                    if row.no_of_sessions != 1:
-                        row.no_of_sessions = 1
-                        frappe.msgprint(
-                            _(
-                                "No of sessions have been set to 1 for {0} as per"
-                                " insurance rules."
-                            ).format(row.get(value)),
-                            alert=True,
-                        )
-            if not row.is_not_available_inhouse:
-                validate_stock_item(
-                    row.get(value),
-                    quantity,
-                    doc.company,
-                    healthcare_service_unit=row.get("healthcare_service_unit"),
-                    method=method,
-                )
-    if prescribed_list:
-        msgPrint(
-            _(
-                "{0}<BR>The above been prescribed. <b>Request the patient to visit the"
-                " cashier for billing/cash payment</b> or prescription printout."
-            ).format(prescribed_list),
-            method,
-        )
 
     # Run on_submit
     validate_totals(doc)
