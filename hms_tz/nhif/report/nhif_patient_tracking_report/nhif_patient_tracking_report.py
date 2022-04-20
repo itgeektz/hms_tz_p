@@ -15,6 +15,7 @@ def execute(filters=None):
 
 def get_columns():
 	return [
+		{"fieldname": "appointment_date", "label": _("Appointment Date"), "fieldtype": "Date"},
 		{"fieldname": "patient", "label": _("Patient"), "fieldtype": "Data"},
 		{"fieldname": "patient_name", "label": _("Patient Name"), "fieldtype": "Data"},
 		{"fieldname": "appointment_no", "label": _("AppointmentNo"), "fieldtype": "Data"},
@@ -49,6 +50,7 @@ def get_data(filters):
 					signature = ""
 				
 				nhif_records.append({
+					"appointment_date": d["appointment_date"],
 					"patient": d["patient"],
 					"patient_name": d["patient_name"],
 					"appointment_no": d["appointment_no"],
@@ -62,6 +64,7 @@ def get_data(filters):
 
 		if d["appointment_no"] not in nhif_appointments:
 			nhif_records.append({
+				"appointment_date": d["appointment_date"],
 				"patient": d["patient"],
 				"patient_name": d["patient_name"],
 				"appointment_no": d["appointment_no"],
@@ -122,7 +125,7 @@ def get_appointment_details(filters):
 	conditions = get_conditions(filters)
 	
 	appointments = frappe.get_all("Patient Appointment", filters=conditions,
-		fields=["name", "patient", "patient_name", "status"], order_by="appointment_date"
+		fields=["name", "patient", "patient_name", "appointment_date", "status"], order_by="appointment_date"
 	)
 	if not appointments:
 		frappe.throw("No Appointment(s) Found for the filters: #{0}, #{1} and #{2}".format(
@@ -134,6 +137,7 @@ def get_appointment_details(filters):
 	for pa in appointments:
 		name_list.append(pa["name"])
 		appointment_list.append({
+			"appointment_date": pa["appointment_date"],
 			"patient": pa["patient"],
 			"patient_name": pa["patient_name"],
 			"appointment_no": pa["name"],
