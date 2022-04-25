@@ -607,10 +607,6 @@ def create_individual_lab_test(source_doc, child):
         # child.lab_test = doc.name
         child.db_update()
 
-    # Will not submit sales invoice or patient encounter if lab test is not created
-    else:
-        frappe.throw(frappe.bold("Lab Test was not created, please try submitting again"))
-
 
 def create_individual_radiology_examination(source_doc, child):
     if child.radiology_examination_created == 1 or child.is_not_available_inhouse:
@@ -655,11 +651,6 @@ def create_individual_radiology_examination(source_doc, child):
         # child.radiology_examination = doc.name
         child.db_update()
 
-    # 08-02-2022
-    # Will not submit sales invoice or patient encounter if radiology examination is not created
-    else:
-        frappe.throw(frappe.bold("Radiology Examination was not created, please try submitting again"))
-
 
 def create_individual_procedure_prescription(source_doc, child):
     if child.procedure_created == 1 or child.is_not_available_inhouse:
@@ -700,11 +691,6 @@ def create_individual_procedure_prescription(source_doc, child):
         # procedure prescription will be updated only clinical procedure is submitted
         # child.clinical_procedure = doc.name
         child.db_update()
-
-    # 08-02-2022
-    # Will not submit sales invoice or patient encounter if clinical procedure is not created
-    else:
-        frappe.throw(frappe.bold("Clinical Procedure was not created, please try submitting again"))
 
 
 def msgThrow(msg, method="throw", alert=True):
@@ -848,4 +834,116 @@ def delete_or_cancel_draft_document():
             dn_del.delete()
         except Exception:
             frappe.log_error(frappe.get_traceback())
+        frappe.db.commit()
+
+def create_invoiced_items_if_not_created():
+    """create pending LRP item(s) after submission of sales invoice"""
+    
+    today_date = nowdate()
+    si_invoices = frappe.db.sql(""" SELECT Distinct(si.name) FROM `tabSales Invoice` si
+        INNER JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
+        WHERE si.patient is not null
+        AND si.docstatus = 1 
+        AND si.posting_date = %s
+        AND sii.hms_tz_is_lrp_item_created = 0
+    """, today_date, as_dict=1)
+
+    for invoice in si_invoices:
+        si_doc = frappe.get_doc("Sales Invoice", invoice.name)
+
+        for item in si_doc.items:
+            if item.reference_dt in [
+                "Lab Prescription",
+                "Radiology Procedure Prescription",
+                "Procedure Prescription",
+            ]:
+                if item.hms_tz_is_lrp_item_created == 1:
+                    continue
+                
+                try:
+                    child = frappe.get_doc(item.reference_dt, item.reference_dn)
+                    patient_encounter_doc = frappe.get_doc("Patient Encounter", child.parent )
+
+                    if child.doctype == "Lab Prescription":
+                        ltt_doc = frappe.get_doc("Lab Test Template", child.lab_test_code)
+
+                        lab_doc = frappe.get_doc({
+                            'doctype': "Lab Test",
+                            'patient': patient_encounter_doc.patient,
+                            'patient_sex': patient_encounter_doc.patient_sex,
+                            'company': patient_encounter_doc.company,
+                            'template': ltt_doc.name,
+                            'practitioner': patient_encounter_doc.practitioner,
+                            'source': patient_encounter_doc.source,
+                            'prescribe': child.prescribe,
+                            'insurance_subscription': patient_encounter_doc.insurance_subscription\
+                                if patient_encounter_doc.insurance_subscription else "",
+                            'ref_doctype': patient_encounter_doc.doctype,
+                            'ref_docname': patient_encounter_doc.name,
+                            'invoiced': 1,
+                            'service_comment': child.medical_code or "No ICD Code" + " : " + child.lab_test_comment or "No Comment"
+                        })
+                        lab_doc.insert(ignore_permissions=True, ignore_mandatory=True)
+                        if lab_doc.name:
+                            child.lab_test_created = 1
+                            child.invoiced = 1
+                            child.sales_invoice_number = item.parent
+                            child.db_update()
+
+                    elif child.doctype == "Radiology Procedure Prescription":
+                        radiology_doc = frappe.get_doc({
+                            'doctype': 'Radiology Examination',
+                            'patient': patient_encounter_doc.patient,
+                            'company': patient_encounter_doc.company,
+                            'radiology_examination_template': child.radiology_examination_template,
+                            'practitioner': patient_encounter_doc.practitioner,
+                            'source': patient_encounter_doc.source,
+                            'prescribe': child.prescribe,
+                            'insurance_subscription': patient_encounter_doc.insurance_subscription\
+                                if patient_encounter_doc.insurance_subscription else "",
+                            'medical_department': frappe.get_value("Radiology Examination Template",
+                                child.radiology_examination_template, 'medical_department'),
+                            'ref_doctype': patient_encounter_doc.doctype,
+                            'ref_docname': patient_encounter_doc.name,
+                            'invoiced': 1,
+                            'service_comment': child.medical_code or "No ICD Code" + " : " + child.radiology_test_comment or "No Comment"
+                        })
+                        radiology_doc.insert(ignore_permissions=True, ignore_mandatory=True)
+                        if radiology_doc.name:
+                            child.radiology_examination_created = 1
+                            child.invoiced = 1
+                            child.sales_invoice_number = item.parent
+                            child.db_update()
+
+                    elif child.doctype == "Procedure Prescription":
+                        procedure_doc = frappe.get_doc({
+                            'doctype': 'Clinical Procedure',
+                            'patient': patient_encounter_doc.patient,
+                            'patient_sex': patient_encounter_doc.patient_sex,
+                            'company': patient_encounter_doc.company,
+                            'procedure_template': child.procedure,
+                            'practitioner': patient_encounter_doc.practitioner,
+                            'source': patient_encounter_doc.source,
+                            'prescribe': child.prescribe,
+                            'insurance_subscription': patient_encounter_doc.insurance_subscription,
+                            'medical_department': frappe.get_value("Clinical Procedure Template",\
+                                    child.procedure, "medical_department"),
+                            'ref_doctype': patient_encounter_doc.doctype,
+                            'ref_docname': patient_encounter_doc.name,
+                            'invoiced': 1,
+                            'service_comment':  child.medical_code or "No ICD Code" + " : " + child.comments or "No Comment"
+                        })
+                        procedure_doc.insert(ignore_permissions=True, ignore_mandatory=True)
+                        if procedure_doc.name:
+                            child.procedure_created = 1
+                            child.invoiced = 1
+                            child.sales_invoice_number = item.parent
+                            child.db_update()
+
+                    item.hms_tz_is_lrp_item_created = 1
+                    item.db_update()
+                except Exception:
+                    traceback = frappe.get_traceback()
+                    frappe.log_error(traceback)
+        
         frappe.db.commit()
