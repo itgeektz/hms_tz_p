@@ -25,17 +25,9 @@ def execute():
         'read_only': 1
     }).insert(ignore_permissions=True)
 
-    frappe.get_doc({
-        'doctype': 'Custom Field',
-        'name': 'Delivery Note-hms_tz_practitioner',
-        'dt': 'Delivery Note',
-        'label': 'Practitioner',
-        'fieldname': 'hms_tz_practitioner',
-        'insert_after': 'hms_tz_appointment_no',
-        'fieldtype': 'Data',
-        'fetch_from': 'reference_name.practitioner',
-        'fetch_if_empty': 1,
-        'read_only': 1
-    }).insert(ignore_permissions=True)
+    practitioner = frappe.get_doc('Custom Field', 'Delivery Note-healthcare_practitioner')
+    practitioner.insert_after = 'healthcare_service_unit'
+    practitioner.read_only = 1
+    practitioner.save(ignore_permissions=True)
 
     frappe.db.commit()
