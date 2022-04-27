@@ -236,8 +236,9 @@ def update_cash_limit(kwargs):
     for name in patient_list:
         try:
             doc = frappe.get_doc("Patient", name)
-            doc.cash_limit = flt(data.get('new_value'))
-            doc.db_update()
+            if flt(doc.cash_limit) != flt(data.get('new_value')):
+                doc.cash_limit = flt(data.get('new_value'))
+                doc.db_update()
         except Exception:
             frappe.log_error(frappe.get_traceback())
 
