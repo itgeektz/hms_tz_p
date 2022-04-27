@@ -12,10 +12,11 @@ import requests
 from time import sleep
 from hms_tz.nhif.doctype.nhif_product.nhif_product import add_product
 from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
-from frappe.utils import getdate
+from frappe.utils import getdate, nowdate, flt
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from hms_tz.nhif.api.healthcare_utils import remove_special_characters
 from datetime import date
+from frappe.utils.background_jobs import enqueue
 
 
 def validate(doc, method):
@@ -210,3 +211,35 @@ def after_insert(doc, method):
         return
     doc.insurance_card_detail = (doc.card_no or "") + ", "
     create_subscription(doc)
+
+
+@frappe.whitelist()
+def enqueue_update_cash_limit(old_cash_limit, new_cash_limit):
+    if getdate(nowdate()).strftime('%A') != 'Saturday':
+        frappe.throw("<h4 class='font-weight-bold text-center'>\
+            Please run this routine only on Saturday</h4>")
+
+    data = dict(old_value=old_cash_limit, new_value=new_cash_limit)
+
+    enqueue(
+        method=update_cash_limit,
+        queue='default',
+        timeout=600000,
+        job_name='update_new_cash_limit',
+        is_async=True,
+        kwargs=data
+    )
+
+def update_cash_limit(kwargs):
+    data = kwargs
+    patient_list = frappe.get_all('Patient', {'status': 'Active'}, pluck='name')
+    for name in patient_list:
+        try:
+            doc = frappe.get_doc("Patient", name)
+            if flt(doc.cash_limit) != flt(data.get('new_value')):
+                doc.cash_limit = flt(data.get('new_value'))
+                doc.db_update()
+        except Exception:
+            frappe.log_error(frappe.get_traceback())
+
+    frappe.db.commit()
