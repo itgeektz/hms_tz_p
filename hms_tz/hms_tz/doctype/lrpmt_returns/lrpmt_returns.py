@@ -537,15 +537,17 @@ def get_drug_item_list(patient, appointment_no, company):
 	if item_list:
 		for item in item_list:
 			for delivery_note in delivery_note_items:
+				if delivery_note.docstatus == 0:
+					status = 'Draft'
+				else:
+					status = 'Submitted'
+				
 				if (
 					item.dn_detail and
-					item.dn_detail == delivery_note.name
-				):				
-					if delivery_note.docstatus == 0:
-						status = 'Draft'
-					else:
-						status = 'Submitted'
-					
+					item.drug_prescription_created == 1 and
+					item.dn_detail == delivery_note.name and
+					delivery_note.docstatus == 1
+				):
 					drug_list.append({
 						"child_name": item.name,
 						"item_name": item.drug_code,
@@ -555,19 +557,16 @@ def get_drug_item_list(patient, appointment_no, company):
 						"dn_detail": item.dn_detail,
 						'status': status
 					})
-					avoid_duplicate_list.append(item.drug_code)
+					avoid_duplicate_list.append(item.name)
 				
-				elif (
-					not item.dn_detail and 
+				if (
 					delivery_note.reference_name and 
 					item.name == delivery_note.reference_name and
+					item.drug_prescription_created == 1 and
+					delivery_note.docstatus == 0 and
+					not item.dn_detail and 
 					not delivery_note.si_detail
-				):
-					if delivery_note.docstatus == 0:
-						status = 'Draft'
-					else:
-						status = 'Submitted'
-					
+				):					
 					drug_list.append({
 						"child_name": item.name,
 						"item_name": item.drug_code,
@@ -577,30 +576,28 @@ def get_drug_item_list(patient, appointment_no, company):
 						"dn_detail": item.dn_detail or "",
 						'status': status
 					})
-					avoid_duplicate_list.append(item.drug_code)
+					avoid_duplicate_list.append(item.name)
 
-				elif (
+				if (
 					not item.dn_detail and 
 					not delivery_note.reference_name and 
-					delivery_note.si_detail
+					item.drug_prescription_created == 1 and
+					delivery_note.si_detail and
+					delivery_note.docstatus == 0
 				):
-					if delivery_note.docstatus == 0:
-						status = 'Draft'
-					else:
-						status = 'Submitted'
-					
-					drug_list.append({
-						"child_name": item.name,
-						"item_name": item.drug_code,
-						"quantity": item.quantity - item.quantity_returned,
-						"encounter_no": item.parent,
-						"delivery_note": delivery_note.parent,
-						"dn_detail": item.dn_detail or "",
-						'status': status
-					})
-					avoid_duplicate_list.append(item.drug_code)
+					if item.name not in avoid_duplicate_list:
+						drug_list.append({
+							"child_name": item.name,
+							"item_name": item.drug_code,
+							"quantity": item.quantity - item.quantity_returned,
+							"encounter_no": item.parent,
+							"delivery_note": delivery_note.parent,
+							"dn_detail": item.dn_detail or "",
+							'status': status
+						})
+						avoid_duplicate_list.append(item.name)
 
-			if item.drug_code not in avoid_duplicate_list:
+			if item.name not in avoid_duplicate_list:
 				drug_list.append({
 					"child_name": item.name,
 					"item_name": item.drug_code,
@@ -619,7 +616,7 @@ def get_drugs(patient, appointment_no, company):
 
 	encounter_list = get_patient_encounters(patient, appointment_no, company)
 	drugs = frappe.get_all("Drug Prescription", filters={"parent": ["in", encounter_list], "is_not_available_inhouse": 0, "is_cancelled": 0},
-		fields=["name", "drug_code", "quantity", "quantity_returned", "parent", "dn_detail"]
+		fields=["name", "drug_code", "quantity", "quantity_returned", "drug_prescription_created", "parent", "dn_detail"]
 	)
 
 	for drug in drugs:
