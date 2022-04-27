@@ -15,7 +15,7 @@
  "module": "NHIF",
  "name": "NHIF Patient Tracking Report",
  "owner": "Administrator",
- "prepared_report": 0,
+ "prepared_report": 1,
  "ref_doctype": "NHIF Patient Claim",
  "report_name": "NHIF Patient Tracking Report",
  "report_type": "Script Report",
