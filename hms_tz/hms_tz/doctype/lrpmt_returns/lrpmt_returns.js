@@ -12,7 +12,7 @@ frappe.ui.form.on('LRPMT Returns', {
 	},
 
 	refresh: function(frm) {
-		frm.set_query('appointment_no', () => {
+		frm.set_query('appointment', () => {
 			return {
 				filters: {
 					'patient': frm.doc.patient
@@ -20,7 +20,7 @@ frappe.ui.form.on('LRPMT Returns', {
 			}
 		});
 		
-		if (frm.doc.patient && frm.doc.appointment_no) {
+		if (frm.doc.patient && frm.doc.appointment) {
 			frm.add_custom_button(__("Get LRPT Items"), function(){
 				frm.trigger("get_lrpt_items")
 			}),
@@ -67,14 +67,14 @@ frappe.ui.form.on('LRPMT Returns', {
 		var $wrapper;
 		var $results;
 		var $placeholder;
-		if (frm.doc.patient && frm.doc.appointment_no && frm.doc.company) {
+		if (frm.doc.patient && frm.doc.appointment && frm.doc.company) {
 			var columns = (["item_name", "encounter_no", "reference_docname", "reference_doctype", "status"])
 
 			frappe.call({
 				method: "hms_tz.hms_tz.doctype.lrpmt_returns.lrpmt_returns.get_lrpt_item_list",
 				args: {
 					patient: frm.doc.patient,
-					appointment_no: frm.doc.appointment_no,
+					appointment: frm.doc.appointment,
 					company: frm.doc.company
 				},
 				callback: (data) => {
@@ -120,13 +120,13 @@ frappe.ui.form.on('LRPMT Returns', {
 		var $wrapper;
 		var $results;
 		var $placeholder;
-		if (frm.doc.patient, frm.doc.appointment_no, frm.doc.company) {
+		if (frm.doc.patient, frm.doc.appointment, frm.doc.company) {
 			var columns = (["item_name", "quantity", "encounter_no", "delivery_note", 'status'])
 			frappe.call({
 				method: "hms_tz.hms_tz.doctype.lrpmt_returns.lrpmt_returns.get_drug_item_list",
 				args: {
 					patient: frm.doc.patient,
-					appointment_no: frm.doc.appointment_no,
+					appointment: frm.doc.appointment,
 					company: frm.doc.company
 				},
 				callback: (r) => {

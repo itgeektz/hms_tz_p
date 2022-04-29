@@ -33,7 +33,7 @@ frappe.ui.form.on('NHIF Patient Claim', {
 				fields:['name'],
 				filters:{
 					'patient': frm.doc.patient, 
-					'appointment_no': frm.doc.patient_appointment,
+					'appointment': frm.doc.patient_appointment,
 					'docstatus': 1
 				}
 			}).then(data => {
