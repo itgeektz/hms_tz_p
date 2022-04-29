@@ -288,16 +288,16 @@ def get_unique_delivery_notes(self):
 		WHERE md.status NOT IN ("", "Null", "Draft")
 		AND md.dn_detail != ""
 		AND lrpmt.patient = %s
-		AND lrpmt.appointment_no = %s
+		AND lrpmt.appointment = %s
 		AND lrpmt.name = %s
-	"""%(frappe.db.escape(self.patient), frappe.db.escape(self.appointment_no), frappe.db.escape(self.name)), as_dict=1)
+	"""%(frappe.db.escape(self.patient), frappe.db.escape(self.appointment), frappe.db.escape(self.name)), as_dict=1)
 	
 @frappe.whitelist()
-def get_lrpt_item_list(patient, appointment_no, company):
+def get_lrpt_item_list(patient, appointment, company):
 	item_list = []
 	child_list = get_lrpt_map()
 
-	encounter_list = get_patient_encounters(patient, appointment_no, company)
+	encounter_list = get_patient_encounters(patient, appointment, company)
 
 	for child in child_list:
 		items = frappe.get_all(child["doctype"], 
@@ -452,8 +452,8 @@ def set_missing_values(doc):
 	)
 
 	if appointment_list:
-		if not doc.appointment_no:
-			doc.appointment_no = appointment_list[0]["name"]
+		if not doc.appointment:
+			doc.appointment = appointment_list[0]["name"]
 		doc.company = appointment_list[0]["company"]
 
 		record = frappe.get_all("Inpatient Record", 
@@ -476,11 +476,11 @@ def set_missing_values(doc):
 			)
 		)
 
-def get_patient_encounters(patient, appointment_no, company):
-	if (patient and appointment_no and company):
+def get_patient_encounters(patient, appointment, company):
+	if (patient and appointment and company):
 		conditions = {
 			"patient": patient,
-			"appointment": appointment_no,
+			"appointment": appointment,
 			"company": company,
 			"docstatus": 1
 		}
@@ -509,11 +509,11 @@ def set_checked_lrpt_items(doc, checked_items):
 	return doc.name
 
 @frappe.whitelist()
-def get_drug_item_list(patient, appointment_no, company):
+def get_drug_item_list(patient, appointment, company):
 	drug_list = []
 	delivery_note_items = []
 
-	item_list, name_list = get_drugs(patient, appointment_no, company)
+	item_list, name_list = get_drugs(patient, appointment, company)
 
 	if name_list:
 		delivery_note_items += frappe.get_all("Delivery Note Item", filters={
@@ -610,11 +610,11 @@ def get_drug_item_list(patient, appointment_no, company):
 	
 	return drug_list
 
-def get_drugs(patient, appointment_no, company):
+def get_drugs(patient, appointment, company):
 	item_list = []
 	name_list = []
 
-	encounter_list = get_patient_encounters(patient, appointment_no, company)
+	encounter_list = get_patient_encounters(patient, appointment, company)
 	drugs = frappe.get_all("Drug Prescription", filters={"parent": ["in", encounter_list], "is_not_available_inhouse": 0, "is_cancelled": 0},
 		fields=["name", "drug_code", "quantity", "quantity_returned", "drug_prescription_created", "parent", "dn_detail"]
 	)
