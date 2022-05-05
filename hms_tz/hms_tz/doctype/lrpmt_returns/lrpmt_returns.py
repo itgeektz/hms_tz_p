@@ -166,19 +166,16 @@ def return_drug_item(self):
 	
 def update_drug_prescription(item, child_name):
 	if (
-		not item.dn_detail or 
-		not item.delivery_note_no or 
-		not item.status or 
-		item.status == "Draft"
+		not item.dn_detail and
+		not item.delivery_note_no and
+		not item.status
 	):
 		frappe.db.set_value("Drug Prescription", child_name, "is_cancelled", 1)
 
-		delete_draft_delivery_note(item)
-
 	if (
-		item.dn_detail and 
 		item.delivery_note_no and 
-		item.status == "Submitted"
+		item.status in ["Draft", "Submitted"] or 
+		item.dn_detail
 	):
 		if (item.quantity_prescribed - item.quantity_to_return) == 0:
 			item_cancelled = 1
@@ -191,29 +188,6 @@ def update_drug_prescription(item, child_name):
 			"is_cancelled": item_cancelled
 		})
 
-def delete_draft_delivery_note(item):
-	"""Delete draft delivery note to avoid resubmission of delivery note if its item is cancelled"""
-
-	if (
-		item.delivery_note_no and
-		item.status == "Draft" and
-		frappe.db.exists("Delivery Note", {"name": item.delivery_note_no})
-	):
-		try:
-			frappe.delete_doc("Delivery Note", item.delivery_note_no, force=True)
-
-			if not frappe.get_value("Delivery Note", item.delivery_note_no):
-				frappe.msgprint(_("<p style='text-align: center: font-size: 16pt;'>Draft Delivery Note: {0}\
-					was deleted successfully.<br></p>".format(bold(item.delivery_note_no))\
-					+ "<p style='text-align: center; background-color: #DCDCDC; font-size: 10pt; font-weight: bold;'>\
-						<i><em>Deleting of this draft delivery note aim to avoid\
-						submitting of this delivery note when it's item was cancelled</em></i>\
-					</p>"
-				))
-		except Exception:
-			frappe.log_error(frappe.get_traceback())
-		
-		frappe.db.commit()
 	
 def get_sales_return(self):
 	conditions = {

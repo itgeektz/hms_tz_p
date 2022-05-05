@@ -23,11 +23,11 @@ frappe.ui.form.on('LRPMT Returns', {
 		if (frm.doc.patient && frm.doc.appointment) {
 			frm.add_custom_button(__("Get LRPT Items"), function(){
 				frm.trigger("get_lrpt_items")
-			}),
+			}).removeClass('btn-default').addClass('btn-warning font-weight-bold text-center text-dark'),
 
 			frm.add_custom_button(__("Get Drug Items"), function(){
 				frm.trigger("get_drug_items")
-			})
+			}).removeClass('btn-default').addClass('btn-info font-weight-bold text-center text-dark')
 		}
 	},
 	
