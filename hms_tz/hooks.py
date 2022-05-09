@@ -208,8 +208,7 @@ scheduler_events = {
     
     "cron": {
         # fire every saturday 2:30 am at night
-        # "30 2 * * 6"
-        "*/2 * * * *": [
+        "30 2 * * 6": [
             "hms_tz.nhif.api.healthcare_utils.delete_or_cancel_draft_document"
         ],
         # Routine for every 10min
