@@ -5,7 +5,10 @@ from frappe.utils import nowdate
 def execute():
     today = nowdate()
     encounters = frappe.get_all("Patient Encounter", {"encounter_date": ["<=", today]}, ["name"], pluck="name")
- 
+
+    if len(encounters) == 0:
+        return 
+
     frappe.db.sql("""
         UPDATE `tabLab Prescription` lrpt
         INNER JOIN `tabPatient Encounter` pe ON lrpt.parent = pe.name
