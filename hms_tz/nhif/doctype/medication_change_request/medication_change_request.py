@@ -79,7 +79,7 @@ class MedicationChangeRequest(Document):
 
     def update_encounter(self):
         doc = frappe.get_doc("Patient Encounter", self.patient_encounter)
-        for line in self.drug_prescription:
+        for line in self.original_pharmacy_prescription:
             for row in doc.drug_prescription:
                 if (
                     line.drug_code == row.drug_code and 
@@ -256,7 +256,7 @@ def validate_healthcare_service_unit(warehouse, item, method):
 def get_items_on_change_of_delivery_note(name, encounter, delivery_note):
     doc = frappe.get_doc("Medication Change Request", name)
     
-    if not encounter or not delivery_note:
+    if not doc or not encounter or not delivery_note:
         return 
 
     patient_encounter_doc = frappe.get_doc("Patient Encounter", encounter)
