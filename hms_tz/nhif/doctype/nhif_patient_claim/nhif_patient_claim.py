@@ -730,8 +730,10 @@ def get_item_refcode(item_code):
 def generate_pdf(doc):
     doc_name = doc.name
     file_list = frappe.get_all("File", filters={"attached_to_name": doc_name})
-    for file in file_list:
-        frappe.delete_doc("File", file.name, ignore_permissions=True)
+    if file_list:
+        file_doc = frappe.get_doc("File", file_list[0].name)
+        pdf = file_doc.get_content()
+        return to_base64(pdf)
 
     data_list = []
     data = doc.patient_encounters
