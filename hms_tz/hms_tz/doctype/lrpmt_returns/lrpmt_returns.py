@@ -90,6 +90,9 @@ def cancel_tharapy_plan_doc(patient, therapy_plan_id):
 	return therapy_plan_doc.name
 
 def return_drug_item(self):
+	if len(self.drug_items) == 0:
+		return 
+	
 	dn_names = get_unique_delivery_notes(self)
 
 	if not dn_names:
