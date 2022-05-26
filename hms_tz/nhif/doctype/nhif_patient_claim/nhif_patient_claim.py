@@ -300,8 +300,8 @@ class NHIFPatientClaim(Document):
         self.nhif_patient_claim_item = []
         final_patient_encounter = self.get_final_patient_encounter()
         inpatient_record = final_patient_encounter.inpatient_record
-        is_inpatient = True if inpatient_record else False
-        if not is_inpatient:
+        # is_inpatient = True if inpatient_record else False
+        if not inpatient_record:
             for encounter in self.patient_encounters:
                 encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
                 for child in childs_map:
@@ -489,7 +489,7 @@ class NHIFPatientClaim(Document):
             patient_appointment_doc = frappe.get_doc(
                 "Patient Appointment", appointment_no
             )
-            if not is_inpatient and not patient_appointment_doc.follow_up:
+            if not inpatient_record and not patient_appointment_doc.follow_up:
                 item_code = patient_appointment_doc.billing_item
                 item_rate = get_item_rate(
                     item_code,
@@ -518,9 +518,10 @@ class NHIFPatientClaim(Document):
             filters={
                 "appointment": self.patient_appointment,
                 "docstatus": 1,
+                "duplicated": 0,
                 "encounter_type": "Final",
             },
-            fields={"*"},
+            fields={"name", "practitioner", "inpatient_record"},
         )
         if len(patient_encounter_list) == 0:
             frappe.throw(_("There no Final Patient Encounter for this Appointment"))
@@ -605,6 +606,7 @@ class NHIFPatientClaim(Document):
             r = requests.post(url, headers=headers, data=json_data, timeout=300)
 
             if r.status_code != 200:
+                frappe.msgprint("Response Status Code: " + str(r.status_code))
                 frappe.throw(str(r.text) if r.text else str(r))
             else:
                 frappe.msgprint(str(r.text))
