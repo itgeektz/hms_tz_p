@@ -606,7 +606,7 @@ class NHIFPatientClaim(Document):
             r = requests.post(url, headers=headers, data=json_data, timeout=300)
 
             if r.status_code != 200:
-                frappe.msgprint("Response Status Code: " + str(r.status_code))
+                frappe.msgprint("NHIF Server responded with HTTP status code: {0}".format(str(r.status_code if r.status_code else "NONE")))
                 frappe.throw(str(r.text) if r.text else str(r))
             else:
                 frappe.msgprint(str(r.text))
@@ -630,7 +630,7 @@ class NHIFPatientClaim(Document):
                     response_data=r.get("text") if r else "NO RESPONSE",
                     status_code=r.get("status_code") if r else "NO STATUS CODE",
                 )
-            frappe.throw(frappe.get_traceback(),str(e)[0:140])
+            frappe.throw(frappe.bold("This folio was NOT submitted due to the error above!.<br> Please retry after resolving the problem."))
             
 
 
