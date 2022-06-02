@@ -739,10 +739,12 @@ def get_item_refcode(item_code):
 
 
 def generate_pdf(doc):
-    doc_name = doc.name
-    file_list = frappe.get_all("File", filters={"attached_to_name": doc_name})
-    for file in file_list:
-        frappe.delete_doc("File", file.name, ignore_permissions=True)
+    file_list = frappe.get_all("File", filters={"attached_to_doctype": "NHIF Patient Claim", "file_name": str(doc.name + ".pdf")})
+    if file_list:
+        patientfile = frappe.get_doc("File", file_list[0].name)
+        if patientfile:
+            pdf = patientfile.get_content()
+            return to_base64(pdf)
 
     data_list = []
     data = doc.patient_encounters
@@ -760,16 +762,16 @@ def generate_pdf(doc):
     else:
         print_format = "Patient File"
 
-    pdf = download_multi_pdf(doctype, doc_name, print_format=print_format, no_letterhead=1)
+    pdf = download_multi_pdf(doctype, doc.name, print_format=print_format, no_letterhead=1)
     if pdf:
         ret = frappe.get_doc(
             {
                 "doctype": "File",
                 "attached_to_doctype": "NHIF Patient Claim",
-                "attached_to_name": doc_name,
+                "attached_to_name": doc.name,
                 "folder": "Home/Attachments",
-                "file_name": doc_name + ".pdf",
-                "file_url": "/private/files/" + doc_name + ".pdf",
+                "file_name": doc.name + ".pdf",
+                "file_url": "/private/files/" + doc.name + ".pdf",
                 "content": pdf,
                 "is_private": 1,
             }
@@ -811,6 +813,11 @@ def read_multi_pdf(output):
 
 
 def get_claim_pdf_file(doc):
+    file_list = frappe.get_all("File", filters={"attached_to_doctype": "NHIF Patient Claim", "file_name": str(doc.name + "-claim.pdf")})
+    if file_list:
+        for file in file_list:
+            frappe.delete_doc("File", file.name, ignore_permissions=True)
+    
     doctype = doc.doctype
     docname = doc.name
     default_print_format = frappe.db.get_value(
