@@ -193,46 +193,61 @@ class NHIFPatientClaim(Document):
 
     def set_patient_claim_disease(self):
         self.nhif_patient_claim_disease = []
-        preliminary_diagnosis_list = []
-        for encounter in self.patient_encounters:
-            encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
-            for row in encounter_doc.patient_encounter_preliminary_diagnosis:
-                if row.medical_code in preliminary_diagnosis_list:
-                    continue
-                preliminary_diagnosis_list.append(row.medical_code)
-                new_row = self.append("nhif_patient_claim_disease", {})
-                new_row.diagnosis_type = "Provisional Diagnosis"
-                new_row.status = "Provisional"
-                new_row.patient_encounter = encounter.name
-                new_row.codification_table = row.name
-                new_row.medical_code = row.medical_code
-                if row.code and len(row.code) > 3:
-                    new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
-                else:
-                    new_row.disease_code = row.code[:3]
-                new_row.description = row.description[0:139]
-                new_row.item_crt_by = get_fullname(row.modified_by)
-                new_row.date_created = row.modified.strftime("%Y-%m-%d")
-        final_diagnosis_list = []
-        for encounter in self.patient_encounters:
-            encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
-            for row in encounter_doc.patient_encounter_final_diagnosis:
-                if row.medical_code in final_diagnosis_list:
-                    continue
-                final_diagnosis_list.append(row.medical_code)
-                new_row = self.append("nhif_patient_claim_disease", {})
-                new_row.diagnosis_type = "Final Diagnosis"
-                new_row.status = "Final"
-                new_row.patient_encounter = encounter.name
-                new_row.codification_table = row.name
-                new_row.medical_code = row.medical_code
-                if row.code and len(row.code) > 3:
-                    new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
-                else:
-                    new_row.disease_code = row.code[:3]
-                new_row.description = row.description[0:139]
-                new_row.item_crt_by = get_fullname(row.modified_by)
-                new_row.date_created = row.modified.strftime("%Y-%m-%d")
+        preliminary_query_string = """
+            SELECT name, parent, code, medical_code, description, modified_by, modified 
+            FROM `tabCodification Table`
+            WHERE parentfield = "patient_encounter_preliminary_diagnosis"
+            AND parenttype = "Patient Encounter"
+            AND parent in ({})
+            GROUP BY medical_code
+            """.format(", ".join(
+                frappe.db.escape(encounters.name) for encounters in self.patient_encounters)
+        )
+        
+        preliminary_diagnosis_list = frappe.db.sql(preliminary_query_string, as_dict=True)
+        for row in preliminary_diagnosis_list:
+            new_row = self.append("nhif_patient_claim_disease", {})
+            new_row.diagnosis_type = "Provisional Diagnosis"
+            new_row.status = "Provisional"
+            new_row.patient_encounter = row.parent
+            new_row.codification_table = row.name
+            new_row.medical_code = row.medical_code
+            # Convert the ICD code of CDC to NHIF
+            if row.code and len(row.code) > 3:
+                new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
+            else:
+                new_row.disease_code = row.code[:3]
+            new_row.description = row.description[0:139]
+            new_row.item_crt_by = get_fullname(row.modified_by)
+            new_row.date_created = row.modified.strftime("%Y-%m-%d")
+        
+        final_query_string = """
+            SELECT name, parent, code, medical_code, description, modified_by, modified
+            FROM `tabCodification Table`
+            WHERE parentfield = "patient_encounter_final_diagnosis"
+            AND parenttype = "Patient Encounter"
+            AND parent in ({})
+            GROUP BY medical_code
+            """.format(", ".join(
+                frappe.db.escape(encounters.name) for encounters in self.patient_encounters)
+        )
+            
+        final_diagnosis_list = frappe.db.sql(final_query_string, as_dict=True)
+        for row in final_diagnosis_list:
+            new_row = self.append("nhif_patient_claim_disease", {})
+            new_row.diagnosis_type = "Final Diagnosis"
+            new_row.status = "Final"
+            new_row.patient_encounter = row.parent
+            new_row.codification_table = row.name
+            new_row.medical_code = row.medical_code
+            # Convert the ICD code of CDC to NHIF
+            if row.code and len(row.code) > 3:
+                new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
+            else:
+                new_row.disease_code = row.code[:3]
+            new_row.description = row.description[0:139]
+            new_row.item_crt_by = get_fullname(row.modified_by)
+            new_row.date_created = row.modified.strftime("%Y-%m-%d")
 
     def set_patient_claim_item(self):
         childs_map = [
@@ -285,8 +300,8 @@ class NHIFPatientClaim(Document):
         self.nhif_patient_claim_item = []
         final_patient_encounter = self.get_final_patient_encounter()
         inpatient_record = final_patient_encounter.inpatient_record
-        is_inpatient = True if inpatient_record else False
-        if not is_inpatient:
+        # is_inpatient = True if inpatient_record else False
+        if not inpatient_record:
             for encounter in self.patient_encounters:
                 encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
                 for child in childs_map:
@@ -296,11 +311,7 @@ class NHIFPatientClaim(Document):
                         item_code = frappe.get_value(
                             child.get("doctype"), row.get(child.get("item")), "item"
                         )
-                        item_rate = get_item_rate(
-                            item_code,
-                            self.company,
-                            encounter_doc.insurance_subscription,
-                        )
+
                         delivered_quantity = (row.get("quantity") or 0) - (
                             row.get("quantity_returned") or 0
                         )
@@ -309,7 +320,7 @@ class NHIFPatientClaim(Document):
                         new_row.item_name = row.get(child.get("item_name"))
                         new_row.item_code = get_item_refcode(item_code)
                         new_row.item_quantity = delivered_quantity or 1
-                        new_row.unit_price = item_rate
+                        new_row.unit_price = row.get("amount")
                         new_row.amount_claimed = (
                             new_row.unit_price * new_row.item_quantity
                         )
@@ -327,30 +338,48 @@ class NHIFPatientClaim(Document):
             dates = []
             occupancy_list = []
             record_doc = frappe.get_doc("Inpatient Record", inpatient_record)
+
+            admission_encounter_doc = frappe.get_doc(
+                "Patient Encounter", record_doc.admission_encounter
+            )
             for occupancy in record_doc.inpatient_occupancies:
                 if not occupancy.is_confirmed:
                     continue
-                checkin_date = occupancy.check_in.strftime("%Y-%m-%d")
-                # Add only in occupancy once a day.
-                if checkin_date not in dates:
-                    dates.append(checkin_date)
-                    occupancy_list.append(occupancy)
+
                 service_unit_type = frappe.get_value(
                     "Healthcare Service Unit",
                     occupancy.service_unit,
                     "service_unit_type",
                 )
+
+                (is_service_chargeable, is_consultancy_chargeable) = frappe.get_value(
+                    "Healthcare Service Unit Type",
+                    service_unit_type,
+                    ["is_service_chargeable", "is_consultancy_chargeable"],
+                )
+
+                # update occupancy object
+                occupancy.update({
+                    "service_unit_type": service_unit_type,
+                    "is_service_chargeable": is_service_chargeable,
+                    "is_consultancy_chargeable": is_consultancy_chargeable
+                })
+                
+                checkin_date = occupancy.check_in.strftime("%Y-%m-%d")
+                # Add only in occupancy once a day.
+                if checkin_date not in dates:
+                    dates.append(checkin_date)
+                    occupancy_list.append(occupancy)
+                
                 item_code = frappe.get_value(
                     "Healthcare Service Unit Type", service_unit_type, "item"
                 )
-                encounter_doc = frappe.get_doc(
-                    "Patient Encounter", record_doc.admission_encounter
-                )
+                
                 item_rate = get_item_rate(
                     item_code,
                     self.company,
-                    encounter_doc.insurance_subscription,
-                    encounter_doc.insurance_company,
+                    admission_encounter_doc.insurance_subscription,
+                    admission_encounter_doc.insurance_company,
                 )
                 new_row = self.append("nhif_patient_claim_item", {})
                 new_row.item_name = occupancy.service_unit
@@ -359,7 +388,7 @@ class NHIFPatientClaim(Document):
                 new_row.unit_price = item_rate
                 new_row.amount_claimed = new_row.unit_price * new_row.item_quantity
                 new_row.approval_ref_no = ""
-                new_row.patient_encounter = encounter_doc.name
+                new_row.patient_encounter = admission_encounter_doc.name
                 new_row.ref_doctype = occupancy.doctype
                 new_row.ref_docname = occupancy.name
                 new_row.folio_item_id = str(uuid.uuid1())
@@ -371,23 +400,8 @@ class NHIFPatientClaim(Document):
                 if not occupancy.is_confirmed:
                     continue
                 checkin_date = occupancy.check_in.strftime("%Y-%m-%d")
-                service_unit_type = frappe.get_value(
-                    "Healthcare Service Unit",
-                    occupancy.service_unit,
-                    "service_unit_type",
-                )
-                (is_service_chargeable, is_consultancy_chargeable) = frappe.get_value(
-                    "Healthcare Service Unit Type",
-                    service_unit_type,
-                    ["is_service_chargeable", "is_consultancy_chargeable"],
-                )
-                encounter_doc = frappe.get_doc(
-                    "Patient Encounter", record_doc.admission_encounter
-                )
-                item_code = frappe.get_value(
-                    "Healthcare Service Unit Type", service_unit_type, "item"
-                )
-                if is_consultancy_chargeable:
+                
+                if occupancy.is_consultancy_chargeable:
                     for row_item in record_doc.inpatient_consultancy:
                         if (
                             row_item.is_confirmed
@@ -413,7 +427,7 @@ class NHIFPatientClaim(Document):
                                 "%Y-%m-%d"
                             )
                             new_row.item_crt_by = get_fullname(row_item.modified_by)
-                if is_service_chargeable:
+                if occupancy.is_service_chargeable:
                     for encounter in self.patient_encounters:
                         encounter_doc = frappe.get_doc(
                             "Patient Encounter", encounter.name
@@ -429,12 +443,7 @@ class NHIFPatientClaim(Document):
                                     row.get(child.get("item")),
                                     "item",
                                 )
-                                item_rate = get_item_rate(
-                                    item_code,
-                                    self.company,
-                                    encounter_doc.insurance_subscription,
-                                    encounter_doc.insurance_company,
-                                )
+
                                 delivered_quantity = (row.get("quantity") or 0) - (
                                     row.get("quantity_returned") or 0
                                 )
@@ -443,7 +452,7 @@ class NHIFPatientClaim(Document):
                                 new_row.item_name = row.get(child.get("item"))
                                 new_row.item_code = get_item_refcode(item_code)
                                 new_row.item_quantity = delivered_quantity or 1
-                                new_row.unit_price = item_rate
+                                new_row.unit_price = row.get("amount")
                                 new_row.amount_claimed = (
                                     new_row.unit_price * new_row.item_quantity
                                 )
@@ -480,7 +489,7 @@ class NHIFPatientClaim(Document):
             patient_appointment_doc = frappe.get_doc(
                 "Patient Appointment", appointment_no
             )
-            if not is_inpatient and not patient_appointment_doc.follow_up:
+            if not inpatient_record and not patient_appointment_doc.follow_up:
                 item_code = patient_appointment_doc.billing_item
                 item_rate = get_item_rate(
                     item_code,
@@ -509,9 +518,10 @@ class NHIFPatientClaim(Document):
             filters={
                 "appointment": self.patient_appointment,
                 "docstatus": 1,
+                "duplicated": 0,
                 "encounter_type": "Final",
             },
-            fields={"*"},
+            fields={"name", "practitioner", "inpatient_record"},
         )
         if len(patient_encounter_list) == 0:
             frappe.throw(_("There no Final Patient Encounter for this Appointment"))
@@ -596,6 +606,7 @@ class NHIFPatientClaim(Document):
             r = requests.post(url, headers=headers, data=json_data, timeout=300)
 
             if r.status_code != 200:
+                frappe.msgprint("NHIF Server responded with HTTP status code: {0}".format(str(r.status_code if r.status_code else "NONE")))
                 frappe.throw(str(r.text) if r.text else str(r))
             else:
                 frappe.msgprint(str(r.text))
@@ -619,7 +630,7 @@ class NHIFPatientClaim(Document):
                     response_data=r.get("text") if r else "NO RESPONSE",
                     status_code=r.get("status_code") if r else "NO STATUS CODE",
                 )
-            frappe.throw(frappe.get_traceback(),str(e)[0:140])
+            frappe.throw(frappe.bold("This folio was NOT submitted due to the error above!.<br> Please retry after resolving the problem."))
             
 
 
