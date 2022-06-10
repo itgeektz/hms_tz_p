@@ -19,9 +19,9 @@ from hms_tz.nhif.api.healthcare_utils import (
     get_approval_number_from_LRPMT,
 )
 import os
-from frappe.utils.pdf import get_pdf, cleanup
+from frappe.utils.pdf import get_pdf
 from PyPDF2 import PdfFileWriter
-
+import html2text
 
 class NHIFPatientClaim(Document):
     def validate(self):
@@ -34,7 +34,10 @@ class NHIFPatientClaim(Document):
             from hms_tz.nhif.api.patient_encounter import finalized_encounter
 
             finalized_encounter(self.patient_encounters[-1])
+            self.final_patient_encounter = self.get_final_patient_encounter()
             self.set_claim_values()
+        else:
+            self.final_patient_encounter = self.get_final_patient_encounter()
         self.calculate_totals()
         self.set_clinical_notes()
         if not self.is_new():
@@ -103,7 +106,7 @@ class NHIFPatientClaim(Document):
         self.folio_no = int(self.name[-9:])
         self.serial_no = self.folio_no
         self.item_crt_by = get_fullname(frappe.session.user)
-        final_patient_encounter = self.get_final_patient_encounter()
+        final_patient_encounter = self.final_patient_encounter
         self.practitioner_no = frappe.get_value(
             "Healthcare Practitioner",
             final_patient_encounter.practitioner,
@@ -234,7 +237,11 @@ class NHIFPatientClaim(Document):
                 new_row.item_crt_by = get_fullname(row.modified_by)
                 new_row.date_created = row.modified.strftime("%Y-%m-%d")
 
-    def set_patient_claim_item(self):
+    def set_patient_claim_item(self, called_method=None):
+        if called_method == "enqueue":
+            self.reload()
+            self.final_patient_encounter = self.get_final_patient_encounter()
+            self.patient_encounters = self.get_patient_encounters()
         childs_map = [
             {
                 "table": "lab_test_prescription",
@@ -283,7 +290,7 @@ class NHIFPatientClaim(Document):
             },
         ]
         self.nhif_patient_claim_item = []
-        final_patient_encounter = self.get_final_patient_encounter()
+        final_patient_encounter = self.final_patient_encounter
         inpatient_record = final_patient_encounter.inpatient_record
         is_inpatient = True if inpatient_record else False
         if not is_inpatient:
@@ -511,7 +518,9 @@ class NHIFPatientClaim(Document):
                 "docstatus": 1,
                 "encounter_type": "Final",
             },
-            fields={"*"},
+            fields=["name", "practitioner", "inpatient_record"],
+            order_by="`modified` desc",
+            limit_page_length=1
         )
         if len(patient_encounter_list) == 0:
             frappe.throw(_("There no Final Patient Encounter for this Appointment"))
@@ -619,7 +628,7 @@ class NHIFPatientClaim(Document):
                     response_data=r.get("text") if r else "NO RESPONSE",
                     status_code=r.get("status_code") if r else "NO STATUS CODE",
                 )
-            frappe.throw(frappe.get_traceback(),str(e)[0:140])
+            frappe.throw("This folio was NOT submitted due to the error above!. Please retry after resolving the problem. "  + str(get_datetime()))
             
 
 
@@ -656,7 +665,8 @@ class NHIFPatientClaim(Document):
                 )
                 # return
             self.clinical_notes += examination_detail or ""
-            self.clinical_notes += "\n"
+            self.clinical_notes += "."
+        self.clinical_notes = html2text.html2text(self.clinical_notes)
 
     def before_insert(self):
         if frappe.db.exists(
@@ -728,10 +738,12 @@ def get_item_refcode(item_code):
 
 
 def generate_pdf(doc):
-    doc_name = doc.name
-    file_list = frappe.get_all("File", filters={"attached_to_name": doc_name})
-    for file in file_list:
-        frappe.delete_doc("File", file.name, ignore_permissions=True)
+    file_list = frappe.get_all("File", filters={"attached_to_doctype": "NHIF Patient Claim", "file_name": str(doc.name + ".pdf")})
+    if file_list:
+        patientfile = frappe.get_doc("File", file_list[0].name)
+        if patientfile:
+            pdf = patientfile.get_content()
+            return to_base64(pdf)
 
     data_list = []
     data = doc.patient_encounters
@@ -749,16 +761,16 @@ def generate_pdf(doc):
     else:
         print_format = "Patient File"
 
-    pdf = download_multi_pdf(doctype, doc_name, print_format=print_format, no_letterhead=1)
+    pdf = download_multi_pdf(doctype, doc.name, print_format=print_format, no_letterhead=1)
     if pdf:
         ret = frappe.get_doc(
             {
                 "doctype": "File",
                 "attached_to_doctype": "NHIF Patient Claim",
-                "attached_to_name": doc_name,
+                "attached_to_name": doc.name,
                 "folder": "Home/Attachments",
-                "file_name": doc_name + ".pdf",
-                "file_url": "/private/files/" + doc_name + ".pdf",
+                "file_name": doc.name + ".pdf",
+                "file_url": "/private/files/" + doc.name + ".pdf",
                 "content": pdf,
                 "is_private": 1,
             }
@@ -800,6 +812,11 @@ def read_multi_pdf(output):
 
 
 def get_claim_pdf_file(doc):
+    file_list = frappe.get_all("File", filters={"attached_to_doctype": "NHIF Patient Claim", "file_name": str(doc.name + "-claim.pdf")})
+    if file_list:
+        for file in file_list:
+            frappe.delete_doc("File", file.name, ignore_permissions=True)
+
     doctype = doc.doctype
     docname = doc.name
     default_print_format = frappe.db.get_value(
