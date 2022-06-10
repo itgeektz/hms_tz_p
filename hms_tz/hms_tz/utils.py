@@ -969,7 +969,8 @@ def on_trash_doc_having_item_reference(doc):
 @frappe.whitelist()
 def manage_healthcare_doc_cancel(doc):
     if frappe.get_meta(doc.doctype).has_field("invoiced"):
-        if doc.invoiced and get_sales_invoice_for_healthcare_doc(doc.doctype, doc.name):
+        # if doc.invoiced and get_sales_invoice_for_healthcare_doc(doc.doctype, doc.name):
+        if doc.invoiced:
             frappe.throw(_("Can not cancel invoiced {0}").format(doc.doctype))
     check_if_healthcare_doc_is_linked(doc, "Cancel")
     delete_medical_record(doc.doctype, doc.name)
