@@ -22,6 +22,12 @@ class LRPMTReturns(Document):
 		get_sales_return(self)
 
 def cancel_lrpt_doc(self):
+	prescription_lrpmt = {
+		"Lab Test": "Lab Prescription",
+		"Radiology Examination": "Radiology Procedure Prescription",
+		"Clinical Procedure": "Procedure Prescription"
+	}
+
 	for item in self.lrpt_items:
 		if item.reference_doctype == "Therapy Plan":
 			cancel_tharapy_plan_doc(self.patient, item.reference_docname)
@@ -29,9 +35,7 @@ def cancel_lrpt_doc(self):
 
 		else:
 			if not item.reference_docname:
-				frappe.db.set_value("Lab Prescription", item.child_name, "is_cancelled", 1)
-				frappe.db.set_value("Radiology Procedure Prescription", item.child_name, "is_cancelled", 1)
-				frappe.db.set_value("Procedure Prescription", item.child_name, "is_cancelled", 1)
+				frappe.db.set_value(prescription_lrpmt[item.reference_doctype], item.child_name, "is_cancelled", 1)
 				
 				continue
 			
@@ -49,13 +53,11 @@ def cancel_lrpt_doc(self):
 						doc.workflow_state == "Not Serviced" or 
 						doc.workflow_state == "Submitted but Not Serviced"
 					):
-						frappe.db.set_value("Lab Prescription", item.child_name, "is_cancelled", 1)
-						frappe.db.set_value("Radiology Procedure Prescription", item.child_name, "is_cancelled", 1)
-						frappe.db.set_value("Procedure Prescription", item.child_name, "is_cancelled", 1)
+						frappe.db.set_value(prescription_lrpmt[item.reference_doctype], item.child_name, "is_cancelled", 1)
 				
 				except Exception:
 					traceback = frappe.get_traceback()
-					frappe.log_error(traceback)
+					frappe.log_error(traceback, str(self.doctype))
 
 	return self.name
 
@@ -88,6 +90,9 @@ def cancel_tharapy_plan_doc(patient, therapy_plan_id):
 	return therapy_plan_doc.name
 
 def return_drug_item(self):
+	if len(self.drug_items) == 0:
+		return 
+	
 	dn_names = get_unique_delivery_notes(self)
 
 	if not dn_names:

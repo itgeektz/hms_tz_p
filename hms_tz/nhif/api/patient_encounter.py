@@ -143,7 +143,7 @@ def on_submit_validation(doc, method):
             if not row.is_not_available_inhouse:
                 if doc.insurance_subscription:
                     old_method = method
-                    method='validate'
+                    method = 'validate'
                 validate_stock_item(
                     row.get(value),
                     quantity,
@@ -153,6 +153,7 @@ def on_submit_validation(doc, method):
                 )
                 if doc.insurance_subscription:
                     method = old_method
+                    
     if prescribed_list:
         msgPrint(
             _(
