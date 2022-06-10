@@ -22,7 +22,9 @@ class MedicationChangeRequest(Document):
             for drug in self.drug_prescription:
                 set_amount(self, drug)
                 if not drug.quantity or drug.quantity == 0:
-                    drug.quantity = get_quantity(drug)
+                    # Remarked by MPC_TZ 2022-06-10 16:16 to avoid automatic qty calculations
+                    # qty = drug_line.get_quantity()
+                    drug.quantity = 0
                 drug.delivered_quantity = drug.quantity - (drug.quantity_returned or 0)
 
                 template_doc = get_template_company_option(drug.drug_code, self.company)

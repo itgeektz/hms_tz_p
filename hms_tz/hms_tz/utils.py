@@ -634,7 +634,9 @@ def get_drugs_to_invoice(encounter):
                     if drug_line.drug_code:
                         qty = 1
                         if frappe.db.get_value('Item', drug_line.drug_code, 'stock_uom') == 'Nos':
-                            qty = drug_line.get_quantity()
+                            # Remarked by MPC_TZ 2022-06-10 16:16 to avoid automatic qty calculations
+                            # qty = drug_line.get_quantity()
+                            qty = 0
 
                         description = ''
                         if drug_line.dosage and drug_line.period:
