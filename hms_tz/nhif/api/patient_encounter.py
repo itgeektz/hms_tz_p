@@ -119,6 +119,15 @@ def on_submit_validation(doc, method):
         table = doc.get(key)
         for row in table:
             quantity = row.get("quantity") or row.get("no_of_sessions")
+            if not quantity:
+                row_item = row.get("drug_code") or row.get("therapy_type")
+                if not row_item:
+                    continue
+                frappe.throw(_(
+                    "Quantity for Item: {0}, Row: {1} can not be zero".format(
+                    frappe.bold(row_item), frappe.bold(row.idx))
+                ))
+
             if (
                 (not doc.insurance_subscription)
                 or row.prescribe
