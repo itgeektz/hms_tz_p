@@ -141,6 +141,9 @@ def on_submit_validation(doc, method):
                             alert=True,
                         )
             if not row.is_not_available_inhouse:
+                if doc.insurance_subscription:
+                    old_method = method
+                    method='validate'
                 validate_stock_item(
                     row.get(value),
                     quantity,
@@ -148,6 +151,8 @@ def on_submit_validation(doc, method):
                     healthcare_service_unit=row.get("healthcare_service_unit"),
                     method=method,
                 )
+                if doc.insurance_subscription:
+                    method = old_method
     if prescribed_list:
         msgPrint(
             _(
@@ -896,10 +901,10 @@ def validate_totals(doc):
 @frappe.whitelist()
 def finalized_encounter(cur_encounter, ref_encounter=None):
     cur_encounter_doc = frappe.get_doc("Patient Encounter", cur_encounter)
-    inpatient_status = frappe.get_value(
-        "Patient", cur_encounter_doc.patient, "inpatient_status"
+    inpatient_status, inpatient_record = frappe.get_value(
+        "Patient", cur_encounter_doc.patient, ["inpatient_status", "inpatient_record"]
     )
-    if inpatient_status:
+    if inpatient_status and cur_encounter_doc.inpatient_record == inpatient_record:
         frappe.throw(
             _(
                 "The patient {0} has inpatient status <strong>{1}</strong>. Please process the discharge before proceeding to finalize the encounter.".format(

@@ -465,7 +465,13 @@ var duplicate = function (frm) {
     if (frm.doc.docstatus != 1 || frm.doc.encounter_type == 'Final' || frm.doc.duplicated == 1 || frm.doc.practitioner.includes("Direct")) {
         return;
     }
+    let click_count = 0;
     frm.add_custom_button(__('Duplicate'), function () {
+        if (click_count > 0) {
+            return;
+        }
+        click_count += 1;
+
         if (frm.is_dirty()) {
             frm.save();
         }

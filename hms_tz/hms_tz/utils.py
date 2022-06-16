@@ -634,7 +634,9 @@ def get_drugs_to_invoice(encounter):
                     if drug_line.drug_code:
                         qty = 1
                         if frappe.db.get_value('Item', drug_line.drug_code, 'stock_uom') == 'Nos':
-                            qty = drug_line.get_quantity()
+                            # Remarked by MPC_TZ 2022-06-10 16:16 to avoid automatic qty calculations
+                            # qty = drug_line.get_quantity()
+                            qty = 0
 
                         description = ''
                         if drug_line.dosage and drug_line.period:
@@ -967,7 +969,8 @@ def on_trash_doc_having_item_reference(doc):
 @frappe.whitelist()
 def manage_healthcare_doc_cancel(doc):
     if frappe.get_meta(doc.doctype).has_field("invoiced"):
-        if doc.invoiced and get_sales_invoice_for_healthcare_doc(doc.doctype, doc.name):
+        # if doc.invoiced and get_sales_invoice_for_healthcare_doc(doc.doctype, doc.name):
+        if doc.invoiced:
             frappe.throw(_("Can not cancel invoiced {0}").format(doc.doctype))
     check_if_healthcare_doc_is_linked(doc, "Cancel")
     delete_medical_record(doc.doctype, doc.name)

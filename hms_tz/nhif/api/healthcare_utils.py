@@ -777,8 +777,14 @@ def get_template_company_option(template=None, company=None):
         return def_res
 
 
-# Cancel open appointments, delete draft vital signs and delete draft delivery note
 def delete_or_cancel_draft_document():
+    """
+    A routine to 
+        1. Cancel open appointments after every 7 days,
+        2. Delete draft vital signs after every 7 days and
+        3. Delete draft delivery note after every 45 days
+    this routine run every saturday 2:30 am at night
+    """
     from frappe.utils import nowdate, add_to_date
 
     before_7_days_date = add_to_date(nowdate(), days=-7, as_string=False)
@@ -795,13 +801,9 @@ def delete_or_cancel_draft_document():
     )
 
     for app_doc in appointments:
-        frappe.db.set_value(
-            "Patient Appointment",
-            app_doc.name,
-            "status",
-            "Cancelled",
-            update_modified=False,
-        )
+        doc = frappe.get_doc('Patient Appointment', app_doc.name)
+        doc.status = "Cancelled"
+        doc.save(ignore_permissions=True)
 
     vital_docs = frappe.db.sql(
         """
