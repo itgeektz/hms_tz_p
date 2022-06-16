@@ -1461,7 +1461,7 @@ def convert_opd_encounter_to_ipd_encounter(encounter):
     if not inpatient_record:
         inpatient_details_from_encounters = frappe.get_all("Patient Encounter", 
             filters={'appointment': doc.appointment, 'inpatient_record': ['!=', ""]},
-            fields=['inpatient_record', 'inpatient_status']
+            fields=['inpatient_record', 'inpatient_status'], page_length=1
         )
         if inpatient_details_from_encounters:
             inpatient_record = inpatient_details_from_encounters[0].inpatient_record
