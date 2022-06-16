@@ -9,7 +9,7 @@ frappe.ui.form.on('Patient Encounter', {
     },
     onload: function (frm) {
         add_btn_final(frm);
-        duplicate(frm);
+        // duplicate(frm);
         set_btn_properties(frm);
         if (frm.doc.docstatus == 1) {
             frm.add_custom_button(__('Create Pending Healthcare Services'), function () {
