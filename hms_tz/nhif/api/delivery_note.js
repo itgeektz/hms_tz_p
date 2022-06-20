@@ -17,6 +17,5 @@ frappe.ui.form.on("Delivery Note Item", {
         frm.fields_dict.items.grid.wrapper.find('.grid-insert-row').hide();
         frm.fields_dict.items.grid.wrapper.find('.grid-duplicate-row').hide();
         frm.fields_dict.items.grid.wrapper.find('.grid-move-row').hide();
-        console.log("child form render");
     }
 });
