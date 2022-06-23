@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import nowdate, getdate, nowtime, add_to_date
+from frappe.utils import nowdate, getdate, nowtime, add_to_date, cint
 from hms_tz.nhif.api.healthcare_utils import (
     get_item_rate,
     get_warehouse_from_service_unit,
@@ -118,15 +118,16 @@ def on_submit_validation(doc, method):
     for key, value in child_tables.items():
         table = doc.get(key)
         for row in table:
-            quantity = row.get("quantity") or row.get("no_of_sessions")
-            if not quantity:
-                row_item = row.get("drug_code") or row.get("therapy_type")
-                if not row_item:
-                    continue
-                frappe.throw(_(
-                    "Quantity for Item: {0}, Row: {1} can not be zero".format(
-                    frappe.bold(row_item), frappe.bold(row.idx))
-                ))
+            quantity = 0
+            row_item = row.get("drug_code") or row.get("therapy_type")
+            if row_item:
+                quantity += cint(row.get("quantity")) or cint(row.get("no_of_sessions"))
+            
+                if not quantity:
+                    frappe.throw(_(
+                        "Quantity for Item: {0}, Row: {1} can not be zero".format(
+                        frappe.bold(row_item), frappe.bold(row.idx))
+                    ))
 
             if (
                 (not doc.insurance_subscription)
@@ -162,6 +163,7 @@ def on_submit_validation(doc, method):
                 )
                 if doc.insurance_subscription:
                     method = old_method
+            
     if prescribed_list:
         msgPrint(
             _(
