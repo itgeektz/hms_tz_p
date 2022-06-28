@@ -710,16 +710,8 @@ def msgPrint(msg, method="throw", alert=False):
 def get_approval_number_from_LRPMT(ref_doctype=None, ref_docname=None):
     if not ref_doctype or not ref_docname:
         return None
-    if ref_doctype == "Drug Prescription":
-        approval_number_list = frappe.get_all(
-            "Delivery Note Item",
-            filters={"reference_doctype": ref_doctype, "reference_name": ref_docname},
-            fields=["approval_number"],
-        )
-        if len(approval_number_list) > 0:
-            return approval_number_list[0].approval_number
-    else:
-        return frappe.get_value(ref_doctype, ref_docname, "approval_number")
+
+    return frappe.get_value(ref_doctype, ref_docname, "approval_number")
 
 
 def set_uninvoiced_so_closed():
@@ -777,8 +769,14 @@ def get_template_company_option(template=None, company=None):
         return def_res
 
 
-# Cancel open appointments, delete draft vital signs and delete draft delivery note
 def delete_or_cancel_draft_document():
+    """
+    A routine to 
+        1. Cancel open appointments after every 7 days,
+        2. Delete draft vital signs after every 7 days and
+        3. Delete draft delivery note after every 45 days
+    this routine run every saturday 2:30 am at night
+    """
     from frappe.utils import nowdate, add_to_date
 
     before_7_days_date = add_to_date(nowdate(), days=-7, as_string=False)
@@ -795,13 +793,9 @@ def delete_or_cancel_draft_document():
     )
 
     for app_doc in appointments:
-        frappe.db.set_value(
-            "Patient Appointment",
-            app_doc.name,
-            "status",
-            "Cancelled",
-            update_modified=False,
-        )
+        doc = frappe.get_doc('Patient Appointment', app_doc.name)
+        doc.status = "Cancelled"
+        doc.save(ignore_permissions=True)
 
     vital_docs = frappe.db.sql(
         """
