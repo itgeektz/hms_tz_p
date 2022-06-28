@@ -429,7 +429,7 @@ def validate_schedule_discharge(inpatient_record):
                     + "<br>"
                 )
             procedure_msg += "<h4 style='background-color: LightCoral;'>\
-                please contact relevent department to Submit/Cancell draft Clinical Procedure\
+                please contact relevent department to Submit/Cancel draft Clinical Procedure\
                 before Scheduling Discharge</h4><br>"
             
         msg_throw = lrpmt_msg + procedure_msg
