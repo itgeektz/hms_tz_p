@@ -95,7 +95,7 @@ frappe.ui.form.on('Patient Appointment', {
 
         if (frm.doc.appointment_type == "NHIF External Referral") {
             if (frm.doc.insurance_subscription) {
-                frm.toggle_display(['referral_no'], false);
+                frm.toggle_display(['referral_no'], true);
                 frm.toggle_reqd("referral_no", true);
                 frm.toggle_display(['remarks'], true);
                 frm.toggle_reqd("remarks", true);
@@ -113,7 +113,20 @@ frappe.ui.form.on('Patient Appointment', {
             frm.set_value("healthcare_referrer_type", "Healthcare External Referrer");
             frm.toggle_reqd("referring_practitioner", false);
             frm.toggle_enable("referring_practitioner", false);
-        } 
+        }
+        
+        if (frm.doc.appointment_type == "Follow up Visit") {
+            if (frm.doc.insurance_subscription) {
+                frm.toggle_display(['referral_no'], true);
+                frm.toggle_reqd("referral_no", true);
+
+            } else {
+                frm.toggle_reqd("referral_no", false);
+                frm.toggle_display(['referral_no'], false);
+
+            }
+            frm.toggle_enable(['referral_no'], true);
+        }
 
         if (frm.doc.source == "Referral") {
             frm.set_value("healthcare_referrer_type", "Healthcare Practitioner");
