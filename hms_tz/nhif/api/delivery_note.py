@@ -157,6 +157,10 @@ def update_drug_prescription(doc):
                     if dni.reference_doctype == "Drug Prescription":
                         for item in patient_encounter_doc.drug_prescription:
                             if (
+                                # commented to avoid mismatch of drug code of drug prescription and 
+                                # item code of delivery note item
+                                # 2022-06-13
+                                # dni.item_code == item.drug_code and 
                                 dni.reference_name == item.name and 
                                 dni.reference_doctype == item.doctype
                             ):
