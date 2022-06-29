@@ -6,8 +6,8 @@ def execute():
     fields = {
         "Delivery Note": [
             dict(
-                fieldname='hms_tz_is_all_items_out_of_stock',
-                label='Is All Items Out of Stock',
+                fieldname='hms_tz_all_items_out_of_stock',
+                label='All Items Out of Stock',
                 fieldtype='Check',
                 insert_after='authorization_number',
                 hidden=1,
