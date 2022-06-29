@@ -95,7 +95,7 @@ def set_missing_values(doc):
 
 
 def before_submit(doc, method):
-    if doc.hms_tz_is_all_items_out_of_stock == 1:
+    if doc.hms_tz_all_items_out_of_stock == 1:
         frappe.throw("<h4 class='font-weight-bold bg-warning text-center'>\
             This Delivery Note can't be submitted because all Items\
                 are not available in stock</h4>")
@@ -215,7 +215,7 @@ def check_item_for_out_of_stock(doc):
 
         doc.items = items
         if len(doc.items) > 0:
-            doc.hms_tz_is_all_items_out_of_stock = 0
+            doc.hms_tz_all_items_out_of_stock = 0
         else:
             check_out_of_stock_for_original_item(doc)
             
@@ -242,7 +242,7 @@ def check_out_of_stock_for_original_item(doc):
 
             original_item.hms_tz_is_out_of_stock = 1
 
-    doc.hms_tz_is_all_items_out_of_stock = 1
+    doc.hms_tz_all_items_out_of_stock = 1
     frappe.msgprint("<h4 class='font-weight-bold bg-warning text-center'>All Items are marked as Out of Stock</h4>")
 
 
