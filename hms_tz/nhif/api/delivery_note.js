@@ -1,21 +1,35 @@
 frappe.ui.form.on("Delivery Note", {
     refresh(frm) {
-        // hide button to delete rows of delivery note item
-        frm.get_field("items").grid.cannot_add_rows = true;
+        if (frappe.user.has_role("Healthcare Head Pharmacist") || frappe.user.has_role("Healthcare Pharmacist")) {
+            // hide button to add rows of delivery note item
+            frm.get_field("items").grid.cannot_add_rows = true;
 
-        // hide button to delete rows of delivery note item
-        $("*[data-fieldname='items']").find(".grid-remove-rows").hide();
-        $("*[data-fieldname='items']").find(".grid-remove-all-rows").hide();
-    }
+            // hide button to delete rows of delivery note item
+            $("*[data-fieldname='items']").find(".grid-remove-rows").hide();
+            $("*[data-fieldname='items']").find(".grid-remove-all-rows").hide();
+        }
+    },
+    onload(frm){
+        if (frappe.user.has_role("Healthcare Head Pharmacist") || frappe.user.has_role("Healthcare Pharmacist")) {
+            // hide button to add rows of delivery note item
+            frm.get_field("items").grid.cannot_add_rows = true;
+
+            // hide button to delete rows of delivery note item
+            $("*[data-fieldname='items']").find(".grid-remove-rows").hide();
+            $("*[data-fieldname='items']").find(".grid-remove-all-rows").hide();
+        }
+    },
 });
 
 frappe.ui.form.on("Delivery Note Item", {
     form_render: (frm, cdt, cdn) => {
-        frm.fields_dict.items.grid.wrapper.find('.grid-delete-row').hide();
-        frm.fields_dict.items.grid.wrapper.find('.grid-insert-row-below').hide();
-        frm.fields_dict.items.grid.wrapper.find('.grid-insert-row').hide();
-        frm.fields_dict.items.grid.wrapper.find('.grid-duplicate-row').hide();
-        frm.fields_dict.items.grid.wrapper.find('.grid-move-row').hide();
+        if (frappe.user.has_role("Healthcare Head Pharmacist") || frappe.user.has_role("Healthcare Pharmacist")) {
+            frm.fields_dict.items.grid.wrapper.find('.grid-delete-row').hide();
+            frm.fields_dict.items.grid.wrapper.find('.grid-insert-row-below').hide();
+            frm.fields_dict.items.grid.wrapper.find('.grid-insert-row').hide();
+            frm.fields_dict.items.grid.wrapper.find('.grid-duplicate-row').hide();
+            frm.fields_dict.items.grid.wrapper.find('.grid-move-row').hide();
+        }
     },
 });
 
