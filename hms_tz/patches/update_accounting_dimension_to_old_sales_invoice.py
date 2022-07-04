@@ -13,6 +13,9 @@ def execute():
         fields=["name"], pluck="name"
     )
 
+    if not sii_items:
+        return
+
     frappe.db.sql("""
         UPDATE `tabSales Invoice Item` sii
         INNER JOIN `tabLab Prescription` lrpt ON sii.reference_dn = lrpt.name
