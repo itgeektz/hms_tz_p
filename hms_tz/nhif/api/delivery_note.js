@@ -1,6 +1,6 @@
 frappe.ui.form.on("Delivery Note", {
     refresh(frm) {
-        if (frappe.user.has_role("Healthcare Head Pharmacist") || frappe.user.has_role("Healthcare Pharmacist")) {
+        if (!frappe.user.has_role("DN Changed Allowed")) {
             // hide button to add rows of delivery note item
             frm.get_field("items").grid.cannot_add_rows = true;
 
@@ -10,7 +10,7 @@ frappe.ui.form.on("Delivery Note", {
         }
     },
     onload(frm){
-        if (frappe.user.has_role("Healthcare Head Pharmacist") || frappe.user.has_role("Healthcare Pharmacist")) {
+        if (!frappe.user.has_role("DN Changed Allowed")) {
             // hide button to add rows of delivery note item
             frm.get_field("items").grid.cannot_add_rows = true;
 
@@ -23,7 +23,7 @@ frappe.ui.form.on("Delivery Note", {
 
 frappe.ui.form.on("Delivery Note Item", {
     form_render: (frm, cdt, cdn) => {
-        if (frappe.user.has_role("Healthcare Head Pharmacist") || frappe.user.has_role("Healthcare Pharmacist")) {
+        if (!frappe.user.has_role("DN Changed Allowed")) {
             frm.fields_dict.items.grid.wrapper.find('.grid-delete-row').hide();
             frm.fields_dict.items.grid.wrapper.find('.grid-insert-row-below').hide();
             frm.fields_dict.items.grid.wrapper.find('.grid-insert-row').hide();
