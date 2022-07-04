@@ -27,9 +27,15 @@ frappe.ui.form.on('Medication Change Request', {
 		});
 	},
 	onload: function (frm) {
+		if (!frappe.user.has_role("Healthcare Practitioner")) {
+			frm.set_df_property("drug_prescription", "read_only", 1);
+		}
 		set_medical_code(frm);
 	},
 	refresh: function (frm) {
+		if (!frappe.user.has_role("Healthcare Practitioner")) {
+			frm.set_df_property("drug_prescription", "read_only", 1);
+		}
 		set_medical_code(frm);
 		frm.set_query('drug_code', 'drug_prescription', function () {
             return {
