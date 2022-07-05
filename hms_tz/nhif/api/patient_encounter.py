@@ -478,7 +478,7 @@ def validate_stock_item(
     if company_option.get("is_not_available"):
         return
 
-    qty = float(qty)
+    qty = float(qty or 0)
     if qty == 0:
         qty = 1
 
