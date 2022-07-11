@@ -121,6 +121,8 @@ class MedicationChangeRequest(Document):
     def update_delivery_note(self, encounter_doc):
         doc = frappe.get_doc("Delivery Note", self.delivery_note)
         doc.items = []
+        doc.hms_tz_original_items = []
+
         for row in encounter_doc.drug_prescription:
             warehouse = get_warehouse_from_service_unit(row.healthcare_service_unit)
             if warehouse != doc.set_warehouse:
@@ -128,7 +130,7 @@ class MedicationChangeRequest(Document):
             
             if row.prescribe or row.is_not_available_inhouse or row.is_cancelled:
                 continue
-            item_code = frappe.get_value("Medication", row.drug_code, "item")
+            item_code, uom = frappe.get_value("Medication", row.drug_code, ["item", "stock_uom"])
             is_stock, item_name = frappe.get_value(
                 "Item", item_code, ["is_stock_item", "item_name"]
             )
@@ -159,6 +161,12 @@ class MedicationChangeRequest(Document):
                 + (row.comment or "No Comments")
             )
             doc.append("items", item)
+
+            new_original_item = set_original_items(doc.name, item)
+            new_original_item.stock_uom = uom
+            new_original_item.uom = uom
+            doc.append("hms_tz_original_items", new_original_item)
+
         doc.save(ignore_permissions=True)
         frappe.msgprint(
             _("Delivery Note " + self.delivery_note + " has been updated!"), alert=True
@@ -282,3 +290,20 @@ def get_items_on_change_of_delivery_note(name, encounter, delivery_note):
     return doc
 
 
+def get_fields_to_clear():
+    return ["name", "owner", "creation", "modified", "modified_by", "docstatus"]
+
+
+def set_original_items(name, item):
+    new_row = item.as_dict()
+    for fieldname in get_fields_to_clear():
+        new_row[fieldname] = None
+        
+    new_row.update({
+        "parent": name,
+        "parentfield": "hms_tz_original_items",
+        "parenttype": "Delivery Note",
+        "doctype": "Original Delivery Note Item"
+    })
+    
+    return new_row
