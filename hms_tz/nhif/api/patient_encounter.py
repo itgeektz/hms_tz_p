@@ -1139,12 +1139,14 @@ def set_amounts(doc):
     ]
     for child in childs_map:
         for row in doc.get(child.get("table")):
+            if row.amount:
+                continue
+            
             item_rate = 0
             item_code = frappe.get_value(
                 child.get("doctype"), row.get(child.get("item")), "item"
             )
-            if row.amount:
-                continue
+            
             if row.prescribe and not doc.insurance_subscription:
                 if doc.get("mode_of_payment"):
                     mode_of_payment = doc.get("mode_of_payment")
@@ -1159,6 +1161,18 @@ def set_amounts(doc):
                             item_code
                         )
                     )
+            
+            elif row.prescribe and doc.insurance_subscription:
+                item_rate = get_mop_amount(
+                    item_code, "Cash", doc.company, doc.patient
+                )
+                if not item_rate or item_rate == 0:
+                    frappe.throw(
+                        _("Cannot get mode of payment rate for item {0}").format(
+                            item_code
+                        )
+                    )
+
             elif not row.prescribe:
                 item_rate = get_item_rate(
                     item_code,
