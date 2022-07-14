@@ -64,7 +64,7 @@ class NHIFPatientClaim(Document):
 
         claim_details = frappe.get_all(
             "NHIF Patient Claim",
-            filters={"authorization_no": authorization_no, "docstatus": 0},
+            filters={'patient': self.patient, 'authorization_no': self.authorization_no, 'cardno': self.cardno, "docstatus": 0},
             fields=["name", "patient", "patient_name"],
         )
 
@@ -76,7 +76,7 @@ class NHIFPatientClaim(Document):
                 frappe.throw(
                     "This Authorization Number {0} has used multiple times in NHIF Patient Claim: {1}. \
                     Please merge the authorization number to Proceed".format(
-                        frappe.bold(authorization_no), frappe.bold(claim_name_list)
+                        frappe.bold(self.authorization_no), frappe.bold(claim_name_list)
                     )
                 )
 
