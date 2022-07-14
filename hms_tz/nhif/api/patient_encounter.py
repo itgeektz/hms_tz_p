@@ -1432,9 +1432,7 @@ def show_last_prescribed_for_lrpt(doc):
             if len(item_doc) > 0:
                 date = item_doc[0]["creation"].strftime("%Y-%m-%d")
 
-                msg_print += _(
-                    msg_print
-                    + "{0} prescribed last on: {1}".format(
+                msg_print += _("{0} prescribed last on: {1}".format(
                         frappe.bold(entry.get(child.get("item"))), frappe.bold(date)
                     )
                     + "<br>"
