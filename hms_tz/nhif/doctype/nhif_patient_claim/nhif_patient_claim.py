@@ -574,7 +574,7 @@ class NHIFPatientClaim(Document):
         entities.Gender = self.gender
         entities.DateOfBirth = str(self.date_of_birth)
         entities.PatientFileNo = self.patient_file_no
-        entities.PatientFile = generate_pdf(self)
+        # entities.PatientFile = generate_pdf(self)
         entities.ClaimFile = get_claim_pdf_file(self)
         entities.ClinicalNotes = self.clinical_notes
         entities.AuthorizationNo = self.authorization_no
