@@ -14,6 +14,7 @@ from hms_tz.nhif.api.healthcare_utils import (
 )
 from hms_tz.hms_tz.doctype.patient_encounter.patient_encounter import get_quantity
 from hms_tz.nhif.api.patient_encounter import validate_stock_item
+from hms_tz.nhif.api.patient_appointment import get_mop_amount
 
 
 class MedicationChangeRequest(Document):
@@ -22,8 +23,9 @@ class MedicationChangeRequest(Document):
         self.warehouse = self.get_warehouse_per_delivery_note()
         if self.drug_prescription:
             for drug in self.drug_prescription:
-                validate_healthcare_service_unit(self.warehouse, drug, method="validate")            
-                set_amount(self, drug)
+                validate_healthcare_service_unit(self.warehouse, drug, method="validate")        
+                if not drug.amount:    
+                    set_amount(self, drug)
                 if not drug.quantity or drug.quantity == 0:
                     # Remarked by MPC_TZ 2022-06-10 16:16 to avoid automatic qty calculations
                     # qty = drug_line.get_quantity()
@@ -217,12 +219,19 @@ def get_insurance_details(self):
     return insurance_subscription, insurance_company
 
 def set_amount(self, item):
-    insurance_subscription, insurance_company = get_insurance_details(self)
-
     item_code = frappe.get_value("Medication", item.drug_code, "item")
-    item.amount = get_item_rate(
-        item_code, self.company, insurance_subscription, insurance_company
-    )
+
+    if not item.prescribe:
+        insurance_subscription, insurance_company = get_insurance_details(self)
+
+        item.amount = get_item_rate(
+            item_code, self.company, insurance_subscription, insurance_company
+        )
+
+    else:
+        item.amount = get_mop_amount(item_code, "Cash", self.company,self.patient)
+
+
 
 def validate_restricted(self, row):
     items = {}
