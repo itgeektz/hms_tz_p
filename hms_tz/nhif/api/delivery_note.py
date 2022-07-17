@@ -194,6 +194,8 @@ def check_item_for_out_of_stock(doc):
     if len(doc.items) > 0 and len(doc.hms_tz_original_items) > 0:
         items = []
 
+        doc.total = 0
+        doc.total_qty = 0
         for dni_row in doc.items:
             for original_item in doc.hms_tz_original_items:
                 if (
@@ -211,7 +213,11 @@ def check_item_for_out_of_stock(doc):
                     original_item.hms_tz_is_out_of_stock = 0
             
             if not dni_row.hms_tz_is_out_of_stock:
+                dni_row.name = None
                 items.append(dni_row)
+
+                doc.total += dni_row.amount
+                doc.total_qty += dni_row.qty
 
         doc.items = items
         if len(doc.items) > 0:
@@ -224,6 +230,8 @@ def check_out_of_stock_for_original_item(doc):
     """Copy items back to delivery note item table 
         if all items marked as out of stock
     """
+    doc.total = 0
+    doc.total_qty = 0
     for original_item in doc.hms_tz_original_items:
         if original_item.hms_tz_is_out_of_stock == 1:
             new_item = original_item.as_dict()
@@ -241,6 +249,9 @@ def check_out_of_stock_for_original_item(doc):
             doc.append("items", frappe.get_doc(new_item).as_dict())
 
             original_item.hms_tz_is_out_of_stock = 1
+
+            doc.total += new_item.amount
+            doc.total_qty += new_item.qty
 
     doc.hms_tz_all_items_out_of_stock = 1
     frappe.msgprint("<h4 class='font-weight-bold bg-warning text-center'>All Items are marked as Out of Stock</h4>")
@@ -270,6 +281,9 @@ def convert_to_instock_item(name, row):
     doc.append('items', new_row)
     
     if len(doc.items) > prev_size:
+        doc.total_qty += new_row.get("qty")
+        doc.total += new_row.get("amount")
+
         for original_item in doc.hms_tz_original_items:
             if original_item.item_code == new_row.get("item_code"):
                 original_item.hms_tz_is_out_of_stock = 0
