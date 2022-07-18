@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import nowdate, getdate, nowtime, add_to_date, cint
+from frappe.utils import nowdate, getdate, nowtime, add_to_date, cint, add_days
 from hms_tz.nhif.api.healthcare_utils import (
     get_item_rate,
     get_warehouse_from_service_unit,
@@ -22,6 +22,7 @@ from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
     get_income_account,
 )
 import time
+import calendar
 from hms_tz.nhif.api.patient_appointment import get_mop_amount
 from erpnext.accounts.utils import get_balance_on
 
@@ -272,72 +273,8 @@ def on_submit_validation(doc, method):
                 )
         if coverage_info.maximum_number_of_claims == 0:
             continue
-        # if maximum_number_of_claims is more than 12 it means more times per month. Times will be less than 1
-        times = 12 / coverage_info.maximum_number_of_claims
-        count = 1
-        days = int(times * 30)
-        if times < 0.1:
-            count = 1 / times
-            days = 30
-        if not coverage_info.number_of_claims:
-            lrpt_names_sql = """
-                SELECT hsi.name FROM `tabLab Prescription` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                AND hsi.lab_test_code = "{1}"
-                AND hsi.prescribe = 0
-                AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-                UNION ALL
-                SELECT hsi.name FROM `tabRadiology Procedure Prescription` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                AND hsi.radiology_examination_template = "{1}"
-                AND hsi.prescribe = 0
-                AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-                UNION ALL
-                SELECT hsi.name FROM `tabProcedure Prescription` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                AND hsi.procedure = "{1}"
-                AND hsi.prescribe = 0
-                AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-                UNION ALL
-                SELECT hsi.name FROM `tabTherapy Plan Detail` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                AND hsi.therapy_type = "{1}"
-                AND hsi.prescribe = 0
-                AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-            """.format(
-                insurance_subscription, template, add_to_date(today, days=-days), today
-            )
-            lrpt_names = frappe.db.sql(lrpt_names_sql)
-            lrpt_count = len(lrpt_names) or 0
-            drug_count_sql = """
-                SELECT SUM(quantity) FROM `tabDrug Prescription` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                AND hsi.drug_code = "{1}"
-                AND hsi.prescribe = 0
-                AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-            """.format(
-                insurance_subscription, template, add_to_date(today, days=-days), today
-            )
-            drug_count = (
-                frappe.db.sql(drug_count_sql, as_dict=0,)[
-                    0
-                ][0]
-                or 0
-            )
-            coverage_info.number_of_claims = lrpt_count + drug_count
-        if coverage_info.number_of_claims > int(count):
-            msgThrow(
-                _(
-                    "Maximum Number of Claims for {0} per year is exceeded within the"
-                    " last {1} days. The allowed count is {2} where as past prescription count is {3}"
-                ).format(template, days, int(count), coverage_info.number_of_claims),
-                method,
-            )
+
+        validate_maximum_number_of_claims_per_month(coverage_info, insurance_subscription, template, today, method)
 
     # Run on_submit
     validate_totals(doc)
@@ -1516,3 +1453,70 @@ def convert_opd_encounter_to_ipd_encounter(encounter):
         )
         doc.reload()
         return True
+
+
+def validate_maximum_number_of_claims_per_month(coverage_info, insurance_subscription, template, today, method):
+    count = 1
+    total_days_per_month = calendar.monthrange(getdate(today).year, getdate(today).month)[1]
+    days = total_days_per_month // coverage_info.maximum_number_of_claims
+
+    if not coverage_info.number_of_claims:
+        lrpt_names_sql = """
+            SELECT hsi.name FROM `tabLab Prescription` hsi
+            INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+            WHERE pe.insurance_subscription = "{0}"
+            AND hsi.lab_test_code = "{1}"
+            AND hsi.prescribe = 0
+            AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+            UNION ALL
+            SELECT hsi.name FROM `tabRadiology Procedure Prescription` hsi
+            INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+            WHERE pe.insurance_subscription = "{0}"
+            AND hsi.radiology_examination_template = "{1}"
+            AND hsi.prescribe = 0
+            AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+            UNION ALL
+            SELECT hsi.name FROM `tabProcedure Prescription` hsi
+            INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+            WHERE pe.insurance_subscription = "{0}"
+            AND hsi.procedure = "{1}"
+            AND hsi.prescribe = 0
+            AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+            UNION ALL
+            SELECT hsi.name FROM `tabTherapy Plan Detail` hsi
+            INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+            WHERE pe.insurance_subscription = "{0}"
+            AND hsi.therapy_type = "{1}"
+            AND hsi.prescribe = 0
+            AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+        """.format(
+            insurance_subscription, template, add_days(today, days=-days), today
+        )
+        lrpt_names = frappe.db.sql(lrpt_names_sql)
+        lrpt_count = len(lrpt_names) or 0
+        
+
+        drug_count_sql = """
+            SELECT SUM(hsi.quantity) FROM `tabDrug Prescription` hsi
+            INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+            WHERE pe.insurance_subscription = "{0}"
+            AND hsi.drug_code = "{1}"
+            AND hsi.prescribe = 0
+            AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+        """.format(
+            insurance_subscription, template, add_days(today, days=-days), today
+        )
+        drug_count = (
+            frappe.db.sql(drug_count_sql, as_dict=0,)[0][0] or 0
+        )
+
+        coverage_info.number_of_claims = lrpt_count + drug_count
+
+    if coverage_info.number_of_claims > int(count):
+        msgThrow(
+            _(
+                "Maximum Number of Claims for {0} per month is exceeded within the"
+                " last {1} days. The allowed count is {2} where as past prescription count is {3}"
+            ).format(template, days, int(count), coverage_info.number_of_claims),
+            method,
+        )
