@@ -655,8 +655,8 @@ class NHIFPatientClaim(Document):
                     request_url=url,
                     request_header=headers,
                     request_body=json_data,
-                    response_data=r.text or "NO RESPONSE",
-                    status_code=r.status_code or "NO STATUS CODE",
+                    response_data=(r.text if r else "NO RESPONSE r. Timeout???") or "NO TEXT",
+                    status_code=(r.status_code if r else "NO RESPONSE r. Timeout???") or "NO STATUS CODE",
                 )
             if r.status_code == 500 and "A claim with Similar Authorization No. already exists" in r.text:
                 frappe.msgprint("This folio was NOT sent. However, since it is already existing at NHIF it hsa been submitted! "  + str(get_datetime()))
