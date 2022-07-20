@@ -27,6 +27,7 @@ def make_token_request(doc, url, headers, payload, fields):
                     request_header=headers,
                     request_body=payload,
                     response_data=json.loads(r.text),
+                    status_code=r.status_code,
                 )
             
             if json.loads(r.text)["token_type"] == "bearer":
@@ -43,10 +44,11 @@ def make_token_request(doc, url, headers, payload, fields):
                 return token
             else:
                 add_log(
-                    request_type="token",
+                    request_type="Token",
                     request_url=url,
                     request_header=headers,
                     request_body=payload,
+                    status_code=r.status_code
                 )
                 frappe.throw(json.loads(r.text))
         
@@ -78,7 +80,7 @@ def get_nhifservice_token(company):
         "expiry": "nhifservice_expiry",
     }
 
-    make_token_request(setting_doc, url, headers, payload, nhifservice_fields)
+    return make_token_request(setting_doc, url, headers, payload, nhifservice_fields)
 
 
 def get_claimsservice_token(company):
@@ -101,7 +103,7 @@ def get_claimsservice_token(company):
         "expiry": "claimsserver_expiry",
     }
     
-    make_token_request(setting_doc, url, headers, payload, claimserver_fields)
+    return make_token_request(setting_doc, url, headers, payload, claimserver_fields)
     
 
 
@@ -132,5 +134,5 @@ def get_formservice_token(company):
         "expiry": "nhifform_expiry",
     }
 
-    make_token_request(company_nhif_doc, url, headers, payload, nhifform_fields)
+    return make_token_request(company_nhif_doc, url, headers, payload, nhifform_fields)
     
