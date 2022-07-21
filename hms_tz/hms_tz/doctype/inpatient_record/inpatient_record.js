@@ -54,7 +54,7 @@ frappe.ui.form.on('Inpatient Record', {
 				discharge_patient(frm);
 			});
 			frm.add_custom_button(__('Add Bed'), function () {
-            	add_bed_dialog(frm);
+				add_bed_dialog(frm);
             });
 		}
 
@@ -204,7 +204,7 @@ let add_bed_dialog = function (frm) {
 		title: 'Add Remaining Bed',
 		width: 100,
 		fields: [
-			{ fieldtype: 'Link', label: 'Service Unit Type', fieldname: 'service_unit_type', options: 'Healthcare Service Unit Type' },
+			{ fieldtype: 'Link', label: 'Service Unit Type', fieldname: 'service_unit_type', options: 'Healthcare Service Unit Type', reqd: 1 },
 			{ fieldtype: 'Link', label: 'Service Unit', fieldname: 'service_unit', options: 'Healthcare Service Unit', reqd: 1 },
 			{ fieldtype: 'Datetime', label: 'Check In', fieldname: 'check_in', reqd: 1 },
 			{ fieldtype: 'Check', label: 'Left', fieldname: 'left', reqd: 1 },
