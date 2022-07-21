@@ -259,8 +259,8 @@ let add_bed_dialog = function (frm) {
 			filters: {
 				'is_group': 0,
 				'company': frm.doc.company,
-				'service_unit_type': dialog.get_value('service_unit_type'),
-				'occupancy_status': 'Vacant'
+				'service_unit_type': dialog.get_value('service_unit_type')
+				//'occupancy_status': 'Vacant'
 			}
 		};
     };
