@@ -223,6 +223,19 @@ let add_bed_dialog = function (frm) {
 			if (!service_unit && !check_in && !check_out) {
 				return;
 			}
+			if (check_in) {
+				let check_in_time = new Date(check_in);
+				let date_time = new Date();
+				if (check_in_time.getTime() > date_time.getTime()) {
+					frappe.throws({
+						title: __('Check In Date Error'),
+						message: __('Check In Date cannot be future date or time'),
+						indicator: 'red'
+					});
+					return;
+				}
+			}
+
 			frappe.call({
 				doc: frm.doc,
 				method: 'add_bed',
