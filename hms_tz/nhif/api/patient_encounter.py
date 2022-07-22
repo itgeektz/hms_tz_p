@@ -1100,9 +1100,15 @@ def set_amounts(doc):
                     )
             
             elif row.prescribe and doc.insurance_subscription:
-                item_rate = get_mop_amount(
-                    item_code, "Cash", doc.company, doc.patient
-                )
+                price_list = frappe.get_value("Company", doc.company, "default_price_list")
+                if not price_list:
+                    frappe.throw(
+                        _("Please set default price list in company {0}").format(
+                            doc.company
+                        )
+                    )
+                
+                item_rate = get_item_price(item_code, price_list, doc.company)
                 if not item_rate or item_rate == 0:
                     frappe.throw(
                         _("Cannot get mode of payment rate for item {0}").format(
@@ -1456,67 +1462,62 @@ def convert_opd_encounter_to_ipd_encounter(encounter):
 
 
 def validate_maximum_number_of_claims_per_month(coverage_info, insurance_subscription, template, today, method):
-    count = 1
-    total_days_per_month = calendar.monthrange(getdate(today).year, getdate(today).month)[1]
-    days = total_days_per_month // coverage_info.maximum_number_of_claims
+    days = 30
 
-    if not coverage_info.number_of_claims:
-        lrpt_names_sql = """
-            SELECT hsi.name FROM `tabLab Prescription` hsi
-            INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-            WHERE pe.insurance_subscription = "{0}"
-            AND hsi.lab_test_code = "{1}"
-            AND hsi.prescribe = 0
-            AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-            UNION ALL
-            SELECT hsi.name FROM `tabRadiology Procedure Prescription` hsi
-            INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-            WHERE pe.insurance_subscription = "{0}"
-            AND hsi.radiology_examination_template = "{1}"
-            AND hsi.prescribe = 0
-            AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-            UNION ALL
-            SELECT hsi.name FROM `tabProcedure Prescription` hsi
-            INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-            WHERE pe.insurance_subscription = "{0}"
-            AND hsi.procedure = "{1}"
-            AND hsi.prescribe = 0
-            AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-            UNION ALL
-            SELECT hsi.name FROM `tabTherapy Plan Detail` hsi
-            INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-            WHERE pe.insurance_subscription = "{0}"
-            AND hsi.therapy_type = "{1}"
-            AND hsi.prescribe = 0
-            AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-        """.format(
-            insurance_subscription, template, add_days(today, days=-days), today
-        )
-        lrpt_names = frappe.db.sql(lrpt_names_sql)
-        lrpt_count = len(lrpt_names) or 0
-        
+    lrpt_names_sql = """
+        SELECT hsi.name FROM `tabLab Prescription` hsi
+        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+        WHERE pe.insurance_subscription = "{0}"
+        AND hsi.lab_test_code = "{1}"
+        AND hsi.prescribe = 0
+        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+        UNION ALL
+        SELECT hsi.name FROM `tabRadiology Procedure Prescription` hsi
+        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+        WHERE pe.insurance_subscription = "{0}"
+        AND hsi.radiology_examination_template = "{1}"
+        AND hsi.prescribe = 0
+        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+        UNION ALL
+        SELECT hsi.name FROM `tabProcedure Prescription` hsi
+        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+        WHERE pe.insurance_subscription = "{0}"
+        AND hsi.procedure = "{1}"
+        AND hsi.prescribe = 0
+        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+        UNION ALL
+        SELECT hsi.name FROM `tabTherapy Plan Detail` hsi
+        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+        WHERE pe.insurance_subscription = "{0}"
+        AND hsi.therapy_type = "{1}"
+        AND hsi.prescribe = 0
+        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+    """.format(
+        insurance_subscription, template, add_days(today, days=-days), today
+    )
+    lrpt_names = frappe.db.sql(lrpt_names_sql)
+    lrpt_count = len(lrpt_names) or 0
+    
 
-        drug_count_sql = """
-            SELECT SUM(hsi.quantity) FROM `tabDrug Prescription` hsi
-            INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-            WHERE pe.insurance_subscription = "{0}"
-            AND hsi.drug_code = "{1}"
-            AND hsi.prescribe = 0
-            AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-        """.format(
-            insurance_subscription, template, add_days(today, days=-days), today
-        )
-        drug_count = (
-            frappe.db.sql(drug_count_sql, as_dict=0,)[0][0] or 0
-        )
+    drug_count_sql = """
+        SELECT SUM(hsi.quantity) FROM `tabDrug Prescription` hsi
+        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+        WHERE pe.insurance_subscription = "{0}"
+        AND hsi.drug_code = "{1}"
+        AND hsi.prescribe = 0
+        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+    """.format(
+        insurance_subscription, template, add_days(today, days=-days), today
+    )
+    drug_count = (
+        frappe.db.sql(drug_count_sql, as_dict=0,)[0][0] or 0
+    )
 
-        coverage_info.number_of_claims = lrpt_count + drug_count
-
-    if coverage_info.number_of_claims > int(count):
+    if (lrpt_count + drug_count) > coverage_info.maximum_number_of_claims:
         msgThrow(
             _(
                 "Maximum Number of Claims for {0} per month is exceeded within the"
                 " last {1} days. The allowed count is {2} where as past prescription count is {3}"
-            ).format(template, days, int(count), coverage_info.number_of_claims),
-            method,
+            ).format(template, days,coverage_info.maximum_number_of_claims, coverage_info.number_of_claims),
+            "validate",
         )

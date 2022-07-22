@@ -11,7 +11,13 @@ from hms_tz.nhif.api.token import get_claimsservice_token
 import json
 import requests
 from frappe.utils.background_jobs import enqueue
-from frappe.utils import getdate, get_fullname, nowdate, get_datetime, time_diff_in_seconds
+from frappe.utils import (
+    getdate,
+    get_fullname,
+    nowdate,
+    get_datetime,
+    time_diff_in_seconds,
+)
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from hms_tz.nhif.api.healthcare_utils import (
     get_item_rate,
@@ -22,6 +28,7 @@ import os
 from frappe.utils.pdf import get_pdf
 from PyPDF2 import PdfFileWriter
 import html2text
+
 
 class NHIFPatientClaim(Document):
     def validate(self):
@@ -64,7 +71,12 @@ class NHIFPatientClaim(Document):
 
         claim_details = frappe.get_all(
             "NHIF Patient Claim",
-            filters={'patient': self.patient, 'authorization_no': self.authorization_no, 'cardno': self.cardno, "docstatus": 0},
+            filters={
+                "patient": self.patient,
+                "authorization_no": self.authorization_no,
+                "cardno": self.cardno,
+                "docstatus": 0,
+            },
             fields=["name", "patient", "patient_name"],
         )
 
@@ -95,7 +107,9 @@ class NHIFPatientClaim(Document):
         frappe.msgprint("Got response from NHIF Claim: " + str(get_datetime()))
         end_datetime = get_datetime()
         time_in_seconds = time_diff_in_seconds(str(end_datetime), str(start_datetime))
-        frappe.msgprint("Total time to complete the process in seconds = " + str(time_in_seconds))
+        frappe.msgprint(
+            "Total time to complete the process in seconds = " + str(time_in_seconds)
+        )
 
     def set_claim_values(self):
         if not self.folio_id:
@@ -160,31 +174,45 @@ class NHIFPatientClaim(Document):
 
     @frappe.whitelist()
     def get_appointments(self):
-        appointments = frappe.get_all('NHIF Patient Claim',
-            filters={'patient': self.patient, 'authorization_no': self.authorization_no, 'cardno': self.cardno},
-            fields=['patient_appointment'], pluck='patient_appointment'
+        appointments = frappe.get_all(
+            "NHIF Patient Claim",
+            filters={
+                "patient": self.patient,
+                "authorization_no": self.authorization_no,
+                "cardno": self.cardno,
+            },
+            fields=["patient_appointment"],
+            pluck="patient_appointment",
         )
-        
+
         if len(appointments) == 1:
-            frappe.throw(_("<p style='text-align: center; font-size: 12pt; background-color: #FFD700;'>\
+            frappe.throw(
+                _(
+                    "<p style='text-align: center; font-size: 12pt; background-color: #FFD700;'>\
                 <strong>This Authorization no: {0} was used only once on <br> NHIF Patient Claim: {1} </strong>\
-                </p>".format(frappe.bold(self.authorization_no), frappe.bold(self.name))))
-        
+                </p>".format(
+                        frappe.bold(self.authorization_no), frappe.bold(self.name)
+                    )
+                )
+            )
+
         for app_name in appointments:
-            frappe.db.set_value('Patient Appointment', app_name, 'nhif_patient_claim', self.name)
-        
+            frappe.db.set_value(
+                "Patient Appointment", app_name, "nhif_patient_claim", self.name
+            )
+
         self.allow_changes = 0
         self.hms_tz_claim_appointment_list = json.dumps(appointments)
-        
+
         self.save(ignore_permissions=True)
 
     def get_patient_encounters(self):
         if not self.hms_tz_claim_appointment_list:
             patient_appointment = self.patient_appointment
-        
+
         else:
-            patient_appointment = ['in', json.loads(self.hms_tz_claim_appointment_list)]
-        
+            patient_appointment = ["in", json.loads(self.hms_tz_claim_appointment_list)]
+
         patient_encounters = frappe.get_all(
             "Patient Encounter",
             filters={
@@ -204,11 +232,16 @@ class NHIFPatientClaim(Document):
             AND parenttype = "Patient Encounter"
             AND parent in ({})
             GROUP BY medical_code
-            """.format(", ".join(
-                frappe.db.escape(encounters.name) for encounters in self.patient_encounters)
+            """.format(
+            ", ".join(
+                frappe.db.escape(encounters.name)
+                for encounters in self.patient_encounters
+            )
         )
-        
-        preliminary_diagnosis_list = frappe.db.sql(preliminary_query_string, as_dict=True)
+
+        preliminary_diagnosis_list = frappe.db.sql(
+            preliminary_query_string, as_dict=True
+        )
         for row in preliminary_diagnosis_list:
             new_row = self.append("nhif_patient_claim_disease", {})
             new_row.diagnosis_type = "Provisional Diagnosis"
@@ -224,7 +257,7 @@ class NHIFPatientClaim(Document):
             new_row.description = row.description[0:139]
             new_row.item_crt_by = get_fullname(row.modified_by)
             new_row.date_created = row.modified.strftime("%Y-%m-%d")
-        
+
         final_query_string = """
             SELECT name, parent, code, medical_code, description, modified_by, modified
             FROM `tabCodification Table`
@@ -232,10 +265,13 @@ class NHIFPatientClaim(Document):
             AND parenttype = "Patient Encounter"
             AND parent in ({})
             GROUP BY medical_code
-            """.format(", ".join(
-                frappe.db.escape(encounters.name) for encounters in self.patient_encounters)
+            """.format(
+            ", ".join(
+                frappe.db.escape(encounters.name)
+                for encounters in self.patient_encounters
+            )
         )
-            
+
         final_diagnosis_list = frappe.db.sql(final_query_string, as_dict=True)
         for row in final_diagnosis_list:
             new_row = self.append("nhif_patient_claim_disease", {})
@@ -336,9 +372,8 @@ class NHIFPatientClaim(Document):
                             child["ref_doctype"], row.get(child["ref_docname"])
                         )
 
-                        if (
-                            child["doctype"] =="Therapy Type" or 
-                            row.get(child["ref_docname"])
+                        if child["doctype"] == "Therapy Type" or row.get(
+                            child["ref_docname"]
                         ):
                             new_row.status = "Submitted"
                         else:
@@ -376,22 +411,24 @@ class NHIFPatientClaim(Document):
                 )
 
                 # update occupancy object
-                occupancy.update({
-                    "service_unit_type": service_unit_type,
-                    "is_service_chargeable": is_service_chargeable,
-                    "is_consultancy_chargeable": is_consultancy_chargeable
-                })
-                
+                occupancy.update(
+                    {
+                        "service_unit_type": service_unit_type,
+                        "is_service_chargeable": is_service_chargeable,
+                        "is_consultancy_chargeable": is_consultancy_chargeable,
+                    }
+                )
+
                 checkin_date = occupancy.check_in.strftime("%Y-%m-%d")
                 # Add only in occupancy once a day.
                 if checkin_date not in dates:
                     dates.append(checkin_date)
                     occupancy_list.append(occupancy)
-                
+
                 item_code = frappe.get_value(
                     "Healthcare Service Unit Type", service_unit_type, "item"
                 )
-                
+
                 item_rate = get_item_rate(
                     item_code,
                     self.company,
@@ -417,7 +454,7 @@ class NHIFPatientClaim(Document):
                 if not occupancy.is_confirmed:
                     continue
                 checkin_date = occupancy.check_in.strftime("%Y-%m-%d")
-                
+
                 if occupancy.is_consultancy_chargeable:
                     for row_item in record_doc.inpatient_consultancy:
                         if (
@@ -479,10 +516,9 @@ class NHIFPatientClaim(Document):
                                         row.get(child["ref_docname"]),
                                     )
                                 )
-                                
-                                if (
-                                    child["doctype"]=="Therapy Type" or 
-                                    row.get(child["ref_docname"])
+
+                                if child["doctype"] == "Therapy Type" or row.get(
+                                    child["ref_docname"]
                                 ):
                                     new_row.status = "Submitted"
                                 else:
@@ -510,7 +546,7 @@ class NHIFPatientClaim(Document):
             patient_appointment_list.append(self.patient_appointment)
         else:
             patient_appointment_list = json.loads(self.hms_tz_claim_appointment_list)
-            
+
         for appointment_no in patient_appointment_list:
             patient_appointment_doc = frappe.get_doc(
                 "Patient Appointment", appointment_no
@@ -534,7 +570,9 @@ class NHIFPatientClaim(Document):
                 new_row.ref_docname = patient_appointment_doc.name
                 new_row.folio_item_id = str(uuid.uuid1())
                 new_row.folio_id = self.folio_id
-                new_row.date_created = patient_appointment_doc.modified.strftime("%Y-%m-%d")
+                new_row.date_created = patient_appointment_doc.modified.strftime(
+                    "%Y-%m-%d"
+                )
                 new_row.item_crt_by = get_fullname(patient_appointment_doc.modified_by)
                 new_row.idx = 1
 
@@ -549,7 +587,7 @@ class NHIFPatientClaim(Document):
             },
             fields=["name", "practitioner", "inpatient_record"],
             order_by="`modified` desc",
-            limit_page_length=1
+            limit_page_length=1,
         )
         if len(patient_encounter_list) == 0:
             frappe.throw(_("There no Final Patient Encounter for this Appointment"))
@@ -613,8 +651,8 @@ class NHIFPatientClaim(Document):
         jsonStr = json.dumps(folio_data)
 
         # Strip off the patient file
-        folio_data.entities[0].PatientFile="Stripped off"
-        folio_data.entities[0].ClaimFile="Stripped off"
+        folio_data.entities[0].PatientFile = "Stripped off"
+        folio_data.entities[0].ClaimFile = "Stripped off"
         jsonStr_wo_files = json.dumps(folio_data)
         return jsonStr, jsonStr_wo_files
 
@@ -634,7 +672,11 @@ class NHIFPatientClaim(Document):
             r = requests.post(url, headers=headers, data=json_data, timeout=300)
 
             if r.status_code != 200:
-                frappe.msgprint("NHIF Server responded with HTTP status code: {0}".format(str(r.status_code if r.status_code else "NONE")))
+                frappe.msgprint(
+                    "NHIF Server responded with HTTP status code: {0}".format(
+                        str(r.status_code if r.status_code else "NONE")
+                    )
+                )
                 frappe.throw(str(r.text) if r.text else str(r))
             else:
                 frappe.msgprint(str(r.text))
@@ -648,24 +690,42 @@ class NHIFPatientClaim(Document):
                         status_code=r.status_code,
                     )
                 frappe.msgprint(_("The claim has been sent successfully"), alert=True)
-            
+
         except Exception as e:
             add_log(
-                    request_type="SubmitFolios",
-                    request_url=url,
-                    request_header=headers,
-                    request_body=json_data,
-                    response_data=r.text or "NO RESPONSE",
-                    status_code=r.status_code or "NO STATUS CODE",
+                request_type="SubmitFolios",
+                request_url=url,
+                request_header=headers,
+                request_body=json_data,
+                response_data=(r.text if r else "NO RESPONSE r. Timeout???")
+                or "NO TEXT",
+                status_code=(r.status_code if r else "NO RESPONSE r. Timeout???")
+                or "NO STATUS CODE",
+            )
+            if (
+                r
+                and r.status_code == 500
+                and "A claim with Similar Authorization No. already exists" in r.text
+            ):
+                frappe.msgprint(
+                    "This folio was NOT sent. However, since it is already existing at NHIF it hsa been submitted! "
+                    + str(get_datetime())
                 )
-            if r.status_code == 500 and "A claim with Similar Authorization No. already exists" in r.text:
-                frappe.msgprint("This folio was NOT sent. However, since it is already existing at NHIF it hsa been submitted! "  + str(get_datetime()))
-            elif r.status_code == 406 and "Folio Number {0} has already been submited.".format(self.folio_no) in r.text:
-                frappe.msgprint("This folio was NOT sent. However, since it is already existing at NHIF it hsa been submitted! "  + str(get_datetime()))
+            elif (
+                r
+                and r.status_code == 406
+                and "Folio Number {0} has already been submited.".format(self.folio_no)
+                in r.text
+            ):
+                frappe.msgprint(
+                    "This folio was NOT sent. However, since it is already existing at NHIF it hsa been submitted! "
+                    + str(get_datetime())
+                )
             else:
-                frappe.throw("This folio was NOT submitted due to the error above!. Please retry after resolving the problem. "  + str(get_datetime()))
-            
-
+                frappe.throw(
+                    "This folio was NOT submitted due to the error above!. Please retry after resolving the problem. "
+                    + str(get_datetime())
+                )
 
     def calculate_totals(self):
         self.total_amount = 0
@@ -719,6 +779,7 @@ class NHIFPatientClaim(Document):
                 )
             )
 
+
 def get_missing_patient_signature(self):
     if self.patient:
         patient_doc = frappe.get_doc("Patient", self.patient)
@@ -732,7 +793,9 @@ def validate_submit_date(self):
     import calendar
 
     submit_claim_month, submit_claim_year = frappe.get_value(
-        "Company NHIF Settings", self.company, ["submit_claim_month", "submit_claim_year"]
+        "Company NHIF Settings",
+        self.company,
+        ["submit_claim_month", "submit_claim_year"],
     )
 
     if not (submit_claim_month or submit_claim_year):
@@ -743,29 +806,30 @@ def validate_submit_date(self):
             )
         )
 
-    if (
-        self.claim_month != submit_claim_month or
-        self.claim_year != submit_claim_year
-    ):
+    if self.claim_month != submit_claim_month or self.claim_year != submit_claim_year:
         frappe.throw(
             "Claim Month: {0} or Claim Year: {1} of this document is not same to Submit Claim Month: {2}\
                 or Submit Claim Year: {3} on Company NHIF Settings".format(
                 frappe.bold(calendar.month_name[self.claim_month]),
                 frappe.bold(self.claim_year),
                 frappe.bold(calendar.month_name[submit_claim_month]),
-                frappe.bold(submit_claim_year)
+                frappe.bold(submit_claim_year),
             )
         )
+
 
 def validate_item_status(self):
     for row in self.nhif_patient_claim_item:
         if row.status == "Draft":
-            frappe.throw("Item: {0}, doctype: {1}. RowNo: {2} is in <strong>Draft</strong>,\
+            frappe.throw(
+                "Item: {0}, doctype: {1}. RowNo: {2} is in <strong>Draft</strong>,\
                 please contact relevant department for clarification".format(
                     frappe.bold(row.item_name),
-                    frappe. bold(row.ref_doctype),
-                    frappe.bold(row.idx)
-                ))
+                    frappe.bold(row.ref_doctype),
+                    frappe.bold(row.idx),
+                )
+            )
+
 
 def get_item_refcode(item_code):
     code_list = frappe.get_all(
@@ -782,7 +846,13 @@ def get_item_refcode(item_code):
 
 
 def generate_pdf(doc):
-    file_list = frappe.get_all("File", filters={"attached_to_doctype": "NHIF Patient Claim", "file_name": str(doc.name + ".pdf")})
+    file_list = frappe.get_all(
+        "File",
+        filters={
+            "attached_to_doctype": "NHIF Patient Claim",
+            "file_name": str(doc.name + ".pdf"),
+        },
+    )
     if file_list:
         patientfile = frappe.get_doc("File", file_list[0].name)
         if patientfile:
@@ -805,7 +875,9 @@ def generate_pdf(doc):
     else:
         print_format = "Patient File"
 
-    pdf = download_multi_pdf(doctype, doc.name, print_format=print_format, no_letterhead=1)
+    pdf = download_multi_pdf(
+        doctype, doc.name, print_format=print_format, no_letterhead=1
+    )
     if pdf:
         ret = frappe.get_doc(
             {
@@ -856,11 +928,17 @@ def read_multi_pdf(output):
 
 
 def get_claim_pdf_file(doc):
-    file_list = frappe.get_all("File", filters={"attached_to_doctype": "NHIF Patient Claim", "file_name": str(doc.name + "-claim.pdf")})
+    file_list = frappe.get_all(
+        "File",
+        filters={
+            "attached_to_doctype": "NHIF Patient Claim",
+            "file_name": str(doc.name + "-claim.pdf"),
+        },
+    )
     if file_list:
         for file in file_list:
             frappe.delete_doc("File", file.name, ignore_permissions=True)
-    
+
     doctype = doc.doctype
     docname = doc.name
     default_print_format = frappe.db.get_value(
@@ -875,13 +953,9 @@ def get_claim_pdf_file(doc):
 
     # print_format = "NHIF Form 2A & B"
 
-    html = frappe.get_print(
-        doctype, docname, print_format, doc=None, no_letterhead=1
-    )
+    html = frappe.get_print(doctype, docname, print_format, doc=None, no_letterhead=1)
 
-    filename = "{name}-claim".format(
-        name=docname.replace(" ", "-").replace("/", "-")
-    )
+    filename = "{name}-claim".format(name=docname.replace(" ", "-").replace("/", "-"))
     pdf = get_pdf(html)
     if pdf:
         ret = frappe.get_doc(
@@ -904,5 +978,3 @@ def get_claim_pdf_file(doc):
         return base64_data
     else:
         frappe.throw(_("Failed to generate pdf"))
-
-
