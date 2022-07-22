@@ -223,11 +223,12 @@ let add_bed_dialog = function (frm) {
 			if (!service_unit && !check_in && !check_out) {
 				return;
 			}
+			
 			if (check_in) {
 				let check_in_time = new Date(check_in);
 				let date_time = new Date();
 				if (check_in_time.getTime() > date_time.getTime()) {
-					frappe.throws({
+					frappe.throw({
 						title: __('Check In Date Error'),
 						message: __('Check In Date cannot be future date or time'),
 						indicator: 'red'
@@ -236,6 +237,27 @@ let add_bed_dialog = function (frm) {
 				}
 			}
 
+			let check_out_time = new Date(check_out);
+			let check_in_time = new Date(check_in);
+			let date_time_out = new Date();
+			if (check_out_time.getTime() > date_time_out.getTime()) {
+				frappe.throw({
+					title: __('Check Out Date Error'),
+					message: __('Check Out Date cannot be future date or time'),
+					indicator: 'red'
+				});
+				return;
+			}
+			if (check_out_time.getTime() <= check_in_time.getTime()) {
+				frappe.throw({
+					title: __('Check Out Date Error'),
+					message: __('Check Out Date cannot before or equal to Check In Date'),
+					indicator: 'red'
+				});
+				return;
+			}
+			
+			
 			frappe.call({
 				doc: frm.doc,
 				method: 'add_bed',
