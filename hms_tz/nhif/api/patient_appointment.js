@@ -115,6 +115,19 @@ frappe.ui.form.on('Patient Appointment', {
             frm.toggle_enable("referring_practitioner", false);
         }
         
+        if (frm.doc.appointment_type == "Emergency") {
+            if (frm.doc.insurance_subscription) {
+                frm.toggle_display(['remarks'], true);
+                frm.toggle_reqd("remarks", true);
+
+            } else {
+                frm.toggle_reqd("remarks", false);
+                frm.toggle_display(['remarks'], false);
+
+            }
+            frm.toggle_enable(['remarks'], true);
+        }
+
         if (frm.doc.appointment_type == "Follow up Visit") {
             if (frm.doc.insurance_subscription) {
                 frm.toggle_display(['referral_no'], true);

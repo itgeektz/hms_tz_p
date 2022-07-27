@@ -314,6 +314,7 @@ def get_authorization_num(
         if card.get("AuthorizationStatus") != "ACCEPTED":
             frappe.throw(card["Remarks"])
         frappe.msgprint(_(card["Remarks"]), alert=True)
+        update_insurance_subscription(insurance_subscription, card)
         add_scheme(card.get("SchemeID"), card.get("SchemeName"))
         add_product(card.get("ProductCode"), card.get("ProductName"))
         return card
@@ -325,6 +326,22 @@ def get_authorization_num(
             status_code = r.status_code
         )
         frappe.throw(json.loads(r.text))
+
+
+def update_insurance_subscription(insurance_subscription, card):
+    subscription_doc = frappe.get_cached_doc("Healthcare Insurance Subscription", insurance_subscription)
+    
+    if subscription_doc.hms_tz_product_code != card["ProductCode"]:
+        frappe.db.set_value(subscription_doc.doctype, subscription_doc.name, {
+            "hms_tz_product_code": card["ProductCode"],
+            "hms_tz_product_name": card["ProductName"]
+        })
+    
+    if subscription_doc.hms_tz_scheme_id != card["SchemeID"]:
+        frappe.db.set_value(subscription_doc.doctype, subscription_doc.name, {
+            "hms_tz_scheme_id": card["SchemeID"],
+            "hms_tz_scheme_name": card["SchemeName"]
+        })
 
 
 @frappe.whitelist()
