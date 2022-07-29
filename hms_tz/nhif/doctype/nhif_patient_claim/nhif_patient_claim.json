@@ -42,6 +42,7 @@
   "patient_type_code",
   "attendance_date",
   "patient_file_no",
+  "delayreason",
   "patient_file_section",
   "patient_file",
   "claim_file_section",
@@ -375,12 +376,17 @@
    "fieldtype": "Data",
    "hidden": 1,
    "label": "Claim Appointment List"
+  },
+  {
+   "fieldname": "delayreason",
+   "fieldtype": "Small Text",
+   "label": "DelayReason"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-03-31 18:01:24.545826",
+ "modified": "2022-07-29 12:42:42.353571",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim",

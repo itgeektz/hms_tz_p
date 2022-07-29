@@ -565,9 +565,11 @@ class NHIFPatientClaim(Document):
             entities.DateAdmitted = str(self.date_admitted)
             entities.DateDischarged = str(self.date_discharge)
         entities.PractitionerNo = self.practitioner_no
+
         entities.CreatedBy = self.item_crt_by
         entities.DateCreated = str(self.posting_date)
-
+        entities.BillNo = self.name
+        entities.DelayReason = self.delayreason
         entities.FolioDiseases = []
         for disease in self.nhif_patient_claim_disease:
             FolioDisease = frappe._dict()
