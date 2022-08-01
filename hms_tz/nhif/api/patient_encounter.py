@@ -1100,9 +1100,15 @@ def set_amounts(doc):
                     )
             
             elif row.prescribe and doc.insurance_subscription:
-                item_rate = get_mop_amount(
-                    item_code, "Cash", doc.company, doc.patient
-                )
+                price_list = frappe.get_value("Company", doc.company, "default_price_list")
+                if not price_list:
+                    frappe.throw(
+                        _("Please set default price list in company {0}").format(
+                            doc.company
+                        )
+                    )
+                
+                item_rate = get_item_price(item_code, price_list, doc.company)
                 if not item_rate or item_rate == 0:
                     frappe.throw(
                         _("Cannot get mode of payment rate for item {0}").format(

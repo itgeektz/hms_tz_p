@@ -54,7 +54,7 @@ frappe.ui.form.on('Inpatient Record', {
 				discharge_patient(frm);
 			});
 			frm.add_custom_button(__('Add Bed'), function () {
-            	add_bed_dialog(frm);
+				add_bed_dialog(frm);
             });
 		}
 
@@ -200,89 +200,107 @@ let admit_patient_dialog = function (frm) {
 };
 
 let add_bed_dialog = function (frm) {
-    let dialog = new frappe.ui.Dialog({
-      title: 'Add Remaining Bed',
-      width: 100,
-      fields: [
-        {
-          fieldtype: 'Link', label: 'Service Unit Type', fieldname: 'service_unit_type',
-          options: 'Healthcare Service Unit Type'
-        },
-        {
-          fieldtype: 'Link', label: 'Service Unit', fieldname: 'service_unit',
-          options: 'Healthcare Service Unit', reqd: 1
-        },
-        
-        {
-          fieldtype: 'Datetime', label: 'Check In', fieldname: 'check_in',
-          reqd: 1
-        },
-        {
-          fieldtype: 'Check', label: 'Left', fieldname: 'left',
-          reqd: 1
-        },
-              {
-          fieldtype: 'Datetime', label: 'Check Out', fieldname: 'check_out',
-          reqd: 1
-        },
-        
-      ],
-      primary_action_label: __('Add'),
-      primary_action: function () {
-        let service_unit = dialog.get_value('service_unit');
-        let check_in = dialog.get_value('check_in');
-        let check_out = dialog.get_value('check_out');
-        let left = dialog.get_value('left');
-          if (check_out && !left){
-          left = 1;
-          }
-          
-        if (!service_unit && !check_in && !check_out) {
-          return;
-        }
-        frappe.call({
-			doc: frm.doc,
-			method: 'add_bed',
-			args: {
-			  'service_unit': service_unit,
-			  'check_in': check_in,
-			  'check_out': check_out,
-			  'left': left,
-			},
-			callback: function (data) {
-			  if (!data.exc) {
-				frm.reload_doc();
-			  }
-			},
+	let dialog = new frappe.ui.Dialog({
+		title: 'Add Remaining Bed',
+		width: 100,
+		fields: [
+			{ fieldtype: 'Link', label: 'Service Unit Type', fieldname: 'service_unit_type', options: 'Healthcare Service Unit Type', reqd: 1 },
+			{ fieldtype: 'Link', label: 'Service Unit', fieldname: 'service_unit', options: 'Healthcare Service Unit', reqd: 1 },
+			{ fieldtype: 'Datetime', label: 'Check In', fieldname: 'check_in', reqd: 1 },
+			{ fieldtype: 'Check', label: 'Left', fieldname: 'left', reqd: 1 },
+			{ fieldtype: 'Datetime', label: 'Check Out', fieldname: 'check_out', reqd: 1 }
+		],
+		primary_action_label: __('Add'),
+		primary_action: function () {
+			let service_unit = dialog.get_value('service_unit');
+			let check_in = dialog.get_value('check_in');
+			let check_out = dialog.get_value('check_out');
+			let left = dialog.get_value('left');
+			if (check_out && !left){
+				left = 1;
+			}
 
-      });
-        frm.reload_doc();
-        frm.refresh_fields();
-        dialog.hide();
-      }
-    });
-  
+			if (!service_unit && !check_in && !check_out) {
+				return;
+			}
+			
+			if (check_in) {
+				let check_in_time = new Date(check_in);
+				let date_time = new Date();
+				if (check_in_time.getTime() > date_time.getTime()) {
+					frappe.throw({
+						title: __('Check In Date Error'),
+						message: __('Check In Date cannot be future date or time'),
+						indicator: 'red'
+					});
+					return;
+				}
+			}
+
+			let check_out_time = new Date(check_out);
+			let check_in_time = new Date(check_in);
+			let date_time_out = new Date();
+			if (check_out_time.getTime() > date_time_out.getTime()) {
+				frappe.throw({
+					title: __('Check Out Date Error'),
+					message: __('Check Out Date cannot be future date or time'),
+					indicator: 'red'
+				});
+				return;
+			}
+			if (check_out_time.getTime() <= check_in_time.getTime()) {
+				frappe.throw({
+					title: __('Check Out Date Error'),
+					message: __('Check Out Date cannot before or equal to Check In Date'),
+					indicator: 'red'
+				});
+				return;
+			}
+			
+			
+			frappe.call({
+				doc: frm.doc,
+				method: 'add_bed',
+				args: {
+					'service_unit': service_unit,
+					'check_in': check_in,
+					'check_out': check_out,
+					'left': left,
+				},
+				callback: function (data) {
+					if (!data.exc) {
+						frm.reload_doc();
+					}
+				},
+			});
+
+			frm.reload_doc();
+			frm.refresh_fields();
+			dialog.hide();
+		}
+	});
+
     dialog.fields_dict['service_unit_type'].get_query = function () {
-      return {
-        filters: {
-          'inpatient_occupancy': 1,
-          'allow_appointments': 0
-        }
-      };
+		return {
+			filters: {
+				'inpatient_occupancy': 1,
+				'allow_appointments': 0
+			}
+		};
     };
+
     dialog.fields_dict['service_unit'].get_query = function () {
-      return {
-        filters: {
-          'is_group': 0,
-          'company': frm.doc.company,
-          'service_unit_type': dialog.get_value('service_unit_type'),
-          'occupancy_status': 'Vacant'
-        }
-      };
+		return {
+			filters: {
+				'is_group': 0,
+				'company': frm.doc.company,
+				'service_unit_type': dialog.get_value('service_unit_type')
+				//'occupancy_status': 'Vacant'
+			}
+		};
     };
-  
-    dialog.show();
-  };
+	dialog.show();
+};
 
 let transfer_patient_dialog = function (frm) {
 	let dialog = new frappe.ui.Dialog({
@@ -290,7 +308,7 @@ let transfer_patient_dialog = function (frm) {
 		width: 100,
 		fields: [
 			{ fieldtype: 'Link', label: 'Leave From', fieldname: 'leave_from', options: 'Healthcare Service Unit', reqd: 1, read_only: 1 },
-			{ fieldtype: 'Link', label: 'Service Unit Type', fieldname: 'service_unit_type', options: 'Healthcare Service Unit Type' },
+			{ fieldtype: 'Link', label: 'Service Unit Type', fieldname: 'service_unit_type', options: 'Healthcare Service Unit Type', reqd: 1 },
 			{ fieldtype: 'Link', label: 'Transfer To', fieldname: 'service_unit', options: 'Healthcare Service Unit', reqd: 1 },
 			{ fieldtype: 'Datetime', label: 'Check In', fieldname: 'check_in', reqd: 1, default: frappe.datetime.now_datetime() }
 		],
@@ -353,7 +371,8 @@ let transfer_patient_dialog = function (frm) {
 			filters: {
 				'is_group': 0,
 				'service_unit_type': dialog.get_value('service_unit_type'),
-				'occupancy_status': 'Vacant'
+				'occupancy_status': 'Vacant',
+				'company': frm.doc.company
 			}
 		};
 	};
