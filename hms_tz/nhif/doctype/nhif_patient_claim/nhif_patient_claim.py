@@ -672,12 +672,35 @@ class NHIFPatientClaim(Document):
             r = requests.post(url, headers=headers, data=json_data, timeout=300)
 
             if r.status_code != 200:
-                frappe.msgprint(
-                    "NHIF Server responded with HTTP status code: {0}".format(
-                        str(r.status_code if r.status_code else "NONE")
+                if (
+                    r
+                    and r.status_code == 500
+                    and "A claim with Similar Authorization No. already exists"
+                    in r.text
+                ):
+                    frappe.msgprint(
+                        "This folio was NOT sent. However, since it is already existing at NHIF it has been submitted! "
+                        + str(get_datetime())
                     )
-                )
-                frappe.throw(str(r.text) if r.text else str(r))
+                elif (
+                    r
+                    and r.status_code == 406
+                    and "Folio Number {0} has already been submited.".format(
+                        self.folio_no
+                    )
+                    in r.text
+                ):
+                    frappe.msgprint(
+                        "This folio was NOT sent. However, since it is already existing at NHIF it has been submitted! "
+                        + str(get_datetime())
+                    )
+                else:
+                    frappe.msgprint(
+                        "NHIF Server responded with HTTP status code: {0}".format(
+                            str(r.status_code if r.status_code else "NONE")
+                        )
+                    )
+                    frappe.throw(str(r.text) if r.text else str(r))
             else:
                 frappe.msgprint(str(r.text))
                 if r.text:
@@ -702,30 +725,10 @@ class NHIFPatientClaim(Document):
                 status_code=(r.status_code if r else "NO RESPONSE r. Timeout???")
                 or "NO STATUS CODE",
             )
-            if (
-                r
-                and r.status_code == 500
-                and "A claim with Similar Authorization No. already exists" in r.text
-            ):
-                frappe.msgprint(
-                    "This folio was NOT sent. However, since it is already existing at NHIF it hsa been submitted! "
-                    + str(get_datetime())
-                )
-            elif (
-                r
-                and r.status_code == 406
-                and "Folio Number {0} has already been submited.".format(self.folio_no)
-                in r.text
-            ):
-                frappe.msgprint(
-                    "This folio was NOT sent. However, since it is already existing at NHIF it hsa been submitted! "
-                    + str(get_datetime())
-                )
-            else:
-                frappe.throw(
-                    "This folio was NOT submitted due to the error above!. Please retry after resolving the problem. "
-                    + str(get_datetime())
-                )
+            frappe.throw(
+                "This folio was NOT submitted due to the error above!. Please retry after resolving the problem. "
+                + str(get_datetime())
+            )
 
     def calculate_totals(self):
         self.total_amount = 0
