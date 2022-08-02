@@ -622,6 +622,8 @@ class NHIFPatientClaim(Document):
             entities.DateAdmitted = str(self.date_admitted)
             entities.DateDischarged = str(self.date_discharge)
         entities.PractitionerNo = self.practitioner_no
+        entities.BillNo = self.name
+        entities.DelayReason = self.delayreason
         entities.CreatedBy = self.item_crt_by
         entities.DateCreated = str(self.posting_date)
 
