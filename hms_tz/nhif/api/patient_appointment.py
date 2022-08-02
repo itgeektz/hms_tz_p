@@ -257,19 +257,15 @@ def make_encounter(doc, method):
 
 @frappe.whitelist()
 def get_authorization_num(
-    insurance_subscription, company, appointment_type, referral_no=""
+    insurance_subscription, company, appointment_type, card_no, referral_no="", remarks=""
 ):
-    enable_nhif_api = frappe.get_value("Company NHIF Settings", company, "enable")
+    enable_nhif_api, nhifservice_url = frappe.get_value("Company NHIF Settings", company, ["enable", "nhifservice_url"])
     if not enable_nhif_api:
         frappe.msgprint(
             _("Company {0} not enabled for NHIF Integration".format(company))
         )
         return
-    card_no = frappe.get_value(
-        "Healthcare Insurance Subscription",
-        insurance_subscription,
-        "coverage_plan_card_number",
-    )
+    
     if not card_no:
         frappe.msgprint(
             _(
@@ -285,20 +281,23 @@ def get_authorization_num(
         + frappe.get_value("Appointment Type", appointment_type, "visit_type_id")[:1]
     )
     referral_no = "&ReferralNo=" + str(referral_no)
-    # remarks = "&Remarks=" + ""
+    remarks = "&Remarks=" + str(remarks)
+    
     token = get_nhifservice_token(company)
 
-    nhifservice_url = frappe.get_value(
-        "Company NHIF Settings", company, "nhifservice_url"
-    )
-    headers = {"Authorization": "Bearer " + token}
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+    }
     url = (
         str(nhifservice_url)
         + "/nhifservice/breeze/verification/AuthorizeCard?"
         + card_no
         + visit_type_id
         + referral_no
-    )  # + remarks
+        + remarks
+    )
+
     r = requests.get(url, headers=headers, timeout=5)
     r.raise_for_status()
     frappe.logger().debug({"webhook_success": r.text})
@@ -308,12 +307,14 @@ def get_authorization_num(
             request_url=url,
             request_header=headers,
             response_data=json.loads(r.text),
+            status_code = r.status_code
         )
         card = json.loads(r.text)
         # console(card)
         if card.get("AuthorizationStatus") != "ACCEPTED":
             frappe.throw(card["Remarks"])
         frappe.msgprint(_(card["Remarks"]), alert=True)
+        update_insurance_subscription(insurance_subscription, card)
         add_scheme(card.get("SchemeID"), card.get("SchemeName"))
         add_product(card.get("ProductCode"), card.get("ProductName"))
         return card
@@ -322,8 +323,25 @@ def get_authorization_num(
             request_type="AuthorizeCard",
             request_url=url,
             request_header=headers,
+            status_code = r.status_code
         )
         frappe.throw(json.loads(r.text))
+
+
+def update_insurance_subscription(insurance_subscription, card):
+    subscription_doc = frappe.get_cached_doc("Healthcare Insurance Subscription", insurance_subscription)
+    
+    if subscription_doc.hms_tz_product_code != card["ProductCode"]:
+        frappe.db.set_value(subscription_doc.doctype, subscription_doc.name, {
+            "hms_tz_product_code": card["ProductCode"],
+            "hms_tz_product_name": card["ProductName"]
+        })
+    
+    if subscription_doc.hms_tz_scheme_id != card["SchemeID"]:
+        frappe.db.set_value(subscription_doc.doctype, subscription_doc.name, {
+            "hms_tz_scheme_id": card["SchemeID"],
+            "hms_tz_scheme_name": card["SchemeName"]
+        })
 
 
 @frappe.whitelist()
