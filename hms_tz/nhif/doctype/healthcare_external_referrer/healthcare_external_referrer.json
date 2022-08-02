@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "referrer_name",
+  "facility_code",
   "mobile_no"
  ],
  "fields": [
@@ -22,10 +23,15 @@
    "fieldname": "mobile_no",
    "fieldtype": "Data",
    "label": "Mobile No"
+  },
+  {
+   "fieldname": "facility_code",
+   "fieldtype": "Data",
+   "label": "Referrer Facility Code"
   }
  ],
  "links": [],
- "modified": "2020-12-24 17:53:41.544771",
+ "modified": "2022-06-29 17:13:03.776832",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Healthcare External Referrer",
