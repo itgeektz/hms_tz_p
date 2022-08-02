@@ -106,6 +106,19 @@ def on_submit_validation(doc, method):
                 for option in healthcare_doc.company_options:
                     if doc.company == option.company:
                         row.department_hsu = option.service_unit
+            
+            if (
+                child.get("doctype") == "Clinical Procedure Template"
+                and row.doctype == "Procedure Prescription"
+            ):
+                if healthcare_doc.is_inpatient and not doc.inpatient_record:
+                    msgThrow(
+                        _("<h4>This Procedure: <strong>{0}</strong> is allowed for Admitted Patient only</h4>").format(
+                            frappe.bold(row.get(child.get("item")))
+                        ),
+                        method,
+                    )
+
     
     # Run on_submit
     submitting_healthcare_practitioner = frappe.db.get_value(
