@@ -7,7 +7,9 @@
  "engine": "InnoDB",
  "field_order": [
   "id",
-  "qualification"
+  "qualification",
+  "qualificationid_column_break",
+  "physicianqualificationid"
  ],
  "fields": [
   {
@@ -25,11 +27,21 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Qualification"
+  },
+  {
+   "fieldname": "qualificationid_column_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "physicianqualificationid",
+   "fieldtype": "Int",
+   "label": "PhysicianQualificationID",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-01-26 18:43:30.975042",
+ "modified": "2022-06-30 10:53:50.376638",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Physician Qualification",
