@@ -20,6 +20,11 @@
   "claimsserver_url",
   "claimsserver_token",
   "claimsserver_expiry",
+  "section_break_11",
+  "nhifform_url",
+  "nhifform_expiry",
+  "column_break_18",
+  "nhifform_token",
   "section_break_15",
   "update_patient_history",
   "section_break_16",
@@ -139,11 +144,35 @@
    "fieldname": "submit_claim_year",
    "fieldtype": "Int",
    "label": "Submit Claim Year"
+  },
+  {
+   "fieldname": "nhifform_url",
+   "fieldtype": "Data",
+   "label": "NHIF Form URL"
+  },
+  {
+   "fieldname": "nhifform_token",
+   "fieldtype": "Small Text",
+   "label": "NHIF Form Token",
+   "read_only": 1
+  },
+  {
+   "fieldname": "nhifform_expiry",
+   "fieldtype": "Datetime",
+   "label": "NHIF Form Token Expiry"
+  },
+  {
+   "fieldname": "section_break_11",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_18",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-04-01 10:54:38.993905",
+ "modified": "2022-06-20 18:19:59.968996",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Company NHIF Settings",
