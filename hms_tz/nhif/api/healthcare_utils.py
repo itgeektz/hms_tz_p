@@ -793,9 +793,13 @@ def delete_or_cancel_draft_document():
     )
 
     for app_doc in appointments:
-        doc = frappe.get_doc('Patient Appointment', app_doc.name)
-        doc.status = "Cancelled"
-        doc.save(ignore_permissions=True)
+        try:
+            doc = frappe.get_doc('Patient Appointment', app_doc.name)
+            doc.status = "Cancelled"
+            doc.save(ignore_permissions=True)
+
+        except Exception:
+            frappe.log_error(frappe.get_traceback(), str("Error in cancelling draft appointment"))
 
     vital_docs = frappe.db.sql(
         """
@@ -808,27 +812,33 @@ def delete_or_cancel_draft_document():
     )
 
     for vs_doc in vital_docs:
-        doc = frappe.get_doc("Vital Signs", vs_doc.name)
-        doc.delete()
-        frappe.db.commit()
-
-    delivery_documents = frappe.db.sql(
-        """
-        SELECT name FROM `tabDelivery Note` 
-        WHERE docstatus = 0 AND posting_date < '{before_45_days_date}'
-    """.format(
-            before_45_days_date=before_45_days_date
-        ),
-        as_dict=1,
-    )
-
-    for dn_doc in delivery_documents:
-        dn_del = frappe.get_doc("Delivery Note", dn_doc.name)
         try:
-            dn_del.delete()
+            doc = frappe.get_doc("Vital Signs", vs_doc.name)
+            doc.delete()
+        
         except Exception:
-            frappe.log_error(frappe.get_traceback())
+            frappe.log_error(frappe.get_traceback(), str("Error in deleting draft vital signs"))
         frappe.db.commit()
+
+
+    # delivery_documents = frappe.db.sql(
+    #     """
+    #     SELECT name FROM `tabDelivery Note` 
+    #     WHERE docstatus = 0 AND posting_date < '{before_45_days_date}'
+    # """.format(
+    #         before_45_days_date=before_45_days_date
+    #     ),
+    #     as_dict=1,
+    # )
+
+    # for dn_doc in delivery_documents:
+    #     dn_del = frappe.get_doc("Delivery Note", dn_doc.name)
+    #     try:
+    #         dn_del.delete()
+    #     except Exception:
+    #         frappe.log_error(frappe.get_traceback())
+    #     frappe.db.commit()
+
 
 def create_invoiced_items_if_not_created():
     """create pending LRP item(s) after submission of sales invoice"""
