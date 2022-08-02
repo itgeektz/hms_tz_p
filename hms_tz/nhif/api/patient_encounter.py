@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import nowdate, getdate, nowtime, add_to_date
+from frappe.utils import nowdate, getdate, nowtime, add_to_date, cint, add_days
 from hms_tz.nhif.api.healthcare_utils import (
     get_item_rate,
     get_warehouse_from_service_unit,
@@ -22,6 +22,7 @@ from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
     get_income_account,
 )
 import time
+import calendar
 from hms_tz.nhif.api.patient_appointment import get_mop_amount
 from erpnext.accounts.utils import get_balance_on
 
@@ -105,6 +106,19 @@ def on_submit_validation(doc, method):
                 for option in healthcare_doc.company_options:
                     if doc.company == option.company:
                         row.department_hsu = option.service_unit
+            
+            if (
+                child.get("doctype") == "Clinical Procedure Template"
+                and row.doctype == "Procedure Prescription"
+            ):
+                if healthcare_doc.is_inpatient and not doc.inpatient_record:
+                    msgThrow(
+                        _("<h4>This Procedure: <strong>{0}</strong> is allowed for Admitted Patient only</h4>").format(
+                            frappe.bold(row.get(child.get("item")))
+                        ),
+                        method,
+                    )
+
     
     # Run on_submit
     submitting_healthcare_practitioner = frappe.db.get_value(
@@ -118,7 +132,17 @@ def on_submit_validation(doc, method):
     for key, value in child_tables.items():
         table = doc.get(key)
         for row in table:
-            quantity = row.get("quantity") or row.get("no_of_sessions")
+            quantity = 0
+            row_item = row.get("drug_code") or row.get("therapy_type")
+            if row_item:
+                quantity += cint(row.get("quantity")) or cint(row.get("no_of_sessions"))
+            
+                if not quantity:
+                    frappe.throw(_(
+                        "Quantity for Item: {0}, Row: {1} can not be zero".format(
+                        frappe.bold(row_item), frappe.bold(row.idx))
+                    ))
+
             if (
                 (not doc.insurance_subscription)
                 or row.prescribe
@@ -153,6 +177,7 @@ def on_submit_validation(doc, method):
                 )
                 if doc.insurance_subscription:
                     method = old_method
+            
     if prescribed_list:
         msgPrint(
             _(
@@ -261,72 +286,8 @@ def on_submit_validation(doc, method):
                 )
         if coverage_info.maximum_number_of_claims == 0:
             continue
-        # if maximum_number_of_claims is more than 12 it means more times per month. Times will be less than 1
-        times = 12 / coverage_info.maximum_number_of_claims
-        count = 1
-        days = int(times * 30)
-        if times < 0.1:
-            count = 1 / times
-            days = 30
-        if not coverage_info.number_of_claims:
-            lrpt_names_sql = """
-                SELECT hsi.name FROM `tabLab Prescription` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                AND hsi.lab_test_code = "{1}"
-                AND hsi.prescribe = 0
-                AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-                UNION ALL
-                SELECT hsi.name FROM `tabRadiology Procedure Prescription` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                AND hsi.radiology_examination_template = "{1}"
-                AND hsi.prescribe = 0
-                AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-                UNION ALL
-                SELECT hsi.name FROM `tabProcedure Prescription` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                AND hsi.procedure = "{1}"
-                AND hsi.prescribe = 0
-                AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-                UNION ALL
-                SELECT hsi.name FROM `tabTherapy Plan Detail` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                AND hsi.therapy_type = "{1}"
-                AND hsi.prescribe = 0
-                AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-            """.format(
-                insurance_subscription, template, add_to_date(today, days=-days), today
-            )
-            lrpt_names = frappe.db.sql(lrpt_names_sql)
-            lrpt_count = len(lrpt_names) or 0
-            drug_count_sql = """
-                SELECT SUM(quantity) FROM `tabDrug Prescription` hsi
-                INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-                WHERE pe.insurance_subscription = "{0}"
-                AND hsi.drug_code = "{1}"
-                AND hsi.prescribe = 0
-                AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-            """.format(
-                insurance_subscription, template, add_to_date(today, days=-days), today
-            )
-            drug_count = (
-                frappe.db.sql(drug_count_sql, as_dict=0,)[
-                    0
-                ][0]
-                or 0
-            )
-            coverage_info.number_of_claims = lrpt_count + drug_count
-        if coverage_info.number_of_claims > int(count):
-            msgThrow(
-                _(
-                    "Maximum Number of Claims for {0} per year is exceeded within the"
-                    " last {1} days. The allowed count is {2} where as past prescription count is {3}"
-                ).format(template, days, int(count), coverage_info.number_of_claims),
-                method,
-            )
+
+        validate_maximum_number_of_claims_per_month(coverage_info, insurance_subscription, template, today, method)
 
     # Run on_submit
     validate_totals(doc)
@@ -467,7 +428,7 @@ def validate_stock_item(
     if company_option.get("is_not_available"):
         return
 
-    qty = float(qty)
+    qty = float(qty or 0)
     if qty == 0:
         qty = 1
 
@@ -738,7 +699,7 @@ def create_delivery_note_per_encounter(patient_encounter_doc, method):
                 doctype="Delivery Note",
                 posting_date=nowdate(),
                 posting_time=nowtime(),
-                set_warehouse=warehouse,
+                set_warehouse=element,
                 company=patient_encounter_doc.company,
                 customer=encounter_customer,
                 currency=frappe.get_value(
@@ -1128,12 +1089,14 @@ def set_amounts(doc):
     ]
     for child in childs_map:
         for row in doc.get(child.get("table")):
+            if row.amount:
+                continue
+            
             item_rate = 0
             item_code = frappe.get_value(
                 child.get("doctype"), row.get(child.get("item")), "item"
             )
-            if row.amount:
-                continue
+            
             if row.prescribe and not doc.insurance_subscription:
                 if doc.get("mode_of_payment"):
                     mode_of_payment = doc.get("mode_of_payment")
@@ -1148,6 +1111,24 @@ def set_amounts(doc):
                             item_code
                         )
                     )
+            
+            elif row.prescribe and doc.insurance_subscription:
+                price_list = frappe.get_value("Company", doc.company, "default_price_list")
+                if not price_list:
+                    frappe.throw(
+                        _("Please set default price list in company {0}").format(
+                            doc.company
+                        )
+                    )
+                
+                item_rate = get_item_price(item_code, price_list, doc.company)
+                if not item_rate or item_rate == 0:
+                    frappe.throw(
+                        _("Cannot get mode of payment rate for item {0}").format(
+                            item_code
+                        )
+                    )
+
             elif not row.prescribe:
                 item_rate = get_item_rate(
                     item_code,
@@ -1407,9 +1388,7 @@ def show_last_prescribed_for_lrpt(doc):
             if len(item_doc) > 0:
                 date = item_doc[0]["creation"].strftime("%Y-%m-%d")
 
-                msg_print += _(
-                    msg_print
-                    + "{0} prescribed last on: {1}".format(
+                msg_print += _("{0} prescribed last on: {1}".format(
                         frappe.bold(entry.get(child.get("item"))), frappe.bold(date)
                     )
                     + "<br>"
@@ -1439,4 +1418,119 @@ def show_last_prescribed_for_lrpt(doc):
     if msg:
         frappe.msgprint(
             _("The below are the last related Item prescribed:<br><br>" + msg)
+        )
+
+@frappe.whitelist()
+def convert_opd_encounter_to_ipd_encounter(encounter):
+    """Convert an out-patient encounter into list of inpatient encounters.
+
+    This can be used when items for opd encounters needs to be created with inpatient
+    functionality of create pending healthcare services while the encounter
+    does not have inpatient record
+
+    :param of encounter: name of the encounter to be converted to inpatient encounter
+    """
+    
+    doc = frappe.get_doc("Patient Encounter", encounter)
+    if doc.inpatient_record:
+        frappe.msgprint("<p class='text-center font-weight-bold h6' style='background-color: #DCDCDC; font-size: 12pt;'>\
+                This encounter having inpatient record: {0} already".format(
+                frappe.bold(doc.inpatient_record)
+            )
+            + "</p>"
+        )
+        return 
+    
+    inpatient_record, inpatient_status = frappe.get_value('Patient', doc.patient, ['inpatient_record', 'inpatient_status'])
+    if not inpatient_record:
+        inpatient_details_from_encounters = frappe.get_all("Patient Encounter", 
+            filters={'appointment': doc.appointment, 'inpatient_record': ['!=', ""]},
+            fields=['inpatient_record', 'inpatient_status'], page_length=1
+        )
+        if inpatient_details_from_encounters:
+            inpatient_record = inpatient_details_from_encounters[0].inpatient_record
+            inpatient_status = inpatient_details_from_encounters[0].inpatient_status
+
+        if not inpatient_record:
+            frappe.throw("<p class='text-center font-weight-bold h6' style='background-color: #DCDCDC; font-size: 11pt;'>\
+                    Scheduling admission was not done for this patient: {0} of appointment: {1}.".format(
+                    frappe.bold(doc.patient), frappe.bold(doc.appointment)
+                )
+                + "</p>"
+            )
+    
+    doc.inpatient_record = inpatient_record
+    doc.inpatient_status = inpatient_status
+    doc.save(ignore_permissions=True)
+
+    if doc.get('inpatient_record'):
+        frappe.msgprint("<p class='text-center font-weight-bold h6' style='background-color: #DCDCDC; font-size: 11pt;'>\
+            This encounter is now having inpatient record: {0}".format(
+                frappe.bold(doc.get('inpatient_record'))
+            )
+            + "</p>"
+        )
+        doc.reload()
+        return True
+
+
+def validate_maximum_number_of_claims_per_month(coverage_info, insurance_subscription, template, today, method):
+    days = 30
+
+    lrpt_names_sql = """
+        SELECT hsi.name FROM `tabLab Prescription` hsi
+        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+        WHERE pe.insurance_subscription = "{0}"
+        AND hsi.lab_test_code = "{1}"
+        AND hsi.prescribe = 0
+        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+        UNION ALL
+        SELECT hsi.name FROM `tabRadiology Procedure Prescription` hsi
+        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+        WHERE pe.insurance_subscription = "{0}"
+        AND hsi.radiology_examination_template = "{1}"
+        AND hsi.prescribe = 0
+        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+        UNION ALL
+        SELECT hsi.name FROM `tabProcedure Prescription` hsi
+        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+        WHERE pe.insurance_subscription = "{0}"
+        AND hsi.procedure = "{1}"
+        AND hsi.prescribe = 0
+        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+        UNION ALL
+        SELECT hsi.name FROM `tabTherapy Plan Detail` hsi
+        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+        WHERE pe.insurance_subscription = "{0}"
+        AND hsi.therapy_type = "{1}"
+        AND hsi.prescribe = 0
+        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+    """.format(
+        insurance_subscription, template, add_days(today, days=-days), today
+    )
+    lrpt_names = frappe.db.sql(lrpt_names_sql)
+    lrpt_count = len(lrpt_names) or 0
+    
+
+    drug_count_sql = """
+        SELECT SUM(hsi.quantity) FROM `tabDrug Prescription` hsi
+        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
+        WHERE pe.insurance_subscription = "{0}"
+        AND hsi.drug_code = "{1}"
+        AND hsi.prescribe = 0
+        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
+    """.format(
+        insurance_subscription, template, add_days(today, days=-days), today
+    )
+    drug_count = (
+        frappe.db.sql(drug_count_sql, as_dict=0,)[0][0] or 0
+    )
+
+    if (lrpt_count + drug_count) > coverage_info.maximum_number_of_claims:
+        msgThrow(
+            _(
+                "Maximum Number of Claims for {0} per month is exceeded within the"
+                " last {1} days. The allowed count is {2} where as past prescription count is {3}"
+            ).format(template, days,coverage_info.maximum_number_of_claims, coverage_info.number_of_claims),
+            "validate",
         )

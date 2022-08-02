@@ -710,16 +710,8 @@ def msgPrint(msg, method="throw", alert=False):
 def get_approval_number_from_LRPMT(ref_doctype=None, ref_docname=None):
     if not ref_doctype or not ref_docname:
         return None
-    if ref_doctype == "Drug Prescription":
-        approval_number_list = frappe.get_all(
-            "Delivery Note Item",
-            filters={"reference_doctype": ref_doctype, "reference_name": ref_docname},
-            fields=["approval_number"],
-        )
-        if len(approval_number_list) > 0:
-            return approval_number_list[0].approval_number
-    else:
-        return frappe.get_value(ref_doctype, ref_docname, "approval_number")
+
+    return frappe.get_value(ref_doctype, ref_docname, "approval_number")
 
 
 def set_uninvoiced_so_closed():
@@ -801,9 +793,13 @@ def delete_or_cancel_draft_document():
     )
 
     for app_doc in appointments:
-        doc = frappe.get_doc('Patient Appointment', app_doc.name)
-        doc.status = "Cancelled"
-        doc.save(ignore_permissions=True)
+        try:
+            doc = frappe.get_doc('Patient Appointment', app_doc.name)
+            doc.status = "Cancelled"
+            doc.save(ignore_permissions=True)
+
+        except Exception:
+            frappe.log_error(frappe.get_traceback(), str("Error in cancelling draft appointment"))
 
     vital_docs = frappe.db.sql(
         """
@@ -816,27 +812,33 @@ def delete_or_cancel_draft_document():
     )
 
     for vs_doc in vital_docs:
-        doc = frappe.get_doc("Vital Signs", vs_doc.name)
-        doc.delete()
-        frappe.db.commit()
-
-    delivery_documents = frappe.db.sql(
-        """
-        SELECT name FROM `tabDelivery Note` 
-        WHERE docstatus = 0 AND posting_date < '{before_45_days_date}'
-    """.format(
-            before_45_days_date=before_45_days_date
-        ),
-        as_dict=1,
-    )
-
-    for dn_doc in delivery_documents:
-        dn_del = frappe.get_doc("Delivery Note", dn_doc.name)
         try:
-            dn_del.delete()
+            doc = frappe.get_doc("Vital Signs", vs_doc.name)
+            doc.delete()
+        
         except Exception:
-            frappe.log_error(frappe.get_traceback())
+            frappe.log_error(frappe.get_traceback(), str("Error in deleting draft vital signs"))
         frappe.db.commit()
+
+
+    # delivery_documents = frappe.db.sql(
+    #     """
+    #     SELECT name FROM `tabDelivery Note` 
+    #     WHERE docstatus = 0 AND posting_date < '{before_45_days_date}'
+    # """.format(
+    #         before_45_days_date=before_45_days_date
+    #     ),
+    #     as_dict=1,
+    # )
+
+    # for dn_doc in delivery_documents:
+    #     dn_del = frappe.get_doc("Delivery Note", dn_doc.name)
+    #     try:
+    #         dn_del.delete()
+    #     except Exception:
+    #         frappe.log_error(frappe.get_traceback())
+    #     frappe.db.commit()
+
 
 def create_invoiced_items_if_not_created():
     """create pending LRP item(s) after submission of sales invoice"""
