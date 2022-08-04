@@ -114,7 +114,7 @@ class NHIFPatientClaim(Document):
     def set_claim_values(self):
         if not self.folio_id:
             self.folio_id = str(uuid.uuid1())
-        self.facility_code = frappe.get_value(
+        self.facility_code = frappe.get_cached_value(
             "Company NHIF Settings", self.company, "facility_code"
         )
         self.posting_date = nowdate()
@@ -122,7 +122,7 @@ class NHIFPatientClaim(Document):
         self.serial_no = self.folio_no
         self.item_crt_by = get_fullname(frappe.session.user)
         final_patient_encounter = self.final_patient_encounter
-        self.practitioner_no = frappe.get_value(
+        self.practitioner_no = frappe.get_cached_value(
             "Healthcare Practitioner",
             final_patient_encounter.practitioner,
             "tz_mct_code",
@@ -209,7 +209,6 @@ class NHIFPatientClaim(Document):
     def get_patient_encounters(self):
         if not self.hms_tz_claim_appointment_list:
             patient_appointment = self.patient_appointment
-
         else:
             patient_appointment = ["in", json.loads(self.hms_tz_claim_appointment_list)]
 
@@ -219,6 +218,7 @@ class NHIFPatientClaim(Document):
                 "appointment": patient_appointment,
                 "docstatus": 1,
             },
+            fields={"name", "encounter_date"},
             order_by="`creation` ASC",
         )
         return patient_encounters
@@ -398,16 +398,20 @@ class NHIFPatientClaim(Document):
                 if not occupancy.is_confirmed:
                     continue
 
-                service_unit_type = frappe.get_value(
+                service_unit_type = frappe.get_cached_value(
                     "Healthcare Service Unit",
                     occupancy.service_unit,
                     "service_unit_type",
                 )
 
-                (is_service_chargeable, is_consultancy_chargeable) = frappe.get_value(
+                (
+                    is_service_chargeable,
+                    is_consultancy_chargeable,
+                    item_code,
+                ) = frappe.get_cached_value(
                     "Healthcare Service Unit Type",
                     service_unit_type,
-                    ["is_service_chargeable", "is_consultancy_chargeable"],
+                    ["is_service_chargeable", "is_consultancy_chargeable", "item"],
                 )
 
                 # update occupancy object
@@ -424,10 +428,6 @@ class NHIFPatientClaim(Document):
                 if checkin_date not in dates:
                     dates.append(checkin_date)
                     occupancy_list.append(occupancy)
-
-                item_code = frappe.get_value(
-                    "Healthcare Service Unit Type", service_unit_type, "item"
-                )
 
                 item_rate = get_item_rate(
                     item_code,
@@ -483,11 +483,11 @@ class NHIFPatientClaim(Document):
                             new_row.item_crt_by = get_fullname(row_item.modified_by)
                 if occupancy.is_service_chargeable:
                     for encounter in self.patient_encounters:
+                        if str(encounter.encounter_date) != checkin_date:
+                            continue
                         encounter_doc = frappe.get_doc(
                             "Patient Encounter", encounter.name
                         )
-                        if str(encounter_doc.encounter_date) != checkin_date:
-                            continue
                         for child in childs_map:
                             for row in encounter_doc.get(child.get("table")):
                                 if row.prescribe or row.is_cancelled:
@@ -622,8 +622,6 @@ class NHIFPatientClaim(Document):
             entities.DateAdmitted = str(self.date_admitted)
             entities.DateDischarged = str(self.date_discharge)
         entities.PractitionerNo = self.practitioner_no
-        entities.BillNo = self.name
-        entities.DelayReason = self.delayreason
         entities.CreatedBy = self.item_crt_by
         entities.DateCreated = str(self.posting_date)
 
