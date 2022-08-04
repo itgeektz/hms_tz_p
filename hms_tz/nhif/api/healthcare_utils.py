@@ -550,7 +550,7 @@ def set_healthcare_services(doc, checked_values):
 
         else:
             map_obj = childs_map.get(checked_item["dt"])
-            service_item = frappe.get_value(
+            service_item = frappe.get_cached_value(
                 checked_item["dt"],
                 checked_item["dn"],
                 map_obj.get("item"),
@@ -569,7 +569,7 @@ def set_healthcare_services(doc, checked_values):
 def create_individual_lab_test(source_doc, child):
     if child.lab_test_created == 1 or child.is_not_available_inhouse:
         return
-    ltt_doc = frappe.get_doc("Lab Test Template", child.lab_test_code)
+    ltt_doc = frappe.get_cached_doc("Lab Test Template", child.lab_test_code)
     patient_sex = frappe.get_value("Patient", source_doc.patient, "sex")
 
     doc = frappe.new_doc("Lab Test")
@@ -623,7 +623,7 @@ def create_individual_radiology_examination(source_doc, child):
         doc.prescribe = 1
     else:
         doc.insurance_subscription = source_doc.insurance_subscription
-    doc.medical_department = frappe.get_value(
+    doc.medical_department = frappe.get_cached_value(
         "Radiology Examination Template",
         child.radiology_examination_template,
         "medical_department",
@@ -668,7 +668,7 @@ def create_individual_procedure_prescription(source_doc, child):
     else:
         doc.insurance_subscription = source_doc.insurance_subscription
     doc.patient_sex = frappe.get_value("Patient", source_doc.patient, "sex")
-    doc.medical_department = frappe.get_value(
+    doc.medical_department = frappe.get_cached_value(
         "Clinical Procedure Template", child.procedure, "medical_department"
     )
     doc.ref_doctype = source_doc.doctype
@@ -877,7 +877,7 @@ def create_invoiced_items_if_not_created():
                     )
 
                     if child.doctype == "Lab Prescription":
-                        ltt_doc = frappe.get_doc(
+                        ltt_doc = frappe.get_cached_doc(
                             "Lab Test Template", child.lab_test_code
                         )
 
