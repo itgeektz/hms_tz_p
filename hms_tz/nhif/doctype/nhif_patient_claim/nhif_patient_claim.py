@@ -551,6 +551,10 @@ class NHIFPatientClaim(Document):
             patient_appointment_doc = frappe.get_doc(
                 "Patient Appointment", appointment_no
             )
+
+            if patient_appointment_doc.get("appointment_type") in ["Investigation Only", "Medicine Only", "Other Visit"]:
+                continue
+
             if not inpatient_record and not patient_appointment_doc.follow_up:
                 item_code = patient_appointment_doc.billing_item
                 item_rate = get_item_rate(
