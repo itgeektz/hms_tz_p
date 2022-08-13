@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import nowdate, getdate, nowtime, add_to_date, cint, add_days
+from frappe.utils import nowdate, getdate, nowtime, add_to_date, cint, cstr, add_days
 from hms_tz.nhif.api.healthcare_utils import (
     get_item_rate,
     get_warehouse_from_service_unit,
@@ -330,6 +330,9 @@ def duplicate_encounter(encounter):
         "diet_recommendation": "previous_diet_recommendation",
     }
 
+    # Copy the examination detail from previous encounter before clearing it
+    clinical_notes = cstr(encounter_dict["hms_tz_previous_examination_detail"]) + "\n" + cstr(encounter_dict["examination_detail"])
+
     fields_to_clear = [
         "name",
         "owner",
@@ -343,6 +346,7 @@ def duplicate_encounter(encounter):
         "parenttype",
         "sales_invoice",
         "is_not_billable",
+        "examination_detail",
     ]
 
     for key, value in child_tables.items():
@@ -356,6 +360,9 @@ def duplicate_encounter(encounter):
             encounter_dict[value].append(new_row)
         encounter_dict[key] = []
     encounter_dict["duplicated"] = 0
+    
+    encounter_dict["hms_tz_previous_examination_detail"] = clinical_notes
+
     encounter_dict["encounter_type"] = "Ongoing"
     if not encounter_dict.get("reference_encounter"):
         encounter_dict["reference_encounter"] = doc.name
