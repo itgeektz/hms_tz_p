@@ -749,13 +749,25 @@ class NHIFPatientClaim(Document):
 
     def set_clinical_notes(self):
         self.clinical_notes = ""
-        examination_detail, previous_examination_detail = frappe.get_value(
-            "Patient Encounter",
-            self.patient_encounters[-1].name,
-            ["examination_detail", "hms_tz_previous_examination_detail"]
-        )
-
-        self.clinical_notes = previous_examination_detail + examination_detail
+        for patient_encounter in self.patient_encounters:
+            examination_detail = (
+                frappe.get_value(
+                    "Patient Encounter", patient_encounter.name, "examination_detail"
+                )
+                or ""
+            )
+            if not examination_detail:
+                frappe.msgprint(
+                    _(
+                        "Encounter {0} does not have Examination Details defined. Check the encounter.".format(
+                            patient_encounter
+                        )
+                    ),
+                    alert=True,
+                )
+                # return
+            self.clinical_notes += examination_detail or ""
+            self.clinical_notes += "\n"
 
     def before_insert(self):
         if frappe.db.exists(
