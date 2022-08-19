@@ -36,6 +36,7 @@
   "created_by",
   "item_crt_by",
   "column_break_18",
+  "practitioner_name",
   "practitioner_no",
   "date_discharge",
   "date_admitted",
@@ -381,12 +382,20 @@
    "fieldname": "delayreason",
    "fieldtype": "Small Text",
    "label": "DelayReason"
+  },
+  {
+   "fieldname": "practitioner_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Practitioner Name",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2022-07-29 12:42:42.353571",
+ "modified": "2022-08-19 13:14:51.608284",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim",
