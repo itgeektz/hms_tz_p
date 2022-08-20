@@ -1,29 +1,28 @@
 import frappe
+from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 def execute():
-    frappe.get_doc({
-        'doctype': 'Custom Field',
-        'name': 'Delivery Note-hms_tz_phone_no',
-        'dt': 'Delivery Note',
-        'label': 'Phone Number',
-        'fieldname': 'hms_tz_phone_no',
-        'insert_after': 'patient_name',
-        'fieldtype': 'Data',
-        'read_only': 0
-    }).insert(ignore_permissions=True)
-
-    frappe.get_doc({
-        'doctype': 'Custom Field',
-        'name': 'Delivery Note-hms_tz_appointment_no',
-        'dt': 'Delivery Note',
-        'label': 'Appointment Number',
-        'fieldname': 'hms_tz_appointment_no',
-        'insert_after': 'coverage_plan_name',
-        'fieldtype': 'Data',
-        'fetch_from': 'reference_name.appointment',
-        'fetch_if_empty': 1,
-        'read_only': 1
-    }).insert(ignore_permissions=True)
+    fields = {
+        "Delivery Note": [
+            dict(
+                fieldname='hms_tz_phone_no',
+                fieldtype='Data',
+                label='Phone Number',
+                insert_after='patient_name',
+                read_only=1
+            ),
+            dict(
+                fieldname="hms_tz_appointment_no",
+                fieldtype="Data",
+                label="Appointment Number",
+                insert_after="coverage_plan_name",
+                fetch_from="reference_name.appointment",
+                fetch_if_empty=1,
+                read_only=1
+            )
+        ]
+    }
+    create_custom_fields(fields, update=True)
 
     practitioner = frappe.get_doc('Custom Field', 'Delivery Note-healthcare_practitioner')
     practitioner.insert_after = 'healthcare_service_unit'
