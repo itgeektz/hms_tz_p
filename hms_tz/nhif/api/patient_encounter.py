@@ -346,7 +346,6 @@ def duplicate_encounter(encounter):
         "parenttype",
         "sales_invoice",
         "is_not_billable",
-        "examination_detail",
     ]
 
     for key, value in child_tables.items():
@@ -360,7 +359,7 @@ def duplicate_encounter(encounter):
             encounter_dict[value].append(new_row)
         encounter_dict[key] = []
     encounter_dict["duplicated"] = 0
-    
+    encounter_dict["examination_detail"] = ""
     encounter_dict["hms_tz_previous_examination_detail"] = clinical_notes
 
     encounter_dict["encounter_type"] = "Ongoing"
