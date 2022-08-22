@@ -127,12 +127,20 @@ class NHIFPatientClaim(Document):
             final_patient_encounter.practitioner,
             ["practitioner_name", "tz_mct_code"],
         )
-        if not practitioner_name or not practitioner_no:
+        if not practitioner_name:
             frappe.throw(
-                _("There is no Practitioner Name or TZ MCT Code for Practitioner {0}").format(
+                _("There is no Practitioner Name for Practitioner {0}").format(
                     final_patient_encounter.practitioner
                 )
             )
+            
+        if not practitioner_no:
+            frappe.throw(
+                _("There is no TZ MCT Code for Practitioner {0}").format(
+                    final_patient_encounter.practitioner
+                )
+            )
+
         self.practitioner_name = practitioner_name
         self.practitioner_no = practitioner_no
         inpatient_record = final_patient_encounter.inpatient_record
@@ -680,7 +688,7 @@ class NHIFPatientClaim(Document):
 
             if r.status_code != 200:
                 if (
-                    r
+                    str(r)
                     and r.status_code == 500
                     and "A claim with Similar Authorization No. already exists"
                     in r.text
@@ -690,7 +698,7 @@ class NHIFPatientClaim(Document):
                         + str(get_datetime())
                     )
                 elif (
-                    r
+                    str(r)
                     and r.status_code == 406
                     and "Folio Number {0} has already been submited.".format(
                         self.folio_no
@@ -727,9 +735,9 @@ class NHIFPatientClaim(Document):
                 request_url=url,
                 request_header=headers,
                 request_body=json_data,
-                response_data=(r.text if r.text else "NO RESPONSE r. Timeout???")
+                response_data=(r.text if str(r) or r.text  else "NO RESPONSE r. Timeout???")
                 or "NO TEXT",
-                status_code=(r.status_code if r.status_code else "NO RESPONSE r. Timeout???")
+                status_code=(r.status_code if str(r) or r.status_code else "NO RESPONSE r. Timeout???")
                 or "NO STATUS CODE",
             )
             frappe.throw(
