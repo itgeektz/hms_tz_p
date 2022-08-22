@@ -7,6 +7,9 @@ def execute():
         "insurance_subscription": ["!=", ""], "encounter_date": [">=", "2022-05-01"], "docstatus": 1
     }, fields=["name"], pluck="name", order_by="encounter_date")
 
+    if not patient_encounters:
+        return 
+    
     for encounter in patient_encounters:
         doc = frappe.get_doc("Patient Encounter", encounter)
 

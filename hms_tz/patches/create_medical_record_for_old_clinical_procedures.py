@@ -7,6 +7,9 @@ def execute():
         order_by='start_date', pluck='name'
     )
 
+    if not procedures:
+        return
+
     medical_records = frappe.get_all('Patient Medical Record', filters={
         'reference_doctype': 'Clinical Procedure'}, fields=['reference_name'],
         order_by='communication_date', pluck='reference_name'
