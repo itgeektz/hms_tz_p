@@ -9,7 +9,9 @@ def execute(filters=None):
 		return
 
 	columns = get_columns()
-	data = get_data(filters)
+	records = get_data(filters)
+
+	data = sorted(records, key = lambda x: (x["appointment_date"], x["patient"], x["authorization_number"]))
 		
 	return columns, data
 
@@ -19,6 +21,7 @@ def get_columns():
 		{"fieldname": "patient", "label": _("Patient"), "fieldtype": "Data"},
 		{"fieldname": "patient_name", "label": _("Patient Name"), "fieldtype": "Data"},
 		{"fieldname": "appointment_no", "label": _("AppointmentNo"), "fieldtype": "Data"},
+		{"fieldname": "authorization_number", "label": _("AuthorizationNo"), "fieldtype": "Data"},
 		{"fieldname": "appointment_status", "label": _("Appointment Status"), "fieldtype": "Data"},
 		{"fieldname": "encounter", "label": _("Last Encounter"), "fieldtype": "Data"},
 		{"fieldname": "encounter_status", "label": _("Status of Last Encounter"), "fieldtype": "Data"},
@@ -54,6 +57,7 @@ def get_data(filters):
 					"patient": d["patient"],
 					"patient_name": d["patient_name"],
 					"appointment_no": d["appointment_no"],
+					"authorization_number": d["authorization_number"],
 					"appointment_status": d["appointment_status"],
 					"encounter": d["encounter"] or "",
 					"encounter_status": d["encounter_status"] or "",
@@ -68,6 +72,7 @@ def get_data(filters):
 				"patient": d["patient"],
 				"patient_name": d["patient_name"],
 				"appointment_no": d["appointment_no"],
+				"authorization_number": d["authorization_number"],
 				"appointment_status": d["appointment_status"],
 				"encounter": d["encounter"] or "",
 				"encounter_status": d["encounter_status"] or "",
@@ -125,7 +130,7 @@ def get_appointment_details(filters):
 	conditions = get_conditions(filters)
 	
 	appointments = frappe.get_all("Patient Appointment", filters=conditions,
-		fields=["name", "patient", "patient_name", "appointment_date", "status"], order_by="appointment_date"
+		fields=["name", "patient", "patient_name", "appointment_date", "status", "authorization_number"], order_by="appointment_date"
 	)
 	if not appointments:
 		frappe.throw("No Appointment(s) Found for the filters: #{0}, #{1} and #{2}".format(
@@ -141,6 +146,7 @@ def get_appointment_details(filters):
 			"patient": pa["patient"],
 			"patient_name": pa["patient_name"],
 			"appointment_no": pa["name"],
+			"authorization_number": pa["authorization_number"],
 			"appointment_status": pa["status"]
 		})
 	
