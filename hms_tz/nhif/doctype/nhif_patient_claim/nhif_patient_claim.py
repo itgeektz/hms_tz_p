@@ -121,18 +121,28 @@ class NHIFPatientClaim(Document):
         self.folio_no = int(self.name[-9:])
         self.serial_no = self.folio_no
         self.item_crt_by = get_fullname(frappe.session.user)
-        final_patient_encounter = self.final_patient_encounter
-        self.practitioner_no = frappe.get_cached_value(
+        final_patient_encounter = self.final_patient_encounter        
+        practitioner_name, practitioner_no = frappe.get_cached_value(
             "Healthcare Practitioner",
             final_patient_encounter.practitioner,
-            "tz_mct_code",
+            ["practitioner_name", "tz_mct_code"],
         )
-        if not self.practitioner_no:
+        if not practitioner_name:
             frappe.throw(
-                _("There no TZ MCT Code for Practitioner {0}").format(
+                _("There is no Practitioner Name for Practitioner {0}").format(
                     final_patient_encounter.practitioner
                 )
             )
+            
+        if not practitioner_no:
+            frappe.throw(
+                _("There is no TZ MCT Code for Practitioner {0}").format(
+                    final_patient_encounter.practitioner
+                )
+            )
+
+        self.practitioner_name = practitioner_name
+        self.practitioner_no = practitioner_no
         inpatient_record = final_patient_encounter.inpatient_record
         self.inpatient_record = inpatient_record
         # Reset values for every validate
@@ -625,6 +635,7 @@ class NHIFPatientClaim(Document):
         if self.patient_type_code == "IN":
             entities.DateAdmitted = str(self.date_admitted)
             entities.DateDischarged = str(self.date_discharge)
+        entities.PractitionerName = self.practitioner_name
         entities.PractitionerNo = self.practitioner_no
         entities.CreatedBy = self.item_crt_by
         entities.DateCreated = str(self.posting_date)
@@ -677,7 +688,7 @@ class NHIFPatientClaim(Document):
 
             if r.status_code != 200:
                 if (
-                    r
+                    str(r)
                     and r.status_code == 500
                     and "A claim with Similar Authorization No. already exists"
                     in r.text
@@ -687,7 +698,7 @@ class NHIFPatientClaim(Document):
                         + str(get_datetime())
                     )
                 elif (
-                    r
+                    str(r)
                     and r.status_code == 406
                     and "Folio Number {0} has already been submited.".format(
                         self.folio_no
@@ -724,9 +735,9 @@ class NHIFPatientClaim(Document):
                 request_url=url,
                 request_header=headers,
                 request_body=json_data,
-                response_data=(r.text if r else "NO RESPONSE r. Timeout???")
+                response_data=(r.text if str(r) or r.text  else "NO RESPONSE r. Timeout???")
                 or "NO TEXT",
-                status_code=(r.status_code if r else "NO RESPONSE r. Timeout???")
+                status_code=(r.status_code if str(r) or r.status_code else "NO RESPONSE r. Timeout???")
                 or "NO STATUS CODE",
             )
             frappe.throw(
