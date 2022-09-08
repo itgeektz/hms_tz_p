@@ -68,7 +68,7 @@ frappe.ui.form.on('Lab Test', {
 		if (frm.doc.docstatus === 1 && frm.doc.sms_sent === 0 && frm.doc.status !== 'Rejected') {
 			frm.add_custom_button(__('Send SMS'), function () {
 				frappe.call({
-					method: 'erpnext.healthcare.doctype.healthcare_settings.healthcare_settings.get_sms_text',
+					method: 'healthcare.healthcare.doctype.healthcare_settings.healthcare_settings.get_sms_text',
 					args: { doc: frm.doc.name },
 					callback: function (r) {
 						if (!r.exc) {

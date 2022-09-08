@@ -8,7 +8,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, nowdate, nowtime, cstr, to_timedelta
 import datetime
-from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
+from healthcare.healthcare.doctype.healthcare_settings.healthcare_settings import (
     get_account,
 )
 from hms_tz.hms_tz.doctype.lab_test.lab_test import create_sample_doc

@@ -17,7 +17,7 @@ from hms_tz.nhif.api.healthcare_utils import (
     msgPrint,
     get_template_company_option,
 )
-from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
+from healthcare.healthcare.doctype.healthcare_settings.healthcare_settings import (
     get_receivable_account,
     get_income_account,
 )

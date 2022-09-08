@@ -8,8 +8,8 @@ import frappe
 from frappe import _
 from frappe.utils.formatters import format_value
 from frappe.utils import time_diff_in_hours, rounded, getdate, nowdate
-from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import get_income_account
-from erpnext.healthcare.doctype.fee_validity.fee_validity import create_fee_validity
+from healthcare.healthcare.doctype.healthcare_settings.healthcare_settings import get_income_account
+from healthcare.healthcare.doctype.fee_validity.fee_validity import create_fee_validity
 from hms_tz.hms_tz.doctype.lab_test.lab_test import create_multiple
 
 
