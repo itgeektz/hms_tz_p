@@ -762,10 +762,13 @@ def get_template_company_option(template=None, company=None):
         )
         return doc
     else:
-        frappe.throw(_("No company option found for template: {0} and company: {1}".format(
-            frappe.bold(template),
-            frappe.bold(company)
-        )))
+        frappe.throw(
+            _(
+                "No company option found for template: {0} and company: {1}".format(
+                    frappe.bold(template), frappe.bold(company)
+                )
+            )
+        )
 
 
 def delete_or_cancel_draft_document():

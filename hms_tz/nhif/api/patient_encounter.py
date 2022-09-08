@@ -98,7 +98,6 @@ def on_submit_validation(doc, method):
                     method,
                 )
 
-
             if (
                 child.get("doctype") != "Medication"
                 and row.doctype != "Drug Prescription"
@@ -106,20 +105,19 @@ def on_submit_validation(doc, method):
                 for option in healthcare_doc.company_options:
                     if doc.company == option.company:
                         row.department_hsu = option.service_unit
-            
+
             if (
                 child.get("doctype") == "Clinical Procedure Template"
                 and row.doctype == "Procedure Prescription"
             ):
                 if healthcare_doc.is_inpatient and not doc.inpatient_record:
                     msgThrow(
-                        _("<h4>This Procedure: <strong>{0}</strong> is allowed for Admitted Patient only</h4>").format(
-                            frappe.bold(row.get(child.get("item")))
-                        ),
+                        _(
+                            "<h4>This Procedure: <strong>{0}</strong> is allowed for Admitted Patient only</h4>"
+                        ).format(frappe.bold(row.get(child.get("item")))),
                         method,
                     )
 
-    
     # Run on_submit
     submitting_healthcare_practitioner = frappe.db.get_value(
         "Healthcare Practitioner", {"user_id": frappe.session.user}, ["name"]
@@ -136,12 +134,15 @@ def on_submit_validation(doc, method):
             row_item = row.get("drug_code") or row.get("therapy_type")
             if row_item:
                 quantity += cint(row.get("quantity")) or cint(row.get("no_of_sessions"))
-            
+
                 if not quantity:
-                    frappe.throw(_(
-                        "Quantity for Item: {0}, Row: {1} can not be zero".format(
-                        frappe.bold(row_item), frappe.bold(row.idx))
-                    ))
+                    frappe.throw(
+                        _(
+                            "Quantity for Item: {0}, Row: {1} can not be zero".format(
+                                frappe.bold(row_item), frappe.bold(row.idx)
+                            )
+                        )
+                    )
 
             if (
                 (not doc.insurance_subscription)
@@ -167,7 +168,7 @@ def on_submit_validation(doc, method):
             if not row.is_not_available_inhouse:
                 if doc.insurance_subscription:
                     old_method = method
-                    method='validate'
+                    method = "validate"
                 validate_stock_item(
                     row.get(value),
                     quantity,
@@ -177,7 +178,7 @@ def on_submit_validation(doc, method):
                 )
                 if doc.insurance_subscription:
                     method = old_method
-            
+
     if prescribed_list:
         msgPrint(
             _(
@@ -200,7 +201,6 @@ def on_submit_validation(doc, method):
             ),
             method,
         )
-
 
     insurance_subscription = doc.insurance_subscription
 
@@ -287,7 +287,9 @@ def on_submit_validation(doc, method):
         if coverage_info.maximum_number_of_claims == 0:
             continue
 
-        validate_maximum_number_of_claims_per_month(coverage_info, insurance_subscription, template, today, method)
+        validate_maximum_number_of_claims_per_month(
+            coverage_info, insurance_subscription, template, today, method
+        )
 
     # Run on_submit
     validate_totals(doc)
@@ -331,7 +333,11 @@ def duplicate_encounter(encounter):
     }
 
     # Copy the examination detail from previous encounter before clearing it
-    clinical_notes = cstr(encounter_dict["hms_tz_previous_examination_detail"]) + "\n" + cstr(encounter_dict["examination_detail"])
+    clinical_notes = (
+        cstr(encounter_dict["hms_tz_previous_examination_detail"])
+        + "\n"
+        + cstr(encounter_dict["examination_detail"])
+    )
 
     fields_to_clear = [
         "name",
@@ -1097,12 +1103,12 @@ def set_amounts(doc):
         for row in doc.get(child.get("table")):
             if row.amount:
                 continue
-            
+
             item_rate = 0
             item_code = frappe.get_value(
                 child.get("doctype"), row.get(child.get("item")), "item"
             )
-            
+
             if row.prescribe and not doc.insurance_subscription:
                 if doc.get("mode_of_payment"):
                     mode_of_payment = doc.get("mode_of_payment")
@@ -1117,16 +1123,18 @@ def set_amounts(doc):
                             item_code
                         )
                     )
-            
+
             elif row.prescribe and doc.insurance_subscription:
-                price_list = frappe.get_value("Company", doc.company, "default_price_list")
+                price_list = frappe.get_value(
+                    "Company", doc.company, "default_price_list"
+                )
                 if not price_list:
                     frappe.throw(
                         _("Please set default price list in company {0}").format(
                             doc.company
                         )
                     )
-                
+
                 item_rate = get_item_price(item_code, price_list, doc.company)
                 if not item_rate or item_rate == 0:
                     frappe.throw(
@@ -1394,7 +1402,8 @@ def show_last_prescribed_for_lrpt(doc):
             if len(item_doc) > 0:
                 date = item_doc[0]["creation"].strftime("%Y-%m-%d")
 
-                msg_print += _("{0} prescribed last on: {1}".format(
+                msg_print += _(
+                    "{0} prescribed last on: {1}".format(
                         frappe.bold(entry.get(child.get("item"))), frappe.bold(date)
                     )
                     + "<br>"
@@ -1426,6 +1435,7 @@ def show_last_prescribed_for_lrpt(doc):
             _("The below are the last related Item prescribed:<br><br>" + msg)
         )
 
+
 @frappe.whitelist()
 def convert_opd_encounter_to_ipd_encounter(encounter):
     """Convert an out-patient encounter into list of inpatient encounters.
@@ -1436,43 +1446,50 @@ def convert_opd_encounter_to_ipd_encounter(encounter):
 
     :param of encounter: name of the encounter to be converted to inpatient encounter
     """
-    
+
     doc = frappe.get_doc("Patient Encounter", encounter)
     if doc.inpatient_record:
-        frappe.msgprint("<p class='text-center font-weight-bold h6' style='background-color: #DCDCDC; font-size: 12pt;'>\
+        frappe.msgprint(
+            "<p class='text-center font-weight-bold h6' style='background-color: #DCDCDC; font-size: 12pt;'>\
                 This encounter having inpatient record: {0} already".format(
                 frappe.bold(doc.inpatient_record)
             )
             + "</p>"
         )
-        return 
-    
-    inpatient_record, inpatient_status = frappe.get_value('Patient', doc.patient, ['inpatient_record', 'inpatient_status'])
+        return
+
+    inpatient_record, inpatient_status = frappe.get_value(
+        "Patient", doc.patient, ["inpatient_record", "inpatient_status"]
+    )
     if not inpatient_record:
-        inpatient_details_from_encounters = frappe.get_all("Patient Encounter", 
-            filters={'appointment': doc.appointment, 'inpatient_record': ['!=', ""]},
-            fields=['inpatient_record', 'inpatient_status'], page_length=1
+        inpatient_details_from_encounters = frappe.get_all(
+            "Patient Encounter",
+            filters={"appointment": doc.appointment, "inpatient_record": ["!=", ""]},
+            fields=["inpatient_record", "inpatient_status"],
+            page_length=1,
         )
         if inpatient_details_from_encounters:
             inpatient_record = inpatient_details_from_encounters[0].inpatient_record
             inpatient_status = inpatient_details_from_encounters[0].inpatient_status
 
         if not inpatient_record:
-            frappe.throw("<p class='text-center font-weight-bold h6' style='background-color: #DCDCDC; font-size: 11pt;'>\
+            frappe.throw(
+                "<p class='text-center font-weight-bold h6' style='background-color: #DCDCDC; font-size: 11pt;'>\
                     Scheduling admission was not done for this patient: {0} of appointment: {1}.".format(
                     frappe.bold(doc.patient), frappe.bold(doc.appointment)
                 )
                 + "</p>"
             )
-    
+
     doc.inpatient_record = inpatient_record
     doc.inpatient_status = inpatient_status
     doc.save(ignore_permissions=True)
 
-    if doc.get('inpatient_record'):
-        frappe.msgprint("<p class='text-center font-weight-bold h6' style='background-color: #DCDCDC; font-size: 11pt;'>\
+    if doc.get("inpatient_record"):
+        frappe.msgprint(
+            "<p class='text-center font-weight-bold h6' style='background-color: #DCDCDC; font-size: 11pt;'>\
             This encounter is now having inpatient record: {0}".format(
-                frappe.bold(doc.get('inpatient_record'))
+                frappe.bold(doc.get("inpatient_record"))
             )
             + "</p>"
         )
@@ -1480,7 +1497,9 @@ def convert_opd_encounter_to_ipd_encounter(encounter):
         return True
 
 
-def validate_maximum_number_of_claims_per_month(coverage_info, insurance_subscription, template, today, method):
+def validate_maximum_number_of_claims_per_month(
+    coverage_info, insurance_subscription, template, today, method
+):
     days = 30
 
     lrpt_names_sql = """
@@ -1516,7 +1535,6 @@ def validate_maximum_number_of_claims_per_month(coverage_info, insurance_subscri
     )
     lrpt_names = frappe.db.sql(lrpt_names_sql)
     lrpt_count = len(lrpt_names) or 0
-    
 
     drug_count_sql = """
         SELECT SUM(hsi.quantity) FROM `tabDrug Prescription` hsi
@@ -1529,7 +1547,10 @@ def validate_maximum_number_of_claims_per_month(coverage_info, insurance_subscri
         insurance_subscription, template, add_days(today, days=-days), today
     )
     drug_count = (
-        frappe.db.sql(drug_count_sql, as_dict=0,)[0][0] or 0
+        frappe.db.sql(drug_count_sql, as_dict=0,)[
+            0
+        ][0]
+        or 0
     )
 
     if (lrpt_count + drug_count) > coverage_info.maximum_number_of_claims:
@@ -1537,6 +1558,11 @@ def validate_maximum_number_of_claims_per_month(coverage_info, insurance_subscri
             _(
                 "Maximum Number of Claims for {0} per month is exceeded within the"
                 " last {1} days. The allowed count is {2} where as past prescription count is {3}"
-            ).format(template, days,coverage_info.maximum_number_of_claims, coverage_info.number_of_claims),
+            ).format(
+                template,
+                days,
+                coverage_info.maximum_number_of_claims,
+                coverage_info.number_of_claims,
+            ),
             "validate",
         )

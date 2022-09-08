@@ -14,15 +14,15 @@ class NHIFProduct(Document):
 def add_product(id, name=None):
     if not id:
         return
-    if frappe.db.exists('NHIF Product', id):
+    if frappe.db.exists("NHIF Product", id):
         if name and name != "null":
-            doc = frappe.get_doc('NHIF Product', id)
+            doc = frappe.get_doc("NHIF Product", id)
             if not doc.product_name:
                 doc.product_name = name
                 doc.save(ignore_permissions=True)
                 frappe.db.commit()
     else:
-        doc = frappe.new_doc('NHIF Product')
+        doc = frappe.new_doc("NHIF Product")
         doc.product_id = id
         if name and name != "null":
             doc.product_name = name

@@ -7,223 +7,288 @@ from frappe import _
 from frappe.utils import cint, flt
 from erpnext.accounts.utils import get_balance_on
 
+
 def execute(filters=None):
-	if not filters:
-		return 
-	
-	columns = get_columns(filters)
+    if not filters:
+        return
 
-	data =  []
-	details = frappe.get_all(
-		"Patient Appointment",
-		filters=[["patient", "=", filters.patient], ["name", "=", filters.patient_appointment]],
-		fields=[
-			"docstatus", "status",
-		]
-	)
+    columns = get_columns(filters)
 
-	if (details[0]["docstatus"] == 0 and details[0]["status"] != "Closed"):
-		frappe.throw(frappe.bold("This Appointment is not Closed..!!"))
-	
-	else:
-		if not filters.get('patient_type'):
-			appointments_data = get_appointment_consultancy(filters)
-			if appointments_data: data += appointments_data
+    data = []
+    details = frappe.get_all(
+        "Patient Appointment",
+        filters=[
+            ["patient", "=", filters.patient],
+            ["name", "=", filters.patient_appointment],
+        ],
+        fields=[
+            "docstatus",
+            "status",
+        ],
+    )
 
-			cash_lrpmt_data = get_cash_lrpmt_transaction(filters)
-			if cash_lrpmt_data: data += cash_lrpmt_data
+    if details[0]["docstatus"] == 0 and details[0]["status"] != "Closed":
+        frappe.throw(frappe.bold("This Appointment is not Closed..!!"))
 
-			insurance_lrpmt_data = get_insurance_lrpmt_transaction(filters)
-			if insurance_lrpmt_data: data += insurance_lrpmt_data
-			
-			ipd_beds = get_ipd_occupancy_transactions(filters)
-			if ipd_beds: data += ipd_beds
+    else:
+        if not filters.get("patient_type"):
+            appointments_data = get_appointment_consultancy(filters)
+            if appointments_data:
+                data += appointments_data
 
-			ipd_cons = get_ipd_consultancy_transactions(filters)
-			if ipd_cons: data += ipd_cons
+            cash_lrpmt_data = get_cash_lrpmt_transaction(filters)
+            if cash_lrpmt_data:
+                data += cash_lrpmt_data
 
-			data = sorted(data, key=lambda d: d['date'])
+            insurance_lrpmt_data = get_insurance_lrpmt_transaction(filters)
+            if insurance_lrpmt_data:
+                data += insurance_lrpmt_data
 
-			if not data:
-				frappe.throw("No Record found for the filters Patient: {0}, Appointment: {1},\
+            ipd_beds = get_ipd_occupancy_transactions(filters)
+            if ipd_beds:
+                data += ipd_beds
+
+            ipd_cons = get_ipd_consultancy_transactions(filters)
+            if ipd_cons:
+                data += ipd_cons
+
+            data = sorted(data, key=lambda d: d["date"])
+
+            if not data:
+                frappe.throw(
+                    "No Record found for the filters Patient: {0}, Appointment: {1},\
 					Patient Type: {2} From Date: {3} and To Date: {4} you specified..., \
 					Please change your filters and try again..!!".format(
-						frappe.bold(filters.patient),
-						frappe.bold(filters.patient_appointment),
-						frappe.bold(filters.patient_type),
-						frappe.bold(filters.from_date),
-						frappe.bold(filters.to_date)
-					)
-				)
+                        frappe.bold(filters.patient),
+                        frappe.bold(filters.patient_appointment),
+                        frappe.bold(filters.patient_type),
+                        frappe.bold(filters.from_date),
+                        frappe.bold(filters.to_date),
+                    )
+                )
 
-			total_amount = 0
-			for n in range(0, len(data)):
-				total_amount += data[n]["amount"]
+            total_amount = 0
+            for n in range(0, len(data)):
+                total_amount += data[n]["amount"]
 
-			last_row = {"date": "Total", "category": "", "description": "", "quantity": "", "rate": "", "amount": total_amount, "patient": "",
-				"patient_name": "", "appointment_type": "", "insurance_company": "", "coverage_plan_name": "", "authorization_number": "", 
-				"coverage_plan_card_number": "", "admitted_date": "", "discharge_date": ""
-			}
+            last_row = {
+                "date": "Total",
+                "category": "",
+                "description": "",
+                "quantity": "",
+                "rate": "",
+                "amount": total_amount,
+                "patient": "",
+                "patient_name": "",
+                "appointment_type": "",
+                "insurance_company": "",
+                "coverage_plan_name": "",
+                "authorization_number": "",
+                "coverage_plan_card_number": "",
+                "admitted_date": "",
+                "discharge_date": "",
+            }
 
-			print_person = frappe.get_value("User", frappe.session.user, "full_name")
+            print_person = frappe.get_value("User", frappe.session.user, "full_name")
 
-			last_row["printed_by"] = print_person
-			
-			data.append(last_row)
+            last_row["printed_by"] = print_person
 
-			return columns, data
-		
-		if filters.get('patient_type') == 'Out-Patient':
-			appointments_data = get_appointment_consultancy(filters)
-			if appointments_data: data += appointments_data
+            data.append(last_row)
 
-			cash_lrpmt_data = get_cash_lrpmt_transaction(filters)
-			if cash_lrpmt_data: data += cash_lrpmt_data
+            return columns, data
 
-			insurance_lrpmt_data = get_insurance_lrpmt_transaction(filters)
-			if insurance_lrpmt_data: data += insurance_lrpmt_data
+        if filters.get("patient_type") == "Out-Patient":
+            appointments_data = get_appointment_consultancy(filters)
+            if appointments_data:
+                data += appointments_data
 
-			data = sorted(data, key=lambda d: d['date'])
+            cash_lrpmt_data = get_cash_lrpmt_transaction(filters)
+            if cash_lrpmt_data:
+                data += cash_lrpmt_data
 
-			if not data:
-				frappe.throw("No Record found for the filters Patient: {0}, Appointment: {1},\
+            insurance_lrpmt_data = get_insurance_lrpmt_transaction(filters)
+            if insurance_lrpmt_data:
+                data += insurance_lrpmt_data
+
+            data = sorted(data, key=lambda d: d["date"])
+
+            if not data:
+                frappe.throw(
+                    "No Record found for the filters Patient: {0}, Appointment: {1},\
 					Patient Type: {2} From Date: {3} and To Date: {4} you specified..., \
 					Please change your filters and try again..!!".format(
-						frappe.bold(filters.patient),
-						frappe.bold(filters.patient_appointment),
-						frappe.bold(filters.patient_type),
-						frappe.bold(filters.from_date),
-						frappe.bold(filters.to_date)
-					)
-				)
+                        frappe.bold(filters.patient),
+                        frappe.bold(filters.patient_appointment),
+                        frappe.bold(filters.patient_type),
+                        frappe.bold(filters.from_date),
+                        frappe.bold(filters.to_date),
+                    )
+                )
 
-			total_amount = 0
-			for n in range(0, len(data)):
-				total_amount += data[n]["amount"]
+            total_amount = 0
+            for n in range(0, len(data)):
+                total_amount += data[n]["amount"]
 
-			last_row = {"date": "Total", "category": "", "description": "", "quantity": "", "rate": "", "amount": total_amount, "patient": "",
-				"patient_name": "", "appointment_type": "", "insurance_company": "", "coverage_plan_name": "", "authorization_number": "", 
-				"coverage_plan_card_number": "", "admitted_date": "", "discharge_date": ""
-			}
+            last_row = {
+                "date": "Total",
+                "category": "",
+                "description": "",
+                "quantity": "",
+                "rate": "",
+                "amount": total_amount,
+                "patient": "",
+                "patient_name": "",
+                "appointment_type": "",
+                "insurance_company": "",
+                "coverage_plan_name": "",
+                "authorization_number": "",
+                "coverage_plan_card_number": "",
+                "admitted_date": "",
+                "discharge_date": "",
+            }
 
-			print_person = frappe.get_value("User", frappe.session.user, "full_name")
+            print_person = frappe.get_value("User", frappe.session.user, "full_name")
 
-			last_row["printed_by"] = print_person
-			
-			data.append(last_row)
+            last_row["printed_by"] = print_person
 
-			return columns, data
-		
-		if filters.get('patient_type') == 'In-Patient':
-			cash_lrpmt_data = get_cash_lrpmt_transaction(filters)
-			if cash_lrpmt_data: data += cash_lrpmt_data
+            data.append(last_row)
 
-			insurance_lrpmt_data = get_insurance_lrpmt_transaction(filters)
-			if insurance_lrpmt_data: data += insurance_lrpmt_data
-			
-			ipd_beds = get_ipd_occupancy_transactions(filters)
-			if ipd_beds: data += ipd_beds
+            return columns, data
 
-			ipd_cons = get_ipd_consultancy_transactions(filters)
-			if ipd_cons: data += ipd_cons
+        if filters.get("patient_type") == "In-Patient":
+            cash_lrpmt_data = get_cash_lrpmt_transaction(filters)
+            if cash_lrpmt_data:
+                data += cash_lrpmt_data
 
-			data = sorted(data, key=lambda d: d['date'])
-			if not data:
-				frappe.throw("No Record found for the filters Patient: {0}, Appointment: {1},\
+            insurance_lrpmt_data = get_insurance_lrpmt_transaction(filters)
+            if insurance_lrpmt_data:
+                data += insurance_lrpmt_data
+
+            ipd_beds = get_ipd_occupancy_transactions(filters)
+            if ipd_beds:
+                data += ipd_beds
+
+            ipd_cons = get_ipd_consultancy_transactions(filters)
+            if ipd_cons:
+                data += ipd_cons
+
+            data = sorted(data, key=lambda d: d["date"])
+            if not data:
+                frappe.throw(
+                    "No Record found for the filters Patient: {0}, Appointment: {1},\
 					Patient Type: {2} From Date: {3} and To Date: {4} you specified..., \
 					Please change your filters and try again..!!".format(
-						frappe.bold(filters.patient),
-						frappe.bold(filters.patient_appointment),
-						frappe.bold(filters.patient_type),
-						frappe.bold(filters.from_date),
-						frappe.bold(filters.to_date)
-					)
-				)
+                        frappe.bold(filters.patient),
+                        frappe.bold(filters.patient_appointment),
+                        frappe.bold(filters.patient_type),
+                        frappe.bold(filters.from_date),
+                        frappe.bold(filters.to_date),
+                    )
+                )
 
-			total_amount = 0
-			for n in range(0, len(data)):
-				total_amount += data[n]["amount"]
+            total_amount = 0
+            for n in range(0, len(data)):
+                total_amount += data[n]["amount"]
 
-			last_row = {"date": "Total", "category": "", "description": "", "quantity": "", "rate": "", "amount": total_amount, "patient": "",
-				"patient_name": "", "appointment_type": "", "insurance_company": "", "coverage_plan_name": "", "authorization_number": "", 
-				"coverage_plan_card_number": "", "admitted_date": "", "discharge_date": ""
-			}
+            last_row = {
+                "date": "Total",
+                "category": "",
+                "description": "",
+                "quantity": "",
+                "rate": "",
+                "amount": total_amount,
+                "patient": "",
+                "patient_name": "",
+                "appointment_type": "",
+                "insurance_company": "",
+                "coverage_plan_name": "",
+                "authorization_number": "",
+                "coverage_plan_card_number": "",
+                "admitted_date": "",
+                "discharge_date": "",
+            }
 
-			print_person = frappe.get_value("User", frappe.session.user, "full_name")
+            print_person = frappe.get_value("User", frappe.session.user, "full_name")
 
-			last_row["printed_by"] = print_person
-			
-			data.append(last_row)
-			# summary_view = get_report_summary(filters, total_amount)
+            last_row["printed_by"] = print_person
 
-			return columns, data #, None, None, summary_view
+            data.append(last_row)
+            # summary_view = get_report_summary(filters, total_amount)
+
+            return columns, data  # , None, None, summary_view
+
 
 def get_columns(filters):
-	columns = [
-		{"fieldname": "date", "fieldtype": "date", "label": _("Date")},
-		{"fieldname": "category", "fieldtype": "Data", "label": _("Category")},
-		{"fieldname": "description", "fieldtype": "Data", "label": _("Description")},
-		{"fieldname": "quantity", "fieldtype": "Data", "label": _("Quantity")},
-		{"fieldname": "rate", "fieldtype": "Currency", "label": _("Rate")},
-		{"fieldname": "amount", "fieldtype": "Currency", "label": _("Amount")},
-	]
-	return columns
+    columns = [
+        {"fieldname": "date", "fieldtype": "date", "label": _("Date")},
+        {"fieldname": "category", "fieldtype": "Data", "label": _("Category")},
+        {"fieldname": "description", "fieldtype": "Data", "label": _("Description")},
+        {"fieldname": "quantity", "fieldtype": "Data", "label": _("Quantity")},
+        {"fieldname": "rate", "fieldtype": "Currency", "label": _("Rate")},
+        {"fieldname": "amount", "fieldtype": "Currency", "label": _("Amount")},
+    ]
+    return columns
+
 
 def get_conditions(filters):
-	if filters.get("patient"): 
-		conditions = "and pa.patient = %(patient)s"
+    if filters.get("patient"):
+        conditions = "and pa.patient = %(patient)s"
 
-	if filters.get("patient_appointment"):
-		conditions += "and pa.name = %(patient_appointment)s"
+    if filters.get("patient_appointment"):
+        conditions += "and pa.name = %(patient_appointment)s"
 
-	if filters.get("from_date"): 
-		conditions += " and pa.appointment_date >= %(from_date)s"
+    if filters.get("from_date"):
+        conditions += " and pa.appointment_date >= %(from_date)s"
 
-	if filters.get("to_date"): 
-		conditions += " and pa.appointment_date <= %(to_date)s"
+    if filters.get("to_date"):
+        conditions += " and pa.appointment_date <= %(to_date)s"
 
-	return conditions
+    return conditions
+
 
 def get_enc_conditions(filters):
-	if filters.get("patient"):
-		conditions = " and pe.patient = %(patient)s"
+    if filters.get("patient"):
+        conditions = " and pe.patient = %(patient)s"
 
-	if filters.get("patient_appointment"):
-		conditions += " and pe.appointment = %(patient_appointment)s"
+    if filters.get("patient_appointment"):
+        conditions += " and pe.appointment = %(patient_appointment)s"
 
-	if filters.get("patient_type") == "Out-Patient":
-		conditions += " and pe.inpatient_record is null "
+    if filters.get("patient_type") == "Out-Patient":
+        conditions += " and pe.inpatient_record is null "
 
-	if filters.get("patient_type") == "In-Patient":
-		conditions += " and pe.inpatient_record is not null "
+    if filters.get("patient_type") == "In-Patient":
+        conditions += " and pe.inpatient_record is not null "
 
-	if filters.get("from_date"):
-		conditions += " and pe.encounter_date >= %(from_date)s"
+    if filters.get("from_date"):
+        conditions += " and pe.encounter_date >= %(from_date)s"
 
-	if filters.get("to_date"):
-		conditions += " and pe.encounter_date <= %(to_date)s"
-	
-	return conditions
+    if filters.get("to_date"):
+        conditions += " and pe.encounter_date <= %(to_date)s"
+
+    return conditions
+
 
 def get_ipd_conditions(filters):
-	if filters.get("patient"):
-		conditions = " and ipd_rec.patient = %(patient)s"
+    if filters.get("patient"):
+        conditions = " and ipd_rec.patient = %(patient)s"
 
-	if filters.get("patient_appointment"):
-		conditions += " and ipd_rec.patient_appointment = %(patient_appointment)s"
+    if filters.get("patient_appointment"):
+        conditions += " and ipd_rec.patient_appointment = %(patient_appointment)s"
 
-	if filters.get("from_date"):
-		conditions += " and DATE(ipd_rec.admitted_datetime) >= %(from_date)s"
+    if filters.get("from_date"):
+        conditions += " and DATE(ipd_rec.admitted_datetime) >= %(from_date)s"
 
-	if filters.get("to_date"):
-		conditions += " and DATE(ipd_rec.admitted_datetime) <= %(to_date)s"
-	
-	return conditions
+    if filters.get("to_date"):
+        conditions += " and DATE(ipd_rec.admitted_datetime) <= %(to_date)s"
+
+    return conditions
+
 
 def get_appointment_consultancy(filters):
-	conditions = get_conditions(filters)
+    conditions = get_conditions(filters)
 
-	data = frappe.db.sql("""
+    data = frappe.db.sql(
+        """
 		SELECT
 			pa.appointment_date AS date,
 			it.item_group AS category,
@@ -245,15 +310,21 @@ def get_appointment_consultancy(filters):
 			LEFT JOIN `tabInpatient Record` ipd_rec ON pa.name = ipd_rec.patient_appointment
 		WHERE pa.status = "Closed"
 		AND pa.follow_up = 0 {conditions}
-	""".format(conditions=conditions), filters, as_dict=1
-	)
-	return data
+	""".format(
+            conditions=conditions
+        ),
+        filters,
+        as_dict=1,
+    )
+    return data
+
 
 def get_ipd_occupancy_transactions(filters):
-	ipd_conditions = get_ipd_conditions(filters)
-	pe_conditions = get_enc_conditions(filters)
+    ipd_conditions = get_ipd_conditions(filters)
+    pe_conditions = get_enc_conditions(filters)
 
-	data = frappe.db.sql("""
+    data = frappe.db.sql(
+        """
 		SELECT
 			DATE(ipd_occ.check_in) AS date,
 			hsut.item_group AS category,
@@ -281,16 +352,22 @@ def get_ipd_occupancy_transactions(filters):
 			WHERE pe.docstatus = 1 {pe_conditions}
 			ORDER BY pe.creation desc
 		) {ipd_conditions}
-	""".format(pe_conditions=pe_conditions, ipd_conditions=ipd_conditions), filters, as_dict=1
-	)
-	
-	return data
+	""".format(
+            pe_conditions=pe_conditions, ipd_conditions=ipd_conditions
+        ),
+        filters,
+        as_dict=1,
+    )
+
+    return data
+
 
 def get_ipd_consultancy_transactions(filters):
-	ipd_conditions = get_ipd_conditions(filters)
-	pe_conditions = get_enc_conditions(filters)
+    ipd_conditions = get_ipd_conditions(filters)
+    pe_conditions = get_enc_conditions(filters)
 
-	data = frappe.db.sql("""
+    data = frappe.db.sql(
+        """
 		SELECT
 			ipd_cons.date AS date,
 			it.item_group AS category,
@@ -317,14 +394,20 @@ def get_ipd_consultancy_transactions(filters):
 			WHERE pe.docstatus = 1 {pe_conditions}
 			ORDER BY pe.creation desc
 		) {ipd_conditions}
-	""".format(pe_conditions=pe_conditions, ipd_conditions=ipd_conditions), filters, as_dict=1
-	)
-	return data
+	""".format(
+            pe_conditions=pe_conditions, ipd_conditions=ipd_conditions
+        ),
+        filters,
+        as_dict=1,
+    )
+    return data
+
 
 def get_cash_lrpmt_transaction(filters):
-	conditions = get_enc_conditions(filters)
+    conditions = get_enc_conditions(filters)
 
-	data = frappe.db.sql("""
+    data = frappe.db.sql(
+        """
 		SELECT
 			DATE(lrpmt.creation) AS date,
 			item_template.lab_test_group AS category,
@@ -487,15 +570,21 @@ def get_cash_lrpmt_transaction(filters):
 			AND  pe.docstatus = 1 {conditions}
 			ORDER BY pe.creation desc
 		)
-	""".format(conditions=conditions), filters, as_dict=1
-	)
+	""".format(
+            conditions=conditions
+        ),
+        filters,
+        as_dict=1,
+    )
 
-	return data
+    return data
+
 
 def get_insurance_lrpmt_transaction(filters):
-	conditions = get_enc_conditions(filters)
-	
-	data = frappe.db.sql("""
+    conditions = get_enc_conditions(filters)
+
+    data = frappe.db.sql(
+        """
 		SELECT
 			DATE(lrpmt.creation) AS date,
 			item_template.lab_test_group AS category,
@@ -656,41 +745,47 @@ def get_insurance_lrpmt_transaction(filters):
 			AND pe.docstatus = 1 {conditions}
 			ORDER BY pe.creation desc
 		)
-	""".format(conditions=conditions), filters, as_dict=1
-	)
+	""".format(
+            conditions=conditions
+        ),
+        filters,
+        as_dict=1,
+    )
 
-	return data
+    return data
+
 
 def get_report_summary(filters, total_amount):
-	customer = frappe.get_value('Patient', filters.get('patient'), 'customer')
-	company = frappe.get_value('Patient Appointment', filters.get('patient_appointment'), 'company')
+    customer = frappe.get_value("Patient", filters.get("patient"), "customer")
+    company = frappe.get_value(
+        "Patient Appointment", filters.get("patient_appointment"), "company"
+    )
 
-	deposit_balance = -1 * get_balance_on(party_type='Customer', party=customer, company=company)
+    deposit_balance = -1 * get_balance_on(
+        party_type="Customer", party=customer, company=company
+    )
 
-	current_balance = flt(flt(deposit_balance) - flt(total_amount))
-	
-	currency = frappe.get_cached_value("Company", company, "default_currency")
+    current_balance = flt(flt(deposit_balance) - flt(total_amount))
 
-	return [
-		{
-			"value": deposit_balance,
-			"label": _("Total Deposited Amount"),
-			"datatype": "Currency",
-			"currency": currency
-		},
-		{
-			"value": total_amount,
-			"label": _("Total Amount Used"),
-			"datatype": "Currency",
-			"currency": currency
-		},
-		{
-			"value": current_balance,
-			"label": _("Current Balance"),
-			"datatype": "Currency",
-			"currency": currency
-		}
-	]
+    currency = frappe.get_cached_value("Company", company, "default_currency")
 
-
-
+    return [
+        {
+            "value": deposit_balance,
+            "label": _("Total Deposited Amount"),
+            "datatype": "Currency",
+            "currency": currency,
+        },
+        {
+            "value": total_amount,
+            "label": _("Total Amount Used"),
+            "datatype": "Currency",
+            "currency": currency,
+        },
+        {
+            "value": current_balance,
+            "label": _("Current Balance"),
+            "datatype": "Currency",
+            "currency": currency,
+        },
+    ]

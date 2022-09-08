@@ -19,6 +19,7 @@ def validate(doc, method):
         doc.is_restricted = is_restricted
     set_normals(doc)
 
+
 def set_normals(doc):
     dob = frappe.get_value("Patient", doc.patient, "dob")
     age = dateutil.relativedelta.relativedelta(getdate(), dob).years
@@ -35,42 +36,41 @@ def set_normals(doc):
             row.detailed_normal_range = data_normals["detailed_normal_range"]
             row.result_status = data_normals["result_status"]
 
+
 def calc_data_normals(data, value):
     data = frappe._dict(data)
     value = float(value)
-    result = {
-        "detailed_normal_range": "",
-        "result_status": ""
-    }
+    result = {"detailed_normal_range": "", "result_status": ""}
 
-    if (data.min and not data.max):
+    if data.min and not data.max:
         result["detailed_normal_range"] = "> " + str(data.min)
-        if (value > data.min):
+        if value > data.min:
             result["result_status"] = "N"
         else:
             result["result_status"] = "L"
-    elif (not data.min and data.max):
+    elif not data.min and data.max:
         result["detailed_normal_range"] = "< " + str(data.max)
-        if (value < data.max):
+        if value < data.max:
             result["result_status"] = "N"
         else:
             result["result_status"] = "H"
-    elif (data.min and data.max):
+    elif data.min and data.max:
         result["detailed_normal_range"] = str(data.min) + " - " + str(data.max)
-        if (value > data.min and value < data.max):
+        if value > data.min and value < data.max:
             result["result_status"] = "N"
-        elif (value < data.min):
+        elif value < data.min:
             result["result_status"] = "L"
-        elif (value > data.max):
+        elif value > data.max:
             result["result_status"] = "H"
 
-    if (data.text):
-        if (result["detailed_normal_range"]):
+    if data.text:
+        if result["detailed_normal_range"]:
             result["detailed_normal_range"] += " / "
 
         result["detailed_normal_range"] += data.text
 
     return result
+
 
 @frappe.whitelist()
 def get_normals(lab_test_name, patient_age, patient_sex):
@@ -161,12 +161,14 @@ def create_sample_collection(doc):
         _("Sample Collection created {0}").format(sample_doc.name), alert=True
     )
 
+
 def update_lab_prescription(doc):
     if doc.ref_doctype == "Patient Encounter":
         encounter_doc = frappe.get_doc("Patient Encounter", doc.ref_docname)
         for row in encounter_doc.lab_test_prescription:
             if row.lab_test_code == doc.template:
-                frappe.db.set_value(row.doctype, row.name, {
-                    "lab_test": doc.name,
-                    "delivered_quantity": 1
-                })
+                frappe.db.set_value(
+                    row.doctype,
+                    row.name,
+                    {"lab_test": doc.name, "delivered_quantity": 1},
+                )

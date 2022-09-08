@@ -54,7 +54,7 @@ doctype_js = {
 }
 # csf_tz.nhif.api.patient_appointment
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
-doctype_list_js = {"Therapy Plan" : "nhif/api/therapy_plan_list.js"}
+doctype_list_js = {"Therapy Plan": "nhif/api/therapy_plan_list.js"}
 
 inpatient_record_list_js = {"doctype": "nhif/api/inpatient_record_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -187,9 +187,9 @@ doc_events = {
     "Prescription Dosage": {
         "before_insert": "hms_tz.nhif.api.prescription_dosage.before_insert",
     },
-#    "Therapy Plan": {
-#        "validate": "hms_tz.nhif.api.therapy_plan.validate",
-#    },
+    #    "Therapy Plan": {
+    #        "validate": "hms_tz.nhif.api.therapy_plan.validate",
+    #    },
 }
 
 # standard_queries = {
@@ -206,7 +206,6 @@ scheduler_events = {
     # "cron": {"*/1 * * * *": ["hms_tz.nhif.api.service_order.real_auto_submit"]},
     "hourly": ["hms_tz.nhif.api.healthcare_utils.set_uninvoiced_so_closed"],
     "daily": ["hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"],
-    
     "cron": {
         # fire every saturday 2:30 am at night
         "30 2 * * 6": [
@@ -215,7 +214,7 @@ scheduler_events = {
         # Routine for every 10min
         "*/10 * * * *": [
             "hms_tz.nhif.api.healthcare_utils.create_invoiced_items_if_not_created"
-        ]
+        ],
     },
     # 	"hourly": [
     # 		"hms_tz.tasks.hourly"

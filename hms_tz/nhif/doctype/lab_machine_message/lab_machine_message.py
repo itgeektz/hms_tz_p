@@ -19,9 +19,9 @@ class LabMachineMessage(Document):
         if not self.message:
             return
         msg_lines = self.message.splitlines()
-        self.machine_make = msg_lines[0].split('|')[2]
-        self.machine_model = msg_lines[0].split('|')[3]
-        self.lab_test_name = msg_lines[3].split('|')[3]
+        self.machine_make = msg_lines[0].split("|")[2]
+        self.machine_model = msg_lines[0].split("|")[3]
+        self.lab_test_name = msg_lines[3].split("|")[3]
 
     def update_lab_test(self):
         if not self.message:
@@ -45,9 +45,9 @@ class LabMachineMessage(Document):
             return
 
         msg_lines = self.message.splitlines()
-        for line in msg_lines[profile.obx_nm_start:profile.obx_nm_end]:
-            test_name = line.split('|')[3].split('^')[1].replace("*", "")
-            test_result = line.split('|')[5]
+        for line in msg_lines[profile.obx_nm_start : profile.obx_nm_end]:
+            test_name = line.split("|")[3].split("^")[1].replace("*", "")
+            test_result = line.split("|")[5]
             lab_test_row = ""
             for row in lab_test.normal_test_items:
                 if row.lab_test_name == test_name:

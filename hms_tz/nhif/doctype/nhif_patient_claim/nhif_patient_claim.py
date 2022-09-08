@@ -121,7 +121,7 @@ class NHIFPatientClaim(Document):
         self.folio_no = int(self.name[-9:])
         self.serial_no = self.folio_no
         self.item_crt_by = get_fullname(frappe.session.user)
-        final_patient_encounter = self.final_patient_encounter        
+        final_patient_encounter = self.final_patient_encounter
         practitioner_name, practitioner_no = frappe.get_cached_value(
             "Healthcare Practitioner",
             final_patient_encounter.practitioner,
@@ -133,7 +133,7 @@ class NHIFPatientClaim(Document):
                     final_patient_encounter.practitioner
                 )
             )
-            
+
         if not practitioner_no:
             frappe.throw(
                 _("There is no TZ MCT Code for Practitioner {0}").format(
@@ -562,7 +562,11 @@ class NHIFPatientClaim(Document):
                 "Patient Appointment", appointment_no
             )
 
-            if patient_appointment_doc.get("appointment_type") in ["Investigation Only", "Medicine Only", "Other Visit"]:
+            if patient_appointment_doc.get("appointment_type") in [
+                "Investigation Only",
+                "Medicine Only",
+                "Other Visit",
+            ]:
                 continue
 
             if not inpatient_record and not patient_appointment_doc.follow_up:
@@ -737,9 +741,15 @@ class NHIFPatientClaim(Document):
                 request_url=url,
                 request_header=headers,
                 request_body=json_data,
-                response_data=(r.text if str(r) or r.text  else "NO RESPONSE r. Timeout???")
+                response_data=(
+                    r.text if str(r) or r.text else "NO RESPONSE r. Timeout???"
+                )
                 or "NO TEXT",
-                status_code=(r.status_code if str(r) or r.status_code else "NO RESPONSE r. Timeout???")
+                status_code=(
+                    r.status_code
+                    if str(r) or r.status_code
+                    else "NO RESPONSE r. Timeout???"
+                )
                 or "NO STATUS CODE",
             )
             frappe.throw(

@@ -83,7 +83,7 @@ def get_data(filters):
             ["docstatus", "=", 1],
             ["company", "=", filters.get("company")],
             ["claim_month", "=", filters.get("submit_claim_month")],
-            ["claim_year", "=", filters.get("submit_claim_year")]
+            ["claim_year", "=", filters.get("submit_claim_year")],
         ],
         fields=["name", "company", "facility_code", "gender", "total_amount"],
     )
@@ -132,13 +132,16 @@ def get_data(filters):
     )
 
     first_day_of_month = getdate(
-        str(filters.get('submit_claim_year')) + '-' + str(filters.get('submit_claim_month')) + '-1'
+        str(filters.get("submit_claim_year"))
+        + "-"
+        + str(filters.get("submit_claim_month"))
+        + "-1"
     )
 
     last_day_of_month = first_day_of_month.replace(
-        day = calendar.monthrange(first_day_of_month.year, first_day_of_month.month)[1]
+        day=calendar.monthrange(first_day_of_month.year, first_day_of_month.month)[1]
     )
-    
+
     details.append(
         {
             "from_date": first_day_of_month,

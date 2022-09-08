@@ -11,7 +11,14 @@ class NHIFResponseLog(Document):
     pass
 
 
-def add_log(request_type, request_url, request_header=None, request_body=None, response_data=None, status_code=None):
+def add_log(
+    request_type,
+    request_url,
+    request_header=None,
+    request_body=None,
+    response_data=None,
+    status_code=None,
+):
     doc = frappe.new_doc("NHIF Response Log")
     doc.request_type = str(request_type)
     doc.request_url = str(request_url)

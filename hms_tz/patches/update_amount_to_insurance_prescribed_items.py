@@ -2,42 +2,55 @@ import frappe
 from frappe import _
 from hms_tz.nhif.api.patient_appointment import get_mop_amount
 
+
 def execute():
-    patient_encounters = frappe.get_all("Patient Encounter", filters={
-        "insurance_subscription": ["!=", ""], "encounter_date": [">=", "2022-05-01"], "docstatus": 1
-    }, fields=["name"], pluck="name", order_by="encounter_date")
+    patient_encounters = frappe.get_all(
+        "Patient Encounter",
+        filters={
+            "insurance_subscription": ["!=", ""],
+            "encounter_date": [">=", "2022-05-01"],
+            "docstatus": 1,
+        },
+        fields=["name"],
+        pluck="name",
+        order_by="encounter_date",
+    )
 
     if not patient_encounters:
-        return 
-    
+        return
+
     for encounter in patient_encounters:
         doc = frappe.get_doc("Patient Encounter", encounter)
 
         for child in get_child_maps():
             for row in doc.get(child.get("table")):
                 if row.amount:
-                        continue
-                    
+                    continue
+
                 try:
                     item_rate = 0
                     item_code = frappe.get_value(
                         child.get("doctype"), row.get(child.get("item")), "item"
                     )
-                    
+
                     if row.prescribe and doc.insurance_subscription:
                         item_rate = get_mop_amount(
                             item_code, "Cash", doc.company, doc.patient
                         )
                         if not item_rate or item_rate == 0:
-                            frappe.throw(_("Cannot get mode of payment rate for item {0}").format(
-                                    item_code
-                                ))
-                    
+                            frappe.throw(
+                                _(
+                                    "Cannot get mode of payment rate for item {0}"
+                                ).format(item_code)
+                            )
+
                     frappe.db.set_value(row.doctype, row.name, "amount", item_rate)
-                
+
                 except Exception:
-                    frappe.log_error(frappe.get_traceback(), str("Set Amount on Encounter via Patch"))
-        
+                    frappe.log_error(
+                        frappe.get_traceback(), str("Set Amount on Encounter via Patch")
+                    )
+
 
 def get_child_maps():
 
@@ -68,4 +81,3 @@ def get_child_maps():
             "item": "therapy_type",
         },
     ]
-    

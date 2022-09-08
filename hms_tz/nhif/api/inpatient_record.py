@@ -209,5 +209,6 @@ def set_beds_price(self):
                 )
             )
 
+
 def after_insert(doc, method):
     create_healthcare_docs_from_name(doc.admission_encounter)

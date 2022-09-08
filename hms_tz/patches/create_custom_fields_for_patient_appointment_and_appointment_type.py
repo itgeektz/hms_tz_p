@@ -1,8 +1,9 @@
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
+
 def execute():
-    fields={
+    fields = {
         "Patient Appointment": [
             dict(
                 fieldname="remarks",
@@ -47,18 +48,18 @@ def execute():
                 fieldtype="Column Break",
                 insert_after="hms_tz_product_name",
             ),
-             dict(
+            dict(
                 fieldname="hms_tz_scheme_id",
                 label="SchemeId",
                 fieldtype="Data",
                 insert_after="hms_tz_scheme_column_break",
             ),
-             dict(
+            dict(
                 fieldname="hms_tz_scheme_name",
                 label="Scheme Name",
                 fieldtype="Data",
                 insert_after="hms_tz_scheme_id",
             ),
-        ]
+        ],
     }
     create_custom_fields(fields)

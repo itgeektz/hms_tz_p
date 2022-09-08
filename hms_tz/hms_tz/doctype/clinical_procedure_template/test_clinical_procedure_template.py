@@ -4,5 +4,6 @@
 from __future__ import unicode_literals
 import unittest
 
+
 class TestClinicalProcedureTemplate(unittest.TestCase):
-	pass
+    pass

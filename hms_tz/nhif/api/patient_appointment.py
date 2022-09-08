@@ -257,15 +257,22 @@ def make_encounter(doc, method):
 
 @frappe.whitelist()
 def get_authorization_num(
-    insurance_subscription, company, appointment_type, card_no, referral_no="", remarks=""
+    insurance_subscription,
+    company,
+    appointment_type,
+    card_no,
+    referral_no="",
+    remarks="",
 ):
-    enable_nhif_api, nhifservice_url = frappe.get_value("Company NHIF Settings", company, ["enable", "nhifservice_url"])
+    enable_nhif_api, nhifservice_url = frappe.get_value(
+        "Company NHIF Settings", company, ["enable", "nhifservice_url"]
+    )
     if not enable_nhif_api:
         frappe.msgprint(
             _("Company {0} not enabled for NHIF Integration".format(company))
         )
         return
-    
+
     if not card_no:
         frappe.msgprint(
             _(
@@ -282,13 +289,10 @@ def get_authorization_num(
     )
     referral_no = "&ReferralNo=" + str(referral_no)
     remarks = "&Remarks=" + str(remarks)
-    
+
     token = get_nhifservice_token(company)
 
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-    }
+    headers = {"Content-Type": "application/json", "Authorization": "Bearer " + token}
     url = (
         str(nhifservice_url)
         + "/nhifservice/breeze/verification/AuthorizeCard?"
@@ -307,7 +311,7 @@ def get_authorization_num(
             request_url=url,
             request_header=headers,
             response_data=json.loads(r.text),
-            status_code = r.status_code
+            status_code=r.status_code,
         )
         card = json.loads(r.text)
         # console(card)
@@ -323,25 +327,35 @@ def get_authorization_num(
             request_type="AuthorizeCard",
             request_url=url,
             request_header=headers,
-            status_code = r.status_code
+            status_code=r.status_code,
         )
         frappe.throw(json.loads(r.text))
 
 
 def update_insurance_subscription(insurance_subscription, card):
-    subscription_doc = frappe.get_cached_doc("Healthcare Insurance Subscription", insurance_subscription)
-    
+    subscription_doc = frappe.get_cached_doc(
+        "Healthcare Insurance Subscription", insurance_subscription
+    )
+
     if subscription_doc.hms_tz_product_code != card["ProductCode"]:
-        frappe.db.set_value(subscription_doc.doctype, subscription_doc.name, {
-            "hms_tz_product_code": card["ProductCode"],
-            "hms_tz_product_name": card["ProductName"]
-        })
-    
+        frappe.db.set_value(
+            subscription_doc.doctype,
+            subscription_doc.name,
+            {
+                "hms_tz_product_code": card["ProductCode"],
+                "hms_tz_product_name": card["ProductName"],
+            },
+        )
+
     if subscription_doc.hms_tz_scheme_id != card["SchemeID"]:
-        frappe.db.set_value(subscription_doc.doctype, subscription_doc.name, {
-            "hms_tz_scheme_id": card["SchemeID"],
-            "hms_tz_scheme_name": card["SchemeName"]
-        })
+        frappe.db.set_value(
+            subscription_doc.doctype,
+            subscription_doc.name,
+            {
+                "hms_tz_scheme_id": card["SchemeID"],
+                "hms_tz_scheme_name": card["SchemeName"],
+            },
+        )
 
 
 @frappe.whitelist()

@@ -215,29 +215,32 @@ def after_insert(doc, method):
 
 @frappe.whitelist()
 def enqueue_update_cash_limit(old_cash_limit, new_cash_limit):
-    if getdate(nowdate()).strftime('%A') != 'Saturday':
-        frappe.throw("<h4 class='font-weight-bold text-center'>\
-            Please run this routine only on Saturday</h4>")
+    if getdate(nowdate()).strftime("%A") != "Saturday":
+        frappe.throw(
+            "<h4 class='font-weight-bold text-center'>\
+            Please run this routine only on Saturday</h4>"
+        )
 
     data = dict(old_value=old_cash_limit, new_value=new_cash_limit)
 
     enqueue(
         method=update_cash_limit,
-        queue='default',
+        queue="default",
         timeout=600000,
-        job_name='update_new_cash_limit',
+        job_name="update_new_cash_limit",
         is_async=True,
-        kwargs=data
+        kwargs=data,
     )
+
 
 def update_cash_limit(kwargs):
     data = kwargs
-    patient_list = frappe.get_all('Patient', {'status': 'Active'}, pluck='name')
+    patient_list = frappe.get_all("Patient", {"status": "Active"}, pluck="name")
     for name in patient_list:
         try:
             doc = frappe.get_doc("Patient", name)
-            if flt(doc.cash_limit) != flt(data.get('new_value')):
-                doc.cash_limit = flt(data.get('new_value'))
+            if flt(doc.cash_limit) != flt(data.get("new_value")):
+                doc.cash_limit = flt(data.get("new_value"))
                 doc.db_update()
         except Exception:
             frappe.log_error(frappe.get_traceback())

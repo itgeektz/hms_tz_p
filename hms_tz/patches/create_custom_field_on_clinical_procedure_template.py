@@ -1,6 +1,7 @@
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
+
 def execute():
     field = {
         "Clinical Procedure Template": [
@@ -9,7 +10,7 @@ def execute():
                 fieldtype="Check",
                 label="Is Inpatient",
                 insert_after="is_not_completed",
-                description="If ticked, this procedure will be provided to admitted patient only"
+                description="If ticked, this procedure will be provided to admitted patient only",
             )
         ]
     }

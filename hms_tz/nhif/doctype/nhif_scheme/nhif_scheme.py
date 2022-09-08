@@ -6,23 +6,24 @@ from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 
+
 class NHIFScheme(Document):
-	pass
+    pass
 
 
 def add_scheme(id, name=None):
-	if frappe.db.exists('NHIF Scheme', id):
-		if name and name != "null":
-			doc = frappe.get_doc('NHIF Scheme', id)
-			if not doc.scheme_name:
-				doc.scheme_name = name
-				doc.save(ignore_permissions=True)
-				frappe.db.commit()
-	else:
-		doc = frappe.new_doc('NHIF Scheme')
-		doc.scheme_id = id
-		if name and name != "null":
-			doc.scheme_name = name
-		doc.save(ignore_permissions=True)
-		frappe.db.commit()
-	return id
+    if frappe.db.exists("NHIF Scheme", id):
+        if name and name != "null":
+            doc = frappe.get_doc("NHIF Scheme", id)
+            if not doc.scheme_name:
+                doc.scheme_name = name
+                doc.save(ignore_permissions=True)
+                frappe.db.commit()
+    else:
+        doc = frappe.new_doc("NHIF Scheme")
+        doc.scheme_id = id
+        if name and name != "null":
+            doc.scheme_name = name
+        doc.save(ignore_permissions=True)
+        frappe.db.commit()
+    return id
