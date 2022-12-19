@@ -86,24 +86,24 @@ frappe.ui.form.on('Patient Encounter', {
                 }
             };
         });
-        frm.set_query("default_healthcare_service_unit", function(){
+        frm.set_query("default_healthcare_service_unit", function () {
             return {
-                filters:{
+                filters: {
                     "company": frm.doc.company,
                     "name": ["like", "%Pharmacy%"]
-                    }
-            }
+                }
+            };
         });
         if (!frm.doc.practitioner.includes("Direct")) {
-            frm.toggle_reqd("examination_detail", 1)
+            frm.toggle_reqd("examination_detail", 1);
         };
-        
+
         set_btn_properties(frm);
     },
-    
-    clear_history: function(frm) {
-        frm.set_value("examination_detail", "")
-        frm.refresh_field("examination_detail")
+
+    clear_history: function (frm) {
+        frm.set_value("examination_detail", "");
+        frm.refresh_field("examination_detail");
     },
 
     default_healthcare_service_unit: function (frm) {
@@ -163,14 +163,14 @@ frappe.ui.form.on('Patient Encounter', {
         });
     },
 
-    hms_tz_add_chronic_diagnosis: function(frm) {
+    hms_tz_add_chronic_diagnosis: function (frm) {
         if (frm.doc.docstatus == 0) {
             frappe.call('hms_tz.nhif.api.patient_encounter.add_chronic_diagnosis', {
                 patient: frm.doc.patient,
                 encounter: frm.doc.name
             }).then(r => {
-                console.log(r.message)
-            })
+                console.log(r.message);
+            });
         }
     },
 
@@ -334,7 +334,7 @@ frappe.ui.form.on('Patient Encounter', {
                     name: doc.lab_bundle,
                     doctype: "Lab Bundle"
                 },
-                callback(r) {
+                callback (r) {
                     console.log(r);
                     if (r.message) {
                         for (var row in r.message.lab_bundle_item) {
@@ -352,15 +352,15 @@ frappe.ui.form.on('Patient Encounter', {
             frappe.msgprint(`<p class='text-center font-weight-bold h6' style='background-color: #DCDCDC; font-size: 12pt;'>\
                 This encounter has insurance of <b>${__(frm.doc.insurance_coverage_plan)}</b>,\
                 no need to convert this encounter to inpatient encounter </p>`);
-            return 
+            return;
         }
         frappe.call('hms_tz.nhif.api.patient_encounter.convert_opd_encounter_to_ipd_encounter', {
             encounter: frm.doc.name
         }).then(r => {
             if (r.message) {
-                frm.refresh()
+                frm.refresh();
             }
-        })
+        });
     }
 });
 
@@ -378,7 +378,7 @@ frappe.ui.form.on('Codification Table', {
     medical_code: set_medical_code,
 });
 
-function get_diagnosis_list(frm, table_name) {
+function get_diagnosis_list (frm, table_name) {
     const diagnosis_list = [];
     if (frm.doc[table_name]) {
         frm.doc[table_name].forEach(element => {
@@ -402,8 +402,8 @@ const medical_code_mapping = {
     ]
 };
 
-function set_medical_code(frm, reset_columns) {
-    function set_options_for_fields(fields, from_table) {
+function set_medical_code (frm, reset_columns) {
+    function set_options_for_fields (fields, from_table) {
         const options = get_diagnosis_list(frm, from_table);
 
         for (const fieldname of fields) {
@@ -424,8 +424,7 @@ function set_medical_code(frm, reset_columns) {
     }
 };
 
-function validate_medical_code(frm) {
-
+function validate_medical_code (frm) {
     for (const [from_table, fields] of Object.entries(medical_code_mapping)) {
         const options = get_diagnosis_list(frm, from_table);
 
