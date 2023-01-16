@@ -24,6 +24,7 @@
   "inpatient_record",
   "cardno",
   "authorization_no",
+  "coverage_plan_name",
   "total_amount",
   "patient_signature",
   "section_break_8",
@@ -390,12 +391,26 @@
    "in_standard_filter": 1,
    "label": "Practitioner Name",
    "read_only": 1
+<<<<<<< HEAD
+=======
+  },
+  {
+   "fetch_from": "patient_appointment.coverage_plan_name",
+   "fetch_if_empty": 1,
+   "fieldname": "coverage_plan_name",
+   "fieldtype": "Data",
+   "label": "Coverage Plan Name"
+>>>>>>> c9035c43 (feat: coverage plan name on nhif patient claim)
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2022-08-19 13:14:51.608284",
+=======
+ "modified": "2023-01-16 17:50:03.396971",
+>>>>>>> c9035c43 (feat: coverage plan name on nhif patient claim)
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim",
