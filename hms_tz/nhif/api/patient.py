@@ -65,7 +65,7 @@ def get_patient_info(card_no=None):
         frappe.throw(_("No companies found to connect to NHIF"))
     token = get_nhifservice_token(company)
 
-    nhifservice_url = frappe.get_value(
+    nhifservice_url = frappe.get_cached_value(
         "Company NHIF Settings", company, "nhifservice_url"
     )
     headers = {"Authorization": "Bearer " + token}
@@ -115,7 +115,7 @@ def get_patient_info(card_no=None):
 def update_patient_history(doc):
     # Remarked till multi company setting is required and feasible from Patient doctype 2021-03-20 19:57:14
     # company = get_default_company()
-    # update_history = frappe.get_value(
+    # update_history = frappe.get_cached_value(
     #     "Company NHIF Settings", company, "update_patient_history")
     # if not update_history:
     #     return
@@ -191,7 +191,7 @@ def create_subscription(doc):
             alert=True,
         )
         return
-    plan_doc = frappe.get_doc("Healthcare Insurance Coverage Plan", plan_name)
+    plan_doc = frappe.get_cached_doc("Healthcare Insurance Coverage Plan", plan_name)
     sub_doc = frappe.new_doc("Healthcare Insurance Subscription")
     sub_doc.patient = doc.name
     sub_doc.insurance_company = plan_doc.insurance_company
@@ -238,11 +238,19 @@ def update_cash_limit(kwargs):
     patient_list = frappe.get_all("Patient", {"status": "Active"}, pluck="name")
     for name in patient_list:
         try:
-            doc = frappe.get_doc("Patient", name)
-            if flt(doc.cash_limit) != flt(data.get("new_value")):
-                doc.cash_limit = flt(data.get("new_value"))
+            doc = frappe.get_cached_doc("Patient", name)
+            if flt(doc.cash_limit) != flt(data.get('new_value')):
+                doc.cash_limit = flt(data.get('new_value'))
                 doc.db_update()
         except Exception:
             frappe.log_error(frappe.get_traceback())
 
     frappe.db.commit()
+
+
+@frappe.whitelist()
+def validate_missing_patient_dob(patient: str):
+    patient_name, dob = frappe.get_value("Patient", patient, ["patient_name", "dob"])
+    if not dob:
+        return False
+    return True

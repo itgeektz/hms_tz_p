@@ -39,7 +39,7 @@ def clear_insurance_details(service_order):
     service_order_doc.claim_status = ""
     service_order_doc.db_update()
 
-    insurance_claim_doc = frappe.get_doc("Healthcare Insurance Claim", insurance_claim)
+    insurance_claim_doc = frappe.get_cached_doc("Healthcare Insurance Claim", insurance_claim)
     insurance_claim_doc.cancel()
     insurance_claim_doc.db_update()
     insurance_claim_doc.reload()

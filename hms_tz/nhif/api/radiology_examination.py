@@ -30,9 +30,8 @@ def update_radiology_procedure_prescription(doc):
     if doc.ref_doctype == "Patient Encounter":
         encounter_doc = frappe.get_doc(doc.ref_doctype, doc.ref_docname)
         for row in encounter_doc.radiology_procedure_prescription:
-            if row.radiology_examination_template == doc.radiology_examination_template:
-                frappe.db.set_value(
-                    row.doctype,
-                    row.name,
-                    {"radiology_examination": doc.name, "delivered_quantity": 1},
-                )
+            if row.name == doc.hms_tz_ref_childname and row.radiology_examination_template == doc.radiology_examination_template:
+                frappe.db.set_value(row.doctype, row.name, {
+                    "radiology_examination": doc.name,
+                    "delivered_quantity": 1
+                })

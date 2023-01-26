@@ -54,29 +54,20 @@ class PatientEncounter(Document):
 
 def create_therapy_plan(encounter):
     if len(encounter.therapies):
-        doc = frappe.new_doc("Therapy Plan")
+        doc = frappe.new_doc('Therapy Plan')
         doc.patient = encounter.patient
         doc.company = encounter.company
         doc.start_date = encounter.encounter_date
         for entry in encounter.therapies:
-            doc.append(
-                "therapy_plan_details",
-                {
-                    "therapy_type": entry.therapy_type,
-                    "no_of_sessions": entry.no_of_sessions,
-                    "prescribe": entry.prescribe or 0,
-                },
-            )
+            doc.append('therapy_plan_details', {
+				'therapy_type': entry.therapy_type,
+				'no_of_sessions': entry.no_of_sessions,
+				"prescribe": entry.prescribe or 0
+			})
         doc.save(ignore_permissions=True)
-        if doc.get("name"):
-            encounter.db_set("therapy_plan", doc.name)
-            frappe.msgprint(
-                _("Therapy Plan {0} created successfully.").format(
-                    frappe.bold(doc.name)
-                ),
-                alert=True,
-            )
-
+        if doc.get('name'):
+            encounter.db_set('therapy_plan', doc.name)
+            frappe.msgprint(_('Therapy Plan {0} created successfully.').format(frappe.bold(doc.name)), alert=True)
 
 def insert_encounter_to_medical_record(doc):
     subject = set_subject_field(doc)

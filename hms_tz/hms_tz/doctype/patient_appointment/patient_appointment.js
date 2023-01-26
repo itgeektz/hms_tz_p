@@ -344,6 +344,7 @@ let check_and_set_availability = function (frm) {
 				d.fields_dict.practitioner.get_query = function () {
 					return {
 						filters: {
+							"hms_tz_company": frm.doc.company,
 							'department': department,
 							'status': 'Active'
 						}

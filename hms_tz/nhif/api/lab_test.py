@@ -21,7 +21,7 @@ def validate(doc, method):
 
 
 def set_normals(doc):
-    dob = frappe.get_value("Patient", doc.patient, "dob")
+    dob = frappe.get_cached_value("Patient", doc.patient, "dob")
     age = dateutil.relativedelta.relativedelta(getdate(), dob).years
     for row in doc.normal_test_items:
         if not row.result_value:
@@ -104,7 +104,7 @@ def get_lab_test_template(lab_test_name):
         "Lab Test Template", {"lab_test_name": lab_test_name}
     )
     if template_id:
-        return frappe.get_doc("Lab Test Template", template_id)
+        return frappe.get_cached_doc("Lab Test Template", template_id)
     return False
 
 
@@ -138,7 +138,7 @@ def on_trash(doc, methd):
 def create_sample_collection(doc):
     if not doc.template:
         return
-    template = frappe.get_doc("Lab Test Template", doc.template)
+    template = frappe.get_cached_doc("Lab Test Template", doc.template)
     if not template.sample_qty or not template.sample:
         return
 
@@ -166,9 +166,8 @@ def update_lab_prescription(doc):
     if doc.ref_doctype == "Patient Encounter":
         encounter_doc = frappe.get_doc("Patient Encounter", doc.ref_docname)
         for row in encounter_doc.lab_test_prescription:
-            if row.lab_test_code == doc.template:
-                frappe.db.set_value(
-                    row.doctype,
-                    row.name,
-                    {"lab_test": doc.name, "delivered_quantity": 1},
-                )
+            if row.name == doc.hms_tz_ref_childname and row.lab_test_code == doc.template:
+                frappe.db.set_value(row.doctype, row.name, {
+                    "lab_test": doc.name,
+                    "delivered_quantity": 1
+                })

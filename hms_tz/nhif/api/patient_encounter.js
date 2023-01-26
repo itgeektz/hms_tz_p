@@ -45,6 +45,9 @@ frappe.ui.form.on('Patient Encounter', {
             frm.remove_custom_button("Medical Record", "Create");
             frm.remove_custom_button("Clinical Procedure", "Create");
         }
+        if (frm.doc.duplicated == 1 && frm.doc.inpatient_record) {
+            frm.remove_custom_button("Schedule Discharge");
+        }
         add_btn_final(frm);
         duplicate(frm);
         if (frm.doc.source == "External Referral") {
@@ -169,7 +172,7 @@ frappe.ui.form.on('Patient Encounter', {
                 patient: frm.doc.patient,
                 encounter: frm.doc.name
             }).then(r => {
-                console.log(r.message);
+                // console.log(r.message);
             });
         }
     },
@@ -495,6 +498,7 @@ var duplicate = function (frm) {
 frappe.ui.form.on('Lab Prescription', {
     lab_test_code: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
+        if (!row.lab_test_code) { return; }
         set_is_not_available_inhouse(frm, row, row.lab_test_code)
             .then(() => {
                 if (row.is_not_available_inhouse) {
@@ -505,8 +509,6 @@ frappe.ui.form.on('Lab Prescription', {
                 }
             });
 
-        if (!row.lab_test_code) { return; }
-        validate_stock_item(frm, row.lab_test_code, 1, row.healthcare_service_unit, "Lab Test Template");
     },
     is_not_available_inhouse: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
@@ -526,7 +528,6 @@ frappe.ui.form.on('Lab Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.lab_test_code, 1, row.healthcare_service_unit, "Lab Test Template");
         }
     },
 });
@@ -534,6 +535,7 @@ frappe.ui.form.on('Lab Prescription', {
 frappe.ui.form.on('Radiology Procedure Prescription', {
     radiology_examination_template: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
+        if (!row.radiology_examination_template) { return; }
         set_is_not_available_inhouse(frm, row, row.radiology_examination_template)
             .then(() => {
                 if (row.is_not_available_inhouse) {
@@ -544,8 +546,6 @@ frappe.ui.form.on('Radiology Procedure Prescription', {
                 }
             });
 
-        if (!row.radiology_examination_template) { return; }
-        validate_stock_item(frm, row.radiology_examination_template, 1, row.healthcare_service_unit, "Radiology Examination Template");
     },
     is_not_available_inhouse: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
@@ -565,7 +565,6 @@ frappe.ui.form.on('Radiology Procedure Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.radiology_examination_template, 1, row.healthcare_service_unit, "Radiology Examination Template");
         }
     },
 });
@@ -573,6 +572,7 @@ frappe.ui.form.on('Radiology Procedure Prescription', {
 frappe.ui.form.on('Procedure Prescription', {
     procedure: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
+        if (!row.procedure) { return; }
         set_is_not_available_inhouse(frm, row, row.procedure)
             .then(() => {
                 if (row.is_not_available_inhouse) {
@@ -583,8 +583,6 @@ frappe.ui.form.on('Procedure Prescription', {
                 }
             });
 
-        if (!row.procedure) { return; }
-        validate_stock_item(frm, row.procedure, 1, row.healthcare_service_unit, "Clinical Procedure Template");
     },
     is_not_available_inhouse: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
@@ -604,7 +602,6 @@ frappe.ui.form.on('Procedure Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.procedure, 1, row.healthcare_service_unit, "Clinical Procedure Template");
         }
     },
 });
@@ -612,6 +609,7 @@ frappe.ui.form.on('Procedure Prescription', {
 frappe.ui.form.on('Drug Prescription', {
     drug_code: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
+        if (!row.drug_code) { return; }
         set_is_not_available_inhouse(frm, row, row.drug_code)
             .then(() => {
                 if (row.is_not_available_inhouse) {
@@ -622,7 +620,6 @@ frappe.ui.form.on('Drug Prescription', {
                 }
 
             });
-        if (!row.drug_code) { return; }
         validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit, "Drug Prescription");
     },
     healthcare_service_unit: function (frm, cdt, cdn) {
@@ -661,6 +658,7 @@ frappe.ui.form.on('Drug Prescription', {
 frappe.ui.form.on('Therapy Plan Detail', {
     therapy_type: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
+        if (!row.therapy_type) { return; }
         set_is_not_available_inhouse(frm, row, row.therapy_type)
             .then(() => {
                 if (row.is_not_available_inhouse) {
@@ -671,8 +669,6 @@ frappe.ui.form.on('Therapy Plan Detail', {
                 }
             });
 
-        if (!row.therapy_type) { return; }
-        validate_stock_item(frm, row.therapy_type, 1, row.healthcare_service_unit, "Therapy Type");
     },
     is_not_available_inhouse: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
@@ -692,7 +688,6 @@ frappe.ui.form.on('Therapy Plan Detail', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.therapy_type, 1, row.healthcare_service_unit, "Therapy Type");
         }
     },
 });
@@ -745,7 +740,8 @@ const set_is_not_available_inhouse = function (frm, row, template) {
         method: 'hms_tz.nhif.api.healthcare_utils.get_template_company_option',
         args: {
             'template': template,
-            'company': frm.doc.company
+            'company': frm.doc.company,
+            "method": "validate"
         },
         callback: function (data) {
             if (data.message) {

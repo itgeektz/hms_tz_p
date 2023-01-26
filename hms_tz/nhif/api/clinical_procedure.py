@@ -37,9 +37,8 @@ def update_procedure_prescription(doc):
     if doc.ref_doctype == "Patient Encounter":
         encounter_doc = frappe.get_doc(doc.ref_doctype, doc.ref_docname)
         for row in encounter_doc.procedure_prescription:
-            if row.procedure == doc.procedure_template:
-                frappe.db.set_value(
-                    row.doctype,
-                    row.name,
-                    {"clinical_procedure": doc.name, "delivered_quantity": 1},
-                )
+            if row.name == doc.hms_tz_ref_childname and row.procedure == doc.procedure_template:
+                frappe.db.set_value(row.doctype, row.name, {
+                    "clinical_procedure": doc.name,
+                    "delivered_quantity": 1
+                })

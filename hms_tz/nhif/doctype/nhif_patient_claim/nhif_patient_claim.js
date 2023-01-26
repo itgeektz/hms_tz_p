@@ -58,5 +58,13 @@ frappe.ui.form.on('NHIF Patient Claim', {
 				}
 			});
 		};
+	},
+
+	is_ready_for_auto_submission: (frm) => {
+		if (frm.doc.is_ready_for_auto_submission == 1) {
+			frm.set_value("reviewed_by", frappe.user.full_name());
+		} else {
+			frm.set_value("reviewed_by", "");
+		}
 	}
 });

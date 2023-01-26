@@ -24,7 +24,7 @@ def set_price(doc, method):
     price_list = None
     price_list_rate = None
     if doc.reference_dt == "Healthcare Service Order":
-        company, hso_prescribed = frappe.get_value(
+        company, hso_prescribed = frappe.get_cached_value(
             doc.reference_dt, doc.reference_dn, ["company", "prescribed"]
         )
         if hso_prescribed:
@@ -36,7 +36,7 @@ def set_price(doc, method):
         "Radiology Examination",
         "Clinical Procedure",
     ]:
-        company = frappe.get_value(doc.reference_dt, doc.reference_dn, "company")
+        company = frappe.get_cached_value(doc.reference_dt, doc.reference_dn, "company")
     else:
         company = frappe.defaults.get_user_default("Company")
         if not company:
