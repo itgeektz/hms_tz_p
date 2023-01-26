@@ -29,7 +29,7 @@ from hms_tz.nhif.api.healthcare_utils import (
 import os
 from frappe.utils.pdf import get_pdf
 from PyPDF2 import PdfFileWriter
-import html2text
+# import html2text
 
 
 class NHIFPatientClaim(Document):
