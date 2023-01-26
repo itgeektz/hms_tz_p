@@ -10,6 +10,10 @@ frappe.ui.form.on('Patient Appointment', {
         frm.trigger("get_mop_amount");
     },
     refresh: function (frm) {
+        // check if appointment is cancelled and hide fields for authorization
+        // this will stop getting authorization number for cancelled appointment and
+        // vital sign will not be created
+        frm.trigger("check_for_cancelled_appointment");
         set_filters(frm);
         frm.trigger("update_primary_action");
         frm.trigger("toggle_reqd_referral_no");
@@ -31,6 +35,7 @@ frappe.ui.form.on('Patient Appointment', {
         frm.trigger("update_primary_action");
         if (frm.doc.insurance_subscription) {
             frm.set_value("mode_of_payment", "");
+            validate_insurance_company(frm);
             frm.trigger('get_insurance_amount');
         } else {
             frm.set_value("insurance_subscription", "");
@@ -161,7 +166,7 @@ frappe.ui.form.on('Patient Appointment', {
             },
             callback: function (data) {
                 if (data.message) {
-                    frm.set_value("paid_amount", data.message);
+                    frm.set_value("paid_amount", data.message[0]);
                 }
             }
         });
@@ -206,6 +211,16 @@ frappe.ui.form.on('Patient Appointment', {
     },
     patient: function (frm) {
         if (frm.doc.patient) {
+            frappe.call("hms_tz.nhif.api.patient.validate_missing_patient_dob", {
+                patient: frm.doc.patient
+            }).then(r => {
+                if (!r.message) {
+                    let d = frm.doc.patient;
+                    frm.set_value("patient", "")
+                    frappe.set_route("Form", "Patient", d);
+                    frappe.msgprint("<h4 style='background-color:LightCoral'>Please update date of birth for this patient</h4>");
+                }
+            }),
             setTimeout(() => {
                 frm.toggle_display('mode_of_payment', true);
                 frm.toggle_display('paid_amount', true);
@@ -214,6 +229,10 @@ frappe.ui.form.on('Patient Appointment', {
         }
     },
     get_authorization_number: function (frm) {
+        if (frm.doc.status == "Cancelled") {
+            frappe.msgprint("Appointment is already cancelled")
+            return
+        }
         frm.trigger("get_authorization_num");
     },
     get_authorization_num: function (frm) {
@@ -342,6 +361,15 @@ frappe.ui.form.on('Patient Appointment', {
             }
         });
     },
+    check_for_cancelled_appointment: (frm) => {
+        if (frm.doc.status == "Cancelled" && !frm.doc.authorization_number) {
+            frm.set_df_property("get_authorization_number", "hidden", 1)
+            frm.set_df_property("authorization_number", "hidden", 1)
+        } else {
+            frm.set_df_property("get_authorization_number", "hidden", 0)
+            frm.set_df_property("authorization_number", "hidden", 0)
+        }
+    }
 });
 
 
@@ -419,14 +447,14 @@ const get_value = (doctype, name, field) => {
 };
 
 const add_btns = (frm) => {
-    if (!frm.doc.patient || frm.is_new() || frm.doc.invoiced || frm.doc.status == "Cancelled") return;
+    if (!frm.doc.patient || frm.is_new() || frm.doc.invoiced || frm.doc.status == "Closed" || frm.doc.status == "Cancelled") return;
     var vitals_btn_required = false;
     const valid_days = get_value("Healthcare Settings", "Healthcare Settings", "valid_days");
     const appointment = get_previous_appointment(frm, { name: ["!=", frm.doc.name], insurance_subscription: frm.doc.insurance_subscription, department: frm.doc.department, status: "Closed" });
     if (typeof appointment != "undefined") {
         const last_appointment_date = appointment.appointment_date;
         const diff = frappe.datetime.get_day_diff(frm.doc.appointment_date, last_appointment_date);
-        if (diff <= valid_days) {
+        if (diff > 0 && diff <= valid_days) {
             vitals_btn_required = true;
             if (!frm.doc.invoiced) {
                 frm.set_value("invoiced", 1);
@@ -460,7 +488,7 @@ const add_invoice_btn = (frm) => {
     });
 };
 
-const add_vital_btn = frm => {
+const add_vital_btn = (frm) => {
     frm.add_custom_button(__('Create Vitals'), function () {
         if (frm.is_dirty()) {
             frm.save();
@@ -486,3 +514,17 @@ const set_auth_number_reqd = frm => {
         frm.toggle_reqd("authorization_number", false);
     }
 };
+
+const validate_insurance_company = (frm) => {
+    frappe.call('hms_tz.nhif.api.patient_appointment.validate_insurance_company', {
+        insurance_company: frm.doc.insurance_company })
+        .then(r => {
+            if (r.message) {
+                frm.set_value("insurance_subscription", "");
+                frm.set_value("insurance_company", "");
+                frm.set_value("coverage_plan_name", "");
+                frm.set_value("coverage_plan_card_number", "");
+                frm.set_value("insurance_company_name", "");
+            }
+        });
+}

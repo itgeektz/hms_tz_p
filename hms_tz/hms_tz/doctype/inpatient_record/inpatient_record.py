@@ -11,6 +11,9 @@ from frappe.desk.reportview import get_match_cond
 
 
 class InpatientRecord(Document):
+    def before_insert(self):
+        self.validate_already_scheduled_or_admitted()
+
     def after_insert(self):
         frappe.db.set_value("Patient", self.patient, "inpatient_record", self.name)
         frappe.db.set_value("Patient", self.patient, "inpatient_status", self.status)
@@ -31,7 +34,6 @@ class InpatientRecord(Document):
 
     def validate(self):
         self.validate_dates()
-        self.validate_already_scheduled_or_admitted()
         if self.status == "Discharged":
             frappe.db.set_value("Patient", self.patient, "inpatient_status", None)
             frappe.db.set_value("Patient", self.patient, "inpatient_record", None)
@@ -63,14 +65,14 @@ class InpatientRecord(Document):
 			select name, status
 			from `tabInpatient Record`
 			where (status = 'Admitted' or status = 'Admission Scheduled')
-			and name != %(name)s and patient = %(patient)s
+			and patient = %(patient)s
 			"""
 
         ip_record = frappe.db.sql(
-            query, {"name": self.name, "patient": self.patient}, as_dict=1
+            query, {"patient": self.patient}, as_dict=1
         )
 
-        if ip_record:
+        if len(ip_record) > 0:
             msg = _(
                 ("Already {0} Patient {1} with Inpatient Record ").format(
                     ip_record[0].status, self.patient
@@ -189,7 +191,7 @@ def schedule_discharge(args):
         inpatient_record = frappe.get_doc("Inpatient Record", inpatient_record_id)
         check_out_inpatient(inpatient_record)
         set_details_from_ip_order(inpatient_record, discharge_order)
-        validate_schedule_discharge(inpatient_record)
+        validate_discharge(inpatient_record)
         inpatient_record.status = "Discharge Scheduled"
         inpatient_record.save(ignore_permissions=True)
         frappe.db.set_value(
@@ -232,6 +234,7 @@ def check_out_inpatient(inpatient_record):
 
 
 def discharge_patient(inpatient_record):
+    validate_discharge(inpatient_record)
     validate_invoiced_inpatient(inpatient_record)
     inpatient_record.discharge_date = today()
     inpatient_record.status = "Discharged"
@@ -382,7 +385,7 @@ def get_leave_from(doctype, txt, searchfield, start, page_len, filters):
     )
 
 
-def validate_schedule_discharge(inpatient_record):
+def validate_discharge(inpatient_record):
     if inpatient_record.status == "Admission Scheduled":
         frappe.throw(
             frappe.bold(

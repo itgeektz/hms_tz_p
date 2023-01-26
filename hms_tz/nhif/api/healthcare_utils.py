@@ -8,17 +8,19 @@ from frappe import _
 import datetime
 
 from hms_tz.hms_tz.utils import validate_customer_created
-from frappe.utils import nowdate, nowtime, now_datetime, add_to_date
+from frappe.utils import nowdate, nowtime, now_datetime, add_to_date, get_url_to_form
 from datetime import timedelta
 import base64
 import re
+import json
+from frappe.model.workflow import apply_workflow
 
 
 @frappe.whitelist()
 def get_healthcare_services_to_invoice(
     patient, company, encounter=None, service_order_category=None, prescribed=None
 ):
-    patient = frappe.get_doc("Patient", patient)
+    patient = frappe.get_cached_doc("Patient", patient)
     items_to_invoice = []
     if patient:
         validate_customer_created(patient)
@@ -100,7 +102,7 @@ def get_healthcare_service_order_to_invoice(
                     and not row.get("is_not_available_inhouse")
                     and not row.get("is_cancelled")
                 ):
-                    item_code = frappe.get_value(
+                    item_code = frappe.get_cached_value(
                         value.get("template"),
                         row.get(value.get("item")),
                         "item",
@@ -231,7 +233,7 @@ def create_delivery_note_from_LRPT(LRPT_doc, patient_encounter_doc):
     item_code = item.get("item_code")
     if not item_code:
         return
-    is_stock, item_name = frappe.get_value(
+    is_stock, item_name = frappe.get_cached_value(
         "Item", item_code, ["is_stock_item", "item_name"]
     )
     if is_stock:
@@ -251,7 +253,7 @@ def create_delivery_note_from_LRPT(LRPT_doc, patient_encounter_doc):
     )
     item_row.reference_doctype = LRPT_doc.doctype
     item_row.reference_name = LRPT_doc.name
-    item_row.description = frappe.get_value("Item", item_code, "description")
+    item_row.description = frappe.get_cached_value("Item", item_code, "description")
     items.append(item_row)
 
     if len(items) == 0:
@@ -263,10 +265,10 @@ def create_delivery_note_from_LRPT(LRPT_doc, patient_encounter_doc):
             posting_time=nowtime(),
             set_warehouse=warehouse,
             company=patient_encounter_doc.company,
-            customer=frappe.get_value(
+            customer=frappe.get_cached_value(
                 "Healthcare Insurance Company", insurance_company, "customer"
             ),
-            currency=frappe.get_value(
+            currency=frappe.get_cached_value(
                 "Company", patient_encounter_doc.company, "default_currency"
             ),
             items=items,
@@ -288,7 +290,7 @@ def create_delivery_note_from_LRPT(LRPT_doc, patient_encounter_doc):
 
 
 def get_warehouse_from_service_unit(healthcare_service_unit):
-    warehouse = frappe.get_value(
+    warehouse = frappe.get_cached_value(
         "Healthcare Service Unit", healthcare_service_unit, "warehouse"
     )
     if not warehouse:
@@ -305,19 +307,19 @@ def get_item_form_LRPT(LRPT_doc):
     comapny_option = get_template_company_option(LRPT_doc.template, LRPT_doc.company)
     item.healthcare_service_unit = comapny_option.service_unit
     if LRPT_doc.doctype == "Lab Test":
-        item.item_code = frappe.get_value(
+        item.item_code = frappe.get_cached_value(
             "Lab Test Template", LRPT_doc.template, "item"
         )
         item.qty = 1
     elif LRPT_doc.doctype == "Radiology Examination":
-        item.item_code = frappe.get_value(
+        item.item_code = frappe.get_cached_value(
             "Radiology Examination Template",
             LRPT_doc.radiology_examination_template,
             "item",
         )
         item.qty = 1
     elif LRPT_doc.doctype == "Clinical Procedure":
-        item.item_code = frappe.get_value(
+        item.item_code = frappe.get_cached_value(
             "Clinical Procedure Template",
             LRPT_doc.procedure_template,
             "item",
@@ -476,7 +478,7 @@ def get_restricted_LRPT(doc):
             "Patient Encounter", doc.ref_docname, "insurance_subscription"
         )
         if insurance_subscription:
-            healthcare_insurance_coverage_plan = frappe.get_value(
+            healthcare_insurance_coverage_plan = frappe.get_cached_value(
                 "Healthcare Insurance Subscription",
                 insurance_subscription,
                 "healthcare_insurance_coverage_plan",
@@ -550,7 +552,7 @@ def set_healthcare_services(doc, checked_values):
 
         else:
             map_obj = childs_map.get(checked_item["dt"])
-            service_item = frappe.get_cached_value(
+            service_item = frappe.get_value(
                 checked_item["dt"],
                 checked_item["dn"],
                 map_obj.get("item"),
@@ -570,7 +572,7 @@ def create_individual_lab_test(source_doc, child):
     if child.lab_test_created == 1 or child.is_not_available_inhouse:
         return
     ltt_doc = frappe.get_cached_doc("Lab Test Template", child.lab_test_code)
-    patient_sex = frappe.get_value("Patient", source_doc.patient, "sex")
+    patient_sex = frappe.get_cached_value("Patient", source_doc.patient, "sex")
 
     doc = frappe.new_doc("Lab Test")
     doc.patient = source_doc.patient
@@ -586,6 +588,8 @@ def create_individual_lab_test(source_doc, child):
         doc.prescribe = 1
     else:
         doc.insurance_subscription = source_doc.insurance_subscription
+        doc.hms_tz_insurance_coverage_plan = source_doc.insurance_coverage_plan
+        doc.insurance_company = source_doc.insurance_company
     doc.ref_doctype = source_doc.doctype
     doc.ref_docname = source_doc.name
     doc.invoiced = 1
@@ -594,6 +598,7 @@ def create_individual_lab_test(source_doc, child):
         + " : "
         + (child.lab_test_comment or "No Comment")
     )
+    doc.hms_tz_ref_childname = child.name
 
     doc.save(ignore_permissions=True)
     if doc.get("name"):
@@ -612,6 +617,8 @@ def create_individual_radiology_examination(source_doc, child):
         return
     doc = frappe.new_doc("Radiology Examination")
     doc.patient = source_doc.patient
+    doc.hms_tz_patient_sex = source_doc.patient_sex
+    doc.hms_tz_patient_age = source_doc.patient_age
     doc.company = source_doc.company
     doc.radiology_examination_template = child.radiology_examination_template
     if source_doc.doctype == "Healthcare Service Order":
@@ -623,6 +630,8 @@ def create_individual_radiology_examination(source_doc, child):
         doc.prescribe = 1
     else:
         doc.insurance_subscription = source_doc.insurance_subscription
+        doc.hms_tz_insurance_coverage_plan = source_doc.insurance_coverage_plan
+        doc.insurance_company = source_doc.insurance_company
     doc.medical_department = frappe.get_cached_value(
         "Radiology Examination Template",
         child.radiology_examination_template,
@@ -636,6 +645,7 @@ def create_individual_radiology_examination(source_doc, child):
         + " : "
         + (child.radiology_test_comment or "No Comment")
     )
+    doc.hms_tz_ref_childname = child.name
 
     doc.save(ignore_permissions=True)
     if doc.get("name"):
@@ -667,7 +677,10 @@ def create_individual_procedure_prescription(source_doc, child):
         doc.prescribe = 1
     else:
         doc.insurance_subscription = source_doc.insurance_subscription
-    doc.patient_sex = frappe.get_value("Patient", source_doc.patient, "sex")
+        doc.hms_tz_insurance_coverage_plan = source_doc.insurance_coverage_plan
+        doc.insurance_company = source_doc.insurance_company
+    doc.patient_sex = frappe.get_cached_value("Patient", source_doc.patient, "sex")
+    doc.patient_age = source_doc.patient_age
     doc.medical_department = frappe.get_cached_value(
         "Clinical Procedure Template", child.procedure, "medical_department"
     )
@@ -677,6 +690,7 @@ def create_individual_procedure_prescription(source_doc, child):
     doc.service_comment = (
         (child.medical_code or "No ICD Code") + " : " + (child.comments or "No Comment")
     )
+    doc.hms_tz_ref_childname = child.name
 
     doc.save(ignore_permissions=True)
     if doc.get("name"):
@@ -752,22 +766,21 @@ def validate_hsu_healthcare_template(doc):
 
 
 @frappe.whitelist()
-def get_template_company_option(template=None, company=None):
+def get_template_company_option(template=None, company=None, method=None):
     exist = frappe.db.exists(
         "Healthcare Company Option", {"company": company, "parent": template}
     )
     if exist:
-        doc = frappe.get_doc(
+        doc = frappe.get_cached_doc(
             "Healthcare Company Option", {"company": company, "parent": template}
         )
         return doc
     else:
-        frappe.throw(
-            _(
-                "No company option found for template: {0} and company: {1}".format(
-                    frappe.bold(template), frappe.bold(company)
-                )
-            )
+        msgThrow(
+            _("No company option found for template: {0} and company: {1}".format(
+                frappe.bold(template), frappe.bold(company))
+            ), 
+            method=method
         )
 
 
@@ -776,13 +789,12 @@ def delete_or_cancel_draft_document():
     A routine to
         1. Cancel open appointments after every 7 days,
         2. Delete draft vital signs after every 7 days and
-        3. Delete draft delivery note after every 45 days
-    this routine run every saturday 2:30 am at night
+        3. Cancel draft delivery note after every 2 days
+    this routine runs every day on 2:30am at night
     """
-    from frappe.utils import nowdate, add_to_date
 
     before_7_days_date = add_to_date(nowdate(), days=-7, as_string=False)
-    before_45_days_date = add_to_date(nowdate(), days=-45, as_string=False)
+    before_2_days_date = add_to_date(nowdate(), days=-2, as_string=False)
 
     appointments = frappe.db.sql(
         """
@@ -817,7 +829,7 @@ def delete_or_cancel_draft_document():
 
     for vs_doc in vital_docs:
         try:
-            doc = frappe.get_doc("Vital Signs", vs_doc.name)
+            doc = frappe.get_cached_doc("Vital Signs", vs_doc.name)
             doc.delete()
 
         except Exception:
@@ -826,23 +838,89 @@ def delete_or_cancel_draft_document():
             )
         frappe.db.commit()
 
-    # delivery_documents = frappe.db.sql(
-    #     """
-    #     SELECT name FROM `tabDelivery Note`
-    #     WHERE docstatus = 0 AND posting_date < '{before_45_days_date}'
-    # """.format(
-    #         before_45_days_date=before_45_days_date
-    #     ),
-    #     as_dict=1,
-    # )
+    delivery_documents = frappe.db.sql(
+        """
+        SELECT name FROM `tabDelivery Note` 
+        WHERE docstatus = 0
+        AND workflow_state != "Not Serviced"
+        AND posting_date < '{before_2_days_date}'
+    """.format(
+            before_2_days_date=before_2_days_date
+        ),
+        as_dict=1,
+    )
 
-    # for dn_doc in delivery_documents:
-    #     dn_del = frappe.get_doc("Delivery Note", dn_doc.name)
-    #     try:
-    #         dn_del.delete()
-    #     except Exception:
-    #         frappe.log_error(frappe.get_traceback())
-    #     frappe.db.commit()
+    for delivery_note  in delivery_documents:
+        delivery_note_doc = frappe.get_doc("Delivery Note", delivery_note.name)
+        try:
+            return_quatity_or_cancel_delivery_note_via_lrpmt_returns(delivery_note_doc, "Backend")
+
+        except Exception:
+            frappe.log_error(frappe.get_traceback(), str("Error for Return or Cancel Delivery Note: {0} Via LRPMT Returns".format(frappe.bold(delivery_note_doc.name))))
+
+        frappe.db.commit()
+
+
+@frappe.whitelist()
+def return_quatity_or_cancel_delivery_note_via_lrpmt_returns(source_doc, method):
+    """
+        Return Quantiies to stock from submitted delivery note and/or
+        Cancel draft delivery note if all items was not serviced
+    """
+
+    source_doc = frappe.get_doc(frappe.parse_json(source_doc))
+
+    status = ""
+    if source_doc.docstatus == 1:
+        status = "Submitted"
+    else:
+        status = "Draft"
+
+    drug_items = []
+
+    for dni_item in source_doc.items:
+        drug_items.append({
+            "drug_name": dni_item.item_code,
+            "quantity_prescribed": dni_item.qty,
+            "quantity_to_return": dni_item.qty,
+            "reason": "Not Serviced",
+            "drug_condition": "Good",
+            "encounter_no": source_doc.reference_name,
+            "delivery_note_no": source_doc.name,
+            "status": status,
+            "dn_detail": dni_item.name,
+            "child_name": dni_item.reference_name
+        })
+
+    target_doc = frappe.get_doc(
+        dict(
+            doctype = "LRPMT Returns",
+            patient = source_doc.patient,
+            patient_name = source_doc.patient_name,
+            appointment = source_doc.hms_tz_appointment_no,
+            company = source_doc.company,
+            drug_items = drug_items
+        )
+    )
+
+    target_doc.insert()
+    target_doc.reload()
+
+    if method == "From Front End":
+        if source_doc.docstatus == 1:
+            return target_doc.name
+
+        else:
+            target_doc.submit()
+            url = get_url_to_form(target_doc.doctype, target_doc.name)
+            frappe.msgprint("LRPMT Returns: <a href='{0}'>{1}</a> is submitted".format(
+					url, frappe.bold(target_doc.name)
+				))
+            
+            return True
+
+    else:
+        target_doc.submit()
 
 
 def create_invoiced_items_if_not_created():
@@ -925,7 +1003,7 @@ def create_invoiced_items_if_not_created():
                                 "insurance_subscription": patient_encounter_doc.insurance_subscription
                                 if patient_encounter_doc.insurance_subscription
                                 else "",
-                                "medical_department": frappe.get_value(
+                                "medical_department": frappe.get_cached_value(
                                     "Radiology Examination Template",
                                     child.radiology_examination_template,
                                     "medical_department",
@@ -959,7 +1037,7 @@ def create_invoiced_items_if_not_created():
                                 "source": patient_encounter_doc.source,
                                 "prescribe": child.prescribe,
                                 "insurance_subscription": patient_encounter_doc.insurance_subscription,
-                                "medical_department": frappe.get_value(
+                                "medical_department": frappe.get_cached_value(
                                     "Clinical Procedure Template",
                                     child.procedure,
                                     "medical_department",
@@ -988,3 +1066,71 @@ def create_invoiced_items_if_not_created():
                     frappe.log_error(traceback)
 
         frappe.db.commit()
+
+@frappe.whitelist()
+def auto_submit_nhif_patient_claim(setting_dict=None):
+    """Routine to submit patient claims and will be triggered:
+        1. Every 00:01 am at night by cron job
+        2. By a button called 'Auto Submit Patient Claim' which is on Company NHIF settings
+    """
+    company_setting_detail = []
+
+    if not setting_dict:
+        company_setting_detail = frappe.get_all("Company NHIF Settings",
+            filters={"enable": 1, "enable_auto_submit_of_claims": 1}, 
+            fields=["company", "submit_claim_year", "submit_claim_month"]
+        )
+    else:
+        company_setting_detail.append(frappe._dict(json.loads(setting_dict)))
+    
+    if len(company_setting_detail) == 0:
+        return 
+
+    for detail in company_setting_detail:
+        frappe.enqueue(
+            method=enqueue_auto_sending_of_patient_claims,
+            queue="long",
+            timeout=1000000,
+            is_async=True,
+            setting_obj=detail,
+        )
+
+def enqueue_auto_sending_of_patient_claims(setting_obj):
+    from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
+
+    patient_claims = frappe.get_all("NHIF Patient Claim", filters={
+        "company": setting_obj.company, 
+        "claim_month": setting_obj.submit_claim_month, 
+        "claim_year": setting_obj.submit_claim_year,
+        "is_ready_for_auto_submission": 1,
+        "docstatus": 0
+    })
+    
+    if len(patient_claims) == 0:
+        return
+
+    success_count = 0
+    failed_count = 0
+    for claim in patient_claims:
+        doc = frappe.get_doc("NHIF Patient Claim", claim.name)
+        try:
+            doc.submit()
+            doc.reload()
+            if doc.docstatus == 1:
+                success_count += 1
+        except:
+            failed_count += 1
+
+    description = "CLAIM'S AUTO SUBMISSION SUMMARY\n\n\ncompany: {0}\n\nTotal Claims Prepared for auto submit: {1}\
+        \n\nTotal claims Submitted: {2}\n\nTotal Claims failed: {3}".format(
+            setting_obj.company, len(patient_claims), success_count, failed_count
+        )
+    add_log(
+        request_type="AutoSubmitFolios",
+        request_url="",
+        request_header="",
+        request_body="",
+        response_data=description,
+        status_code="Summary",
+    )
+    frappe.db.commit()

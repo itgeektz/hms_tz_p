@@ -17,6 +17,8 @@ from frappe.utils import (
     nowdate,
     get_datetime,
     time_diff_in_seconds,
+    now_datetime,
+    cint
 )
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from hms_tz.nhif.api.healthcare_utils import (
@@ -67,8 +69,30 @@ class NHIFPatientClaim(Document):
     def before_submit(self):
         start_datetime = get_datetime()
         frappe.msgprint("Submit process started: " + str(get_datetime()))
-        authorization_no = self.authorization_no
 
+        self.validate_multiple_appointments_per_authorization_no()
+
+        validate_item_status(self)
+        self.patient_encounters = self.get_patient_encounters()
+        if not self.patient_signature:
+            get_missing_patient_signature(self)
+
+        validate_submit_date(self)
+
+        # self.claim_file_mem = get_claim_pdf_file(self)
+        frappe.msgprint("Sending NHIF Claim: " + str(get_datetime()))
+        self.send_nhif_claim()
+        frappe.msgprint("Got response from NHIF Claim: " + str(get_datetime()))
+        end_datetime = get_datetime()
+        time_in_seconds = time_diff_in_seconds(str(end_datetime), str(start_datetime))
+        frappe.msgprint(
+            "Total time to complete the process in seconds = " + str(time_in_seconds)
+        )
+    
+    def validate_multiple_appointments_per_authorization_no(self):
+        """Validate if patient gets multiple appointments with same authorization number"""
+
+        #Check if there are multiple claims with same authorization number
         claim_details = frappe.get_all(
             "NHIF Patient Claim",
             filters={
@@ -91,25 +115,39 @@ class NHIFPatientClaim(Document):
                         frappe.bold(self.authorization_no), frappe.bold(claim_name_list)
                     )
                 )
+        
+        # rock: 139
+        # Check if there are multiple appointments with same authorization number
+        appointment_documents = frappe.get_all("Patient Appointment", filters={
+            "patient": self.patient, "authorization_number": self.authorization_no,
+            "coverage_plan_card_number": self.cardno, "status": ["!=", "Cancelled"]
+        }, pluck="name")
+        
+        if len(appointment_documents) > 1:
+            msg = "<p style='text-align: left; font-size: 13px'>Patient: {0}-{1} has multiple appointments: ".format(
+                frappe.bold(self.patient), frappe.bold(self.patient_name)
+            )
+            #check if there is any merging done before
+            merged_appointments = json.loads(self.hms_tz_claim_appointment_list) if self.hms_tz_claim_appointment_list else None
+            reqd_throw_count = 0
+            for appointment in appointment_documents:
+                msg += frappe.bold(appointment) + ", "
 
-        validate_item_status(self)
-        self.patient_encounters = self.get_patient_encounters()
-        if not self.patient_signature:
-            get_missing_patient_signature(self)
+                if merged_appointments:
+                    for app in merged_appointments:
+                        if appointment == app:
+                            reqd_throw_count += 1
+            
+            msg += " with same authorization no: {1}<br> Please consider merging of claims\
+                if Claims for all {2} appointments have already been created</p>".format(
+                    frappe.bold(self.patient), 
+                    frappe.bold(self.authorization_no),
+                    frappe.bold(len(appointment_documents))
+                )
 
-        validate_submit_date(self)
-        # frappe.msgprint("Generating patient file: " + str(get_datetime()))
-        # self.patient_file_mem = generate_pdf(self)
-        # frappe.msgprint("Generating claim file: " + str(get_datetime()))
-        # self.claim_file_mem = get_claim_pdf_file(self)
-        frappe.msgprint("Sending NHIF Claim: " + str(get_datetime()))
-        self.send_nhif_claim()
-        frappe.msgprint("Got response from NHIF Claim: " + str(get_datetime()))
-        end_datetime = get_datetime()
-        time_in_seconds = time_diff_in_seconds(str(end_datetime), str(start_datetime))
-        frappe.msgprint(
-            "Total time to complete the process in seconds = " + str(time_in_seconds)
-        )
+            if reqd_throw_count < 2:
+                frappe.throw(msg)
+
 
     def set_claim_values(self):
         if not self.folio_id:
@@ -118,8 +156,7 @@ class NHIFPatientClaim(Document):
             "Company NHIF Settings", self.company, "facility_code"
         )
         self.posting_date = nowdate()
-        self.folio_no = int(self.name[-9:])
-        self.serial_no = self.folio_no
+        self.serial_no = int(self.name[-9:])
         self.item_crt_by = get_fullname(frappe.session.user)
         final_patient_encounter = self.final_patient_encounter
         practitioner_name, practitioner_no = frappe.get_cached_value(
@@ -693,14 +730,11 @@ class NHIFPatientClaim(Document):
             r = requests.post(url, headers=headers, data=json_data, timeout=300)
 
             if r.status_code != 200:
-                if (
-                    str(r)
-                    and r.status_code == 500
-                    and "A claim with Similar Authorization No. already exists"
-                    in r.text
-                ):
+                if str(r) and r.status_code == 500 and "A claim with Similar" in r.text:
                     frappe.msgprint(
-                        "This folio was NOT sent. However, since it is already existing at NHIF it has been submitted! "
+                        "This folio was NOT sent. However, since the folio is already existing at NHIF, it has been submitted!<br><b>Message from NHIF:</b><br><br>{0}".format(
+                            r.text
+                        )
                         + str(get_datetime())
                     )
                 elif (
@@ -712,7 +746,9 @@ class NHIFPatientClaim(Document):
                     in r.text
                 ):
                     frappe.msgprint(
-                        "This folio was NOT sent. However, since it is already existing at NHIF it has been submitted! "
+                        "This folio was NOT sent. However, since it is already existing at NHIF, it has been submitted!<br><b>Message from NHIF:</b><br><br>{0}".format(
+                            r.text
+                        )
                         + str(get_datetime())
                     )
                 else:
@@ -741,15 +777,9 @@ class NHIFPatientClaim(Document):
                 request_url=url,
                 request_header=headers,
                 request_body=json_data,
-                response_data=(
-                    r.text if str(r) or r.text else "NO RESPONSE r. Timeout???"
-                )
+                response_data=(r.text if str(r) else "NO RESPONSE r. Timeout???")
                 or "NO TEXT",
-                status_code=(
-                    r.status_code
-                    if str(r) or r.status_code
-                    else "NO RESPONSE r. Timeout???"
-                )
+                status_code=(r.status_code if str(r) else "NO RESPONSE r. Timeout???")
                 or "NO STATUS CODE",
             )
             frappe.throw(
@@ -809,9 +839,36 @@ class NHIFPatientClaim(Document):
             )
 
 
+    def after_insert(self):
+        folio_counter = frappe.get_all("NHIF Folio Counter", filters={
+            "company": self.company, "claim_year": self.claim_year, "claim_month": self.claim_month
+        }, fields=["name"], page_length=1)
+
+        folio_no = 1
+        if not folio_counter:
+            new_folio_doc = frappe.get_doc({
+                "doctype": "NHIF Folio Counter",
+                "company": self.company,
+                "claim_year": self.claim_year,
+                "claim_month": self.claim_month,
+                "posting_date": now_datetime(),
+                "folio_no": folio_no
+            }).insert(ignore_permissions=True)
+            new_folio_doc.reload()
+        else:
+            folio_doc = frappe.get_doc("NHIF Folio Counter", folio_counter[0].name)
+            folio_no = cint(folio_doc.folio_no) + 1
+
+            folio_doc.folio_no += 1
+            folio_doc.posting_date = now_datetime()
+            folio_doc.save(ignore_permissions=True)
+        frappe.set_value(self.doctype, self.name, "folio_no", folio_no)
+        self.reload()
+
+
 def get_missing_patient_signature(self):
     if self.patient:
-        patient_doc = frappe.get_doc("Patient", self.patient)
+        patient_doc = frappe.get_cached_doc("Patient", self.patient)
         signature = patient_doc.patient_signature
         if not signature:
             frappe.throw(_("Patient signature is required"))

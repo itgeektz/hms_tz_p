@@ -1,0 +1,103 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2022-08-22 13:07:18.245543",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "billno",
+  "foliono",
+  "datesubmitted",
+  "column_break_cardno",
+  "cardno",
+  "authorizationno",
+  "amountclaimed",
+  "submissionid_section_break",
+  "submissionid",
+  "submissionno",
+  "remarks_column_break",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "foliono",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "FolioNo",
+   "search_index": 1
+  },
+  {
+   "fieldname": "billno",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "BillNo",
+   "search_index": 1
+  },
+  {
+   "fieldname": "datesubmitted",
+   "fieldtype": "Datetime",
+   "label": "DateSubmitted"
+  },
+  {
+   "fieldname": "submissionid",
+   "fieldtype": "Data",
+   "label": "SubmissionID"
+  },
+  {
+   "fieldname": "submissionno",
+   "fieldtype": "Data",
+   "label": "SubmissionNo"
+  },
+  {
+   "fieldname": "column_break_cardno",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cardno",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "CardNo",
+   "search_index": 1
+  },
+  {
+   "fieldname": "authorizationno",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "AuthorizationNo",
+   "search_index": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "submissionid_section_break",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "remarks_column_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "bold": 1,
+   "fieldname": "amountclaimed",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "AmountClaimed",
+   "search_index": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2022-08-25 13:56:52.386374",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "NHIF Claim Reconciliation Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

@@ -54,9 +54,10 @@ doctype_js = {
 }
 # csf_tz.nhif.api.patient_appointment
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
-doctype_list_js = {"Therapy Plan": "nhif/api/therapy_plan_list.js"}
 
-inpatient_record_list_js = {"doctype": "nhif/api/inpatient_record_list.js"}
+doctype_list_js = {
+    "Therapy Plan" : ["nhif/api/therapy_plan_list.js"],
+}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
@@ -118,9 +119,8 @@ inpatient_record_list_js = {"doctype": "nhif/api/inpatient_record_list.js"}
 
 doc_events = {
     "Patient Appointment": {
-        "validate": [
-            "hms_tz.nhif.api.patient_appointment.make_next_doc",
-        ]
+        "before_insert": "hms_tz.nhif.api.patient_appointment.before_insert",
+        "validate": "hms_tz.nhif.api.patient_appointment.make_next_doc",
     },
     "Vital Signs": {
         "on_submit": "hms_tz.nhif.api.patient_appointment.make_encounter",
@@ -207,8 +207,12 @@ scheduler_events = {
     "hourly": ["hms_tz.nhif.api.healthcare_utils.set_uninvoiced_so_closed"],
     "daily": ["hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"],
     "cron": {
-        # fire every saturday 2:30 am at night
-        "30 2 * * 6": [
+        # Routine for every day 00:01 am at night
+        "1 0 * * *": [
+            "hms_tz.nhif.api.healthcare_utils.auto_submit_nhif_patient_claim"
+        ],
+        # Routine for every day 2:30am at night
+        "30 2 * * *": [
             "hms_tz.nhif.api.healthcare_utils.delete_or_cancel_draft_document"
         ],
         # Routine for every 10min
