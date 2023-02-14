@@ -89,9 +89,11 @@ def execute():
             dict(
                 fieldname="healthcare_notes_template",
                 label="Healthcare Notes Template",
-                fieldtype="Data",
+                fieldtype="Link",
                 insert_after="mtuha",
                 module_def="Hms Tz",
+                options="Healthcare Notes Template",
+                fetch_from="procedure_template.healthcare_notes_template"
             ),
             dict(
                 fieldname="hms_tz_ref_childname",
@@ -184,8 +186,6 @@ def execute():
                 fieldtype="Section Break",
                 insert_after="claim_status",
                 module_def="Hms Tz",
-                options="Healthcare Notes Template",
-                fetch_from="procedure_template.healthcare_notes_template"
             ),
             dict(
                 fieldname="section_break_43",
@@ -923,7 +923,7 @@ def execute():
                 reqd=1
             )
         ],
-        "Healthcare Insurance Coverage Plan": [
+        "Healthcare Service Insurance Coverage": [
             dict(
                 fieldtype='Check',
                 label='Is Auto Generated',
