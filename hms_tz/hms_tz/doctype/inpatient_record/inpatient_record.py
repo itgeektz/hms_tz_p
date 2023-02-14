@@ -35,8 +35,13 @@ class InpatientRecord(Document):
     def validate(self):
         self.validate_dates()
         if self.status == "Discharged":
-            frappe.db.set_value("Patient", self.patient, "inpatient_status", None)
-            frappe.db.set_value("Patient", self.patient, "inpatient_record", None)
+            if not frappe.db.exists("Inpatient Record", {
+                "patient": self.patient,
+                "status": ["in", ["Admitted", "Admission Scheduled", "Discharge Scheduled"]],
+                "name": ["!=", self.name]
+            }):
+                frappe.db.set_value("Patient", self.patient, "inpatient_status", None)
+                frappe.db.set_value("Patient", self.patient, "inpatient_record", None)
 
     def validate_dates(self):
         if (getdate(self.expected_discharge) < getdate(self.scheduled_date)) or (
