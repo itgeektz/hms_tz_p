@@ -23,6 +23,9 @@ def validate(doc, method):
     # validate date of birth
     if date.today() < getdate(doc.dob):
         frappe.throw(_("The date of birth cannot be later than today's date"))
+    
+    check_card_number(doc.card_no, doc.is_new(), doc.name, "validate")
+
     # replace initial 0 with 255 and remove all the unnecessray characters
     doc.mobile = remove_special_characters(doc.mobile)
     if doc.mobile[0] == "0":
@@ -139,12 +142,14 @@ def update_patient_history(doc):
 
 
 @frappe.whitelist()
-def check_card_number(card_no, is_new=None, patient=None):
+def check_card_number(card_no, is_new=None, patient=None, caller=None):
     filters = {"insurance_card_detail": ["like", "%" + card_no + "%"]}
     if not is_new and patient:
         filters["name"] = ["!=", patient]
     patients = frappe.get_all("Patient", filters=filters)
     if len(patients):
+        if caller:
+            frappe.throw(f"Cardno: <b>{card_no}</b> used with patient: <b>{patient}</b>, Please change Cardno to Proceed")
         return patients[0].name
     else:
         return "false"
