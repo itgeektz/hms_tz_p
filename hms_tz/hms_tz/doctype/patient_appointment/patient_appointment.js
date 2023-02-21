@@ -133,7 +133,7 @@ frappe.ui.form.on('Patient Appointment', {
 			if (frm.doc.procedure_template) {
 				frm.add_custom_button(__('Clinical Procedure'), function () {
 					frappe.model.open_mapped_doc({
-						method: 'hms_tz.hms_tz.doctype.clinical_procedure.clinical_procedure.make_procedure',
+						method: 'healthcare.healthcare.doctype.clinical_procedure.clinical_procedure.make_procedure',
 						frm: frm,
 					});
 				}, __('Create'));
