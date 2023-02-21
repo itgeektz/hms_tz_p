@@ -13,7 +13,6 @@ def execute():
                 label="Source",
                 fieldtype="Data",
                 insert_after="visit_type_id",
-                module_def="Hms Tz",
                 translatable=1
             ),
             dict(
@@ -21,7 +20,6 @@ def execute():
                 label="Visit Type ID",
                 fieldtype="Select",
                 insert_after="medical_code",
-                module_def="Hms Tz",
                 translatable=1,
                 options="1-Normal Visit\
                         2-Emergency\
@@ -38,7 +36,7 @@ def execute():
                 label="Healthcare Notes Template",
                 fieldtype="Link",
                 insert_after="description",
-                module_def="Hms Tz",
+                
                 options="Healthcare Notes Template",
             ),
             dict(
@@ -46,7 +44,7 @@ def execute():
                 label="Healthcare Service Unit",
                 fieldtype="Link",
                 insert_after="healthcare_service_unit_type",
-                module_def="Hms Tz",
+                
                 translatable=1,
                 options="Healthcare Service Unit"
             ),
@@ -55,7 +53,7 @@ def execute():
                 label="Is Not Completed",
                 fieldtype="Check",
                 insert_after="disabled",
-                module_def="Hms Tz",
+                
                 translatable=1,
             ),
             dict(
@@ -63,7 +61,7 @@ def execute():
                 label="Is Inpatient",
                 fieldtype="Check",
                 insert_after="is_not_completed",
-                module_def="Hms Tz",
+                
                 description="If ticked, this procedure will be provided to admitted patient only",
                 translatable=1,
             ),
@@ -74,14 +72,12 @@ def execute():
                 label="Service Reference Number",
                 fieldtype="Data",
                 insert_after="notes",
-                module_def="Hms Tz",
             ),
             dict(
                 fieldname="approval_type",
                 label="Approval Type",
                 fieldtype="Select",
                 insert_after="approval_number",
-                module_def="Hms Tz",
                 options="Local\
                         NHIF\
                         Other Insurance"
@@ -91,7 +87,6 @@ def execute():
                 label="Healthcare Notes Template",
                 fieldtype="Link",
                 insert_after="mtuha",
-                module_def="Hms Tz",
                 options="Healthcare Notes Template",
                 fetch_from="procedure_template.healthcare_notes_template"
             ),
@@ -100,7 +95,6 @@ def execute():
                 label="Ref Childname",
                 fieldtype="Data",
                 insert_after="ref_docname",
-                module_def="Hms Tz",
                 read_pnly=1
             ),
             dict(
@@ -108,14 +102,12 @@ def execute():
                 label="Is Restricted",
                 fieldtype="Check",
                 insert_after="medical_code",
-                module_def="Hms Tz",
             ),
             dict(
                 fieldname="mtuha",
                 label="MTUHA",
                 fieldtype="Link",
                 insert_after="section_break_38",
-                module_def="Hms Tz",
                 optiom="MTUHA"
             ),
             dict(
@@ -123,7 +115,6 @@ def execute():
                 label="Pre Operative Note",
                 fieldtype="Text Editor",
                 insert_after="pre_operative_notes_template",
-                module_def="Hms Tz",
                 fetch_from="pre_operative_notes_template.terms"
             ),
             dict(
@@ -131,7 +122,6 @@ def execute():
                 label="Pre Operative Notes Template",
                 fieldtype="Link",
                 insert_after="section_break_43",
-                module_def="Hms Tz",
                 options="Healthcare Notes Template",
                 fetch_from="procedure_template.healthcare_notes_template"
             ),
@@ -140,7 +130,6 @@ def execute():
                 label="Pre Operative Notes Template",
                 fieldtype="Link",
                 insert_after="section_break_43",
-                module_def="Hms Tz",
                 options="Healthcare Notes Template",
                 fetch_from="procedure_template.healthcare_notes_template"
             ),
@@ -149,7 +138,7 @@ def execute():
                 label="Procedure Notes",
                 fieldtype="Text Editor",
                 insert_after="healthcare_notes_template",
-                module_def="Hms Tz",
+                
                 fetch_from="healthcare_notes_template.terms"
             ),
             dict(
@@ -157,7 +146,7 @@ def execute():
                 label="Ref DocType",
                 fieldtype="Link",
                 insert_after="amended_from",
-                module_def="Hms Tz",
+                
                 options="DocType"
             ),
             dict(
@@ -166,39 +155,39 @@ def execute():
                 fieldtype="Dynamic Link",
                 insert_after="ref_doctype",
                 options="ref_doctype",
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldname="ref_doctype",
                 label="Ref DocType",
                 fieldtype="Link",
                 insert_after="amended_from",
-                module_def="Hms Tz",
+                
                 options="DocType"
             ),
             dict(
                 fieldname="section_break_0",
                 fieldtype="Section Break",
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldname="section_break_38",
                 fieldtype="Section Break",
                 insert_after="claim_status",
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldname="section_break_43",
                 fieldtype="Section Break",
                 insert_after="procedure_notes",
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldname="service_comment",
                 label="Service Comment",
                 fieldtype="Text",
                 insert_after="practitioner_name",
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldname="workflow_state",
@@ -206,7 +195,7 @@ def execute():
                 fieldtype="Link",
                 insert_after="section_break_0",
                 options="Workflow State",
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldname="hms_tz_insurance_coverage_plan",
@@ -224,7 +213,7 @@ def execute():
                 label="MTUHA",
                 fieldtype="Link",
                 insert_after="description",
-                module_def="Hms Tz",
+                
                 options="MTUHA"
             )
         ],
@@ -234,28 +223,28 @@ def execute():
                 label="Service Reference Number",
                 fieldtype="Data",
                 insert_after="is_restricted",
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Select',
                 label='Approval type',
                 fieldname='approval_type',
                 insert_after='approval_number',
-                module_def="Hms Tz",
+                
                 options='Local\nNHIF\nOther Insurance',
             ),
             dict(
                 fieldtype='Column Break',
                 fieldname='column_break_89',
                 insert_after='approval_type',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Link',
                 label='Department',
                 fieldname='department',
                 insert_after='healthcare_practitioner',
-                module_def="Hms Tz",
+                
                 options='Department',
             ),
             dict(
@@ -263,14 +252,14 @@ def execute():
                 label='Healthcare',
                 fieldname='healthcare',
                 insert_after='reference_name',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Link',
                 label='Healthcare Practitioner',
                 fieldname='healthcare_practitioner',
                 insert_after='healthcare_service_unit',
-                module_def="Hms Tz",
+                
                 options='Healthcare Practitioner',
             ),
             dict(
@@ -278,7 +267,7 @@ def execute():
                 label='Healthcare Service Unit',
                 fieldname='healthcare_service_unit',
                 insert_after='accounting_dimensions_section',
-                module_def="Hms Tz",
+                
                 options='Healthcare Service Unit',
             ),
             dict(
@@ -286,14 +275,14 @@ def execute():
                 label='Is Discount Applied',
                 fieldname='hms_tz_is_discount_applied',
                 insert_after='amount',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='Is Out of Stock',
                 fieldname='hms_tz_is_out_of_stock',
                 insert_after='customer_item_code',
-                module_def="Hms Tz",
+                
                 bold=1,
             ),
             dict(
@@ -301,49 +290,49 @@ def execute():
                 label='Is Restricted',
                 fieldname='is_restricted',
                 insert_after='original_stock_uom_qty',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Date',
                 label='Last Date Prescribed',
                 fieldname='last_date_prescribed',
                 insert_after='column_break_89',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Float',
                 label='Last Qty Prescribed',
                 fieldname='last_qty_prescribed',
                 insert_after='last_date_prescribed',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Data',
                 label='Original Item',
                 fieldname='original_item',
                 insert_after='healthcare',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Float',
                 label='Original Stock UOM Qty',
                 fieldname='original_stock_uom_qty',
                 insert_after='original_item',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Float',
                 label='Recommended Qty',
                 fieldname='recommended_qty',
                 insert_after='last_qty_prescribed',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Link',
                 label='Reference Doctype',
                 fieldname='reference_doctype',
                 insert_after='page_break',
-                module_def="Hms Tz",
+                
                 options='DocType',
             ),
             dict(
@@ -351,7 +340,7 @@ def execute():
                 label='Reference Name',
                 fieldname='reference_name',
                 insert_after='reference_doctype',
-                module_def="Hms Tz",
+                
                 options='reference_doctype',
             ),
 
@@ -362,27 +351,27 @@ def execute():
                 label='Authorization Number',
                 fieldname='authorization_number',
                 insert_after='reference_name',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Column Break',
                 fieldname='column_break_21',
                 insert_after='department',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Data',
                 label='Coverage Plan Name',
                 fieldname='coverage_plan_name',
                 insert_after='form_sales_invoice',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Link',
                 label='Department',
                 fieldname='department',
                 insert_after='sales_team',
-                module_def="Hms Tz",
+                
                 options='Department',
             ),
             dict(
@@ -390,7 +379,7 @@ def execute():
                 label='Form Sales Invoice',
                 fieldname='form_sales_invoice',
                 insert_after='patient_name',
-                module_def="Hms Tz",
+                
                 options='Sales Invoice',
             ),
             dict(
@@ -398,7 +387,7 @@ def execute():
                 label='Healthcare Practitioner',
                 fieldname='healthcare_practitioner',
                 insert_after='healthcare_service_unit',
-                module_def="Hms Tz",
+                
                 options='Healthcare Practitioner',
                 read_only=1,
             ),
@@ -406,7 +395,7 @@ def execute():
                 fieldtype='Check',
                 label='All Items Out of Stock',
                 fieldname='hms_tz_all_items_out_of_stock',
-                module_def="Hms Tz",
+                
                 insert_after='authorization_number',
                 hidden=1,
                 read_only=1,
@@ -416,7 +405,7 @@ def execute():
                 label='Appointment Number',
                 fieldname='hms_tz_appointment_no',
                 insert_after='coverage_plan_name',
-                module_def="Hms Tz",
+                
                 fetch_from="reference_name.appointment",
                 fetch_if_empty=1,
                 read_only=1,
@@ -426,35 +415,35 @@ def execute():
                 label='Comment',
                 fieldname='hms_tz_comment',
                 insert_after='set_target_warehouse',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Button',
                 label='LRPMT Returns',
                 fieldname='hms_tz_lrpmt_returns',
                 insert_after='hms_tz_comment',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Button',
                 label='Medicatiion Change Request',
                 fieldname='hms_tz_medicatiion_change_request',
                 insert_after='hms_tz_lrpmt_returns',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Button',
                 label='Medicatiion Change Request',
                 fieldname='hms_tz_medicatiion_change_request',
                 insert_after='hms_tz_lrpmt_returns',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Table',
                 label='Original Items',
                 fieldname='hms_tz_original_items',
                 insert_after='original_prescription',
-                module_def="Hms Tz",
+                
                 options='Original Delivery Note Item',
                 read_only=1,
             ),
@@ -463,7 +452,7 @@ def execute():
                 label='Phone Number',
                 fieldname='hms_tz_phone_no',
                 insert_after='patient_name',
-                module_def="Hms Tz",
+                
                 read_only=1,
             ),
             dict(
@@ -471,42 +460,42 @@ def execute():
                 label='Medical Department',
                 fieldname='medical_department',
                 insert_after='customer_name',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Section Break',
                 label='Medical References',
                 fieldname='medical_references',
                 insert_after='authorization_number',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Section Break',
                 label='Original Prescription',
                 fieldname='original_prescription',
                 insert_after='items',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Data',
                 label='Patient',
                 fieldname='patient',
                 insert_after='vehicle',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Data',
                 label='Patient Name',
                 fieldname='patient_name',
                 insert_after='patient',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Link',
                 label='Reference Doctype',
                 fieldname='reference_doctype',
                 insert_after='return_against',
-                module_def="Hms Tz",
+                
                 options='DocType',
             ),
             dict(
@@ -514,7 +503,7 @@ def execute():
                 label='Reference Name',
                 fieldname='reference_name',
                 insert_after='reference_doctype',
-                module_def="Hms Tz",
+                
                 options='reference_doctype',
             ),
             dict(
@@ -522,7 +511,7 @@ def execute():
                 label='Vehicle',
                 fieldname='vehicle',
                 insert_after='healthcare_practitioner',
-                module_def="Hms Tz",
+                
                 options='Vehicle',
                 hidden=1,
             ),
@@ -530,7 +519,7 @@ def execute():
                 fieldtype='Link',
                 label='Workflow State',
                 fieldname='workflow_state',
-                module_def="Hms Tz",
+                
                 options='Workflow State',
             ),
         ],
@@ -540,7 +529,7 @@ def execute():
                 label='Result Component',
                 fieldname='result_component',
                 insert_after='particulars',
-                module_def="Hms Tz",
+                
                 options='Result Component',
             )
         ],
@@ -550,7 +539,7 @@ def execute():
                 label='Medical Code',
                 fieldname='medical_code',
                 insert_after='diet_plan',
-                module_def="Hms Tz",
+                
             )
         ],
         "Drug Prescription": [
@@ -559,48 +548,48 @@ def execute():
                 label='Amount',
                 fieldname='amount',
                 insert_after='is_restricted',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='Cancelled',
                 fieldname='cancelled',
                 insert_after='reference_journal_entry',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Column Break',
                 fieldname='column_break_34',
                 insert_after='delivered_quantity',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Float',
                 label='Delivered Quantity',
                 fieldname='delivered_quantity',
                 insert_after='drug_prescription_created',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Data',
                 label='Department HSU',
                 fieldname='department_hsu',
                 insert_after='dn_detail',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Data',
                 label='dn detail',
                 fieldname='dn_detail',
                 insert_after='delivered_quantity',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Link',
                 label='Healthcare Service Unit',
                 fieldname='healthcare_service_unit',
                 insert_after='dosage_form',
-                module_def="Hms Tz",
+                
                 options='Healthcare Service Unit',
             ),
             dict(
@@ -608,35 +597,35 @@ def execute():
                 label='Is Discount Applied',
                 fieldname='hms_tz_is_discount_applied',
                 insert_after='hms_tz_is_discount_percent',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Percent',
                 label='Discount (%) on Price',
                 fieldname='hms_tz_is_discount_percent',
                 insert_after='update_schedule',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='Invoiced',
                 fieldname='invoiced',
                 insert_after='cancelled',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='Is Cancelled',
                 fieldname='is_cancelled',
                 insert_after='reference_journal_entry',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='Is Not Available Inhouse',
                 fieldname='is_not_available_inhouse',
                 insert_after='prescribe',
-                module_def="Hms Tz",
+                
                 allow_on_submit=1,
                 read_only=1,
                 bold=1,
@@ -646,7 +635,7 @@ def execute():
                 label='Is Out of Stock',
                 fieldname='hms_tz_is_out_of_stock',
                 insert_after='is_not_available_inhouse',
-                module_def="Hms Tz",
+                
                 allow_on_submit=1,
                 read_only=1,
                 bold=1,
@@ -656,55 +645,55 @@ def execute():
                 label='Is Restricted',
                 fieldname='is_restricted',
                 insert_after='healthcare_service_unit',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Select',
                 label='Medical Code',
                 fieldname='medical_code',
                 insert_after='drug_code',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='NHIF 2C Form',
                 fieldname='nhif_2c_form',
                 insert_after='prescribe',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='Override Healthcare Insurance Subscription',
                 fieldname='override_subscription',
                 insert_after='medical_code',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='Prescribe',
                 fieldname='prescribe',
                 insert_after='override_subscription',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Int',
                 label='Quantity Returned',
                 fieldname='quantity_returned',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Data',
                 label='Reference Journal Entry',
                 fieldname='reference_journal_entry',
                 insert_after='sales_invoice_number',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Data',
                 label='Sales Invoice Number',
                 fieldname='sales_invoice_number',
                 insert_after='column_break_34',
-                module_def="Hms Tz",
+                
             ),
         ],
         "Healthcare Insurance Company": [
@@ -713,7 +702,7 @@ def execute():
                 label='Default Price List',
                 fieldname='default_price_list',
                 insert_after='customer',
-                module_def="Hms Tz",
+                
                 options='Price List',
             ),
             dict(
@@ -721,7 +710,7 @@ def execute():
                 label='Disabled',
                 fieldname='disabled',
                 insert_after='default_price_list',
-                module_def="Hms Tz",
+                
                 bold=1,
             ),
             dict(
@@ -729,21 +718,21 @@ def execute():
                 label='Facility Code',
                 fieldname='facility_code',
                 insert_after='insurance_company_name',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='Has Price Discount',
                 fieldname='hms_tz_has_price_discount',
                 insert_after='disabled',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Percent',
                 label='Price Discount(%)',
                 fieldname='hms_tz_price_discount',
                 insert_after='hms_tz_has_price_discount',
-                module_def="Hms Tz",
+                
                 depends_on="eval: doc.hms_tz_has_price_discount == 1",
                 mandatory_depends_on="eval: doc.hms_tz_has_price_discount == 1",
                 bold=1
@@ -756,28 +745,28 @@ def execute():
                 label='Code for NHIF Excluded Services',
                 fieldname='code_for_nhif_excluded_services',
                 insert_after='daily_limit',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Currency',
                 label='Default Daily Limit',
                 fieldname='daily_limit',
                 insert_after='insurance_company_name',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Data',
                 label='NHIF Scheme ID',
                 fieldname='nhif_scheme_id',
                 insert_after='secondary_price_list',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Link',
                 label='Secondary Price List',
                 fieldname='secondary_price_list',
                 insert_after='price_list',
-                module_def="Hms Tz",
+                
                 options='Price List',
             ),
         ],
@@ -787,7 +776,7 @@ def execute():
                 label='Company',
                 fieldname='company',
                 insert_after='coverage_plan_card_number',
-                module_def="Hms Tz",
+                
                 options='Company',
             ),
             dict(
@@ -795,63 +784,63 @@ def execute():
                 label='Coverage Plan Card Number',
                 fieldname='coverage_plan_card_number',
                 insert_after='coverage_plan_name',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Data',
                 label='Coverage Plan Name',
                 fieldname='coverage_plan_name',
                 insert_after='healthcare_insurance_coverage_plan',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Currency',
                 label='Daily Limit',
                 fieldname='daily_limit',
                 insert_after='insurance_company_customer',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Section Break',
                 label='Product and Scheme Details',
                 fieldname='hms_tz_scheme_section_break',
                 insert_after='coverage_plan_card_number',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Data',
                 label='Product Code',
                 fieldname='hms_tz_product_code',
                 insert_after='hms_tz_scheme_section_break',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldname="hms_tz_product_name",
                 label="Product Name",
                 fieldtype="Data",
                 insert_after="hms_tz_product_code",
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Column Break',
                 label="",
                 fieldname='hms_tz_scheme_column_break',
                 insert_after='hms_tz_product_name',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldname="hms_tz_scheme_id",
                 label="SchemeId",
                 fieldtype="Data",
                 insert_after="hms_tz_scheme_column_break",
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Data',
                 label='Scheme Name',
                 fieldname='hms_tz_scheme_name',
                 insert_after='hms_tz_scheme_id',
-                module_def="Hms Tz",
+                
             ),
         ],
         "Healthcare Practitioner": [
@@ -860,21 +849,21 @@ def execute():
                 label='Abbreviation',
                 fieldname='abbreviation',
                 insert_after='practitioner_name',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='Bypass Vitals',
                 fieldname='bypass_vitals',
                 insert_after='nhif_physician_qualification',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Link',
                 label='Default Medication Healthcare Service Unit',
                 fieldname='default_medication_healthcare_service_unit',
                 insert_after='default_values',
-                module_def="Hms Tz",
+                
                 options='Healthcare Service Unit',
             ),
             dict(
@@ -882,21 +871,21 @@ def execute():
                 label='Default Values',
                 fieldname='default_values',
                 insert_after='hospital',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Signature',
                 label='Doctors Signature',
                 fieldname='doctors_signature',
                 insert_after='bypass_vitals',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Link',
                 label='NHIF Physician Qualification',
                 fieldname='nhif_physician_qualification',
                 insert_after='tz_mct_code',
-                module_def="Hms Tz",
+                
                 options='NHIF Physician Qualification',
             ),
             dict(
@@ -904,21 +893,21 @@ def execute():
                 label='Title and Qualification',
                 fieldname='title_and_qualification',
                 insert_after='supplier',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Data',
                 label='TZ MCT Code',
                 fieldname='tz_mct_code',
                 insert_after='office_phone',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldname="hms_tz_company",
                 fieldtype="Link",
                 label="Company",
                 insert_after="status",
-                module_def="Hms Tz",
+                
                 options="Company",
                 reqd=1
             )
@@ -929,14 +918,14 @@ def execute():
                 label='Is Auto Generated',
                 fieldname='is_auto_generated',
                 insert_after='end_date',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Link',
                 label='Item',
                 fieldname='item',
                 insert_after='healthcare_service_template',
-                module_def="Hms Tz",
+                
                 options='Item',
             ),
             dict(
@@ -944,7 +933,7 @@ def execute():
                 label='Maximum Claim Duration',
                 fieldname='maximum_claim_duration',
                 insert_after='maximum_number_of_claims',
-                module_def="Hms Tz",
+                
             ),
         ],
         "Healthcare Service Unit Type": [
@@ -953,21 +942,21 @@ def execute():
             #     label='Disabled',
             #     fieldname='disabled',
             #     insert_after='is_group',
-            #     module_def="Hms Tz",
+            #     
             # ),
             dict(
                 fieldtype='Check',
                 label='Is Consultancy Chargeable',
                 fieldname='is_consultancy_chargeable',
                 insert_after='occupancy_status',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='Is Service Chargeable',
                 fieldname='is_service_chargeable',
                 insert_after='is_consultancy_chargeable',
-                module_def="Hms Tz",
+                
             ),
         ],
         "Inpatient Consultancy": [
@@ -976,7 +965,7 @@ def execute():
                 label='Encounter',
                 fieldname='encounter',
                 insert_after='delivery_note',
-                module_def="Hms Tz",
+                
                 options='Patient Encounter',
             ),
             dict(
@@ -984,21 +973,21 @@ def execute():
                 label='Invoiced',
                 fieldname='hms_tz_invoiced',
                 insert_after='encounter',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='Is Discount Applied',
                 fieldname='hms_tz_is_discount_applied',
                 insert_after='rate',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='Is Confirmed',
                 fieldname='is_confirmed',
                 insert_after='hms_tz_invoiced',
-                module_def="Hms Tz",
+                
             ),
         ],
         "Inpatient Occupancy": [
@@ -1007,21 +996,21 @@ def execute():
                 label='Amount',
                 fieldname='amount',
                 insert_after='check_out',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Button',
                 label='Confirmed',
                 fieldname='confirmed',
                 insert_after='amount',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Link',
                 label='Delivery Note',
                 fieldname='delivery_note',
                 insert_after='confirmed',
-                module_def="Hms Tz",
+                
                 options='Delivery Note',
             ),
             dict(
@@ -1029,14 +1018,14 @@ def execute():
                 label='Is Discount Applied',
                 fieldname='hms_tz_is_discount_applied',
                 insert_after='amount',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='Is Confirmed',
                 fieldname='is_confirmed',
                 insert_after='invoiced',
-                module_def="Hms Tz",
+                
             ),
         ],
         "Inpatient Record": [
@@ -1045,34 +1034,34 @@ def execute():
                 label='Cash Limit',
                 fieldname='cash_limit',
                 insert_after='claim_status',
-                module_def="Hms Tz",
+                
                 fetch_if_empty=1
             ),
             dict(
                 fieldtype='Column Break',
                 fieldname='column_break_45',
                 insert_after='duplicate',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Column Break',
                 fieldname='column_break_92',
                 insert_after='when_to_obtain_urgent_care',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Check',
                 label='Duplicate',
                 fieldname='duplicate',
                 insert_after='inpatient_record_type',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Link',
                 label='Duplicated From',
                 fieldname='duplicated_from',
                 insert_after='reference_inpatient_record',
-                module_def="Hms Tz",
+                
                 options='Inpatient Record',
             ),
             dict(
@@ -1080,21 +1069,21 @@ def execute():
                 label='History',
                 fieldname='history',
                 insert_after='discharge_note',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Section Break',
                 label='Inpatient Consultancies',
                 fieldname='inpatient_consultancies',
                 insert_after='btn_transfer',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Table',
                 label='Inpatient Consultancy',
                 fieldname='inpatient_consultancy',
                 insert_after='inpatient_consultancies',
-                module_def="Hms Tz",
+                
                 options='Inpatient Consultancy',
             ),
             dict(
@@ -1102,7 +1091,7 @@ def execute():
                 label='Inpatient Record Final Diagnosis',
                 fieldname='inpatient_record_final_diagnosis',
                 insert_after='section_break_57',
-                module_def="Hms Tz",
+                
                 options='Codification Table',
             ),
             dict(
@@ -1110,7 +1099,7 @@ def execute():
                 label='Inpatient Record Preliminary Diagnosis',
                 fieldname='inpatient_record_preliminary_diagnosis',
                 insert_after='section_break_47',
-                module_def="Hms Tz",
+                
                 options='Codification Table',
             ),
             dict(
@@ -1118,7 +1107,7 @@ def execute():
                 label='Inpatient Record Type',
                 fieldname='inpatient_record_type',
                 insert_after='reference',
-                module_def="Hms Tz",
+                
                 options='Initial\nOngoing\nFinal',
             ),
             dict(
@@ -1126,28 +1115,28 @@ def execute():
                 label='Insurance Coverage Plan',
                 fieldname='insurance_coverage_plan',
                 insert_after='insurance_subscription',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Small Text',
                 label='Medication',
                 fieldname='medication',
                 insert_after='history',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Small Text',
                 label='On Examination',
                 fieldname='on_examination',
                 insert_after='column_break_92',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Link',
                 label='Patient Appointment',
                 fieldname='patient_appointment',
                 insert_after='admission_encounter',
-                module_def="Hms Tz",
+                
                 options='Patient Appointment',
                 fetch_from='admission_encounter.appointment',
             ),
@@ -1156,20 +1145,20 @@ def execute():
                 label='Patient Vitals',
                 fieldname='patient_vitals',
                 insert_after='patient_vitals_summary',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Section Break',
                 label='Patient Vitals Summary',
                 fieldname='patient_vitals_summary',
-                module_def="Hms Tz",
+                
             ),
             dict(
                 fieldtype='Data',
                 label='Practitioner Name',
                 fieldname='practitioner_name',
                 insert_after='admission_practitioner',
-                module_def="Hms Tz",
+                
                 fetch_from='practitioner.practitioner_name',
             ),
             dict(
@@ -1177,7 +1166,7 @@ def execute():
                 label='Previous Clinical Procedures',
                 fieldname='previous_clinical_procedures',
                 insert_after='procedure_prescription',
-                module_def="Hms Tz",
+                
                 options='Previous Procedure Prescription',
             ),
             {
@@ -1185,7 +1174,7 @@ def execute():
                 'label': 'Previous Diet Recommendation',
                 'fieldname': 'previous_diet_recommendation',
                 'insert_after': 'diet_recommendation',
-                "module_def": "Hms Tz",
+                
                 'options': 'Previous Diet Recommendation',
                 'read_only': 1,
             },
@@ -1194,7 +1183,7 @@ def execute():
                 'label': 'Previous Items',
                 'fieldname': 'previous_drug_prescription',
                 'insert_after': 'drug_prescription',
-                "module_def": "Hms Tz",
+                
                 'options': 'Previous Drug Prescription',
                 'read_only': 1,
             },
@@ -1203,7 +1192,7 @@ def execute():
                 'label': 'Previous Lab Tests',
                 'fieldname': 'previous_lab_tests',
                 'insert_after': 'lab_test_prescription',
-                "module_def": "Hms Tz",
+                
                 'options': 'Previous Lab Prescription',
                 'read_only': 1,
             },
@@ -1213,7 +1202,7 @@ def execute():
                 'fieldname': 'previous_radiology_procedure',
                 'insert_after': 'radiology_procedure_prescription',
                 'options': 'Previous Radiology Procedure Prescription',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Table',
@@ -1221,7 +1210,7 @@ def execute():
                 'fieldname': 'previous_therapy_plan_detail',
                 'insert_after': 'therapies',
                 'options': 'Previous Therapy Plan Detail',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Link',
@@ -1229,7 +1218,7 @@ def execute():
                 'fieldname': 'price_list',
                 'insert_after': 'expected_discharge',
                 'options': 'Price List',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1237,14 +1226,14 @@ def execute():
                 'fieldname': 'primary_practitioner_name',
                 'insert_after': 'primary_practitioner',
                 'fetch_from': 'primary_practitioner.practitioner_name',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Section Break',
                 'label': 'Reference',
                 'fieldname': 'reference',
                 'insert_after': 'diagnosis',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Link',
@@ -1252,21 +1241,21 @@ def execute():
                 'fieldname': 'reference_inpatient_record',
                 'insert_after': 'column_break_45',
                 'options': 'Inpatient Record',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Button',
                 'label': 'Reset Admission Status To Admission Scheduled',
                 'fieldname': 'reset_admission_status_to_admission_scheduled',
                 'insert_after': 'status',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Text',
                 'label': 'Review',
                 'fieldname': 'review',
                 'insert_after': 'surgical_procedure',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1274,35 +1263,35 @@ def execute():
                 'fieldname': 'secondary_practitioner_name',
                 'insert_after': 'secondary_practitioner',
                 'fetch_from': 'secondary_practitioner.practitioner_name',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Section Break',
                 'label': "",
                 'fieldname': 'section_break_47',
                 'insert_after': 'duplicated_from',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Section Break',
                 'label': "",
                 'fieldname': 'section_break_57',
                 'insert_after': 'previous_radiology_procedure',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Small Text',
                 'label': 'Surgical procedure',
                 'fieldname': 'surgical_procedure',
                 'insert_after': 'on_examination',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Small Text',
                 'label': 'When to Obtain Urgent Care',
                 'fieldname': 'when_to_obtain_urgent_care',
                 'insert_after': 'medication',
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Item": [
@@ -1311,14 +1300,14 @@ def execute():
                 'label': 'Healthcare Service Template',
                 'fieldname': 'healthcare_service_template',
                 'insert_after': 'hms_item_name',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
                 'label': 'HMS Item Name',
                 'fieldname': 'hms_item_name',
                 'insert_after': 'item_name',
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Lab Prescription": [
@@ -1327,91 +1316,91 @@ def execute():
                 'label': 'Amount',
                 'fieldname': 'amount',
                 'insert_after': 'lab_test_name',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Check',
                 'label': 'Cancelled',
                 'fieldname': 'cancelled',
                 'insert_after': 'reference_journal_entry',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Column Break',
                 'label': "",
                 'fieldname': 'column_break_23',
                 'insert_after': 'delivered_quantity',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Float',
                 'label': 'Delivered Quantity',
                 'fieldname': 'delivered_quantity',
                 'insert_after': 'section_break_21',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Check',
                 'label': 'Is Discount Applied',
                 'fieldname': 'hms_tz_is_discount_applied',
                 'insert_after': 'amount',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Check',
                 'label': 'Is Cancelled',
                 'fieldname': 'is_cancelled',
                 'insert_after': 'reference_journal_entry',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Check',
                 'label': 'Is Not Available Inhouse',
                 'fieldname': 'is_not_available_inhouse',
                 'insert_after': 'prescribe',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Select',
                 'label': 'Medical Code',
                 'fieldname': 'medical_code',
                 'insert_after': 'lab_test_code',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Check',
                 'label': 'Override Healthcare Insurance Subscription',
                 'fieldname': 'override_subscription',
                 'insert_after': 'medical_code',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Check',
                 'label': 'Prescribe',
                 'fieldname': 'prescribe',
                 'insert_after': 'override_subscription',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
                 'label': 'Reference Journal Entry',
                 'fieldname': 'reference_journal_entry',
                 'insert_after': 'sales_invoice_number',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
                 'label': 'Sales Invoice Number',
                 'fieldname': 'sales_invoice_number',
                 'insert_after': 'column_break_23',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Section Break',
                 'label': '',
                 'fieldname': 'section_break_21',
                 'insert_after': 'note',
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Lab Test Template": [
@@ -1420,60 +1409,60 @@ def execute():
                 'label': 'C Max Range',
                 'fieldname': 'c_max_range',
                 'insert_after': 'c_min_range',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Float',
                 'label': 'C Min Range',
                 'fieldname': 'c_min_range',
                 'insert_after': 'column_break_30',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
                 'label': 'C Text',
                 'fieldname': 'c_text',
                 'insert_after': 'c_max_range',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Column Break',
                 'fieldname': 'column_break_26',
                 'insert_after': 'm_text',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Column Break',
                 'fieldname': 'column_break_30',
                 'insert_after': 'f_text',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Column Break',
                 'fieldname': 'column_break_34',
                 'insert_after': 'c_text',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Float',
                 'label': 'F Max Range',
                 'fieldname': 'f_max_range',
                 'insert_after': 'f_min_range',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Float',
                 'label': 'F Min Range',
                 'fieldname': 'f_min_range',
                 'insert_after': 'column_break_26',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
                 'label': 'F Text',
                 'fieldname': 'f_text',
                 'insert_after': 'f_max_range',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Link',
@@ -1481,28 +1470,28 @@ def execute():
                 'fieldname': 'healthcare_service_unit',
                 'insert_after': 'healthcare_service_unit_type',
                 'options': 'Healthcare Service Unit',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Float',
                 'label': 'I Max Range',
                 'fieldname': 'i_max_range',
                 'insert_after': 'i_min_range',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Float',
                 'label': 'I Min Range',
                 'fieldname': 'i_min_range',
                 'insert_after': 'column_break_34',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
                 'label': 'I Text',
                 'fieldname': 'i_text',
                 'insert_after': 'i_max_range',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Section Break',
@@ -1510,21 +1499,21 @@ def execute():
                 'fieldname': 'lab_routine_normals',
                 'insert_after': 'lab_test_normal_range',
                 'depends_on': "eval:doc.lab_test_template_type == 'Single'",
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Float',
                 'label': 'M Max Range',
                 'fieldname': 'm_max_range',
                 'insert_after': 'm_min_range',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Float',
                 'label': 'M Min Range',
                 'fieldname': 'm_min_range',
                 'insert_after': 'lab_routine_normals',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1541,7 +1530,7 @@ def execute():
                 'insert_after': 'is_restricted',
                 'depends_on': 'eval: doc.is_restricted',
                 'mandatory_depends_on': 'eval: doc.is_restricted',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Select',
@@ -1551,7 +1540,7 @@ def execute():
                 'options': 'Local\nNHIF\nOther Insurance',
                 'depends_on': 'eval: doc.is_restricted',
                 'mandatory_depends_on': 'eval: doc.is_restricted',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1559,14 +1548,14 @@ def execute():
                 'fieldname': 'hms_tz_ref_childname',
                 'insert_after': 'ref_docname',
                 'read_pnly': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Check',
                 'label': 'Is Restricted',
                 'fieldname': 'is_restricted',
                 'insert_after': 'department',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Link',
@@ -1574,7 +1563,7 @@ def execute():
                 'fieldname': 'ref_doctype',
                 'insert_after': 'prescription',
                 'options': 'DocType',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Dynamic Link',
@@ -1582,14 +1571,14 @@ def execute():
                 'fieldname': 'ref_docname',
                 'insert_after': 'ref_doctype',
                 'options': 'ref_doctype',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Text',
                 'label': 'Service Comment',
                 'fieldname': 'service_comment',
                 'insert_after': 'practitioner_name',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1597,14 +1586,14 @@ def execute():
                 'fieldname': 'title',
                 'insert_after': 'naming_series',
                 'default': '{patient_name} - {template}',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Link',
                 'label': 'Workflow State',
                 'fieldname': 'workflow_state',
                 'insert_after': 'ref_docname',
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldname":"hms_tz_insurance_coverage_plan",
@@ -1623,7 +1612,7 @@ def execute():
                 'fieldname': 'hms_tz_help_msg_section_break',
                 'insert_after': "",
                 'idx': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'HTML',
@@ -1638,14 +1627,14 @@ def execute():
                         4. Cancel whole draft delivery note, even if one item of draft delivery note is selected<br>\
                         5. Return quantities of submitted delivery note\
 			    </div>",
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Section Break',
                 'label': '',
                 'fieldname': 'hms_tz_patient_info',
                 'insert_after': 'hms_tz_lrpmt_returns_help_msg',
-                "module_def": "Hms Tz",
+                
             }
         ],
         "Medication Change Request": [
@@ -1665,14 +1654,14 @@ def execute():
                 'fieldname': 'company_options',
                 'insert_after': 'column_break_6',
                 'options': 'Healthcare Company Option',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Small Text',
                 'label': 'Default Comments',
                 'fieldname': 'default_comments',
                 'insert_after': 'default_prescription_dosage',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Link',
@@ -1680,7 +1669,7 @@ def execute():
                 'fieldname': 'healthcare_service_unit',
                 'insert_after': 'default_comments',
                 'options': 'Healthcare Service Unit',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1695,21 +1684,21 @@ def execute():
                 'label': 'hms_tz_appointment_string',
                 'fieldname': 'hms_tz_appointment_string',
                 'insert_after': 'naming_series',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Rating',
                 'label': 'How Likely Would You Recommend Our Services To Others',
                 'fieldname': 'how_likely_would_you_recommend_our_services_to_others',
                 'insert_after': 'total_amount',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
                 'label': 'Internal Form Number',
                 'fieldname': 'internal_form_number',
                 'insert_after': 'allow_changes',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Select',
@@ -1726,14 +1715,14 @@ def execute():
                 'fieldname': 'detailed_normal_range',
                 'insert_after': 'conversion_factor',
                 'columns': 2,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Float',
                 'label': 'Max Normal',
                 'fieldname': 'max_normal',
                 'insert_after': 'min_normal',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Float',
@@ -1741,7 +1730,7 @@ def execute():
                 'fieldname': 'min_normal',
                 'insert_after': 'require_result_value',
                 'read_only': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1750,7 +1739,7 @@ def execute():
                 'insert_after': 'detailed_normal_range',
                 'read_only': 1,
                 'columns': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1758,7 +1747,7 @@ def execute():
                 'fieldname': 'text_normal',
                 'insert_after': 'max_normal',
                 'read_only': 1,
-                "module_def": "Hms Tz",
+                
             }
         ],
         "Original Delivery Note Item": [
@@ -1768,7 +1757,7 @@ def execute():
                 'fieldname': 'hms_tz_is_discount_applied',
                 'insert_after': 'amount',
                 'description': 'Discount is applied only if the discount percent is defined on Healthcare Insurance Company',
-                "module_def": "Hms Tz",
+                
             }
         ],
         "Patient Appointment": [
@@ -1779,7 +1768,7 @@ def execute():
                 'insert_after': 'get_authorization_number',
                 'depends_on': 'eval:doc.insurance_company && doc.practitioner',
                 'translatable': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1788,7 +1777,7 @@ def execute():
                 'insert_after': 'coverage_plan_name',
                 'fetch_from': 'insurance_subscription.coverage_plan_card_number',
                 'read_only': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1797,7 +1786,7 @@ def execute():
                 'insert_after': 'insurance_subscription',
                 'fetch_from': 'insurance_subscription.coverage_plan_name',
                 'read_only': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Float',
@@ -1805,14 +1794,14 @@ def execute():
                 'fieldname': 'daily_limit',
                 'insert_after': 'insurance_company_name',
                 'depends_on': "eval:doc.insurance_company && doc.insurance_company!='NHIF';",
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Check',
                 'label': 'Follow Up',
                 'fieldname': 'follow_up',
                 'insert_after': 'ref_patient_encounter',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Button',
@@ -1820,7 +1809,7 @@ def execute():
                 'fieldname': 'get_authorization_number',
                 'insert_after': 'column_break_49',
                 'depends_on': 'eval:doc.insurance_company && !doc.authorization_number && doc.practitioner',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Link',
@@ -1828,7 +1817,7 @@ def execute():
                 'fieldname': 'healthcare_referrer_type',
                 'insert_after': 'referring_practitioner',
                 'options': 'DocType',
-                "module_def": "Hms Tz",
+                
                 'hidden': 1,
             },
             {
@@ -1838,7 +1827,7 @@ def execute():
                 'insert_after': 'healthcare_referrer_type',
                 'options': 'healthcare_referrer_type',
                 'read_only_depends_on': 'eval:doc.invoiced || doc.authorization_number;',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Check',
@@ -1847,7 +1836,7 @@ def execute():
                 'insert_after': 'paid_amount',
                 'description': 'Discount is applied only if the discount percent is defined on Healthcare Insurance Company',
                 'read_only': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1857,7 +1846,7 @@ def execute():
                 'fetch_from': 'insurance_company.insurance_company_name',
                 'read_only': 1,
                 'translatable': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1868,7 +1857,7 @@ def execute():
                 'fetch_from': 'patient.mobile',
                 'read_only': 1,
                 'translatable': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Link',
@@ -1877,7 +1866,7 @@ def execute():
                 'insert_after': 'insurance_claim',
                 'options': 'NHIF Patient Claim',
                 'read_only': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1885,7 +1874,7 @@ def execute():
                 'fieldname': 'old_hms_number',
                 'insert_after': 'notes',
                 'fetch_from': 'patient.old_hms_registration_no',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Attach Image',
@@ -1895,7 +1884,7 @@ def execute():
                 'fetch_from': 'patient.image',
                 'read_only': 1,
                 'hidden': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1905,7 +1894,7 @@ def execute():
                 'depends_on': 'eval: doc.mode_of_payment && !doc.mode_of_payment.includes("Cash")',
                 'mandatory_depends_on': 'eval: doc.mode_of_payment && !doc.mode_of_payment.includes("Cash")',
                 'translatable': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1914,7 +1903,7 @@ def execute():
                 'insert_after': 'ref_vital_signs',
                 'read_only': 1,
                 'translatable': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1922,7 +1911,7 @@ def execute():
                 'fieldname': 'ref_vital_signs',
                 'insert_after': 'duration',
                 'read_only': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Link',
@@ -1931,7 +1920,7 @@ def execute():
                 'insert_after': 'send_vfd',
                 'options': 'Journal Entry',
                 'read_only': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1939,7 +1928,7 @@ def execute():
                 'fieldname': 'referral_no',
                 'insert_after': 'healthcare_referrer',
                 'translatable': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Small Text',
@@ -1947,7 +1936,7 @@ def execute():
                 'fieldname': 'remarks',
                 'insert_after': 'referral_no',
                 'translatable': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Button',
@@ -1955,13 +1944,13 @@ def execute():
                 'fieldname': 'send_vfd',
                 'insert_after': 'ref_sales_invoice',
                 'depends_on': 'ref_sales_invoice',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Check',
                 'label': 'SMS Sent',
                 'fieldname': 'sms_sent',
-                "module_def": "Hms Tz",
+                
                 'insert_after': 'reminded',
             }
         ],
@@ -1975,7 +1964,7 @@ def execute():
                 'in_list_view': 1,
                 'translatable': 1,
                 'description': '<hr>Onset: When did the CC begin?<br>\nLocation: Where is the CC located?<br>\nDuration: How long has the CC been going on for?<br>\nCharacterization: How does the patient describe the CC?<br>\nAlleviating and Aggravating factors: What makes the CC better? Worse?<br>\nRadiation: Does the CC move or stay in one location?<br>\nTemporal factor: Is the CC worse (or better) at a certain time of the day?<br>\nSeverity: Using a scale of 1 to 10, 1 being the least, 10 being the worst, how does the patient rate the CC?<br>\n',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Data',
@@ -1984,7 +1973,7 @@ def execute():
                 'insert_after': 'complaint',
                 'in_list_view': 1,
                 'translatable': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Duration',
@@ -1992,13 +1981,13 @@ def execute():
                 'fieldname': 'compliant_duration',
                 'insert_after': 'complaint',
                 'hidden': 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Link',
                 'label': 'System',
                 'fieldname': 'system',
-                "module_def": "Hms Tz",
+                
             }
         ],
         "Patient Encounter": [
@@ -2011,7 +2000,7 @@ def execute():
                 "read_only": 1,
                 "hidden": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Select",
@@ -2022,20 +2011,20 @@ def execute():
                 "fetch_from": "patient.blood_group",
                 "read_only": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Column Break",
                 "label": "", "fieldname": "column_break_31",
                 "insert_after": "duplicated",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Button",
                 "label": "Copy From Preliminary Diagnosis",
                 "fieldname": "copy_from_preliminary_diagnosis",
                 "insert_after": "section_break_52",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Button",
@@ -2043,7 +2032,7 @@ def execute():
                 "fieldname": "create_sales_invoice",
                 "insert_after": "encounter_mode_of_payment",
                 "depends_on": "eval: !doc.sales_invoice && doc.encounter_category == \"Direct Cash\" && !!doc.__islocal",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Float",
@@ -2053,7 +2042,7 @@ def execute():
                 "read_only": 1,
                 "hidden": 1,
                 "print_hide": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Float",
@@ -2062,7 +2051,7 @@ def execute():
                 "insert_after": "insurance_subscription",
                 "fetch_from": "appointment.daily_limit",
                 "depends_on": "eval:doc.insurance_company != \"NHIF\"",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2071,7 +2060,7 @@ def execute():
                 "insert_after": "get_chronic_medications",
                 "options": "Healthcare Service Unit",
                 "fetch_from": "practitioner.default_medication_healthcare_service_unit",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -2080,7 +2069,7 @@ def execute():
                 "insert_after": "amended_from",
                 "read_only": 1,
                 "allow_on_submit": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Small Text",
@@ -2088,14 +2077,14 @@ def execute():
                 "fieldname": "ed_addressed_to",
                 "insert_after": "ed_reason_for_absence",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Int",
                 "label": "ED No of Days",
                 "fieldname": "ed_no_of_days",
                 "insert_after": "ed_addressed_to",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2103,7 +2092,7 @@ def execute():
                 "fieldname": "ed_reason_for_absence",
                 "insert_after": "section_break_33",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2111,7 +2100,7 @@ def execute():
                 "fieldname": "encounter_category",
                 "insert_after": "encounter_time",
                 "options": "Encounter Category",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2119,7 +2108,7 @@ def execute():
                 "fieldname": "encounter_mode_of_payment",
                 "insert_after": "encounter_category",
                 "options": "Mode of Payment", "mandatory_depends_on": "eval: doc.encounter_category == \"Direct Cash\"",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Select",
@@ -2132,7 +2121,7 @@ def execute():
                 "allow_on_submit": 1,
                 "in_standard_filter": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Text Editor",
@@ -2142,7 +2131,7 @@ def execute():
                 "mandatory_depends_on": "eval:!doc.practitioner.includes ('Direct')",
                 "translatable": 1,
                 "permlevel": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Button",
@@ -2150,7 +2139,7 @@ def execute():
                 "fieldname": "clear_history",
                 "insert_after": "examination_detail",
                 "hidden": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -2162,7 +2151,7 @@ def execute():
                 "in_list_view": 1,
                 "in_standard_filter": 1,
                 "in_preview": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2171,7 +2160,7 @@ def execute():
                 "insert_after": "reference_encounter",
                 "options": "Patient Encounter",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Button",
@@ -2179,21 +2168,21 @@ def execute():
                 "fieldname": "get_chronic_diagnosis",
                 "insert_after": "section_break_28",
                 "depends_on": "eval: doc.docstatus == 0",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Button",
                 "label": "Get Chronic Medications",
                 "fieldname": "get_chronic_medications",
                 "insert_after": "sb_drug_prescription",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Button",
                 "label": "Get Lab Bundle Items",
                 "fieldname": "get_lab_bundle_items",
                 "insert_after": "lab_bundle",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Signature",
@@ -2202,7 +2191,7 @@ def execute():
                 "insert_after": "patient_signature",
                 "fetch_from": "practitioner.doctors_signature",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2212,7 +2201,7 @@ def execute():
                 "fetch_from": "appointment.healthcare_referrer",
                 "read_only": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2224,14 +2213,14 @@ def execute():
                 "fetch_if_empty": 1,
                 "read_only": 1,
                 "hidden": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Column Break",
                 "label": "",
                 "fieldname": "hms_tz_column_break",
                 "insert_after": "get_chronic_diagnosis",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Button",
@@ -2239,7 +2228,7 @@ def execute():
                 "fieldname": "hms_tz_add_chronic_diagnosis",
                 "insert_after": "hms_tz_column_break",
                 "depends_on": "eval: doc.docstatus == 0",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Button",
@@ -2248,7 +2237,7 @@ def execute():
                 "insert_after": "medical_department",
                 "bold": 1,
                 "permlevel": 3,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
@@ -2256,7 +2245,7 @@ def execute():
                 "fieldname": "hms_tz_previous_section_break",
                 "insert_after": "system_and_symptoms",
                 "collapsible": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Text Editor",
@@ -2265,21 +2254,21 @@ def execute():
                 "insert_after": "hms_tz_previous_section_break",
                 "read_only": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
                 "label": "",
                 "fieldname": "hms_tz_examination_detail_section_break",
                 "insert_after": "hms_tz_previous_examination_detail",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
                 "label": "",
                 "fieldname": "hms_tz_section_break",
                 "insert_after": "hms_tz_add_chronic_diagnosis",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Attach Image",
@@ -2290,7 +2279,7 @@ def execute():
                 "fetch_if_empty": 1,
                 "read_only": 1,
                 "hidden": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2301,7 +2290,7 @@ def execute():
                 "read_only": 1,
                 "in_list_view": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -2309,7 +2298,7 @@ def execute():
                 "fieldname": "is_not_billable",
                 "insert_after": "current_total",
                 "allow_on_submit": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2317,7 +2306,7 @@ def execute():
                 "fieldname": "lab_bundle",
                 "insert_after": "sb_test_prescription",
                 "options": "Lab Bundle",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2326,7 +2315,7 @@ def execute():
                 "insert_after": "healthcare_service_unit",
                 "fetch_from": "appointment.mode_of_payment",
                 "read_only": 1,   "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2336,7 +2325,7 @@ def execute():
                 "fetch_from": "patient.old_hms_registration_no",
                 "read_only": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Table",
@@ -2344,7 +2333,7 @@ def execute():
                 "fieldname": "patient_encounter_final_diagnosis",
                 "insert_after": "copy_from_preliminary_diagnosis",
                 "options": "Codification Table",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Table",
@@ -2352,7 +2341,7 @@ def execute():
                 "fieldname": "patient_encounter_preliminary_diagnosis",
                 "insert_after": "hms_tz_section_break",
                 "options": "Codification Table",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
@@ -2360,14 +2349,14 @@ def execute():
                 "fieldname": "patient_info_section_break",
                 "insert_after": "section_break_3",
                 "collapsible": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Signature",
                 "label": "Patient Signature",
                 "fieldname": "patient_signature",
                 "insert_after": "signatures",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Table",
@@ -2376,7 +2365,7 @@ def execute():
                 "insert_after": "diet_recommendation",
                 "options": "Previous Diet Recommendation",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Table",
@@ -2385,7 +2374,7 @@ def execute():
                 "insert_after": "drug_prescription",
                 "options": "Previous Drug Prescription",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Table",
@@ -2394,7 +2383,7 @@ def execute():
                 "insert_after": "lab_test_prescription",
                 "options": "Previous Lab Prescription",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Table",
@@ -2403,7 +2392,7 @@ def execute():
                 "insert_after": "procedure_prescription",
                 "options": "Previous Procedure Prescription",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Table",
@@ -2412,7 +2401,7 @@ def execute():
                 "insert_after": "radiology_procedure_prescription",
                 "options": "Previous Radiology Procedure Prescription",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Table",
@@ -2421,7 +2410,7 @@ def execute():
                 "insert_after": "therapies",
                 "options": "Previous Therapy Plan Detail",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Float",
@@ -2430,7 +2419,7 @@ def execute():
                 "insert_after": "sb_refs",
                 "read_only": 1, "hidden": 1,
                 "print_hide": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
@@ -2438,7 +2427,7 @@ def execute():
                 "fieldname": "reference",
                 "insert_after": "diagnosis_in_print",
                 "hidden": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2447,7 +2436,7 @@ def execute():
                 "insert_after": "column_break_31",
                 "options": "Patient Encounter",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2457,21 +2446,21 @@ def execute():
                 "options": "Sales Invoice",
                 "read_only": 1,
                 "allow_on_submit": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
                 "label": "PRELIMINARY DIAGNOSIS",
                 "fieldname": "section_break_28",
                 "insert_after": "claim_status",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
                 "label": "",
                 "fieldname": "section_break_52",
                 "insert_after": "previous_radiology_procedure_prescription",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Button",
@@ -2479,14 +2468,14 @@ def execute():
                 "fieldname": "sent_to_vfd",
                 "insert_after": "sales_invoice",
                 "depends_on": "eval: doc.sales_invoice",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Column Break",
                 "label": "Signatures",
                 "fieldname": "signatures",
                 "insert_after": "encounter_comment",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
@@ -2494,7 +2483,7 @@ def execute():
                 "fieldname": "symptoms_and_signs",
                 "insert_after": "healthcare_referrer",
                 "permlevel": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Table",
@@ -2503,7 +2492,7 @@ def execute():
                 "insert_after": "symptoms_and_signs",
                 "options": "Patient Encounter Symptom",
                 "permlevel": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Button",
@@ -2511,7 +2500,7 @@ def execute():
                 "fieldname": "undo_set_as_final",
                 "insert_after": "is_not_billable",
                 "permlevel": 3,
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Patient Referral": [
@@ -2523,7 +2512,7 @@ def execute():
                 "fetch_from": "patient_encounter.insurance_company",
                 "read_only": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2533,7 +2522,7 @@ def execute():
                 "fetch_from": "patient_encounter.insurance_coverage_plan",
                 "read_only": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2543,7 +2532,7 @@ def execute():
                 "fetch_from": "patient.mobile",
                 "read_only": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2555,7 +2544,7 @@ def execute():
                 "in_list_view": 1,
                 "in_standard_filter": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2563,7 +2552,7 @@ def execute():
                 "fieldname": "referred_to_facility",
                 "insert_after": "referred_to_medical_department",
                 "options": "NHIF Facility Code",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2573,7 +2562,7 @@ def execute():
                 "fetch_from": "referred_to_practitioner.department",
                 "read_only": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Patient": [
@@ -2584,7 +2573,7 @@ def execute():
                 "insert_after": "nida_card_number",
                 "hidden": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2593,7 +2582,7 @@ def execute():
                 "insert_after": "insurance_details",
                 "read_only_depends_on": "eval: doc.card_no",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Currency",
@@ -2602,7 +2591,7 @@ def execute():
                 "insert_after": "language",
                 "precision": 2,
                 "default": 5000000,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Table",
@@ -2610,7 +2599,7 @@ def execute():
                 "fieldname": "chronic_medications",
                 "insert_after": "codification_table",
                 "options": "Chronic Medications",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
@@ -2618,7 +2607,7 @@ def execute():
                 "fieldname": "chronic_section",
                 "insert_after": "surgical_history",
                 "permlevel": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Table",
@@ -2626,14 +2615,14 @@ def execute():
                 "fieldname": "codification_table",
                 "insert_after": "chronic_section",
                 "options": "Codification Table",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Column Break",
                 "label": "",
                 "fieldname": "column_break_3",
                 "insert_after": "card_no",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2642,7 +2631,7 @@ def execute():
                 "insert_after": "age_html",
                 "options": "Occupation",
                 "reqd": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2651,7 +2640,7 @@ def execute():
                 "insert_after": "area",
                 "options": "Demography",
                 "reqd": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2660,7 +2649,7 @@ def execute():
                 "insert_after": "common_occupation",
                 "options": "Ethnicity",
                 "reqd": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2669,7 +2658,7 @@ def execute():
                 "insert_after": "mobile",
                 "options": "Campaign",
                 "reqd": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Small Text",
@@ -2678,13 +2667,13 @@ def execute():
                 "insert_after": "column_break_3",
                 "translatable": 1,
                 "permlevel": 2,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
                 "label": "NHIF Details",
                 "fieldname": "insurance_details",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2694,21 +2683,21 @@ def execute():
                 "read_only": 1,
                 "hidden": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Column Break",
                 "label": "",
                 "fieldname": "next_to_kid_column_break",
                 "insert_after": "next_to_kin_mobile_no",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
                 "label": "Next to Kin Details",
                 "fieldname": "next_to_kin_details",
                 "insert_after": "marital_status",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2716,7 +2705,7 @@ def execute():
                 "fieldname": "next_to_kin_mobile_no",
                 "insert_after": "next_to_kin_name",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2724,7 +2713,7 @@ def execute():
                 "fieldname": "next_to_kin_name",
                 "insert_after": "next_to_kin_details",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Select",
@@ -2733,7 +2722,7 @@ def execute():
                 "insert_after": "next_to_kid_column_break",
                 "options": "\nFather\nMother\nSpouse\nSiblings\nFamily\nOther",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2741,7 +2730,7 @@ def execute():
                 "fieldname": "nida_card_number",
                 "insert_after": "report_preference",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2749,7 +2738,7 @@ def execute():
                 "fieldname": "old_hms_registration_no",
                 "insert_after": "phone",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Text Editor",
@@ -2757,14 +2746,14 @@ def execute():
                 "fieldname": "patient_details_with_formatting",
                 "insert_after": "patient_details",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Signature",
                 "label": "Patient Signature",
                 "fieldname": "patient_signature",
                 "insert_after": "old_hms_registration_no",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2774,7 +2763,7 @@ def execute():
                 "read_only": 1,
                 "hidden": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2783,7 +2772,7 @@ def execute():
                 "insert_after": "how_did_you_hear_about_us",
                 "options": "Referred From",
                 "depends_on": "eval:doc.how_did_you_hear_about_us == \"Referred\"",
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Prescription Dosage": [
@@ -2792,7 +2781,7 @@ def execute():
                 "label": "",
                 "fieldname": "column_break_1",
                 "insert_after": "dosage",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Float",
@@ -2801,7 +2790,7 @@ def execute():
                 "insert_after": "column_break_1",
                 "allow_in_quick_entry": 1,
                 "description": "Enter total quantity in PCs (tabs, caps, vials) of prescription to be dispensed for each day",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -2809,14 +2798,14 @@ def execute():
                 "fieldname": "dosage_form",
                 "insert_after": "default_strength",
                 "options": "Dosage Form",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
                 "label": "",
                 "fieldname": "section_break_3",
                 "insert_after": "dosage_form",
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Previous Drug Prescription": [
@@ -2827,14 +2816,14 @@ def execute():
                 "insert_after": "cancelled",
                 "read_only": 1,
                 "allow_on_submit": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
                 "label": "NHIF 2C Form",
                 "fieldname": "nhif_2c_form",
                 "insert_after": "prescribe",
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Previous Lab Prescription": [
@@ -2845,7 +2834,7 @@ def execute():
                 "insert_after": "cancelled",
                 "read_only": 1,
                 "allow_on_submit": 1,
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Previous Procedure Prescription": [
@@ -2874,7 +2863,7 @@ def execute():
                 'label': '',
                 'fieldname': 'column_break_6',
                 'insert_after': 'sessions_completed',
-                "module_def": "Hms Tz",
+                
             },
             {
                 'fieldtype': 'Check',
@@ -2892,35 +2881,35 @@ def execute():
                 "fieldname": "amount",
                 "insert_after": "procedure_created",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
                 "label": "Cancelled",
                 "fieldname": "cancelled",
                 "insert_after": "reference_journal_entry",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Column Break",
                 "label": "",
                 "fieldname": "column_break_10",
                 "insert_after": "clinical_procedure",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Column Break",
                 "label": "",
                 "fieldname": "column_break_30",
                 "insert_after": "delivered_quantity",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Float",
                 "label": "Delivered Quantity",
                 "fieldname": "delivered_quantity",
                 "insert_after": "section_break_28",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -2929,7 +2918,7 @@ def execute():
                 "insert_after": "amount",
                 "read_only": 1,
                 "description": "Discount is applied only if the discount percent is defined on Healthcare Insurance Company",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Select",
@@ -2938,7 +2927,7 @@ def execute():
                 "insert_after": "override_insurance_subscription",
                 "options": "\nCash\nPrescribe",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -2947,7 +2936,7 @@ def execute():
                 "insert_after": "reference_journal_entry",
                 "read_only": 1,
                 "allow_on_submit": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -2955,7 +2944,7 @@ def execute():
                 "fieldname": "is_not_available_inhouse",
                 "insert_after": "prescribe",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Select",
@@ -2965,14 +2954,14 @@ def execute():
                 "reqd": 1,
                 "in_list_view": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
                 "label": "Override Insurance Subscription",
                 "fieldname": "override_insurance_subscription",
                 "insert_after": "column_break_10",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -2980,14 +2969,14 @@ def execute():
                 "fieldname": "override_subscription",
                 "insert_after": "medical_code",
                 "permlevel": 2,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
                 "label": "Prescribe",
                 "fieldname": "prescribe",
                 "insert_after": "override_subscription",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -2995,7 +2984,7 @@ def execute():
                 "fieldname": "reference_journal_entry",
                 "insert_after": "sales_invoice_number",
                 "read_only": 1,    "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3005,14 +2994,14 @@ def execute():
                 "read_only": 1,
                 "allow_on_submit": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
                 "label": "",
                 "fieldname": "section_break_28",
                 "insert_after": "note",
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Radiology Examination Template": [
@@ -3022,7 +3011,7 @@ def execute():
                 "fieldname": "body_part",
                 "insert_after": "description",
                 "options": "Body Part",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -3031,14 +3020,14 @@ def execute():
                 "insert_after": "healthcare_service_unit_type",
                 "options": "Healthcare Service Unit",
                 "hidden": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
                 "label": "Radiology Report",
                 "fieldname": "radiology_report",
                 "insert_after": "medical_code",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Text Editor",
@@ -3048,7 +3037,7 @@ def execute():
                 "fetch_from": "radiology_report_type.terms",
                 "fetch_if_empty": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -3056,7 +3045,7 @@ def execute():
                 "fieldname": "radiology_report_type",
                 "insert_after": "radiology_report",
                 "options": "Healthcare Notes Template",
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Radiology Examination": [
@@ -3068,7 +3057,7 @@ def execute():
                 "depends_on": "eval: doc.is_restricted",
                 "mandatory_depends_on": "eval: doc.is_restricted",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Select",
@@ -3079,7 +3068,7 @@ def execute():
                 "depends_on": "eval: doc.is_restricted",
                 "mandatory_depends_on": "eval: doc.is_restricted",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -3088,7 +3077,7 @@ def execute():
                 "insert_after": "amended_from",
                 "options": "Body Part",
                 "fetch_from": "radiology_examination_template.body_part",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3098,7 +3087,7 @@ def execute():
                 "fetch_from": "practitioner.practitioner_name",
                 "read_only": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3107,7 +3096,7 @@ def execute():
                 "insert_after": "ref_docname",
                 "read_only": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -3115,7 +3104,7 @@ def execute():
                 "fieldname": "is_restricted",
                 "insert_after": "patient_details_html",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -3124,7 +3113,7 @@ def execute():
                 "insert_after": "terms",
                 "options": "Healthcare Notes Template",
                 "fetch_from": "radiology_examination_template.radiology_report_type",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Text Editor",
@@ -3134,7 +3123,7 @@ def execute():
                 "fetch_from": "radiology_report.terms",
                 "fetch_if_empty": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -3143,7 +3132,7 @@ def execute():
                 "insert_after": "radiology_report_details",
                 "options": "DocType",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Dynamic Link",
@@ -3152,7 +3141,7 @@ def execute():
                 "insert_after": "ref_doctype",
                 "options": "ref_doctype",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Text",
@@ -3161,7 +3150,7 @@ def execute():
                 "insert_after": "healthcare_practitioner_name",
                 "read_only": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3170,7 +3159,7 @@ def execute():
                 "insert_after": "workflow_state",
                 "allow_on_submit": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -3180,7 +3169,7 @@ def execute():
                 "hidden": 1,
                 "no_copy": 1,
                 "allow_on_submit": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldname": "hms_tz_patient_age",
@@ -3190,7 +3179,7 @@ def execute():
                 "fetch_from ":  "ref_docname.patient_age",
                 "fetch_if_empty": 1,
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldname": "hms_tz_patient_sex",
@@ -3201,7 +3190,7 @@ def execute():
                 "fetch_from ":  "ref_docname.patient_sex",
                 "fetch_if_empty": 1,
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldname": "hms_tz_insurance_coverage_plan",
@@ -3211,7 +3200,7 @@ def execute():
                 "fetch_from ":  "insurance_subscription.healthcare_insurance_coverage_plan",
                 "fetch_if_empty": 1,
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             }
         ],
         "Radiology Procedure Prescription": [
@@ -3221,28 +3210,28 @@ def execute():
                 "fieldname": "amount",
                 "insert_after": "radiology_procedure_name",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
                 "label": "Cancelled",
                 "fieldname": "cancelled",
                 "insert_after": "reference_journal_entry",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Column Break",
                 "label": "",
                 "fieldname": "column_break_25",
                 "insert_after": "delivered_quantity",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Float",
                 "label": "Delivered Quantity",
                 "fieldname": "delivered_quantity",
                 "insert_after": "section_break_23",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -3251,7 +3240,7 @@ def execute():
                 "insert_after": "amount",
                 "read_only": 1,
                 "description": "Discount is applied only if the discount percent is defined on Healthcare Insurance Company",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -3260,7 +3249,7 @@ def execute():
                 "insert_after": "reference_journal_entry",
                 "read_only": 1,
                 "allow_on_submit": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -3268,7 +3257,7 @@ def execute():
                 "fieldname": "is_not_available_inhouse",
                 "insert_after": "prescribe",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Select",
@@ -3278,7 +3267,7 @@ def execute():
                 "reqd": 1,
                 "in_list_view": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -3286,14 +3275,14 @@ def execute():
                 "fieldname": "override_subscription",
                 "insert_after": "medical_code",
                 "permlevel": 2,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
                 "label": "Prescribe",
                 "fieldname": "prescribe",
                 "insert_after": "override_subscription",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3302,7 +3291,7 @@ def execute():
                 "insert_after": "sales_invoice_number",
                 "read_only": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3311,14 +3300,14 @@ def execute():
                 "read_only": 1,
                 "allow_on_submit": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
                 "label": "",
                 "fieldname": "section_break_23",
                 "insert_after": "note",
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Sales Invoice Item": [
@@ -3328,7 +3317,7 @@ def execute():
                 "fieldname": "department",
                 "insert_after": "healthcare_practitioner",
                 "options": "Department",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -3336,7 +3325,7 @@ def execute():
                 "fieldname": "healthcare_practitioner",
                 "insert_after": "healthcare_service_unit",
                 "options": "Healthcare Practitioner",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -3344,7 +3333,7 @@ def execute():
                 "fieldname": "healthcare_service_unit",
                 "insert_after": "accounting_dimensions_section",
                 "options": "Healthcare Service Unit",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -3355,7 +3344,7 @@ def execute():
                 "read_only": 1,
                 "allow_on_submit": 1,
                 "bold": 1,
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Sales Order": [
@@ -3366,7 +3355,7 @@ def execute():
                 "insert_after": "customer_name",
                 "depends_on": "eval: doc.customer == \"Cash Customer\"", "mandatory_depends_on": "eval: doc.customer == \"Cash Customer\"",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3375,7 +3364,7 @@ def execute():
                 "insert_after": "patient_actual_name",
                 "options": "Phone",  "depends_on": "eval: doc.customer == \"Cash Customer\"", "mandatory_depends_on": "eval: doc.customer == \"Cash Customer\"",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Sample Collection": [
@@ -3387,7 +3376,7 @@ def execute():
                 "options": "DocType",
                 "read_only": 1,
                 "print_hide": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Dynamic Link",
@@ -3397,14 +3386,14 @@ def execute():
                 "options": "ref_doctype",
                 "read_only": 1,
                 "print_hide": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
                 "label": "",
                 "fieldname": "section_break_20",
                 "insert_after": "sample_details",
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Therapy Plan Detail": [
@@ -3414,28 +3403,28 @@ def execute():
                 "fieldname": "amount",
                 "insert_after": "is_not_available_inhouse",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
                 "label": "Cancelled",
                 "fieldname": "cancelled",
                 "insert_after": "reference_journal_entry",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Column Break",
                 "label": "",
                 "fieldname": "column_break_22",
                 "insert_after": "delivered_quantity",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Column Break",
                 "label": "",
                 "fieldname": "column_break_6",
                 "insert_after": "sessions_completed",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Small Text",
@@ -3444,7 +3433,7 @@ def execute():
                 "insert_after": "column_break_6",
                 "mandatory_depends_on": "eval:doc.override_subscription == 1 && doc.prescribe != 1;",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Float",
@@ -3452,7 +3441,7 @@ def execute():
                 "fieldname": "delivered_quantity",
                 "insert_after": "section_break_20",
                 "default": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -3461,7 +3450,7 @@ def execute():
                 "insert_after": "amount",
                 "read_only": 1,
                 "description": "Discount is applied only if the discount percent is defined on Healthcare Insurance Company",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -3470,7 +3459,7 @@ def execute():
                 "insert_after": "cancelled",
                 "read_only": 1,
                 "allow_on_submit": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -3479,7 +3468,7 @@ def execute():
                 "insert_after": "reference_journal_entry",
                 "read_only": 1,
                 "allow_on_submit": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -3487,7 +3476,7 @@ def execute():
                 "fieldname": "is_not_available_inhouse",
                 "insert_after": "prescribe",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Select",
@@ -3496,7 +3485,7 @@ def execute():
                 "insert_after": "therapy_type",
                 "mandatory_depends_on": "eval:doc.parent == \"Patient Encounter\"",
                 "in_list_view": 1,  "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
@@ -3504,14 +3493,14 @@ def execute():
                 "fieldname": "override_subscription",
                 "insert_after": "medical_code",
                 "permlevel": 2,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Check",
                 "label": "Prescribe",
                 "fieldname": "prescribe",
                 "insert_after": "override_subscription",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3519,7 +3508,7 @@ def execute():
                 "fieldname": "reference_journal_entry",
                 "insert_after": "sales_invoice_number",
                 "read_only": 1,    "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3527,14 +3516,14 @@ def execute():
                 "fieldname": "sales_invoice_number",
                 "insert_after": "column_break_22",
                 "allow_on_submit": 1, "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
                 "label": "",
                 "fieldname": "section_break_20",
                 "insert_after": "note",
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Therapy Plan Template": [
@@ -3553,7 +3542,7 @@ def execute():
                 "insert_after": "total_sessions_completed",
                 "options": "DocType",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Dynamic Link",
@@ -3562,7 +3551,7 @@ def execute():
                 "insert_after": "ref_doctype",
                 "options": "ref_doctype",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -3572,7 +3561,7 @@ def execute():
                 "hidden": 1,
                 "no_copy": 1,
                 "allow_on_submit": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldname": "hms_tz_appointment",
@@ -3583,7 +3572,7 @@ def execute():
                 "fetch_from ":  "ref_docname.appointment",
                 "fetch_if_empty": 1,
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldname": "hms_tz_patient_age",
@@ -3593,7 +3582,7 @@ def execute():
                 "fetch_from ":  "ref_docname.patient_age",
                 "fetch_if_empty": 1,
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldname": "hms_tz_patient_sex",
@@ -3604,7 +3593,7 @@ def execute():
                 "fetch_from ":  "ref_docname.patient_sex",
                 "fetch_if_empty": 1,
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldname": "hms_tz_insurance_coverage_plan",
@@ -3614,7 +3603,7 @@ def execute():
                 "fetch_from ":  "ref_docname.insurance_coverage_plan",
                 "fetch_if_empty": 1,
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
         ],
         "Vital Signs": [
@@ -3623,7 +3612,7 @@ def execute():
                 "label": "",
                 "fieldname": "column_break_29",
                 "insert_after": "verbal_response",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Select",
@@ -3632,7 +3621,7 @@ def execute():
                 "insert_after": "glasgow_coma_scale",
                 "options": "\n4 - Spontaneous--open with blinking at baseline\n3 - To verbal stimuli, command, speech\n2 - To pain only (not applied to face)\n1 - No response",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
@@ -3640,7 +3629,7 @@ def execute():
                 "fieldname": "glasgow_coma_scale",
                 "insert_after": "intraocular_pressure_le",
                 "collapsible": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3651,14 +3640,14 @@ def execute():
                 "read_only": 1,
                 "in_standard_filter": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Int",
                 "label": "Height (in cm)",
                 "fieldname": "height_in_cm",
                 "insert_after": "weight",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Attach Image",
@@ -3668,7 +3657,7 @@ def execute():
                 "fetch_if_empty": 1,
                 "read_only": 1,
                 "hidden": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3677,7 +3666,7 @@ def execute():
                 "insert_after": "intraocular_pressure_re",
                 "depends_on": "eval:doc.medical_department=='Eye'",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3686,7 +3675,7 @@ def execute():
                 "insert_after": "visual_acuity_le",
                 "depends_on": "eval:doc.medical_department=='Eye'",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3696,7 +3685,7 @@ def execute():
                 "fetch_from": "appointment.department",
                 "read_only": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3707,7 +3696,7 @@ def execute():
                 "read_only": 1,
                 "hidden": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Select",
@@ -3716,7 +3705,7 @@ def execute():
                 "insert_after": "column_break_29",
                 "options": "\n6 - Obeys commands for movement\n5 - Purposeful movement to painful stimulus\n4 - Withdraws in response to pain\n3 - Flexion in response to pain (decorticate posturing)\n2 - Extension response in response to pain (decerebrate posturing)\n1 - No response",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3725,7 +3714,7 @@ def execute():
                 "insert_after": "respiratory_rate",
                 "translatable": 1,
                 "description": "For a healthy individual, the normal SpO2 should be between 96% to 99%.",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Select",
@@ -3736,20 +3725,20 @@ def execute():
                 "in_list_view": 1,
                 "in_standard_filter": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "HTML",
                 "label": "Patient Vitals",
                 "fieldname": "patient_vitals",
                 "insert_after": "patient_vitals_summary",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
                 "label": "Patient Vitals Summary",
                 "fieldname": "patient_vitals_summary",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Link",
@@ -3759,7 +3748,7 @@ def execute():
                 "options": "Healthcare Practitioner",
                 "fetch_from": "appointment.practitioner",
                 "read_only": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Float",
@@ -3767,14 +3756,14 @@ def execute():
                 "fieldname": "rbg",
                 "insert_after": "oxygen_saturation_spo2",
                 "description": "Value in mmol/l: The reference values for a \"normal\" random glucose test in an average adult are 4.4\u9225?.8 mmol/l, between 7.8\u9225?1.1 mmol/l is considered pre-diabetes, and > 11.1 mmol/l is considered diabetes according to ADA guidelines",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Section Break",
                 "label": "",
                 "fieldname": "section_break_2",
                 "insert_after": "patient_vitals",
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3784,7 +3773,7 @@ def execute():
                 "fetch_from": "appointment.coverage_plan_name",
                 "read_only": 1,
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Select",
@@ -3793,7 +3782,7 @@ def execute():
                 "insert_after": "eye_opening",
                 "options": "\n5 - Oriented\n4 - Confused conversation, but able to answer questions\n3 - Inappropriate words\n2 - Incomprehensible speech\n1 - No response",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3802,7 +3791,7 @@ def execute():
                 "insert_after": "visual_acuity_re",
                 "depends_on": "eval:doc.medical_department=='Eye'",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
             {
                 "fieldtype": "Data",
@@ -3811,7 +3800,7 @@ def execute():
                 "insert_after": "vital_signs_note",
                 "depends_on": "eval:doc.medical_department=='Eye'",
                 "translatable": 1,
-                "module_def": "Hms Tz",
+                
             },
         ]
     }
