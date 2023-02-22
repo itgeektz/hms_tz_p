@@ -143,6 +143,8 @@ def update_patient_history(doc):
 
 @frappe.whitelist()
 def check_card_number(card_no, is_new=None, patient=None, caller=None):
+    if not card_no:
+        return "false"
     filters = {"insurance_card_detail": ["like", "%" + card_no + "%"]}
     if not is_new and patient:
         filters["name"] = ["!=", patient]
