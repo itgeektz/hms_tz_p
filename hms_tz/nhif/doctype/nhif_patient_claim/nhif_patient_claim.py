@@ -48,7 +48,7 @@ class NHIFPatientClaim(Document):
         else:
             self.final_patient_encounter = self.get_final_patient_encounter()
         self.calculate_totals()
-        self.set_clinical_notes()
+        # self.set_clinical_notes()
         if not self.is_new():
             frappe.db.sql(
                 "UPDATE `tabPatient Appointment` SET nhif_patient_claim = '' WHERE nhif_patient_claim = '{0}'".format(
@@ -381,12 +381,16 @@ class NHIFPatientClaim(Document):
             },
         ]
         self.nhif_patient_claim_item = []
+        self.clinical_notes = ""
         final_patient_encounter = self.final_patient_encounter
         inpatient_record = final_patient_encounter.inpatient_record
         # is_inpatient = True if inpatient_record else False
         if not inpatient_record:
             for encounter in self.patient_encounters:
                 encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
+
+                self.set_clinical_notes(encounter_doc)
+
                 for child in childs_map:
                     for row in encounter_doc.get(child.get("table")):
                         if row.prescribe or row.is_cancelled:
@@ -527,6 +531,9 @@ class NHIFPatientClaim(Document):
                         encounter_doc = frappe.get_doc(
                             "Patient Encounter", encounter.name
                         )
+
+                        self.set_clinical_notes(encounter_doc)
+                        
                         for child in childs_map:
                             for row in encounter_doc.get(child.get("table")):
                                 if row.prescribe or row.is_cancelled:
@@ -660,7 +667,7 @@ class NHIFPatientClaim(Document):
         entities.DateOfBirth = str(self.date_of_birth)
         entities.PatientFileNo = self.patient_file_no
         # entities.PatientFile = generate_pdf(self)
-        entities.ClaimFile = get_claim_pdf_file(self)
+        # entities.ClaimFile = get_claim_pdf_file(self)
         entities.ClinicalNotes = self.clinical_notes
         entities.AuthorizationNo = self.authorization_no
         entities.AttendanceDate = str(self.attendance_date)
@@ -792,27 +799,36 @@ class NHIFPatientClaim(Document):
             item.folio_disease_id = item.folio_disease_id or str(uuid.uuid1())
             item.date_created = item.date_created or nowdate()
 
-    def set_clinical_notes(self):
-        self.clinical_notes = ""
-        for patient_encounter in self.patient_encounters:
-            examination_detail = (
-                frappe.get_value(
-                    "Patient Encounter", patient_encounter.name, "examination_detail"
-                )
-                or ""
+    def set_clinical_notes(self, encounter_doc):
+        if not self.clinical_notes:
+            patient_name = f"Patient: <b>{self.patient_name}</b>,"
+            date_of_birth = f"Date of Birth: <b>{self.date_of_birth}</b>,"
+            gender = f"Gender: <b>{self.gender}</b>,"
+            years = f"Age: <b>{(frappe.utils.date_diff(nowdate(), self.date_of_birth))//365} years</b>,"
+            self.clinical_notes = " ".join([patient_name, gender, date_of_birth, years]) + "\n\n"
+
+        if not encounter_doc.examination_detail:
+            frappe.msgprint(
+                _(
+                    f"Encounter {encounter_doc.name} does not have Examination Details defined. Check the encounter."
+                ),
+                alert=True,
             )
-            if not examination_detail:
-                frappe.msgprint(
-                    _(
-                        "Encounter {0} does not have Examination Details defined. Check the encounter.".format(
-                            patient_encounter
-                        )
-                    ),
-                    alert=True,
-                )
-                # return
-            self.clinical_notes += examination_detail or ""
-            self.clinical_notes += "\n"
+            # return
+        self.clinical_notes += encounter_doc.examination_detail or ""
+        self.clinical_notes += "\n\n"
+
+        if len(encounter_doc.get("drug_prescription")) > 0:
+            for row in encounter_doc.get("drug_prescription"):
+                med_info = ""
+                if row.dosage:
+                    med_info += f", Dosage: {row.dosage}"
+                if row.period:
+                    med_info += f", Perion: {row.period}"
+                if row.dosage_form:
+                    med_info += f", Dosage Form: {row.dosage_form}"
+                
+                self.clinical_notes += f"Drug: {row.drug_code} {med_info} \n\n"
 
     def before_insert(self):
         if frappe.db.exists(
