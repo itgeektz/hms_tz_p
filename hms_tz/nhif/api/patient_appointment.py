@@ -457,6 +457,7 @@ def set_follow_up(appointment_doc, method):
 
 
 def make_next_doc(doc, method):
+    check_multiple_appointments(doc)
     if doc.is_new():
         return
     if doc.insurance_subscription:
@@ -558,3 +559,27 @@ def get_discount_percent(insurance_company):
         discount_percent = discount
     
     return discount_percent
+
+def check_multiple_appointments(doc):
+    if (
+        doc.coverage_plan_card_number and 
+        "NHIF" in doc.insurance_company and 
+        doc.appointment_type in ["Outpatient Visit", "Normal Visit"] and
+        doc.department not in ["Eye", "Optometrist", "Physiotherapy"]
+    ):
+        appointments = frappe.get_list("Patient Appointment", 
+            filters={
+                "patient": doc.patient,
+                "coverage_plan_card_number": doc.coverage_plan_card_number,
+                "appointment_date": frappe.utils.nowdate(),
+                "status": ["!=", "Cancelled"],
+                "name": ["!=", doc.name]
+            },
+            fields=["name", "department", "practitioner"]
+        )
+
+        if len(appointments) > 0:
+            msg = f"Patient already has an appointment: <b>{appointments[0].name}</b> for Practitioner: <b>{appointments[0].practitioner}</b>. \
+                <br>It is adviced to have only one appointment per day."
+            frappe.msgprint(msg)
+            frappe.msgprint(f"Patient already has an appointment for <b>{appointments[0].practitioner}</b>", alert=True)
