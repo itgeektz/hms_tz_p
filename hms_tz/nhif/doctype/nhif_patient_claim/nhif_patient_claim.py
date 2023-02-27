@@ -143,29 +143,35 @@ class NHIFPatientClaim(Document):
         self.posting_date = nowdate()
         self.serial_no = int(self.name[-9:])
         self.item_crt_by = get_fullname(frappe.session.user)
-        final_patient_encounter = self.final_patient_encounter
-        practitioner_name, practitioner_no = frappe.get_cached_value(
+        # rock: 173 
+        pratitioners = [d.practitioner for d in self.final_patient_encounter]
+        practitioner_details = frappe.get_all(
             "Healthcare Practitioner",
-            final_patient_encounter.practitioner,
+            {"name": ["in", pratitioners]},
             ["practitioner_name", "tz_mct_code"],
         )
-        if not practitioner_name:
+        if not practitioner_details[0].practitioner_name:
             frappe.throw(
                 _("There is no Practitioner Name for Practitioner {0}").format(
-                    final_patient_encounter.practitioner
+                    practitioner_details[0].practitioner_name
                 )
             )
+<<<<<<< HEAD
 
         if not practitioner_no:
+=======
+            
+        if not practitioner_details[0].tz_mct_code:
+>>>>>>> dabe53be (feat: add multiple practitioner number in json if multiple claims merged together)
             frappe.throw(
                 _("There is no TZ MCT Code for Practitioner {0}").format(
-                    final_patient_encounter.practitioner
+                    practitioner_details[0].practitioner_name
                 )
             )
 
-        self.practitioner_name = practitioner_name
-        self.practitioner_no = practitioner_no
-        inpatient_record = final_patient_encounter.inpatient_record
+        self.practitioner_name = practitioner_details[0].practitioner_name
+        self.practitioner_no = ", ".join([d.tz_mct_code for d in practitioner_details])
+        inpatient_record = [h.inpatient_record for h in self.final_patient_encounter][0] or None
         self.inpatient_record = inpatient_record
         # Reset values for every validate
         self.patient_type_code = "OUT"
@@ -384,10 +390,14 @@ class NHIFPatientClaim(Document):
             },
         ]
         self.nhif_patient_claim_item = []
+<<<<<<< HEAD
         self.clinical_notes = ""
         final_patient_encounter = self.final_patient_encounter
         inpatient_record = final_patient_encounter.inpatient_record
         # is_inpatient = True if inpatient_record else False
+=======
+        inpatient_record = [d.inpatient_record for d in self.final_patient_encounter][0] or None
+>>>>>>> dabe53be (feat: add multiple practitioner number in json if multiple claims merged together)
         if not inpatient_record:
             for encounter in self.patient_encounters:
                 encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
@@ -634,21 +644,28 @@ class NHIFPatientClaim(Document):
                 new_row.idx = 1
 
     def get_final_patient_encounter(self):
+        # rock 173
+        appointment = None
+        if self.hms_tz_claim_appointment_list:
+            appointment = ["in", json.loads(self.hms_tz_claim_appointment_list)]
+        else:
+            appointment = self.patient_appointment
+
         patient_encounter_list = frappe.get_all(
             "Patient Encounter",
             filters={
-                "appointment": self.patient_appointment,
+                "appointment": appointment,
                 "docstatus": 1,
                 "duplicated": 0,
                 "encounter_type": "Final",
             },
             fields=["name", "practitioner", "inpatient_record"],
             order_by="`modified` desc",
-            limit_page_length=1,
+            # limit_page_length=1,
         )
         if len(patient_encounter_list) == 0:
             frappe.throw(_("There no Final Patient Encounter for this Appointment"))
-        return patient_encounter_list[0]
+        return patient_encounter_list
 
     def get_patient_file_no(self):
         patient_file_no = self.patient
