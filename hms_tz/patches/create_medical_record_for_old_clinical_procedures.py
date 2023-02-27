@@ -1,5 +1,5 @@
 import frappe
-from hms_tz.hms_tz.doctype.clinical_procedure.clinical_procedure import (
+from healthcare.healthcare.doctype.clinical_procedure.clinical_procedure import (
     insert_clinical_procedure_to_medical_record,
 )
 
