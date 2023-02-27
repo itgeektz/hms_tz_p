@@ -129,6 +129,9 @@ class NHIFPatientClaim(Document):
         
         if len(appointment_documents) > 1:
             validate_hold_card_status(self, appointment_documents, claim_details, merged_appointments, caller)
+        else:
+            if caller:
+                frappe.msgprint("Release Patient Card", 20, alert=True)
 
 
     def set_claim_values(self):
