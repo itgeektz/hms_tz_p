@@ -10,9 +10,6 @@ from hms_tz.nhif.api.healthcare_utils import (
     create_delivery_note_from_LRPT,
     get_restricted_LRPT,
 )
-from healthcare.healthcare.doctype.clinical_procedure.clinical_procedure import (
-    insert_clinical_procedure_to_medical_record,
-)
 
 
 def validate(doc, methd):
@@ -23,7 +20,6 @@ def validate(doc, methd):
 
 def on_submit(doc, methd):
     update_procedure_prescription(doc)
-    insert_clinical_procedure_to_medical_record(doc)
     create_delivery_note(doc)
 
 
