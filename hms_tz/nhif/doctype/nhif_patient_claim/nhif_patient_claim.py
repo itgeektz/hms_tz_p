@@ -144,10 +144,10 @@ class NHIFPatientClaim(Document):
         self.serial_no = int(self.name[-9:])
         self.item_crt_by = get_fullname(frappe.session.user)
         # rock: 173 
-        pratitioners = [d.practitioner for d in self.final_patient_encounter]
+        practitioners = [d.practitioner for d in self.final_patient_encounter]
         practitioner_details = frappe.get_all(
             "Healthcare Practitioner",
-            {"name": ["in", pratitioners]},
+            {"name": ["in", practitioners]},
             ["practitioner_name", "tz_mct_code"],
         )
         if not practitioner_details[0].practitioner_name:
@@ -156,13 +156,8 @@ class NHIFPatientClaim(Document):
                     practitioner_details[0].practitioner_name
                 )
             )
-<<<<<<< HEAD
-
-        if not practitioner_no:
-=======
             
         if not practitioner_details[0].tz_mct_code:
->>>>>>> dabe53be (feat: add multiple practitioner number in json if multiple claims merged together)
             frappe.throw(
                 _("There is no TZ MCT Code for Practitioner {0}").format(
                     practitioner_details[0].practitioner_name
@@ -390,14 +385,8 @@ class NHIFPatientClaim(Document):
             },
         ]
         self.nhif_patient_claim_item = []
-<<<<<<< HEAD
         self.clinical_notes = ""
-        final_patient_encounter = self.final_patient_encounter
-        inpatient_record = final_patient_encounter.inpatient_record
-        # is_inpatient = True if inpatient_record else False
-=======
         inpatient_record = [d.inpatient_record for d in self.final_patient_encounter][0] or None
->>>>>>> dabe53be (feat: add multiple practitioner number in json if multiple claims merged together)
         if not inpatient_record:
             for encounter in self.patient_encounters:
                 encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
