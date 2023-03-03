@@ -38,6 +38,7 @@ frappe.ui.form.on('Patient Encounter', {
             };
         };
         set_medical_code(frm, true);
+
         if (frm.doc.duplicated == 1 || frm.doc.finalized || frm.doc.practitioner.includes("Direct")) {
             frm.remove_custom_button("Schedule Admission");
             frm.remove_custom_button("Refer Practitioner");
@@ -160,7 +161,7 @@ frappe.ui.form.on('Patient Encounter', {
                         }
                     });
                     refresh_field('patient_encounter_preliminary_diagnosis');
-                    set_medical_code(frm);
+                    set_medical_code(frm, true);
                 }
             }
         });
@@ -260,7 +261,7 @@ frappe.ui.form.on('Patient Encounter', {
             }
         });
         refresh_field('patient_encounter_final_diagnosis');
-        set_medical_code(frm);
+        set_medical_code(frm, true);
     },
     encounter_category: function (frm) {
         if (frm.doc.patient_encounter_preliminary_diagnosis && frm.doc.patient_encounter_preliminary_diagnosis.length > 0) {
@@ -279,7 +280,7 @@ frappe.ui.form.on('Patient Encounter', {
             final_row.mtuha = "Other";
             refresh_field('patient_encounter_final_diagnosis');
         }
-        set_medical_code(frm);
+        set_medical_code(frm, true);
 
     },
     create_sales_invoice: function (frm) {
@@ -419,6 +420,19 @@ function set_medical_code (frm, reset_columns) {
 
             grid.fields_map.medical_code.options = options;
             grid.refresh();
+
+           // Set options for the medical_code field in the child table 
+           frm.set_df_property(fieldname, 'options', options);
+           // Set options for the medical_code field in the child table's child table
+           if (reset_columns) {
+               frm.fields_dict[fieldname].grid.grid_rows.forEach(row => {
+                   row.docfields.forEach(docfield => {
+                       if (docfield.fieldname === 'medical_code') {
+                           docfield.options = options;
+                       }
+                   });
+               });
+           }
         }
     }
 
