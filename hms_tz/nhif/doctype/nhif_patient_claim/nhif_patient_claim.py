@@ -165,7 +165,7 @@ class NHIFPatientClaim(Document):
             )
 
         self.practitioner_name = practitioner_details[0].practitioner_name
-        self.practitioner_no = ", ".join([d.tz_mct_code for d in practitioner_details])
+        self.practitioner_no = ",".join([d.tz_mct_code for d in practitioner_details])
         inpatient_record = [h.inpatient_record for h in self.final_patient_encounter][0] or None
         self.inpatient_record = inpatient_record
         # Reset values for every validate
@@ -839,7 +839,9 @@ class NHIFPatientClaim(Document):
                 if row.dosage_form:
                     med_info += f", Dosage Form: {row.dosage_form}"
                 
-                self.clinical_notes += f"Drug: {row.drug_code} {med_info} \n\n"
+                self.clinical_notes += f"Drug: {row.drug_code} {med_info}"
+                self.clinical_notes += "\n"
+        self.clinical_notes = self.clinical_notes.replace('"', ' ')
 
     def before_insert(self):
         if frappe.db.exists(
