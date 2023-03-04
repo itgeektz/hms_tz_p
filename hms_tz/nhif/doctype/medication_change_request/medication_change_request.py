@@ -61,6 +61,8 @@ class MedicationChangeRequest(Document):
 
     def validate_item_insurance_coverage(self, row, method):
         """Validate if the Item is covered with the insurance coverage plan of a patient"""
+        if row.prescribe:
+            return
         
         insurance_subscription, insurance_company, mop = get_insurance_details(self)
         if mop:
