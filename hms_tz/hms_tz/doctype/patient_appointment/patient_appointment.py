@@ -19,7 +19,7 @@ from frappe import _
 import datetime
 from frappe.core.doctype.sms_settings.sms_settings import send_sms
 from erpnext.hr.doctype.employee.employee import is_holiday
-from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
+from healthcare.healthcare.doctype.healthcare_settings.healthcare_settings import (
     get_receivable_account,
     get_income_account,
 )

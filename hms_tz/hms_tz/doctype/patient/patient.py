@@ -15,7 +15,7 @@ from frappe.contacts.address_and_contact import (
 from frappe.model.naming import set_name_by_naming_series
 from frappe.utils.nestedset import get_root_of
 from erpnext import get_default_currency
-from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
+from healthcare.healthcare.doctype.healthcare_settings.healthcare_settings import (
     get_receivable_account,
     get_income_account,
     send_registration_sms,
