@@ -824,16 +824,18 @@ class NHIFPatientClaim(Document):
                 alert=True,
             )
             # return
+        self.clinical_notes += f"PractitionerName: {encounter_doc.practitioner_name} \n"
         self.clinical_notes += encounter_doc.examination_detail or ""
         self.clinical_notes += "\n\n"
 
         if len(encounter_doc.get("drug_prescription")) > 0:
+            self.clinical_notes += "Medications: \n"
             for row in encounter_doc.get("drug_prescription"):
                 med_info = ""
                 if row.dosage:
                     med_info += f", Dosage: {row.dosage}"
                 if row.period:
-                    med_info += f", Perion: {row.period}"
+                    med_info += f", Period: {row.period}"
                 if row.dosage_form:
                     med_info += f", Dosage Form: {row.dosage_form}"
                 
