@@ -352,9 +352,9 @@ def get_authorization_num(
         if card.get("AuthorizationStatus") != "ACCEPTED":
             frappe.throw(title=card.get("AuthorizationStatus"), msg=card["Remarks"])
         frappe.msgprint(_(card["Remarks"]), alert=True)
-        update_insurance_subscription(insurance_subscription, card)
         add_scheme(card.get("SchemeID"), card.get("SchemeName"))
         add_product(card.get("ProductCode"), card.get("ProductName"))
+        update_insurance_subscription(insurance_subscription, card, company)
         return card
     else:
         add_log(
@@ -366,6 +366,7 @@ def get_authorization_num(
         frappe.throw(json.loads(r.text))
 
 
+<<<<<<< HEAD
 def update_insurance_subscription(insurance_subscription, card):
     subscription_doc = frappe.get_cached_doc(
         "Healthcare Insurance Subscription", insurance_subscription
@@ -390,6 +391,29 @@ def update_insurance_subscription(insurance_subscription, card):
                 "hms_tz_scheme_name": card["SchemeName"],
             },
         )
+=======
+def update_insurance_subscription(insurance_subscription, card, company):
+    subscription_doc = frappe.get_cached_doc("Healthcare Insurance Subscription", insurance_subscription)
+    
+    if subscription_doc.hms_tz_product_code != card["ProductCode"] or subscription_doc.hms_tz_scheme_id != card["SchemeID"]:
+        plan = frappe.db.get_list(
+            "NHIF Product",
+            {"nhif_product_code": card["ProductCode"], "company": company},
+            "healthcare_insurance_coverage_plan",
+        )
+        
+        plan_doc = frappe.get_cached_doc("Healthcare Insurance Coverage Plan", plan[0].healthcare_insurance_coverage_plan)
+
+        subscription_doc.insurance_company = plan_doc.insurance_company
+        subscription_doc.healthcare_insurance_coverage_plan = plan_doc.name
+        subscription_doc.coverage_plan_name = plan_doc.coverage_plan_name
+        subscription_doc.hms_tz_product_code = card["ProductCode"]
+        subscription_doc.hms_tz_product_name = card["ProductName"]
+        subscription_doc.hms_tz_scheme_id = card["SchemeID"]
+        subscription_doc.hms_tz_scheme_name = card["SchemeName"]
+
+        subscription_doc.save(ignore_permissions=True)
+>>>>>>> b69cdf6c (feat: update old HIS with latest product code, scheme id and coverage plan details from NHIF)
 
 
 @frappe.whitelist()
