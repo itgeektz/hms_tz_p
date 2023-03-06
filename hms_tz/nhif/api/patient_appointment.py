@@ -366,32 +366,6 @@ def get_authorization_num(
         frappe.throw(json.loads(r.text))
 
 
-<<<<<<< HEAD
-def update_insurance_subscription(insurance_subscription, card):
-    subscription_doc = frappe.get_cached_doc(
-        "Healthcare Insurance Subscription", insurance_subscription
-    )
-
-    if subscription_doc.hms_tz_product_code != card["ProductCode"]:
-        frappe.db.set_value(
-            subscription_doc.doctype,
-            subscription_doc.name,
-            {
-                "hms_tz_product_code": card["ProductCode"],
-                "hms_tz_product_name": card["ProductName"],
-            },
-        )
-
-    if subscription_doc.hms_tz_scheme_id != card["SchemeID"]:
-        frappe.db.set_value(
-            subscription_doc.doctype,
-            subscription_doc.name,
-            {
-                "hms_tz_scheme_id": card["SchemeID"],
-                "hms_tz_scheme_name": card["SchemeName"],
-            },
-        )
-=======
 def update_insurance_subscription(insurance_subscription, card, company):
     subscription_doc = frappe.get_cached_doc("Healthcare Insurance Subscription", insurance_subscription)
     
@@ -413,7 +387,6 @@ def update_insurance_subscription(insurance_subscription, card, company):
         subscription_doc.hms_tz_scheme_name = card["SchemeName"]
 
         subscription_doc.save(ignore_permissions=True)
->>>>>>> b69cdf6c (feat: update old HIS with latest product code, scheme id and coverage plan details from NHIF)
 
 
 @frappe.whitelist()
