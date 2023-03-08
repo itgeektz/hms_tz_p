@@ -266,7 +266,8 @@ frappe.ui.form.on('Patient Appointment', {
                     const card = data.message;
                     if (card.AuthorizationStatus == 'ACCEPTED') {
                         frm.set_value("authorization_number", card.AuthorizationNo);
-                        frm.save();
+                        frm.set_value("nhif_employer_name", card.EmployerName);
+                        frm.save(); 
                         frappe.show_alert({
                             message: __("Authorization Number is updated"),
                             indicator: 'green'
