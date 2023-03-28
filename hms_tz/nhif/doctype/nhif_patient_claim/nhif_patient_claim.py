@@ -526,59 +526,63 @@ class NHIFPatientClaim(Document):
                                 "%Y-%m-%d"
                             )
                             new_row.item_crt_by = get_fullname(row_item.modified_by)
-                if occupancy.is_service_chargeable:
-                    for encounter in self.patient_encounters:
-                        if str(encounter.encounter_date) != checkin_date:
-                            continue
-                        encounter_doc = frappe.get_doc(
-                            "Patient Encounter", encounter.name
-                        )
+                
+                for encounter in self.patient_encounters:
+                    if str(encounter.encounter_date) != checkin_date:
+                        continue
+                    encounter_doc = frappe.get_doc(
+                        "Patient Encounter", encounter.name
+                    )
 
-                        self.set_clinical_notes(encounter_doc)
-                        
-                        for child in childs_map:
-                            for row in encounter_doc.get(child.get("table")):
-                                if row.prescribe or row.is_cancelled:
+                    # allow clinical notes to be added to the claim even if the service is not chargeable and encounters will be ignored
+                    self.set_clinical_notes(encounter_doc)
+
+                    if not occupancy.is_service_chargeable:
+                        continue
+                    
+                    for child in childs_map:
+                        for row in encounter_doc.get(child.get("table")):
+                            if row.prescribe or row.is_cancelled:
                                     continue
-                                item_code = frappe.get_value(
-                                    child.get("doctype"),
-                                    row.get(child.get("item")),
-                                    "item",
-                                )
+                            item_code = frappe.get_value(
+                                child.get("doctype"),
+                                row.get(child.get("item")),
+                                "item",
+                            )
 
-                                delivered_quantity = (row.get("quantity") or 0) - (
-                                    row.get("quantity_returned") or 0
-                                )
+                            delivered_quantity = (row.get("quantity") or 0) - (
+                                row.get("quantity_returned") or 0
+                            )
 
-                                new_row = self.append("nhif_patient_claim_item", {})
-                                new_row.item_name = row.get(child.get("item"))
-                                new_row.item_code = get_item_refcode(item_code)
-                                new_row.item_quantity = delivered_quantity or 1
-                                new_row.unit_price = row.get("amount")
-                                new_row.amount_claimed = (
-                                    new_row.unit_price * new_row.item_quantity
+                            new_row = self.append("nhif_patient_claim_item", {})
+                            new_row.item_name = row.get(child.get("item"))
+                            new_row.item_code = get_item_refcode(item_code)
+                            new_row.item_quantity = delivered_quantity or 1
+                            new_row.unit_price = row.get("amount")
+                            new_row.amount_claimed = (
+                                new_row.unit_price * new_row.item_quantity
+                            )
+                            new_row.approval_ref_no = (
+                                get_approval_number_from_LRPMT(
+                                    child["ref_doctype"],
+                                    row.get(child["ref_docname"]),
                                 )
-                                new_row.approval_ref_no = (
-                                    get_approval_number_from_LRPMT(
-                                        child["ref_doctype"],
-                                        row.get(child["ref_docname"]),
-                                    )
-                                )
+                            )
 
-                                if child["doctype"] == "Therapy Type" or row.get(
-                                    child["ref_docname"]
-                                ):
-                                    new_row.status = "Submitted"
-                                else:
-                                    new_row.status = "Draft"
+                            if child["doctype"] == "Therapy Type" or row.get(
+                                child["ref_docname"]
+                            ):
+                                new_row.status = "Submitted"
+                            else:
+                                new_row.status = "Draft"
 
-                                new_row.patient_encounter = encounter.name
-                                new_row.ref_doctype = row.doctype
-                                new_row.ref_docname = row.name
-                                new_row.folio_item_id = str(uuid.uuid1())
-                                new_row.folio_id = self.folio_id
-                                new_row.date_created = row.modified.strftime("%Y-%m-%d")
-                                new_row.item_crt_by = get_fullname(row.modified_by)
+                            new_row.patient_encounter = encounter.name
+                            new_row.ref_doctype = row.doctype
+                            new_row.ref_docname = row.name
+                            new_row.folio_item_id = str(uuid.uuid1())
+                            new_row.folio_id = self.folio_id
+                            new_row.date_created = row.modified.strftime("%Y-%m-%d")
+                            new_row.item_crt_by = get_fullname(row.modified_by)
 
         sorted_patient_claim_item = sorted(
             self.nhif_patient_claim_item, key=lambda k: k.get("ref_doctype")
