@@ -395,8 +395,8 @@ function get_diagnosis_list (frm, table_name) {
 
 const medical_code_mapping = {
     "patient_encounter_preliminary_diagnosis": [
+        'radiology_procedure_prescription',
         'lab_test_prescription',
-        'radiology_procedure_prescription'
     ],
     "patient_encounter_final_diagnosis": [
         'procedure_prescription',
@@ -421,18 +421,20 @@ function set_medical_code (frm, reset_columns) {
             grid.fields_map.medical_code.options = options;
             grid.refresh();
 
-           // Set options for the medical_code field in the child table 
-           frm.set_df_property(fieldname, 'options', options);
-           // Set options for the medical_code field in the child table's child table
-           if (reset_columns) {
-               frm.fields_dict[fieldname].grid.grid_rows.forEach(row => {
-                   row.docfields.forEach(docfield => {
-                       if (docfield.fieldname === 'medical_code') {
-                           docfield.options = options;
-                       }
-                   });
-               });
-           }
+            // Set options for the medical_code field in the child table 
+            frm.set_df_property(fieldname, 'options', options);
+            // Set options for the medical_code field in the child table's child table
+            if (reset_columns) {
+                frm.fields_dict[fieldname].grid.grid_rows.forEach(row => {
+                    row.docfields.forEach(docfield => {
+                        if (docfield.fieldname === 'medical_code') {
+                            docfield.options = options;
+                        }
+                    });
+                });
+            }
+            frm.refresh_field(fieldname);
+            grid.refresh();
         }
     }
 
