@@ -226,6 +226,18 @@ frappe.ui.form.on('Patient Appointment', {
                 frm.toggle_display('paid_amount', true);
             }, 100);
             frm.set_value("insurance_subscription", "");
+            if (!frm.doc.ref_vital_signs) {
+                frm.set_df_property("follow_up", "read_only", 0);
+            } else {
+                frm.set_df_property("follow_up", "read_only", 1);
+            }
+        }
+    },
+    ref_vital_signs: function (frm) {
+        if (frm.doc.ref_vital_signs) {
+            frm.set_df_property("follow_up", "read_only", 1);
+        } else {
+            frm.set_df_property("follow_up", "read_only", 0);
         }
     },
     get_authorization_number: function (frm) {
