@@ -7,7 +7,4 @@ hms_tz.patches.update_original_delivery_note_item_to_old_delivery_note
 hms_tz.patches.property_setter.hms_tz_property_setter
 hms_tz.patches.custom_fields.custom_fields_fetching_values_from_his
 hms_tz.patches.property_setter.properties_for_values_fetched_from_his
-<<<<<<< HEAD
-=======
 hms_tz.patches.custom_fields.followup_custom_field_on_coverage_plan_and_insurance_company
->>>>>>> 722c24ce (feat: allow altering of follow up days for insurance patients)
