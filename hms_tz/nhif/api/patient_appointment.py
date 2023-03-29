@@ -432,10 +432,9 @@ def set_follow_up(appointment_doc, method):
         "name": ["!=", appointment_doc.name],
         "insurance_subscription": appointment_doc.insurance_subscription,
         "department": appointment_doc.department,
-        # "status": "Closed",
+        "status": "Closed",
     }
     appointment = get_previous_appointment(appointment_doc.patient, filters)
-    # frappe.throw(str(appointment_doc.coverage_plan_name))
     if appointment and appointment_doc.appointment_date:
         diff = date_diff(appointment_doc.appointment_date, appointment.appointment_date)
         if appointment_doc.mode_of_payment:
