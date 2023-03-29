@@ -818,7 +818,7 @@ class NHIFPatientClaim(Document):
             date_of_birth = f"Date of Birth: <b>{self.date_of_birth}</b>,"
             gender = f"Gender: <b>{self.gender}</b>,"
             years = f"Age: <b>{(frappe.utils.date_diff(nowdate(), self.date_of_birth))//365} years</b>,"
-            self.clinical_notes = " ".join([patient_name, gender, date_of_birth, years]) + "\n\n"
+            self.clinical_notes = " ".join([patient_name, gender, date_of_birth, years]) + "<br>"
 
         if not encounter_doc.examination_detail:
             frappe.msgprint(
@@ -828,12 +828,12 @@ class NHIFPatientClaim(Document):
                 alert=True,
             )
             # return
-        self.clinical_notes += f"PractitionerName: {encounter_doc.practitioner_name} \n"
+        department = frappe.get_cached_value("Healthcare Practitioner", encounter_doc.practitioner, "department")
+        self.clinical_notes += f"<br>PractitionerName: <i>{encounter_doc.practitioner_name},</i> Speciality: <i>{department},</i> DateofService: <i>{encounter_doc.encounter_date} {encounter_doc.encounter_time}</i> <br>"
         self.clinical_notes += encounter_doc.examination_detail or ""
-        self.clinical_notes += "\n\n"
 
         if len(encounter_doc.get("drug_prescription")) > 0:
-            self.clinical_notes += "Medications: \n"
+            self.clinical_notes += "<br>Medication(s): <br>"
             for row in encounter_doc.get("drug_prescription"):
                 med_info = ""
                 if row.dosage:
@@ -844,7 +844,7 @@ class NHIFPatientClaim(Document):
                     med_info += f", Dosage Form: {row.dosage_form}"
                 
                 self.clinical_notes += f"Drug: {row.drug_code} {med_info}"
-                self.clinical_notes += "\n"
+                self.clinical_notes += "<br>"
         self.clinical_notes = self.clinical_notes.replace('"', ' ')
 
     def before_insert(self):
