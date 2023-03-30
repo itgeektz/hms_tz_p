@@ -1321,64 +1321,32 @@ def validate_patient_balance_vs_patient_costs(doc):
         return
 
     total_amount_billed = 0
+
+    child_map = [
+        {"child_table": "lab_test_prescription"},
+        {"child_table": "radiology_procedure_prescription"},
+        {"child_table": "procedure_prescription"},
+        {"child_table": "drug_prescription"},
+        {"child_table": "therapies"},
+    ]
     for enc in encounters:
         encounter_doc = frappe.get_doc("Patient Encounter", enc)
 
-        for lab in encounter_doc.lab_test_prescription:
-            if (
-                lab.prescribe == 0
-                or lab.is_not_available_inhouse == 1
-                or lab.invoiced == 1
-                or lab.is_cancelled == 1
-            ):
-                continue
+        for row in child_map:
+            for child in encounter_doc.get(row.get("child_table")):
+                if (
+                    child.prescribe == 0
+                    or child.is_not_available_inhouse == 1
+                    or child.invoiced == 1
+                    or child.is_cancelled == 1
+                ):
+                    continue
 
-            total_amount_billed += lab.amount
-
-        for radiology in encounter_doc.radiology_procedure_prescription:
-            if (
-                radiology.prescribe == 0
-                or radiology.is_not_available_inhouse == 1
-                or radiology.invoiced == 1
-                or radiology.is_cancelled == 1
-            ):
-                return
-
-            total_amount_billed += radiology.amount
-
-        for procedure in encounter_doc.procedure_prescription:
-            if (
-                procedure.prescribe == 0
-                or procedure.is_not_available_inhouse == 1
-                or procedure.invoiced == 1
-                or procedure.is_cancelled == 1
-            ):
-                return
-
-            total_amount_billed += procedure.amount
-
-        for drug in encounter_doc.drug_prescription:
-            if (
-                drug.prescribe == 0
-                or drug.is_not_available_inhouse == 1
-                or drug.invoiced == 1
-                or drug.is_cancelled == 1
-            ):
-                return
-
-            total_amount_billed += drug.quantity * drug.amount
-
-        for plan in encounter_doc.therapies:
-            if (
-                plan.prescribe == 0
-                or plan.is_not_available_inhouse == 1
-                or plan.invoiced == 1
-                or plan.is_cancelled == 1
-            ):
-                return
-
-            total_amount_billed += plan.amount
-
+                if child.doctype == "Drug Prescription":
+                    total_amount_billed += ((child.quantity - child.quantity_returned) * child.amount)
+                else:
+                    total_amount_billed = child.amount
+                
     inpatient_record_doc = frappe.get_doc("Inpatient Record", doc.inpatient_record)
 
     cash_limit = inpatient_record_doc.cash_limit
@@ -1402,16 +1370,60 @@ def validate_patient_balance_vs_patient_costs(doc):
 
     patient_balance = (-1 * deposit_balance) + cash_limit
 
-    if patient_balance < total_amount_billed:
-        frappe.throw(
-            frappe.bold(
-                "The deposit balance of this patient {0} - {1} is not enough or\
-                the patient has reached the cash limit. In order to submit this encounter,\
-                please request patient to deposit advances or request patient cash limit adjustment".format(
-                    doc.patient, doc.patient_name
+    cash_limit_percent = 100 - ((total_amount_billed / patient_balance) * 100)
+    cash_limit_details = frappe.get_value(
+        "Company", {"name": doc.company, "hms_tz_has_cash_limit_alert": 1}, 
+        ["hms_tz_minimum_cash_limit_percent", "hms_tz_limit_exceed_action", "hms_tz_limit_under_minimum_percent_action"],
+        as_dict=1
+    )
+    
+    make_cash_limit_alert(doc, cash_limit_percent, cash_limit_details)
+
+
+def make_cash_limit_alert(doc, cash_limit_percent, cash_limit_details):
+    if cash_limit_percent > 0 and cash_limit_percent <= cash_limit_details.get("hms_tz_minimum_cash_limit_percent"):
+        if cash_limit_details.get("hms_tz_limit_under_minimum_percent_action") == "Warn":
+            frappe.msgprint(
+                frappe.bold(
+                    "The patient {0} - {1} has reached 90% of their cash limit.\
+                        Please request patient to deposit advances or request patient cash limit adjustment".format(
+                        doc.patient, doc.patient_name
+                    )
                 )
             )
-        )
+        
+        elif cash_limit_details.get("hms_tz_limit_under_minimum_percent_action") == "Stop":
+            frappe.throw(
+                frappe.bold(
+                    "The patient {0} - {1} has reached 90% of their cash limit.\
+                        Please request patient to deposit advances or request patient cash limit adjustment".format(
+                        doc.patient, doc.patient_name
+                    )
+                )
+            )
+
+    elif cash_limit_percent <= 0:
+        if cash_limit_details.get("hms_tz_limit_exceed_action") == "Warn":
+            frappe.msgprint(
+                frappe.bold(
+                    "The deposit balance of this patient {0} - {1} is not enough or\
+                        the patient has reached the cash limit. In order to submit this encounter,\
+                        please request patient to deposit advances or request patient cash limit adjustment".format(
+                        doc.patient, doc.patient_name
+                    )
+                )
+            )
+            
+        if cash_limit_details.get("hms_tz_limit_exceed_action") == "Stop":
+            frappe.throw(
+                frappe.bold(
+                    "The deposit balance of this patient {0} - {1} is not enough or\
+                    the patient has reached the cash limit. In order to submit this encounter,\
+                    please request patient to deposit advances or request patient cash limit adjustment".format(
+                        doc.patient, doc.patient_name
+                    )
+                )
+            )
 
 
 def get_patient_encounters(doc):
