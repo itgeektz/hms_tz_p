@@ -364,10 +364,7 @@ frappe.ui.form.on('Patient Encounter', {
             if (r.message) {
                 frm.refresh();
             }
-<<<<<<< HEAD
         });
-=======
-        })
     },
     hms_tz_reuse_lab_items: (frm) => {
         let fields = ["lab_test_code as item", "lab_test_name as item_name", "creation as date"]
@@ -393,7 +390,6 @@ frappe.ui.form.on('Patient Encounter', {
         let fields = ["therapy_type as item", "therapy_type as item_name", "creation as date"]
         let value_dict = { "table_field": "therapies", "item_field": "therapy_type", "item_name_field": "therapy_type"}
         reuse_lrpmt_items(frm, "Therapy Plan Detail", fields, value_dict, "Therapy Items")
->>>>>>> e560eef2 (feat: allow reuse of LRPMT items via dialog)
     }
     
 });
