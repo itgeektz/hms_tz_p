@@ -7,9 +7,6 @@ hms_tz.patches.update_original_delivery_note_item_to_old_delivery_note
 hms_tz.patches.property_setter.hms_tz_property_setter
 hms_tz.patches.custom_fields.custom_fields_fetching_values_from_his
 hms_tz.patches.property_setter.properties_for_values_fetched_from_his
-<<<<<<< HEAD
-=======
 hms_tz.patches.custom_fields.followup_custom_field_on_coverage_plan_and_insurance_company
 hms_tz.patches.custom_fields.cash_limit_alert_custom_fields_on_company
 hms_tz.patches.custom_fields.reuse_lrpmt_items_custom_fields_on_encounter
->>>>>>> e560eef2 (feat: allow reuse of LRPMT items via dialog)
