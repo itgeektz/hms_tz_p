@@ -1675,3 +1675,36 @@ def validate_maximum_number_of_claims_per_month(
             ),
             "validate",
         )
+
+@frappe.whitelist()
+def get_lrpmt_items_to_reuse(kwargs):
+    """Get unique LRPMT items from previous encounters that can be reused on current encounters"""
+    
+    kwargs = frappe.parse_json(kwargs)
+    if not kwargs.get("patient"):
+        return []
+
+    appointments = frappe.get_all(
+        "Patient Appointment", 
+        filters={"patient": kwargs.get("patient"), "name": ["!=", kwargs.get("appoitnemnt")], "status": "Closed"}, 
+        fields=["name"], limit_page_length=2,
+        order_by="appointment_date desc", pluck="name"
+    )
+    if not appointments:
+        return []
+    
+    encounters = frappe.get_all("Patient Encounter", filters={"appointment": ["in", appointments]}, fields=["name"], pluck="name")
+    items = frappe.get_all(
+        kwargs.doctype,
+        fields=kwargs.get("fields"),
+        filters={"parent": ["in", encounters], "is_cancelled": 0, "is_not_available_inhouse": 0}
+    )
+
+    data = []
+    unique_items = []
+    for item in items:
+        if item.item not in unique_items:
+            unique_items.append(item.item)
+            data.append(item)
+
+    return data
