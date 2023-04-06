@@ -17,6 +17,7 @@ from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from hms_tz.nhif.api.healthcare_utils import remove_special_characters
 from datetime import date
 from frappe.utils.background_jobs import enqueue
+from hms_tz.nhif.doctype.nhif_product.nhif_product import add_product
 
 
 def validate(doc, method):
@@ -159,6 +160,10 @@ def check_card_number(card_no, is_new=None, patient=None, caller=None):
 
 def create_subscription(doc):
     if not frappe.db.exists("NHIF Product", {"nhif_product_code": doc.product_code}):
+        company = get_default_company()
+        if company:
+            add_product(company, doc.get("product_code"), None)
+
         return
     subscription_list = frappe.get_list(
         "Healthcare Insurance Subscription",
