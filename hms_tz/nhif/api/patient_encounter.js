@@ -368,13 +368,6 @@ frappe.ui.form.on('Patient Encounter', {
     }
 });
 
-frappe.ui.form.on('Drug Prescription', {
-    drug_prescription_add: function (frm, cdt, cdn) {
-        var row = frappe.get_doc(cdt, cdn);
-        if (!row.healthcare_service_unit) row.healthcare_service_unit = frm.doc.default_healthcare_service_unit;
-        refresh_field("drug_prescription");
-    }
-});
 
 frappe.ui.form.on('Codification Table', {
     patient_encounter_preliminary_diagnosis_remove: set_medical_code,
@@ -421,8 +414,6 @@ function set_medical_code (frm, reset_columns) {
             grid.fields_map.medical_code.options = options;
             grid.refresh();
 
-            // Set options for the medical_code field in the child table 
-            frm.set_df_property(fieldname, 'options', options);
             // Set options for the medical_code field in the child table's child table
             if (reset_columns) {
                 frm.fields_dict[fieldname].grid.grid_rows.forEach(row => {
@@ -435,6 +426,7 @@ function set_medical_code (frm, reset_columns) {
             }
             frm.refresh_field(fieldname);
             grid.refresh();
+            grid.setup_visible_columns();
         }
     }
 
@@ -669,6 +661,11 @@ frappe.ui.form.on('Drug Prescription', {
         frappe.model.set_value(cdt, cdn, "quantity", 0);
         frm.refresh_field("drug_prescription");
     },
+    drug_prescription_add: function (frm, cdt, cdn) {
+        var row = frappe.get_doc(cdt, cdn);
+        if (!row.healthcare_service_unit) row.healthcare_service_unit = frm.doc.default_healthcare_service_unit;
+        refresh_field("drug_prescription");
+    }
 });
 
 frappe.ui.form.on('Therapy Plan Detail', {
