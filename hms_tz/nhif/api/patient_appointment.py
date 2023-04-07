@@ -437,9 +437,18 @@ def set_follow_up(appointment_doc, method):
     appointment = get_previous_appointment(appointment_doc.patient, filters)
     if appointment and appointment_doc.appointment_date:
         diff = date_diff(appointment_doc.appointment_date, appointment.appointment_date)
-        valid_days = int(
-            frappe.get_cached_value("Healthcare Settings", "Healthcare Settings", "valid_days")
-        )
+        if appointment_doc.mode_of_payment:
+            valid_days = int(
+                frappe.get_cached_value("Healthcare Settings", "Healthcare Settings", "valid_days")
+            )
+        else:
+            valid_days = int(
+                frappe.get_cached_value("Healthcare Insurance Coverage Plan", {"coverage_plan_name": appointment_doc.coverage_plan_name}, "no_of_days_for_follow_up")
+            )
+            if valid_days == 0:
+                valid_days = int(
+                    frappe.get_cached_value("Healthcare Insurance Company", appointment_doc.insurance_company, "no_of_days_for_follow_up")
+                )
         if diff <= valid_days:
             appointment_doc.follow_up = 1
             if (
@@ -449,6 +458,7 @@ def set_follow_up(appointment_doc, method):
             ):
                 return
             appointment_doc.invoiced = 1
+            appointment_doc.paid_amount = 0
             # frappe.msgprint(_("Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"), alert=True)
         else:
             appointment_doc.follow_up = 0
