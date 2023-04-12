@@ -1552,9 +1552,6 @@ def show_last_prescribed_for_lrpt(doc, method):
             _("The below are the last related Item prescribed:<br><br>" + msg)
         )
 
-<<<<<<< HEAD
-
-=======
 def validate_prescribe_days(doc, doctype, item_value, date):
     if doc.insurance_company:
         valid_min_presribe_days = frappe.get_value(doctype, 
@@ -1649,7 +1646,6 @@ def validate_admission_encounter(encounter):
         return True
 
 @frappe.whitelist()
-
 def validate_admission_encounter(encounter):
     """Validate encounter if it has duplicated = 1"""
     duplicated_encounter = frappe.get_value(
