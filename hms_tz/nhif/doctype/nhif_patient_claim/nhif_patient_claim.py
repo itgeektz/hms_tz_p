@@ -793,6 +793,12 @@ class NHIFPatientClaim(Document):
                 status_code=(r.status_code if str(r) else "NO RESPONSE r. Timeout???")
                 or "NO STATUS CODE",
             )
+            self.add_comment(
+                comment_type="Comment",
+                text=r.text if str(r) else "NO RESPONSE",
+            )
+            frappe.db.commit()
+
             frappe.throw(
                 "This folio was NOT submitted due to the error above!. Please retry after resolving the problem. "
                 + str(get_datetime())
