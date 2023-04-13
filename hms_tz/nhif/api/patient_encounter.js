@@ -390,8 +390,12 @@ frappe.ui.form.on('Patient Encounter', {
         let fields = ["therapy_type as item", "therapy_type as item_name", "creation as date"]
         let value_dict = { "table_field": "therapies", "item_field": "therapy_type", "item_name_field": "therapy_type"}
         reuse_lrpmt_items(frm, "Therapy Plan Detail", fields, value_dict, "Therapy Items")
+    },
+    hms_tz_reuse_previous_diagnosis: (frm) => {
+        let fields = ["medical_code as item", "code as item_name", "description", "mtuha", "creation as date"]
+        let value_dict = { "table_field": "patient_encounter_preliminary_diagnosis", "item_field": "medical_code", "item_name_field": "code", "description_field": "description", "mtuha_field": "mtuha"}
+        reuse_lrpmt_items(frm, "Codification Table", fields, value_dict, "Previous Diagnosis", "Diagnosis")
     }
-    
 });
 
 
@@ -801,7 +805,7 @@ var set_btn_properties = (frm) => {
         });
 };
 
-var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category) => {
+var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller="") => {
     let filters = { "patient": frm.doc.patient, "appoitnemnt": frm.doc.appointment, "doctype": doctype, "fields": fields };
     let d = new frappe.ui.Dialog({
         title: "Select Item",
@@ -813,6 +817,39 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category) => {
                 Bold: 1,
             },
             {
+                fieldname: "no_of_visit_sb",
+                fieldtype: "Section Break"
+            },
+            {
+                fieldname: "number_of_visit",
+                fieldtype: "Int",
+                label: "Number of Visit",
+                reqd: 1,
+            },
+            {
+                fieldname: "include_cb",
+                fieldtype: "Column Break"
+            },
+            {
+                fieldname: "include_ipd_encounters",
+                fieldtype: "Check",
+                label: "Include IPD Encounters",
+                Bold: 1,
+            },
+            {
+                fieldname: "filters_cb",
+                fieldtype: "Column Break"
+            },
+            {
+                fieldname: "apply_filters",
+                fieldtype: "Button",
+                label: "Apply Filters",
+            },
+            {
+                fieldname: "space_sb",
+                fieldtype: "Section Break"
+            },
+            {
                 fieldname: "space",
                 fieldtype: "HTML"
             }
@@ -821,18 +858,30 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category) => {
     d.set_value("item_category", item_category);
     let wrapper = d.fields_dict.space.$wrapper;
 
-    frappe.call({
-        method: "hms_tz.nhif.api.patient_encounter.get_lrpmt_items_to_reuse",
-        args: {
-            kwargs: filters
+    d.fields_dict.apply_filters.$input.click(() => {
+        if (!d.get_value("number_of_visit")) {
+            frappe.msgprint("<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
+                Please enter number of visit</h4>");
+            return
         }
-    }).then(r => {
-        let records = r.message;
-        if (records.length > 0) {
-            let html = show_details(records);
-            wrapper.html(html);
-        } else {
-            wrapper.append(`<div class="multiselect-empty-state"
+
+        filters.number_of_visit = d.get_value("number_of_visit");
+        filters.include_ipd_encounters = d.get_value("include_ipd_encounters");
+        frappe.dom.freeze(__("Please wait..."));
+        frappe.call({
+            method: "hms_tz.nhif.api.patient_encounter.get_previous_diagnosis_and_lrpmt_items_to_reuse",
+            args: {
+                kwargs: filters,
+                caller: caller
+            }
+        }).then(r => {
+            frappe.dom.unfreeze();
+            let records = r.message;
+            if (records.length > 0) {
+                let html = show_details(records, caller);
+                wrapper.html(html);
+            } else {
+                wrapper.append(`<div class="multiselect-empty-state"
                     style="border: 1px solid #d1d8dd; border-radius: 3px; height: 200px; overflow: auto;">
                     <span class="text-center" style="margin-top: -40px;">
                         <i class="fa fa-2x fa-heartbeat text-extra-muted"></i>
@@ -840,27 +889,48 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category) => {
                         No Item(s) reuse</p>
                     </span>
                 </div>`);
-        }
+            }
+        });
     });
 
     d.set_primary_action(__("Reuse Item"), function () {
         let items = [];
 
         wrapper.find('tr:has(input:checked)').each(function () {
-            items.push({
-                item: $(this).find("#item").attr("data-item"),
-                item_name: $(this).find("#item_name").attr("data-item_name"),
-            });
+            if (caller == "Diagnosis") { 
+                items.push({
+                    item: $(this).find("#item").attr("data-item"),
+                    item_name: $(this).find("#item_name").attr("data-item_name"),
+                    description: $(this).find("#description").attr("data-description"),
+                    mtuha: $(this).find("#mtuha").attr("data-mtuha"),
+                });
+            } else {
+                items.push({
+                    item: $(this).find("#item").attr("data-item"),
+                    item_name: $(this).find("#item_name").attr("data-item_name"),
+                });
+             }
         });
 
         if (items.length > 0) {
             let field = String(value_dict.table_field);
-            items.forEach((item) => {
-                let new_row = {}
-                new_row[value_dict.item_field] = item.item;
-                new_row[value_dict.item_name_field] = item.item_name;
-                let row = frm.add_child(field, new_row);
-            })
+            if (caller == "Diagnosis") { 
+                items.forEach((item) => {
+                    let new_row = {}
+                    new_row[value_dict.item_field] = item.item;
+                    new_row[value_dict.item_name_field] = item.item_name;
+                    new_row[value_dict.description_field] = item.description;
+                    new_row[value_dict.mtuha_field] = item.mtuha;
+                    let row = frm.add_child(field, new_row);
+                })
+            } else {
+                items.forEach((item) => {
+                    let new_row = {}
+                    new_row[value_dict.item_field] = item.item;
+                    new_row[value_dict.item_name_field] = item.item_name;
+                    let row = frm.add_child(field, new_row);
+                })
+            }
             frm.refresh_field(field);
             d.hide();
 
@@ -876,6 +946,7 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category) => {
         }
     });
 
+    d.$body.find("button[data-fieldtype='Button']").removeClass("btn-default").addClass("btn-info");
     d.$wrapper.find('.modal-content').css({
         "width": "650px",
         "max-height": "1000px",
@@ -885,29 +956,61 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category) => {
     d.show();
 };
 
-var show_details = (data) => {
-    let html = `<table class="table table-hover" style="width:100%;">
-        <colgroup>
-            <col width="5%">
-            <col width=30%">
-            <col width="35%">
-            <col width="30%">
-        </colgroup>
-        <tr style="background-color: #D3D3D3;">
-            <th></th>
-            <th>Item</th>
-            <th>Item Name</th>
-            <th>Date of Service</th>
-        </tr>`;
+var show_details = (data, caller="") => {
+    let html = `<table class="table table-hover" style="width:100%;">`;
+    if (caller == "Diagnosis") {
+        html += `
+            <colgroup>
+                <col width="5%">
+                <col width=17%">
+                <col width="10%">
+                <col width="26%">
+                <col width="22%">
+                <col width="20%">
+            </colgroup>
+            <tr style="background-color: #D3D3D3;">
+                <th></th>
+                <th>Medical Code</th>
+                <th>Code Name</th>
+                <th>Description</th>
+                <th>Mtuha</th>
+                <th>Date of Service</th>
+            </tr>`;
 
-    data.forEach(row => {
-        html += `<tr>
-                    <td><input type="checkbox"/></td>
-                    <td id="item" data-item="${row.item}">${row.item}</td>
-                    <td id="item_name" data-item_name="${row.item_name}">${row.item_name}</td>
-                    <td id="date" data-date="${frappe.datetime.get_datetime_as_string(row.date)}">${frappe.datetime.get_datetime_as_string(row.date)}</td>
-                </tr>`;
-    });
+        data.forEach(row => {
+            html += `<tr>
+                        <td><input type="checkbox"/></td>
+                        <td id="item" data-item="${row.item}">${row.item}</td>
+                        <td id="item_name" data-item_name="${row.item_name}">${row.item_name}</td>
+                        <td id="description" data-description="${row.description}">${row.description}</td>
+                        <td id="mtuha" data-mtuha="${row.mtuha}">${row.mtuha}</td>
+                        <td id="date" data-date="${frappe.datetime.get_datetime_as_string(row.date)}">${frappe.datetime.get_datetime_as_string(row.date)}</td>
+                    </tr>`;
+        });
+    } else {
+        html += `
+            <colgroup>
+                <col width="5%">
+                <col width=30%">
+                <col width="35%">
+                <col width="30%">
+            </colgroup>
+            <tr style="background-color: #D3D3D3;">
+                <th></th>
+                <th>Item</th>
+                <th>Item Name</th>
+                <th>Date of Service</th>
+            </tr>`;
+
+        data.forEach(row => {
+            html += `<tr>
+                        <td><input type="checkbox"/></td>
+                        <td id="item" data-item="${row.item}">${row.item}</td>
+                        <td id="item_name" data-item_name="${row.item_name}">${row.item_name}</td>
+                        <td id="date" data-date="${frappe.datetime.get_datetime_as_string(row.date)}">${frappe.datetime.get_datetime_as_string(row.date)}</td>
+                    </tr>`;
+        });
+    }
     html += `</table>`;
     return html;
 }
