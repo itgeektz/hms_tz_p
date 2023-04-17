@@ -38,6 +38,7 @@ frappe.ui.form.on('Healthcare Insurance Subscription', {
             callback: function (data) {
                 if (data.message && data.message != frm.doc.patient_name) {
                     frm.set_value("patient_name", data.message);
+                    frm.save("Submit")
                 }
             }
         });
