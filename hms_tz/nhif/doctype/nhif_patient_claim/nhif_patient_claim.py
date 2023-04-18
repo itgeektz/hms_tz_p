@@ -692,7 +692,7 @@ class NHIFPatientClaim(Document):
         entities.CreatedBy = self.item_crt_by
         entities.DateCreated = str(self.posting_date)
         entities.BillNo = self.name
-        entities.DelayReason = self.delayreason
+        entities.LateSubmissionReason = self.delayreason
 
         entities.FolioDiseases = []
         for disease in self.nhif_patient_claim_disease:
