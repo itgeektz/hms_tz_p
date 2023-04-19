@@ -679,7 +679,7 @@ class NHIFPatientClaim(Document):
         entities.DateOfBirth = str(self.date_of_birth)
         entities.PatientFileNo = self.patient_file_no
         # entities.PatientFile = generate_pdf(self)
-        # entities.ClaimFile = get_claim_pdf_file(self)
+        entities.ClaimFile = get_claim_pdf_file(self)
         entities.ClinicalNotes = self.clinical_notes
         entities.AuthorizationNo = self.authorization_no
         entities.AttendanceDate = str(self.attendance_date)
@@ -692,7 +692,7 @@ class NHIFPatientClaim(Document):
         entities.CreatedBy = self.item_crt_by
         entities.DateCreated = str(self.posting_date)
         entities.BillNo = self.name
-        entities.DelayReason = self.delayreason
+        entities.LateSubmissionReason = self.delayreason
 
         entities.FolioDiseases = []
         for disease in self.nhif_patient_claim_disease:
@@ -793,6 +793,12 @@ class NHIFPatientClaim(Document):
                 status_code=(r.status_code if str(r) else "NO RESPONSE r. Timeout???")
                 or "NO STATUS CODE",
             )
+            self.add_comment(
+                comment_type="Comment",
+                text=r.text if str(r) else "NO RESPONSE",
+            )
+            frappe.db.commit()
+
             frappe.throw(
                 "This folio was NOT submitted due to the error above!. Please retry after resolving the problem. "
                 + str(get_datetime())
