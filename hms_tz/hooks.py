@@ -168,6 +168,7 @@ doc_events = {
     "Radiology Examination": {
         "on_submit": "hms_tz.nhif.api.radiology_examination.on_submit",
         "validate": "hms_tz.nhif.api.radiology_examination.validate",
+        "on_cancel": "hms_tz.nhif.api.radiology_examination.on_cancel",
     },
     "Clinical Procedure": {
         "on_submit": "hms_tz.nhif.api.clinical_procedure.on_submit",
