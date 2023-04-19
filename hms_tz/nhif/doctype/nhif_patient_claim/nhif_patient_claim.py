@@ -166,16 +166,16 @@ class NHIFPatientClaim(Document):
 
         self.practitioner_name = practitioner_details[0].practitioner_name
         self.practitioner_no = ",".join([d.tz_mct_code for d in practitioner_details])
-        inpatient_record = [h.inpatient_record for h in self.final_patient_encounter][0] or None
-        self.inpatient_record = inpatient_record
+        inpatient_record = [h.inpatient_record for h in self.final_patient_encounter if h.inpatient_record] or None
+        self.inpatient_record = inpatient_record[0] if inpatient_record else None
         # Reset values for every validate
         self.patient_type_code = "OUT"
         self.date_admitted = None
         self.date_discharge = None
-        if inpatient_record:
+        if self.inpatient_record:
             discharge_date, date_admitted, admitted_datetime = frappe.get_value(
                 "Inpatient Record",
-                inpatient_record,
+                self.inpatient_record,
                 ["discharge_date", "scheduled_date", "admitted_datetime"],
             )
             if getdate(date_admitted) < getdate(admitted_datetime):
@@ -203,7 +203,7 @@ class NHIFPatientClaim(Document):
         self.patient_file_no = self.get_patient_file_no()
         if not self.allow_changes:
             self.set_patient_claim_disease()
-            self.set_patient_claim_item()
+            self.set_patient_claim_item(self.inpatient_record)
 
     @frappe.whitelist()
     def get_appointments(self):
@@ -243,7 +243,7 @@ class NHIFPatientClaim(Document):
                 frappe.db.set_value(
                     "Patient Appointment", app_name["patient_appointment"], "nhif_patient_claim", self.name
                 )
-            
+        app_list = list(set(app_list))
         self.allow_changes = 0
         self.hms_tz_claim_appointment_list = json.dumps(app_list)
 
@@ -332,7 +332,7 @@ class NHIFPatientClaim(Document):
             new_row.item_crt_by = get_fullname(row.modified_by)
             new_row.date_created = row.modified.strftime("%Y-%m-%d")
 
-    def set_patient_claim_item(self, called_method=None):
+    def set_patient_claim_item(self, inpatient_record=None, called_method=None):
         if called_method == "enqueue":
             self.reload()
             self.final_patient_encounter = self.get_final_patient_encounter()
@@ -386,7 +386,6 @@ class NHIFPatientClaim(Document):
         ]
         self.nhif_patient_claim_item = []
         self.clinical_notes = ""
-        inpatient_record = [d.inpatient_record for d in self.final_patient_encounter][0] or None
         if not inpatient_record:
             for encounter in self.patient_encounters:
                 encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
@@ -680,7 +679,7 @@ class NHIFPatientClaim(Document):
         entities.DateOfBirth = str(self.date_of_birth)
         entities.PatientFileNo = self.patient_file_no
         # entities.PatientFile = generate_pdf(self)
-        # entities.ClaimFile = get_claim_pdf_file(self)
+        entities.ClaimFile = get_claim_pdf_file(self)
         entities.ClinicalNotes = self.clinical_notes
         entities.AuthorizationNo = self.authorization_no
         entities.AttendanceDate = str(self.attendance_date)
@@ -693,7 +692,7 @@ class NHIFPatientClaim(Document):
         entities.CreatedBy = self.item_crt_by
         entities.DateCreated = str(self.posting_date)
         entities.BillNo = self.name
-        entities.DelayReason = self.delayreason
+        entities.LateSubmissionReason = self.delayreason
 
         entities.FolioDiseases = []
         for disease in self.nhif_patient_claim_disease:
@@ -794,6 +793,12 @@ class NHIFPatientClaim(Document):
                 status_code=(r.status_code if str(r) else "NO RESPONSE r. Timeout???")
                 or "NO STATUS CODE",
             )
+            self.add_comment(
+                comment_type="Comment",
+                text=r.text if str(r) else "NO RESPONSE",
+            )
+            frappe.db.commit()
+
             frappe.throw(
                 "This folio was NOT submitted due to the error above!. Please retry after resolving the problem. "
                 + str(get_datetime())

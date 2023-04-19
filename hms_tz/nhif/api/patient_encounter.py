@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import nowdate, getdate, nowtime, add_to_date, cint, cstr, add_days
+from frappe.utils import nowdate, getdate, nowtime, add_to_date, cint, cstr, add_days, date_diff
 from hms_tz.nhif.api.healthcare_utils import (
     get_item_rate,
     get_warehouse_from_service_unit,
@@ -58,7 +58,7 @@ def on_submit_validation(doc, method):
     if doc.encounter_type == "Initial":
         doc.reference_encounter = doc.name
     show_last_prescribed(doc, method)
-    show_last_prescribed_for_lrpt(doc)
+    show_last_prescribed_for_lrpt(doc, method)
 
     checkـforـduplicate(doc, method)
 
@@ -1266,6 +1266,7 @@ def show_last_prescribed(doc, method):
         return
     if method == "validate":
         msg = None
+        valid_days_msg = ""
         for row in doc.drug_prescription:
             medication_list = frappe.db.sql(
                 """
@@ -1294,7 +1295,19 @@ def show_last_prescribed(doc, method):
                     )
                     + "</strong><br>"
                 )
-        if msg:
+                
+                val_msg = validate_prescribe_days(doc, "Medication", row.drug_code, medication_list[0].get("posting_date"))
+                if val_msg:
+                    valid_days_msg += val_msg
+        
+        if valid_days_msg:
+            frappe.msgprint(
+                _(
+                    "These Items should not be prescribed, because days are below minimum prescription days:<br>"
+                    + valid_days_msg
+                )
+            )
+        elif msg:
             frappe.msgprint(
                 _(
                     "The below are the last related medication prescriptions:<br><br>"
@@ -1321,64 +1334,32 @@ def validate_patient_balance_vs_patient_costs(doc):
         return
 
     total_amount_billed = 0
+
+    child_map = [
+        {"child_table": "lab_test_prescription"},
+        {"child_table": "radiology_procedure_prescription"},
+        {"child_table": "procedure_prescription"},
+        {"child_table": "drug_prescription"},
+        {"child_table": "therapies"},
+    ]
     for enc in encounters:
         encounter_doc = frappe.get_doc("Patient Encounter", enc)
 
-        for lab in encounter_doc.lab_test_prescription:
-            if (
-                lab.prescribe == 0
-                or lab.is_not_available_inhouse == 1
-                or lab.invoiced == 1
-                or lab.is_cancelled == 1
-            ):
-                continue
+        for row in child_map:
+            for child in encounter_doc.get(row.get("child_table")):
+                if (
+                    child.prescribe == 0
+                    or child.is_not_available_inhouse == 1
+                    or child.invoiced == 1
+                    or child.is_cancelled == 1
+                ):
+                    continue
 
-            total_amount_billed += lab.amount
-
-        for radiology in encounter_doc.radiology_procedure_prescription:
-            if (
-                radiology.prescribe == 0
-                or radiology.is_not_available_inhouse == 1
-                or radiology.invoiced == 1
-                or radiology.is_cancelled == 1
-            ):
-                return
-
-            total_amount_billed += radiology.amount
-
-        for procedure in encounter_doc.procedure_prescription:
-            if (
-                procedure.prescribe == 0
-                or procedure.is_not_available_inhouse == 1
-                or procedure.invoiced == 1
-                or procedure.is_cancelled == 1
-            ):
-                return
-
-            total_amount_billed += procedure.amount
-
-        for drug in encounter_doc.drug_prescription:
-            if (
-                drug.prescribe == 0
-                or drug.is_not_available_inhouse == 1
-                or drug.invoiced == 1
-                or drug.is_cancelled == 1
-            ):
-                return
-
-            total_amount_billed += drug.quantity * drug.amount
-
-        for plan in encounter_doc.therapies:
-            if (
-                plan.prescribe == 0
-                or plan.is_not_available_inhouse == 1
-                or plan.invoiced == 1
-                or plan.is_cancelled == 1
-            ):
-                return
-
-            total_amount_billed += plan.amount
-
+                if child.doctype == "Drug Prescription":
+                    total_amount_billed += ((child.quantity - child.quantity_returned) * child.amount)
+                else:
+                    total_amount_billed = child.amount
+                
     inpatient_record_doc = frappe.get_doc("Inpatient Record", doc.inpatient_record)
 
     cash_limit = inpatient_record_doc.cash_limit
@@ -1402,16 +1383,60 @@ def validate_patient_balance_vs_patient_costs(doc):
 
     patient_balance = (-1 * deposit_balance) + cash_limit
 
-    if patient_balance < total_amount_billed:
-        frappe.throw(
-            frappe.bold(
-                "The deposit balance of this patient {0} - {1} is not enough or\
-                the patient has reached the cash limit. In order to submit this encounter,\
-                please request patient to deposit advances or request patient cash limit adjustment".format(
-                    doc.patient, doc.patient_name
+    cash_limit_percent = 100 - ((total_amount_billed / patient_balance) * 100)
+    cash_limit_details = frappe.get_value(
+        "Company", {"name": doc.company, "hms_tz_has_cash_limit_alert": 1}, 
+        ["hms_tz_minimum_cash_limit_percent", "hms_tz_limit_exceed_action", "hms_tz_limit_under_minimum_percent_action"],
+        as_dict=1
+    )
+    
+    make_cash_limit_alert(doc, cash_limit_percent, cash_limit_details)
+
+
+def make_cash_limit_alert(doc, cash_limit_percent, cash_limit_details):
+    if cash_limit_percent > 0 and cash_limit_percent <= cash_limit_details.get("hms_tz_minimum_cash_limit_percent"):
+        if cash_limit_details.get("hms_tz_limit_under_minimum_percent_action") == "Warn":
+            frappe.msgprint(
+                frappe.bold(
+                    "The patient {0} - {1} has reached 90% of their cash limit.\
+                        Please request patient to deposit advances or request patient cash limit adjustment".format(
+                        doc.patient, doc.patient_name
+                    )
                 )
             )
-        )
+        
+        elif cash_limit_details.get("hms_tz_limit_under_minimum_percent_action") == "Stop":
+            frappe.throw(
+                frappe.bold(
+                    "The patient {0} - {1} has reached 90% of their cash limit.\
+                        Please request patient to deposit advances or request patient cash limit adjustment".format(
+                        doc.patient, doc.patient_name
+                    )
+                )
+            )
+
+    elif cash_limit_percent <= 0:
+        if cash_limit_details.get("hms_tz_limit_exceed_action") == "Warn":
+            frappe.msgprint(
+                frappe.bold(
+                    "The deposit balance of this patient {0} - {1} is not enough or\
+                        the patient has reached the cash limit. In order to submit this encounter,\
+                        please request patient to deposit advances or request patient cash limit adjustment".format(
+                        doc.patient, doc.patient_name
+                    )
+                )
+            )
+            
+        if cash_limit_details.get("hms_tz_limit_exceed_action") == "Stop":
+            frappe.throw(
+                frappe.bold(
+                    "The deposit balance of this patient {0} - {1} is not enough or\
+                    the patient has reached the cash limit. In order to submit this encounter,\
+                    please request patient to deposit advances or request patient cash limit adjustment".format(
+                        doc.patient, doc.patient_name
+                    )
+                )
+            )
 
 
 def get_patient_encounters(doc):
@@ -1429,7 +1454,7 @@ def get_patient_encounters(doc):
         return patient_encounters
 
 
-def show_last_prescribed_for_lrpt(doc):
+def show_last_prescribed_for_lrpt(doc, method):
     childs_map = [
         {
             "table": "lab_test_prescription",
@@ -1461,7 +1486,9 @@ def show_last_prescribed_for_lrpt(doc):
         # }
     ]
 
+
     msg = ""
+    valid_days_msg = ""
     for child in childs_map:
         msg_print = ""
         for entry in doc.get(child.get("table")):
@@ -1488,6 +1515,10 @@ def show_last_prescribed_for_lrpt(doc):
                     + "<br>"
                 )
 
+                val_msg = validate_prescribe_days(doc, child.get("doctype"), entry.get(child.get("item")), date)
+                if val_msg:
+                    valid_days_msg += val_msg
+
         msg += msg_print
 
     for plan in doc.therapies:
@@ -1508,13 +1539,39 @@ def show_last_prescribed_for_lrpt(doc):
                 )
                 + "<br>"
             )
+            val_msg = validate_prescribe_days(doc, "Therapy Type", items[0]["therapy_type"], items[0]["date"])
+            if val_msg:
+                valid_days_msg += val_msg
 
-    if msg:
+    if valid_days_msg:
+        frappe.throw(
+            _("These Items should not be prescribed, since days are below minimum prescription days:<br>" + valid_days_msg),
+        )
+    elif msg:
         frappe.msgprint(
             _("The below are the last related Item prescribed:<br><br>" + msg)
         )
 
+def validate_prescribe_days(doc, doctype, item_value, date):
+    if doc.insurance_company:
+        valid_min_presribe_days = frappe.get_value(doctype, 
+            {"name": item_value, "hms_tz_validate_prescription_days_for_insurance": 1},
+            "hms_tz_insurance_min_no_of_days_for_prescription"
+        )
+        
+    elif doc.mode_of_payment:
+        valid_min_presribe_days = frappe.get_value(doctype,
+            {"name": item_value, "hms_tz_validate_prescription_days_for_cash": 1},
+            "hms_tz_cash_min_no_of_days_for_prescription"
+        )
+    
+    if valid_min_presribe_days and (date_diff(nowdate(), date) < cint(valid_min_presribe_days)):
+        item = item_value
+        msg = _(f"<p style='background-color: #CCFB5D;'><b>{item}</b> was lastly prescribed on: <b>{date}</b> and it should be prescribed again after: <b>{valid_min_presribe_days} days</b></p><br>")
 
+        return msg
+    
+>>>>>>> a19f0e96 (feat: control and  allow configuration of minimum days for an item to be prescribed on patient encounter)
 @frappe.whitelist()
 def convert_opd_encounter_to_ipd_encounter(encounter):
     """Convert an out-patient encounter into list of inpatient encounters.
@@ -1589,7 +1646,6 @@ def validate_admission_encounter(encounter):
         return True
 
 @frappe.whitelist()
-
 def validate_admission_encounter(encounter):
     """Validate encounter if it has duplicated = 1"""
     duplicated_encounter = frappe.get_value(
@@ -1675,3 +1731,36 @@ def validate_maximum_number_of_claims_per_month(
             ),
             "validate",
         )
+
+@frappe.whitelist()
+def get_lrpmt_items_to_reuse(kwargs):
+    """Get unique LRPMT items from previous encounters that can be reused on current encounters"""
+    
+    kwargs = frappe.parse_json(kwargs)
+    if not kwargs.get("patient"):
+        return []
+
+    appointments = frappe.get_all(
+        "Patient Appointment", 
+        filters={"patient": kwargs.get("patient"), "name": ["!=", kwargs.get("appoitnemnt")], "status": "Closed"}, 
+        fields=["name"], limit_page_length=2,
+        order_by="appointment_date desc", pluck="name"
+    )
+    if not appointments:
+        return []
+    
+    encounters = frappe.get_all("Patient Encounter", filters={"appointment": ["in", appointments]}, fields=["name"], pluck="name")
+    items = frappe.get_all(
+        kwargs.doctype,
+        fields=kwargs.get("fields"),
+        filters={"parent": ["in", encounters], "is_cancelled": 0, "is_not_available_inhouse": 0}
+    )
+
+    data = []
+    unique_items = []
+    for item in items:
+        if item.item not in unique_items:
+            unique_items.append(item.item)
+            data.append(item)
+
+    return data
