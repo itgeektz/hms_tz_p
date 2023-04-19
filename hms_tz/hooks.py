@@ -163,6 +163,7 @@ doc_events = {
         "on_submit": "hms_tz.nhif.api.lab_test.on_submit",
         "after_insert": "hms_tz.nhif.api.lab_test.after_insert",
         "on_trash": "hms_tz.nhif.api.lab_test.on_trash",
+        "on_cancel": "hms_tz.nhif.api.lab_test.on_cancel",
         "validate": "hms_tz.nhif.api.lab_test.validate",
     },
     "Radiology Examination": {

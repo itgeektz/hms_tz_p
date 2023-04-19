@@ -108,7 +108,7 @@ def get_lab_test_template(lab_test_name):
     return False
 
 
-def on_submit(doc, methd):
+def on_submit(doc, method):
     update_lab_prescription(doc)
     create_delivery_note(doc)
 
@@ -119,11 +119,11 @@ def create_delivery_note(doc):
         create_delivery_note_from_LRPT(doc, patient_encounter_doc)
 
 
-def after_insert(doc, methd):
+def after_insert(doc, method):
     create_sample_collection(doc)
 
 
-def on_trash(doc, methd):
+def on_trash(doc, method):
     sample_list = frappe.get_all(
         "Sample Collection",
         filters={
@@ -134,6 +134,22 @@ def on_trash(doc, methd):
     for item in sample_list:
         frappe.delete_doc("Sample Collection", item.name)
 
+def on_cancel(doc, method):
+    doc.flags.ignore_links = True
+
+    if doc.docstatus == 2:
+        frappe.db.set_value("Lab Prescription", doc.hms_tz_ref_childname, "lab_test", "")
+
+        new_lab_doc = frappe.copy_doc(doc)
+        new_lab_doc.status = "Draft"
+        new_lab_doc.workflow_state = None
+        new_lab_doc.amended_from = doc.name
+        new_lab_doc.save(ignore_permissions=True)
+
+        url = frappe.utils.get_url_to_form(new_lab_doc.doctype, new_lab_doc.name)
+        frappe.msgprint(f"Lab Test: <strong>{doc.name}</strong> is cancelled:<br>\
+            New Lab Test: <a href='{url}'><strong>{new_lab_doc.name}</strong></a> is successful created")
+        
 
 def create_sample_collection(doc):
     if not doc.template:
