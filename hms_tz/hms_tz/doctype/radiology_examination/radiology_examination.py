@@ -25,10 +25,6 @@ class RadiologyExamination(Document):
                 self.name,
             )
 
-<<<<<<< HEAD
-    def on_cancel(self):
-        manage_healthcare_doc_cancel(self)
-
     def on_submit(self):
         insert_to_medical_record(self)
         # make_insurance_claim(self)
@@ -46,11 +42,6 @@ class RadiologyExamination(Document):
             )
         if ref_company:
             self.company = ref_company
-=======
-	def on_submit(self):
-		insert_to_medical_record(self)
-		# make_insurance_claim(self)
->>>>>>> ba7e0c1a (feat: allow cancellation of radiology examination record and amend it to a new copy of radiology examination)
 
 
 def set_title_field(self):
