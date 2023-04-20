@@ -15,6 +15,7 @@ frappe.ui.form.on('NHIF Patient Claim', {
 	},
 
 	refresh(frm) {
+		$("[data-action='delete_all_rows']").hide();
 		if (frm.doc.docstatus === 0 && frm.doc.authorization_no) {
 			frm.add_custom_button(__("Merge Claims"), function () {
 				frm.dirty()
@@ -29,7 +30,8 @@ frappe.ui.form.on('NHIF Patient Claim', {
 		}
 	},
 
-	onload: function(frm) {
+	onload: function (frm) {
+		$("[data-action='delete_all_rows']").hide();
 		if (frm.doc.patient && frm.doc.patient_appointment) {
 			frappe.db.get_list('LRPMT Returns', {
 				fields:['name'],
