@@ -163,11 +163,13 @@ doc_events = {
         "on_submit": "hms_tz.nhif.api.lab_test.on_submit",
         "after_insert": "hms_tz.nhif.api.lab_test.after_insert",
         "on_trash": "hms_tz.nhif.api.lab_test.on_trash",
+        "on_cancel": "hms_tz.nhif.api.lab_test.on_cancel",
         "validate": "hms_tz.nhif.api.lab_test.validate",
     },
     "Radiology Examination": {
         "on_submit": "hms_tz.nhif.api.radiology_examination.on_submit",
         "validate": "hms_tz.nhif.api.radiology_examination.validate",
+        "on_cancel": "hms_tz.nhif.api.radiology_examination.on_cancel",
     },
     "Clinical Procedure": {
         "on_submit": "hms_tz.nhif.api.clinical_procedure.on_submit",

@@ -466,6 +466,7 @@ def set_follow_up(appointment_doc, method):
 
 
 def make_next_doc(doc, method):
+    validate_insurance_subscription(doc)
     check_multiple_appointments(doc)
     if doc.is_new():
         return
@@ -535,9 +536,21 @@ def make_next_doc(doc, method):
 @frappe.whitelist()
 def validate_insurance_company(insurance_company: str) -> str:
     if frappe.get_value("Healthcare Insurance Company", insurance_company, "disabled"):
-        frappe.msgprint(_("<b>Insurance Company: <string>{0}</strong> is disabled, Please choose different insurance subscription</b>".format(insurance_company)))
+        frappe.msgprint(_("<b>Insurance Company: <strong>{0}</strong> is disabled, Please choose different insurance subscription</b>".format(insurance_company)))
         return True
     return False
+
+@frappe.whitelist()
+def validate_insurance_subscription(doc):
+    if not doc.insurance_subscription:
+        return
+    
+    if frappe.db.get_value("Healthcare Insurance Subscription", doc.insurance_subscription, "docstatus") == 0:
+        url = frappe.utils.get_link_to_form("Healthcare Insurance Subscription", doc.insurance_subscription)
+        frappe.throw(
+            _(f"Insurance Subscription: <strong>{doc.insurance_subscription}</strong> is on Draft<br>\
+                Click here: <strong>{url}</strong> to submit Insurance Subscription")
+        )
 
 
 def calculate_patient_age(patient):

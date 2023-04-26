@@ -1571,7 +1571,6 @@ def validate_prescribe_days(doc, doctype, item_value, date):
 
         return msg
     
->>>>>>> a19f0e96 (feat: control and  allow configuration of minimum days for an item to be prescribed on patient encounter)
 @frappe.whitelist()
 def convert_opd_encounter_to_ipd_encounter(encounter):
     """Convert an out-patient encounter into list of inpatient encounters.
@@ -1733,8 +1732,8 @@ def validate_maximum_number_of_claims_per_month(
         )
 
 @frappe.whitelist()
-def get_lrpmt_items_to_reuse(kwargs):
-    """Get unique LRPMT items from previous encounters that can be reused on current encounters"""
+def get_previous_diagnosis_and_lrpmt_items_to_reuse(kwargs, caller):
+    """Get unique Diagnosis and LRPMT items from previous encounters that can be reused on current encounters"""
     
     kwargs = frappe.parse_json(kwargs)
     if not kwargs.get("patient"):
@@ -1743,24 +1742,38 @@ def get_lrpmt_items_to_reuse(kwargs):
     appointments = frappe.get_all(
         "Patient Appointment", 
         filters={"patient": kwargs.get("patient"), "name": ["!=", kwargs.get("appoitnemnt")], "status": "Closed"}, 
-        fields=["name"], limit_page_length=2,
+        fields=["name"], limit_page_length=kwargs.get("number_of_visit"),
         order_by="appointment_date desc", pluck="name"
     )
     if not appointments:
         return []
     
-    encounters = frappe.get_all("Patient Encounter", filters={"appointment": ["in", appointments]}, fields=["name"], pluck="name")
-    items = frappe.get_all(
-        kwargs.doctype,
-        fields=kwargs.get("fields"),
-        filters={"parent": ["in", encounters], "is_cancelled": 0, "is_not_available_inhouse": 0}
-    )
-
+    enc_cond = {"appointment": ["in", appointments]}
+    if not kwargs.get("include_ipd_encounters"):
+        enc_cond["inpatient_record"] = ("=", "")
+    
+    encounters = frappe.get_all("Patient Encounter", filters=enc_cond, fields=["name"], pluck="name")
+    if not encounters:
+        return []
+    
     data = []
-    unique_items = []
-    for item in items:
-        if item.item not in unique_items:
-            unique_items.append(item.item)
-            data.append(item)
+    if caller == "Diagnosis":
+        diagnosis = frappe.get_all(
+            kwargs.doctype,
+            fields=kwargs.get("fields"),
+            filters={"parent": ["in", encounters], "parentfield":"patient_encounter_final_diagnosis"}
+        )
+        data = list({v["item"]:v for v in diagnosis}.values())
+    else:
+        items = frappe.get_all(
+            kwargs.doctype,
+            fields=kwargs.get("fields"),
+            filters={"parent": ["in", encounters], "is_cancelled": 0, "is_not_available_inhouse": 0}
+        )
+        unique_items = []
+        for item in items:
+            if item.item not in unique_items:
+                unique_items.append(item.item)
+                data.append(item)
 
     return data
