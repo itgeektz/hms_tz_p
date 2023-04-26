@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from hms_tz.hms_tz.utils import manage_healthcare_doc_cancel
 from frappe.utils import cstr
 
 
@@ -25,9 +24,6 @@ class RadiologyExamination(Document):
                 "radiology_examination",
                 self.name,
             )
-
-    def on_cancel(self):
-        manage_healthcare_doc_cancel(self)
 
     def on_submit(self):
         insert_to_medical_record(self)
