@@ -29,12 +29,8 @@ from hms_tz.nhif.api.healthcare_utils import (
 import os
 from frappe.utils.pdf import get_pdf
 from PyPDF2 import PdfFileWriter
-<<<<<<< HEAD
-# import html2text
-=======
 import html2text
 from hms_tz.nhif.doctype.nhif_tracking_claim_change.nhif_tracking_claim_change import track_changes_of_claim_items
->>>>>>> fc26901e (feat: allow tracking of  removed/deleted items and items whose amount was changed from NHIF Patient Claim)
 
 
 class NHIFPatientClaim(Document):
