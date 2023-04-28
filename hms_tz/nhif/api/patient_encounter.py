@@ -329,16 +329,6 @@ def on_submit_validation(doc, method):
         if coverage_info.maximum_number_of_claims == 0:
             continue
 
-<<<<<<< HEAD
-        validate_maximum_number_of_claims_per_month(
-            coverage_info, insurance_subscription, template, today, method
-        )
-
-    if not doc.patient_age:
-        doc.patient_age = calculate_patient_age(doc.patient)
-=======
->>>>>>> dbb32cfb (chore: remove message for validation of  maximum number of days per month)
-
     if not doc.patient_age:
         doc.patient_age = calculate_patient_age(doc.patient)
     
@@ -1647,96 +1637,6 @@ def validate_admission_encounter(encounter):
         ))
         return True
 
-<<<<<<< HEAD
-@frappe.whitelist()
-def validate_admission_encounter(encounter):
-    """Validate encounter if it has duplicated = 1"""
-    duplicated_encounter = frappe.get_value(
-        "Patient Encounter", {"from_encounter": encounter}, "name"
-    )
-    if duplicated_encounter:
-        url = frappe.utils.get_link_to_form("Patient Encounter", duplicated_encounter)
-        frappe.msgprint(
-            "You can't schedule Admission on this encounter: {0},<br>\
-            Please, Click Here: {1} to open the right encounter".format(
-                frappe.bold(encounter), frappe.bold(url)
-            )
-        )
-        return True
-
-
-def validate_maximum_number_of_claims_per_month(
-    coverage_info, insurance_subscription, template, today, method
-):
-    days = 30
-
-    lrpt_names_sql = """
-        SELECT hsi.name FROM `tabLab Prescription` hsi
-        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-        WHERE pe.insurance_subscription = "{0}"
-        AND hsi.lab_test_code = "{1}"
-        AND hsi.prescribe = 0
-        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-        UNION ALL
-        SELECT hsi.name FROM `tabRadiology Procedure Prescription` hsi
-        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-        WHERE pe.insurance_subscription = "{0}"
-        AND hsi.radiology_examination_template = "{1}"
-        AND hsi.prescribe = 0
-        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-        UNION ALL
-        SELECT hsi.name FROM `tabProcedure Prescription` hsi
-        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-        WHERE pe.insurance_subscription = "{0}"
-        AND hsi.procedure = "{1}"
-        AND hsi.prescribe = 0
-        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-        UNION ALL
-        SELECT hsi.name FROM `tabTherapy Plan Detail` hsi
-        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-        WHERE pe.insurance_subscription = "{0}"
-        AND hsi.therapy_type = "{1}"
-        AND hsi.prescribe = 0
-        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-    """.format(
-        insurance_subscription, template, add_days(today, days=-days), today
-    )
-    lrpt_names = frappe.db.sql(lrpt_names_sql)
-    lrpt_count = len(lrpt_names) or 0
-
-    drug_count_sql = """
-        SELECT SUM(hsi.quantity) FROM `tabDrug Prescription` hsi
-        INNER JOIN `tabPatient Encounter` pe ON hsi.parent = pe.name
-        WHERE pe.insurance_subscription = "{0}"
-        AND hsi.drug_code = "{1}"
-        AND hsi.prescribe = 0
-        AND DATE(pe.creation) BETWEEN "{2}" AND "{3}"
-    """.format(
-        insurance_subscription, template, add_days(today, days=-days), today
-    )
-    drug_count = (
-        frappe.db.sql(drug_count_sql, as_dict=0,)[
-            0
-        ][0]
-        or 0
-    )
-
-    if (lrpt_count + drug_count) > coverage_info.maximum_number_of_claims:
-        msgThrow(
-            _(
-                "Maximum Number of Claims for {0} per month is exceeded within the"
-                " last {1} days. The allowed count is {2} where as past prescription count is {3}"
-            ).format(
-                template,
-                days,
-                coverage_info.maximum_number_of_claims,
-                coverage_info.number_of_claims,
-            ),
-            "validate",
-        )
-
-=======
->>>>>>> dbb32cfb (chore: remove message for validation of  maximum number of days per month)
 @frappe.whitelist()
 def get_previous_diagnosis_and_lrpmt_items_to_reuse(kwargs, caller):
     """Get unique Diagnosis and LRPMT items from previous encounters that can be reused on current encounters"""
