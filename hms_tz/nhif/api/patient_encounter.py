@@ -329,12 +329,15 @@ def on_submit_validation(doc, method):
         if coverage_info.maximum_number_of_claims == 0:
             continue
 
+<<<<<<< HEAD
         validate_maximum_number_of_claims_per_month(
             coverage_info, insurance_subscription, template, today, method
         )
 
     if not doc.patient_age:
         doc.patient_age = calculate_patient_age(doc.patient)
+=======
+>>>>>>> dbb32cfb (chore: remove message for validation of  maximum number of days per month)
 
     if not doc.patient_age:
         doc.patient_age = calculate_patient_age(doc.patient)
@@ -1644,6 +1647,7 @@ def validate_admission_encounter(encounter):
         ))
         return True
 
+<<<<<<< HEAD
 @frappe.whitelist()
 def validate_admission_encounter(encounter):
     """Validate encounter if it has duplicated = 1"""
@@ -1731,6 +1735,8 @@ def validate_maximum_number_of_claims_per_month(
             "validate",
         )
 
+=======
+>>>>>>> dbb32cfb (chore: remove message for validation of  maximum number of days per month)
 @frappe.whitelist()
 def get_previous_diagnosis_and_lrpmt_items_to_reuse(kwargs, caller):
     """Get unique Diagnosis and LRPMT items from previous encounters that can be reused on current encounters"""
