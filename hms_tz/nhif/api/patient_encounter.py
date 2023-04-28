@@ -1530,20 +1530,11 @@ def show_last_prescribed_for_lrpt(doc, method):
                 as_dict=1,
             )
 
-<<<<<<< HEAD
-            if len(item_doc) > 0:
-                date = item_doc[0]["creation"].strftime("%Y-%m-%d")
-
-                msg_print += _(
-                    "{0} prescribed last on: {1}".format(
-                        frappe.bold(entry.get(child.get("item"))), frappe.bold(date)
-=======
             if items:
                 msg = _(
                     msg
                     + "{0} prescribed last on: {1}".format(
                         frappe.bold(items[0]["therapy_type"]), frappe.bold(items[0]["date"])
->>>>>>> 8e6b4dc9 (fix: remove duplication of last prescribed message for LRPMT items)
                     )
                     + "<br>"
                 )
