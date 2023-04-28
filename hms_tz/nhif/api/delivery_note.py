@@ -23,15 +23,11 @@ def set_original_item(doc):
         if item.item_code:
             item.original_item = item.item_code
             item.original_stock_uom_qty = item.stock_qty
-<<<<<<< HEAD
-
-=======
         
         #SHM Rock: #168
         if doc.form_sales_invoice and doc.patient:
             update_dosage_details(item)
         
->>>>>>> b10365d9 (fix: update dosage information and doctor's comment for cash invoiced patients)
         new_row = item.as_dict()
         for fieldname in get_fields_to_clear():
             new_row[fieldname] = None
