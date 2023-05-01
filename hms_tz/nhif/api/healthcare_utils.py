@@ -1164,7 +1164,6 @@ def varify_service_approval_number_for_LRPM(patient, company, approval_number, t
             {"customer_name": "NHIF", "parent": item_code, "parenttype": "Item"},
             "ref_code"
         )
-        frappe.msgprint(str(item_ref_code) + " " + str(item_code))
 
         if result.get("ItemCode") != item_ref_code:
             frappe.msgprint(f"<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
