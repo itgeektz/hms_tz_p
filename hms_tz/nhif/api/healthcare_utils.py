@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 import datetime
-
+import requests
 from hms_tz.hms_tz.utils import validate_customer_created
 from frappe.utils import nowdate, nowtime, now_datetime, add_to_date, get_url_to_form
 from datetime import timedelta
@@ -14,6 +14,8 @@ import base64
 import re
 import json
 from frappe.model.workflow import apply_workflow
+from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
+from hms_tz.nhif.api.token import get_formservice_token
 
 
 @frappe.whitelist()
@@ -1134,3 +1136,98 @@ def enqueue_auto_sending_of_patient_claims(setting_obj):
         status_code="Summary",
     )
     frappe.db.commit()
+
+@frappe.whitelist()
+def varify_service_approval_number_for_LRPM(patient, company, approval_number, template, item):
+    """Verify if the service approval number is valid for the given patient and item ref code
+    
+    Arguments:
+        patient {str} -- Patient number
+        company {str} -- Company name
+        approval_number {str} -- Service approval number
+        template {str} -- Template name
+        item {str} -- Item code
+    """
+
+    def validate_item_ref_code(templete_doctype, template_name, result):
+        item_code = None
+        if templete_doctype == "Lab Test Template":
+            item_code = frappe.get_cached_value(templete_doctype, template_name, "item")
+        elif templete_doctype == "Radiology Examination Template":
+            item_code = frappe.get_cached_value(templete_doctype, template_name, "item")
+        elif templete_doctype == "Clinical Procedure Template":
+            item_code = frappe.get_cached_value(templete_doctype, template_name, "item")
+        elif templete_doctype == "Medication":
+            item_code = template_name
+
+        item_ref_code = frappe.get_value("Item Customer Detail",
+            {"customer_name": "NHIF", "parent": item_code, "parenttype": "Item"},
+            "ref_code"
+        )
+        frappe.msgprint(str(item_ref_code) + " " + str(item_code))
+
+        if result.get("ItemCode") != item_ref_code:
+            frappe.msgprint(f"<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
+                This Approval Number: <b>{approval_number}</b> is not for this item: <b>{item}</b></h4>")
+            return False
+        return True
+    
+    def validate_card_no(patient, result):
+        card_no = frappe.get_value("Patient", patient, "card_no")
+        if result.get("CardNo") != card_no:
+            frappe.msgprint(f"<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
+                This Approval Number: <b>{approval_number}</b> is not for this patient: <b>{patient}</b></h4>")
+            return False
+        return True
+
+
+    enable_nhif_api, nhifform_url = frappe.get_cached_value("Company NHIF Settings", company, ["enable", "nhifform_url"])
+    if not enable_nhif_api:
+        frappe.msgprint(
+            _(f"Company <b>{company}</b> not enabled for NHIF Integration")
+        )
+        return
+
+    url = str(nhifform_url) + f"/formposting/api/v1/approval/GetAuthorizedService?ApprovalReferenceNo={approval_number}"
+    token = get_formservice_token(company)
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+    }
+
+    r = requests.request("GET", url, headers=headers, timeout=120)
+
+    if r.status_code == 200:
+        add_log(
+            request_type="GetAuthorizedService",
+            request_url=url,
+            request_header=headers,
+            request_body="",
+            response_data=r.text,
+            status_code=r.status_code,
+        )
+        data = json.loads(r.text)
+        if len(data) == 0:
+            frappe.msgprint(f"<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
+                This Approval Number: <b>{approval_number}</b> is not Valid, <br>Please check again</h4>")
+            return False
+
+        if not validate_card_no(patient, data[0]):
+            return False
+        elif not validate_item_ref_code(template, item, data[0]):
+            return False
+        else:
+            return data[0]
+        
+    else:
+        add_log(
+            request_type="GetAuthorizedService",
+            request_url=url,
+            request_header=headers,
+            request_body="",
+            response_data=r.text,
+            status_code=r.status_code,
+        )
+        frappe.msgprint(f"Error: <b>{r.text}</b>")
+        return False

@@ -108,6 +108,20 @@ def get_lab_test_template(lab_test_name):
     return False
 
 
+def before_submit(doc, method):
+    if doc.is_restricted and not doc.approval_number:
+            frappe.throw(_(
+                    f"Approval number is required for <b>{doc.radiology_examination_template}</b>. Please set the Approval Number."
+                )
+            )
+        
+    if doc.approval_number and doc.approval_status != "Verified":
+        frappe.throw(_(
+                f"Approval number: <b>{doc.approval_number}</b> for item: <b>{doc.radiology_examination_template}</b> is not verified.>br>\
+                    Please verify the Approval Number."
+            )
+        )
+
 def on_submit(doc, method):
     update_lab_prescription(doc)
     create_delivery_note(doc)
