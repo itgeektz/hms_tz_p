@@ -11,9 +11,5 @@ hms_tz.patches.custom_fields.followup_custom_field_on_coverage_plan_and_insuranc
 hms_tz.patches.custom_fields.cash_limit_alert_custom_fields_on_company
 hms_tz.patches.custom_fields.reuse_lrpmt_items_custom_fields_on_encounter
 hms_tz.patches.custom_fields.custom_fields_for_lrpmt_template
-<<<<<<< HEAD
-hms_tz.patches.custom_fields.reuse_previous_diagnosis_custom_fields_on_encounter
-=======
 hms_tz.patches.custom_fields.reuse_previous_diagnosis_custom_fields_on_encounter
 hms_tz.patches.custom_fields.custom_fields_of_approval_number_for_lrpm_docs
->>>>>>> 369a5df1 (feat: allow verification of service approval number from NHIF before provision of restricted service or before dispensing of restricted medicines)
