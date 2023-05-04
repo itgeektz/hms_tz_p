@@ -151,10 +151,16 @@ def before_submit(doc, method):
 
     for item in doc.items:
         if item.is_restricted and not item.approval_number:
-            frappe.throw(
-                _(
-                    "Approval number required for {0}. Please open line {1} and set the Approval Number."
-                ).format(item.item_name, item.idx)
+            frappe.throw(_(
+                    f"Approval number required for {item.item_name}. Please open line {item.idx} and set the Approval Number."
+                )
+            )
+        
+        if item.approval_number and item.approval_status != "Verified":
+            frappe.throw(_(
+                    f"Approval number: <b>{item.approval_number}</b> for item: <b>{item.item_code}</b> is not verified.\
+                        Please open line: <b>{item.idx}</b> and verify the Approval Number."
+                )
             )
 
 

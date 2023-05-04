@@ -1,14 +1,4 @@
-frappe.ui.form.on('Clinical Procedure', {
-    refresh: function(frm) {
-        frm.remove_custom_button('Start');
-        frm.remove_custom_button('Complete');
-    },
-
-    onload: function(frm) {
-        frm.remove_custom_button('Start');
-        frm.remove_custom_button('Complete');
-    },
-    
+frappe.ui.form.on("Radiology Examination", {
     approval_number: (frm) => {
         frm.fields_dict.approval_number.$input.focusout(() => {
             if (frm.doc.approval_number != "" && frm.doc.approval_number != undefined) {
@@ -17,8 +7,8 @@ frappe.ui.form.on('Clinical Procedure', {
                     patient: frm.doc.patient,
                     company: frm.doc.company,
                     approval_number: frm.doc.approval_number,
-                    template: "Clinical Procedure Template",
-                    item: frm.doc.procedure_template,
+                    template: "Radiology Examination Template",
+                    item: frm.doc.radiology_examination_template,
                 }).then(r => {
                     frappe.dom.unfreeze();
                     if (r.message) {
@@ -32,7 +22,7 @@ frappe.ui.form.on('Clinical Procedure', {
                         frm.set_value("approval_status", "Verified");
                         frm.set_value("authorized_item_id", data.AuthorizedItemID);
                         frm.set_value("service_authorization_id", data.ServiceAuthorizationID);
-
+                        
                     } else {
                         frm.set_value("approval_number", "");
                         frappe.show_alert({
