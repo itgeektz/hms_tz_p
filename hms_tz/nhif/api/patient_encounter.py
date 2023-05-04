@@ -1486,71 +1486,70 @@ def show_last_prescribed_for_lrpt(doc, method):
         # }
     ]
 
+    if method == "validate":
+        msg = ""
+        valid_days_msg = ""
+        for child in childs_map:
+            msg_print = ""
+            for entry in doc.get(child.get("table")):
+                conditions = {
+                    "patient": doc.patient,
+                    child.get("field_name"): entry.get(child.get("item")),
+                }
 
-    msg = ""
-    valid_days_msg = ""
-    for child in childs_map:
-        msg_print = ""
-        for entry in doc.get(child.get("table")):
-            conditions = {
-                "patient": doc.patient,
-                child.get("field_name"): entry.get(child.get("item")),
-            }
+                item_doc = frappe.get_all(
+                    child.get("ref_doc"),
+                    filters=conditions,
+                    fields=[child.get("field_name"), "creation"],
+                    order_by="creation DESC",
+                    limit=1,
+                )
 
-            item_doc = frappe.get_all(
-                child.get("ref_doc"),
-                filters=conditions,
-                fields=[child.get("field_name"), "creation"],
-                order_by="creation DESC",
-                limit=1,
+                if len(item_doc) > 0:
+                    date = item_doc[0]["creation"].strftime("%Y-%m-%d")
+
+                    msg_print += _("{0} prescribed last on: {1}".format(
+                            frappe.bold(entry.get(child.get("item"))), frappe.bold(date)
+                        )
+                        + "<br>"
+                    )
+
+                    val_msg = validate_prescribe_days(doc, child.get("doctype"), entry.get(child.get("item")), date)
+                    if val_msg:
+                        valid_days_msg += val_msg
+
+            msg += msg_print
+
+        for plan in doc.therapies:
+            items = frappe.db.sql(
+                """ 
+                SELECT tpd.therapy_type, Date(tpd.creation) AS date FROM `tabTherapy Plan Detail` tpd
+                INNER JOIN `tabTherapy Plan` tp ON tpd.parent = tp.name WHERE tp.patient = %s 
+                AND tpd.therapy_type = %s """
+                % (frappe.db.escape(doc.patient), frappe.db.escape(plan.therapy_type)),
+                as_dict=1,
             )
 
-            if len(item_doc) > 0:
-                date = item_doc[0]["creation"].strftime("%Y-%m-%d")
-
-                msg_print += _(
-                    "{0} prescribed last on: {1}".format(
-                        frappe.bold(entry.get(child.get("item"))), frappe.bold(date)
+            if items:
+                msg = _(
+                    msg
+                    + "{0} prescribed last on: {1}".format(
+                        frappe.bold(items[0]["therapy_type"]), frappe.bold(items[0]["date"])
                     )
                     + "<br>"
                 )
-
-                val_msg = validate_prescribe_days(doc, child.get("doctype"), entry.get(child.get("item")), date)
+                val_msg = validate_prescribe_days(doc, "Therapy Type", items[0]["therapy_type"], items[0]["date"])
                 if val_msg:
                     valid_days_msg += val_msg
 
-        msg += msg_print
-
-    for plan in doc.therapies:
-        items = frappe.db.sql(
-            """ 
-            SELECT tpd.therapy_type, Date(tpd.creation) AS date FROM `tabTherapy Plan Detail` tpd
-            INNER JOIN `tabTherapy Plan` tp ON tpd.parent = tp.name WHERE tp.patient = %s 
-            AND tpd.therapy_type = %s """
-            % (frappe.db.escape(doc.patient), frappe.db.escape(plan.therapy_type)),
-            as_dict=1,
-        )
-
-        if items:
-            msg = _(
-                msg
-                + "{0} prescribed last on: {1}".format(
-                    frappe.bold(items[0]["therapy_type"]), frappe.bold(items[0]["date"])
-                )
-                + "<br>"
+        if valid_days_msg:
+            frappe.throw(
+                _("These Items should not be prescribed, since days are below minimum prescription days:<br>" + valid_days_msg),
             )
-            val_msg = validate_prescribe_days(doc, "Therapy Type", items[0]["therapy_type"], items[0]["date"])
-            if val_msg:
-                valid_days_msg += val_msg
-
-    if valid_days_msg:
-        frappe.throw(
-            _("These Items should not be prescribed, since days are below minimum prescription days:<br>" + valid_days_msg),
-        )
-    elif msg:
-        frappe.msgprint(
-            _("The below are the last related Item prescribed:<br><br>" + msg)
-        )
+        elif msg:
+            frappe.msgprint(
+                _("The below are the last related Item prescribed:<br><br>" + msg)
+            )
 
 def validate_prescribe_days(doc, doctype, item_value, date):
     if doc.insurance_company:
