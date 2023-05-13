@@ -103,6 +103,7 @@ frappe.ui.form.on('Patient Encounter', {
         };
 
         set_btn_properties(frm);
+        // set_delete_button_in_child_table(frm);
     },
 
     clear_history: function (frm) {
@@ -367,34 +368,43 @@ frappe.ui.form.on('Patient Encounter', {
         });
     },
     hms_tz_reuse_lab_items: (frm) => {
-        let fields = ["lab_test_code as item", "lab_test_name as item_name", "creation as date"]
-        let value_dict = { "table_field": "lab_test_prescription", "item_field": "lab_test_code", "item_name_field": "lab_test_name"}
-        reuse_lrpmt_items(frm, "Lab Prescription", fields, value_dict, "Lab Items")
+        let fields = ["lab_test_code as item", "lab_test_name as item_name", "creation as date"];
+        let value_dict = { "table_field": "lab_test_prescription", "item_field": "lab_test_code", "item_name_field": "lab_test_name" };
+        reuse_lrpmt_items(frm, "Lab Prescription", fields, value_dict, "Lab Items");
     },
     hms_tz_reuse_radiology_items: (frm) => {
-        let fields = ["radiology_examination_template as item", "radiology_procedure_name as item_name", "creation as date"]
-        let value_dict = { "table_field": "radiology_procedure_prescription", "item_field": "radiology_examination_template", "item_name_field": "radiology_procedure_name"}
-        reuse_lrpmt_items(frm, "Radiology Procedure Prescription", fields, value_dict, "Radiology Items")
+        let fields = ["radiology_examination_template as item", "radiology_procedure_name as item_name", "creation as date"];
+        let value_dict = { "table_field": "radiology_procedure_prescription", "item_field": "radiology_examination_template", "item_name_field": "radiology_procedure_name" };
+        reuse_lrpmt_items(frm, "Radiology Procedure Prescription", fields, value_dict, "Radiology Items");
     },
     hms_tz_reuse_procedure_items: (frm) => {
-        let fields = ["procedure as item", "procedure_name as item_name", "creation as date"]
-        let value_dict = { "table_field": "procedure_prescription", "item_field": "procedure", "item_name_field": "procedure_name"}
-        reuse_lrpmt_items(frm, "Procedure Prescription", fields, value_dict, "Procedure Items")
+        let fields = ["procedure as item", "procedure_name as item_name", "creation as date"];
+        let value_dict = { "table_field": "procedure_prescription", "item_field": "procedure", "item_name_field": "procedure_name" };
+        reuse_lrpmt_items(frm, "Procedure Prescription", fields, value_dict, "Procedure Items");
     },
     hms_tz_reuse_drug_items: (frm) => {
-        let fields = ["drug_code as item", "drug_name as item_name", "creation as date"]
-        let value_dict = { "table_field": "drug_prescription", "item_field": "drug_code", "item_name_field": "drug_name"}
-        reuse_lrpmt_items(frm, "Drug Prescription", fields, value_dict, "Drug Items")
+        let fields = ["drug_code as item", "drug_name as item_name", "creation as date"];
+        let value_dict = { "table_field": "drug_prescription", "item_field": "drug_code", "item_name_field": "drug_name" };
+        reuse_lrpmt_items(frm, "Drug Prescription", fields, value_dict, "Drug Items");
     },
     hms_tz_reuse_therapy_items: (frm) => {
-        let fields = ["therapy_type as item", "therapy_type as item_name", "creation as date"]
-        let value_dict = { "table_field": "therapies", "item_field": "therapy_type", "item_name_field": "therapy_type"}
-        reuse_lrpmt_items(frm, "Therapy Plan Detail", fields, value_dict, "Therapy Items")
+        let fields = ["therapy_type as item", "therapy_type as item_name", "creation as date"];
+        let value_dict = { "table_field": "therapies", "item_field": "therapy_type", "item_name_field": "therapy_type" };
+        reuse_lrpmt_items(frm, "Therapy Plan Detail", fields, value_dict, "Therapy Items");
     },
     hms_tz_reuse_previous_diagnosis: (frm) => {
-        let fields = ["medical_code as item", "code as item_name", "description", "mtuha", "creation as date"]
-        let value_dict = { "table_field": "patient_encounter_preliminary_diagnosis", "item_field": "medical_code", "item_name_field": "code", "description_field": "description", "mtuha_field": "mtuha"}
-        reuse_lrpmt_items(frm, "Codification Table", fields, value_dict, "Previous Diagnosis", "Diagnosis")
+        let fields = ["medical_code as item", "code as item_name", "description", "mtuha", "creation as date"];
+        let value_dict = { "table_field": "patient_encounter_preliminary_diagnosis", "item_field": "medical_code", "item_name_field": "code", "description_field": "description", "mtuha_field": "mtuha" };
+        reuse_lrpmt_items(frm, "Codification Table", fields, value_dict, "Previous Diagnosis", "Diagnosis");
+    },
+    hms_tz_patient_history: (frm) => {
+        if (frm.doc.patient) {
+            frappe.route_options = { 'patient': frm.doc.patient };
+            frappe.open_in_new_tab = true;
+            frappe.set_route('tz-patient-history',);
+        } else {
+            frappe.msgprint(__('Please select Patient'));
+        }
     }
 });
 
@@ -803,9 +813,14 @@ var set_btn_properties = (frm) => {
             'font-size': '16px', 'border-radius': '6px', 'cursor': 'pointer',
             'width': '180px',
         });
+    $('[data-fieldname="hms_tz_patient_history"]').removeClass('btn-default')
+        .addClass('btn-primary align-middle text-white font-weight-bold').css({
+            'font-size': '16px', 'border-radius': '6px', 'cursor': 'pointer',
+            'width': '180px',
+        });
 };
 
-var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller="") => {
+var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller = "") => {
     let filters = { "patient": frm.doc.patient, "appoitnemnt": frm.doc.appointment, "doctype": doctype, "fields": fields };
     let d = new frappe.ui.Dialog({
         title: "Select Item",
@@ -862,7 +877,7 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
         if (!d.get_value("number_of_visit")) {
             frappe.msgprint("<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
                 Please enter number of visit</h4>");
-            return
+            return;
         }
 
         filters.number_of_visit = d.get_value("number_of_visit");
@@ -897,7 +912,7 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
         let items = [];
 
         wrapper.find('tr:has(input:checked)').each(function () {
-            if (caller == "Diagnosis") { 
+            if (caller == "Diagnosis") {
                 items.push({
                     item: $(this).find("#item").attr("data-item"),
                     item_name: $(this).find("#item_name").attr("data-item_name"),
@@ -909,27 +924,27 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
                     item: $(this).find("#item").attr("data-item"),
                     item_name: $(this).find("#item_name").attr("data-item_name"),
                 });
-             }
+            }
         });
 
         if (items.length > 0) {
             let field = String(value_dict.table_field);
-            if (caller == "Diagnosis") { 
+            if (caller == "Diagnosis") {
                 items.forEach((item) => {
-                    let new_row = {}
+                    let new_row = {};
                     new_row[value_dict.item_field] = item.item;
                     new_row[value_dict.item_name_field] = item.item_name;
                     new_row[value_dict.description_field] = item.description;
                     new_row[value_dict.mtuha_field] = item.mtuha;
                     let row = frm.add_child(field, new_row);
-                })
+                });
             } else {
                 items.forEach((item) => {
-                    let new_row = {}
+                    let new_row = {};
                     new_row[value_dict.item_field] = item.item;
                     new_row[value_dict.item_name_field] = item.item_name;
                     let row = frm.add_child(field, new_row);
-                })
+                });
             }
             frm.refresh_field(field);
             d.hide();
@@ -956,7 +971,7 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
     d.show();
 };
 
-var show_details = (data, caller="") => {
+var show_details = (data, caller = "") => {
     let html = `<table class="table table-hover" style="width:100%;">`;
     if (caller == "Diagnosis") {
         html += `
@@ -1013,4 +1028,27 @@ var show_details = (data, caller="") => {
     }
     html += `</table>`;
     return html;
+};
+
+
+function set_delete_button_in_child_table (frm, child_table_fields) {
+    if (frm.doc.docstatus != 0) {
+        return;
+    }
+    $.each(child_table_fields, function (i, child_table_field) {
+        if (frm.fields_dict[child_table_field]) {
+            $.each(frm.fields_dict[child_table_field].grid.grid_rows, function (i, row) {
+                if (!row.doc.__islocal) {
+                    if (!row.wrapper.find('.grid-row-delete').length) {
+                        $(row.wrapper).find('.grid-row-check').after('<button class="btn btn-default btn-xs grid-row-delete" style="margin-left: 5px;"><i class="fa fa-trash-o text-danger"></i></button>');
+                        row.wrapper.find('.grid-row-delete').on('click', function () {
+                            frappe.model.clear_doc(row.doc.doctype, row.doc.name);
+                            row.remove();
+                        });
+                    }
+                }
+            });
+        }
+    }
+    );
 }
