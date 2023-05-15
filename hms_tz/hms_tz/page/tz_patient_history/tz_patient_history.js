@@ -1,15 +1,15 @@
 frappe.provide('frappe.patient_history');
-frappe.pages['tz-patient-history'].on_page_load = function(wrapper) {
+frappe.pages['tz-patient-history'].on_page_load = function (wrapper) {
 	frappe.ui.make_app_page({
 		parent: wrapper,
 		title: __('Patient History')
 	});
 
 	let patient_history = new PatientHistory(wrapper);
-	$(wrapper).bind('show', ()=> {
+	$(wrapper).bind('show', () => {
 		patient_history.show();
 	});
-}
+};
 
 
 class PatientHistory {
@@ -21,7 +21,7 @@ class PatientHistory {
 		this.start = 0;
 	}
 
-	show() {
+	show () {
 		// frappe.breadcrumbs.add('Healthcare');
 		this.sidebar.empty();
 
@@ -57,7 +57,7 @@ class PatientHistory {
 		this.sidebar.find('[data-fieldname="patient"]').append('<div class="patient-info"></div>');
 	}
 
-	make_patient_profile() {
+	make_patient_profile () {
 		this.page.set_title(__('Patient History'));
 		this.main_section.empty().append(frappe.render_template('tz_patient_history'));
 		this.setup_filters();
@@ -67,7 +67,7 @@ class PatientHistory {
 		this.show_patient_vital_charts('bp', 'mmHg', 'Blood Pressure');
 	}
 
-	setup_filters() {
+	setup_filters () {
 		$('.doctype-filter').empty();
 		let me = this;
 
@@ -119,7 +119,7 @@ class PatientHistory {
 		});
 	}
 
-	setup_documents(document_types="", selected_date_range="") {
+	setup_documents (document_types = "", selected_date_range = "") {
 		let filters = {
 			name: this.patient_id,
 			start: this.start,
@@ -134,7 +134,7 @@ class PatientHistory {
 		frappe.call({
 			'method': 'hms_tz.hms_tz.page.tz_patient_history.tz_patient_history.get_feed',
 			args: filters,
-			callback: function(r) {
+			callback: function (r) {
 				let data = r.message;
 				if (data.length) {
 					me.add_to_records(data);
@@ -149,10 +149,10 @@ class PatientHistory {
 		});
 	}
 
-	add_to_records(data) {
+	add_to_records (data) {
 		let details = "";
 		let i;
-		for (i=0; i<data.length; i++) {
+		for (i = 0; i < data.length; i++) {
 			if (data[i].reference_doctype) {
 				let label = '';
 				if (data[i].subject) {
@@ -191,7 +191,7 @@ class PatientHistory {
 
 				details += `<div class='d-flex flex-column width-full'>
 						<div>
-							`+time_line_heading+`
+							`+ time_line_heading + `
 								<span>
 									${data[i].date_sep}
 								</span>
@@ -229,7 +229,7 @@ class PatientHistory {
 		}
 	}
 
-	add_date_separator(data) {
+	add_date_separator (data) {
 		let date = frappe.datetime.str_to_obj(data.communication_date);
 		let pdate = '';
 		let diff = frappe.datetime.get_day_diff(frappe.datetime.get_today(),
@@ -246,7 +246,7 @@ class PatientHistory {
 		return data;
 	}
 
-	show_patient_info() {
+	show_patient_info () {
 		this.get_patient_info().then(() => {
 			$('.patient-info').empty().append(frappe.render_template('tz_patient_history_sidebar', {
 				patient_image: this.patient.image,
@@ -258,28 +258,28 @@ class PatientHistory {
 		});
 	}
 
-	show_patient_details() {
+	show_patient_details () {
 		let me = this;
 		frappe.call({
 			'method': 'healthcare.healthcare.doctype.patient.patient.get_patient_detail',
 			args: {
 				patient: me.patient_id
 			},
-			callback: function(r) {
+			callback: function (r) {
 				let data = r.message;
 				let details = ``;
 
 				if (data.occupation) details += `<br><br><b> ${__('Occupation')} : </b> ${data.occupation}`;
 				if (data.blood_group) details += `<br><b> ${__('Blood Group')} : </b> ${data.blood_group}`;
-				if (data.allergies) details +=  `<br><br><b> ${__('Allerigies')} : </b> ${data.allergies.replace(/\n/g, ", ")}`;
-				if (data.medication) details +=  `<br><b> ${__('Medication')} : </b> ${data.medication.replace(/\n/g, ", ")}`;
-				if (data.alcohol_current_use) details +=  `<br><br><b> ${__('Alcohol use')} : </b> ${data.alcohol_current_use}`;
-				if (data.alcohol_past_use) details +=  `<br><b> ${__('Alcohol past use')} : </b> ${data.alcohol_past_use}`;
-				if (data.tobacco_current_use) details +=  `<br><b> ${__('Tobacco use')} : </b> ${data.tobacco_current_use}`;
-				if (data.tobacco_past_use) details +=  `<br><b> ${__('Tobacco past use')} : </b> ${data.tobacco_past_use}`;
-				if (data.medical_history) details +=  `<br><br><b> ${__('Medical history')} : </b> ${data.medical_history.replace(/\n/g, ", ")}`;
-				if (data.surgical_history) details +=  `<br><b> ${__('Surgical history')} : </b> ${data.surgical_history.replace(/\n/g, ", ")}`;
-				if (data.surrounding_factors) details +=  `<br><br><b> ${__('Occupational hazards')} : </b> ${data.surrounding_factors.replace(/\n/g, ", ")}`;
+				if (data.allergies) details += `<br><br><b> ${__('Allerigies')} : </b> ${data.allergies.replace(/\n/g, ", ")}`;
+				if (data.medication) details += `<br><b> ${__('Medication')} : </b> ${data.medication.replace(/\n/g, ", ")}`;
+				if (data.alcohol_current_use) details += `<br><br><b> ${__('Alcohol use')} : </b> ${data.alcohol_current_use}`;
+				if (data.alcohol_past_use) details += `<br><b> ${__('Alcohol past use')} : </b> ${data.alcohol_past_use}`;
+				if (data.tobacco_current_use) details += `<br><b> ${__('Tobacco use')} : </b> ${data.tobacco_current_use}`;
+				if (data.tobacco_past_use) details += `<br><b> ${__('Tobacco past use')} : </b> ${data.tobacco_past_use}`;
+				if (data.medical_history) details += `<br><br><b> ${__('Medical history')} : </b> ${data.medical_history.replace(/\n/g, ", ")}`;
+				if (data.surgical_history) details += `<br><b> ${__('Surgical history')} : </b> ${data.surgical_history.replace(/\n/g, ", ")}`;
+				if (data.surrounding_factors) details += `<br><br><b> ${__('Occupational hazards')} : </b> ${data.surrounding_factors.replace(/\n/g, ", ")}`;
 				if (data.other_risk_factors) details += `<br><b> ${__('Other risk factors')} : </b> ${data.other_risk_factors.replace(/\n/g, ", ")}`;
 				if (data.patient_details) details += `<br><br><b> ${__('More info')} : </b> ${data.patient_details.replace(/\n/g, ", ")}`;
 
@@ -292,7 +292,7 @@ class PatientHistory {
 		});
 	}
 
-	get_patient_info() {
+	get_patient_info () {
 		return frappe.xcall('frappe.client.get', {
 			doctype: 'Patient',
 			name: this.patient_id,
@@ -303,31 +303,32 @@ class PatientHistory {
 		});
 	}
 
-	setup_buttons() {
+	setup_buttons () {
 		let me = this;
-		this.page.main.on("click", ".btn-show-chart", function() {
+		this.page.main.on("click", ".btn-show-chart", function () {
 			let btn_id = $(this).attr("data-show-chart-id"), scale_unit = $(this).attr("data-pts");
 			let title = $(this).attr("data-title");
 			me.show_patient_vital_charts(btn_id, scale_unit, title);
 		});
 
-		this.page.main.on('click', '.btn-more', function() {
-			let	doctype = $(this).attr('data-doctype'), docname = $(this).attr('data-docname');
-			if (me.page.main.find('.'+docname).parent().find('.document-html').attr('data-fetched') == '1') {
-				me.page.main.find('.'+docname).hide();
-				me.page.main.find('.'+docname).parent().find('.document-html').show();
+		this.page.main.on('click', '.btn-more', function () {
+			let doctype = $(this).attr('data-doctype'), docname = $(this).attr('data-docname');
+			if (me.page.main.find('.' + docname).parent().find('.document-html').attr('data-fetched') == '1') {
+				me.page.main.find('.' + docname).hide();
+				me.page.main.find('.' + docname).parent().find('.document-html').show();
 			} else {
 				if (doctype && docname) {
 					let exclude = ['patient', 'patient_name', 'patient_sex', 'encounter_date', 'naming_series'];
 					frappe.call({
-						method: 'healthcare.healthcare.utils.render_doc_as_html',
+						method: 'hms_tz.hms_tz.utils.render_doc_as_html',
 						args: {
 							doctype: doctype,
 							docname: docname,
-							exclude_fields: exclude
+							exclude_fields: exclude,
+							use_setttings: true
 						},
 						freeze: true,
-						callback: function(r) {
+						callback: function (r) {
 							if (r.message) {
 								me.page.main.find('.' + docname).hide();
 
@@ -351,18 +352,18 @@ class PatientHistory {
 			}
 		});
 
-		this.page.main.on('click', '.btn-less', function() {
+		this.page.main.on('click', '.btn-less', function () {
 			let docname = $(this).attr('data-docname');
 			me.page.main.find('.' + docname).parent().find('.document-id').show();
 			me.page.main.find('.' + docname).parent().find('.document-html').hide();
 		});
 
-		me.page.main.on('click', '.btn-get-records', function() {
+		me.page.main.on('click', '.btn-get-records', function () {
 			this.setup_documents();
 		});
 	}
 
-	show_patient_vital_charts(btn_id, scale_unit, title) {
+	show_patient_vital_charts (btn_id, scale_unit, title) {
 		let me = this;
 
 		frappe.call({
@@ -370,7 +371,7 @@ class PatientHistory {
 			args: {
 				patient: me.patient_id
 			},
-			callback: function(r) {
+			callback: function (r) {
 				if (r.message) {
 					let show_chart_btns_html = `
 						<div style='padding-top:10px;'>
@@ -394,8 +395,8 @@ class PatientHistory {
 					let bp_systolic = [], bp_diastolic = [], temperature = [];
 					let pulse = [], respiratory_rate = [], bmi = [], height = [], weight = [];
 
-					for (let i=0; i<data.length; i++) {
-						labels.push(data[i].signs_date+' | '+data[i].signs_time);
+					for (let i = 0; i < data.length; i++) {
+						labels.push(data[i].signs_date + ' | ' + data[i].signs_time);
 
 						if (btn_id === 'bp') {
 							bp_systolic.push(data[i].bp_systolic);
@@ -415,20 +416,20 @@ class PatientHistory {
 						}
 					}
 					if (btn_id === 'temperature') {
-						datasets.push({name: 'Temperature', values: temperature, chartType: 'line'});
+						datasets.push({ name: 'Temperature', values: temperature, chartType: 'line' });
 					}
 					if (btn_id === 'bmi') {
-						datasets.push({name: 'BMI', values: bmi, chartType: 'line'});
-						datasets.push({name: 'Height', values: height, chartType: 'line'});
-						datasets.push({name: 'Weight', values: weight, chartType: 'line'});
+						datasets.push({ name: 'BMI', values: bmi, chartType: 'line' });
+						datasets.push({ name: 'Height', values: height, chartType: 'line' });
+						datasets.push({ name: 'Weight', values: weight, chartType: 'line' });
 					}
 					if (btn_id === 'bp') {
-						datasets.push({name: 'BP Systolic', values: bp_systolic, chartType: 'line'});
-						datasets.push({name: 'BP Diastolic', values: bp_diastolic, chartType: 'line'});
+						datasets.push({ name: 'BP Systolic', values: bp_systolic, chartType: 'line' });
+						datasets.push({ name: 'BP Diastolic', values: bp_diastolic, chartType: 'line' });
 					}
 					if (btn_id === 'pulse_rate') {
-						datasets.push({name: 'Heart Rate / Pulse', values: pulse, chartType: 'line'});
-						datasets.push({name: 'Respiratory Rate', values: respiratory_rate, chartType: 'line'});
+						datasets.push({ name: 'Heart Rate / Pulse', values: pulse, chartType: 'line' });
+						datasets.push({ name: 'Respiratory Rate', values: respiratory_rate, chartType: 'line' });
 					}
 
 					new frappe.Chart('.patient_vital_charts', {

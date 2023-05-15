@@ -4,10 +4,11 @@
 
 from __future__ import unicode_literals
 import math
+import json
 import frappe
 from frappe import _
 from frappe.utils.formatters import format_value
-from frappe.utils import time_diff_in_hours, rounded, getdate, nowdate
+from frappe.utils import time_diff_in_hours, rounded, getdate, nowdate, cstr
 from healthcare.healthcare.doctype.healthcare_settings.healthcare_settings import (
     get_income_account,
 )
@@ -274,7 +275,6 @@ def get_clinical_procedures_to_invoice(patient, company):
             and procedure.status == "Completed"
             and not procedure.consumption_invoiced
         ):
-
             service_item = get_healthcare_service_item(
                 "clinical_procedure_consumable_item"
             )
@@ -1426,3 +1426,196 @@ def update_insurance_claim(
     frappe.set_value(
         "Healthcare Insurance Claim", insurance_claim, "billing_amount", total_amount
     )
+
+
+@frappe.whitelist()
+def render_doc_as_html(doctype, docname, exclude_fields=None, use_setttings=False):
+    """
+    Render document as HTML
+    """
+    exclude_fields = exclude_fields or []
+    doc = frappe.get_doc(doctype, docname)
+    meta = frappe.get_meta(doctype)
+    doc_html = section_html = section_label = html = ""
+    sec_on = has_data = False
+    col_on = 0
+
+    only_filds = []
+    if use_setttings:
+        settings = frappe.get_single("Patient History Settings")
+        selected_fields = [
+            d.selected_fields
+            for d in settings.standard_doctypes
+            if d.document_type == doctype
+        ]
+        if not selected_fields:
+            selected_fields = [
+                d.selected_fields
+                for d in settings.custom_doctypes
+                if d.document_type == doctype
+            ]
+        if selected_fields and selected_fields[0]:
+            selected_fields = json.loads(selected_fields[0])
+            only_filds = [f["fieldname"] for f in selected_fields]
+
+    for df in meta.fields:
+        # on section break append previous section and html to doc html
+        if df.fieldtype == "Section Break":
+            if has_data and col_on and sec_on:
+                doc_html += section_html + html + "</div>"
+
+            elif has_data and not col_on and sec_on:
+                doc_html += """
+                    <br>
+                    <div class='row'>
+                        <div class='col-md-12 col-sm-12'>
+                            <b>{0}</b>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='col-md-12 col-sm-12'>
+                            {1} {2}
+                        </div>
+                    </div>
+                """.format(
+                    section_label, section_html, html
+                )
+
+            # close divs for columns
+            while col_on:
+                doc_html += "</div>"
+                col_on -= 1
+
+            sec_on = True
+            has_data = False
+            col_on = 0
+            section_html = html = ""
+
+            if df.label:
+                section_label = df.label
+            continue
+
+        # on column break append html to section html or doc html
+        if df.fieldtype == "Column Break":
+            if sec_on and not col_on and has_data:
+                section_html += """
+                    <br>
+                    <div class='row'>
+                        <div class='col-md-12 col-sm-12'>
+                            <b>{0}</b>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='col-md-4 col-sm-4'>
+                            {1}
+                        </div>
+                """.format(
+                    section_label, html
+                )
+            elif col_on == 1 and has_data:
+                section_html += "<div class='col-md-4 col-sm-4'>" + html + "</div>"
+            elif col_on > 1 and has_data:
+                doc_html += "<div class='col-md-4 col-sm-4'>" + html + "</div>"
+            else:
+                doc_html += """
+                    <div class='row'>
+                        <div class='col-md-12 col-sm-12'>
+                            {0}
+                        </div>
+                    </div>
+                """.format(
+                    html
+                )
+
+            html = ""
+            col_on += 1
+
+            if df.label:
+                html += "<br>" + df.label
+            continue
+
+        # on table iterate through items and create table
+        # based on the in_list_view property
+        # append to section html or doc html
+        if df.fieldtype == "Table":
+            if use_setttings and only_filds:
+                if df.fieldname not in only_filds:
+                    continue
+            items = doc.get(df.fieldname)
+            if not items:
+                continue
+            child_meta = frappe.get_meta(df.options)
+
+            if not has_data:
+                has_data = True
+            table_head = table_row = ""
+            create_head = True
+
+            for item in items:
+                table_row += "<tr>"
+                for cdf in child_meta.fields:
+                    if cdf.in_list_view:
+                        if create_head:
+                            table_head += (
+                                "<th class='text-muted'>" + cdf.label + "</th>"
+                            )
+                        if item.get(cdf.fieldname):
+                            table_row += (
+                                "<td>" + cstr(item.get(cdf.fieldname)) + "</td>"
+                            )
+                        else:
+                            table_row += "<td></td>"
+
+                create_head = False
+                table_row += "</tr>"
+
+            if sec_on:
+                section_html += """
+                    <table class='table table-condensed bordered'>
+                        {0} {1}
+                    </table>
+                """.format(
+                    table_head, table_row
+                )
+            else:
+                html += """
+                    <table class='table table-condensed table-bordered'>
+                        {0} {1}
+                    </table>
+                """.format(
+                    table_head, table_row
+                )
+            continue
+
+        # on any other field type add label and value to html
+        if (
+            not df.hidden
+            and not df.print_hide
+            and doc.get(df.fieldname)
+            and df.fieldname not in exclude_fields
+        ):
+            if use_setttings and only_filds:
+                if df.fieldname not in only_filds:
+                    continue
+            formatted_value = format_value(
+                doc.get(df.fieldname), meta.get_field(df.fieldname), doc
+            )
+            html += "<br>{0} : {1}".format(df.label or df.fieldname, formatted_value)
+
+            if not has_data:
+                has_data = True
+
+    if sec_on and col_on and has_data:
+        doc_html += section_html + html + "</div></div>"
+    elif sec_on and not col_on and has_data:
+        doc_html += """
+            <div class='col-md-12 col-sm-12'>
+                <div class='col-md-12 col-sm-12'>
+                    {0} {1}
+                </div>
+            </div>
+        """.format(
+            section_html, html
+        )
+
+    return {"html": doc_html}
