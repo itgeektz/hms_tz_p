@@ -257,27 +257,31 @@ def process_prices_list(kwargs):
                     )
                     if len(item_price_list) > 0:
                         for price in item_price_list:
-                            if package.isactive and int(package.isactive) == 1:
-                                if float(price.price_list_rate) != float(
-                                    package.unitprice
+                            #2023-05-16 
+                            # remove condition for isactive
+                            # if package.isactive and int(package.isactive) == 1:
+                            
+                            if float(price.price_list_rate) != float(
+                                package.unitprice
+                            ):
+                                # delete Item Price if no package.unitprice or it is 0
+                                if (
+                                    not float(package.unitprice)
+                                    or float(package.unitprice) == 0
                                 ):
-                                    # delete Item Price if no package.unitprice or it is 0
-                                    if (
-                                        not float(package.unitprice)
-                                        or float(package.unitprice) == 0
-                                    ):
-                                        frappe.delete_doc("Item Price", price.name)
-                                    else:
-                                        frappe.set_value(
-                                            "Item Price",
-                                            price.name,
-                                            "price_list_rate",
-                                            float(package.unitprice),
-                                        )
-                            else:
-                                frappe.delete_doc("Item Price", price.name)
+                                    frappe.delete_doc("Item Price", price.name)
+                                else:
+                                    frappe.set_value(
+                                        "Item Price",
+                                        price.name,
+                                        "price_list_rate",
+                                        float(package.unitprice),
+                                    )
+                            # else:
+                                # frappe.delete_doc("Item Price", price.name)
 
-                    elif package.isactive and int(package.isactive) == 1:
+                    # elif package.isactive and int(package.isactive) == 1:
+                    else:
                         item_price_doc = frappe.new_doc("Item Price")
                         item_price_doc.update(
                             {
