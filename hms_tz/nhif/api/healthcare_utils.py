@@ -73,7 +73,6 @@ def get_childs_map():
 def get_healthcare_service_order_to_invoice(
     patient, company, encounter, service_order_category=None, prescribed=None
 ):
-
     reference_encounter = frappe.get_value(
         "Patient Encounter", encounter, "reference_encounter"
     )
@@ -143,6 +142,7 @@ def get_item_price(item_code, price_list, company):
 def get_item_rate(item_code, company, insurance_subscription, insurance_company=None):
     price_list = None
     price_list_rate = None
+    hic_plan = None
     if insurance_subscription:
         hic_plan = frappe.get_cached_value(
             "Healthcare Insurance Subscription",
@@ -779,10 +779,12 @@ def get_template_company_option(template=None, company=None, method=None):
         return doc
     else:
         msgThrow(
-            _("No company option found for template: {0} and company: {1}".format(
-                frappe.bold(template), frappe.bold(company))
-            ), 
-            method=method
+            _(
+                "No company option found for template: {0} and company: {1}".format(
+                    frappe.bold(template), frappe.bold(company)
+                )
+            ),
+            method=method,
         )
 
 
@@ -852,13 +854,22 @@ def delete_or_cancel_draft_document():
         as_dict=1,
     )
 
-    for delivery_note  in delivery_documents:
+    for delivery_note in delivery_documents:
         delivery_note_doc = frappe.get_doc("Delivery Note", delivery_note.name)
         try:
-            return_quatity_or_cancel_delivery_note_via_lrpmt_returns(delivery_note_doc, "Backend")
+            return_quatity_or_cancel_delivery_note_via_lrpmt_returns(
+                delivery_note_doc, "Backend"
+            )
 
         except Exception:
-            frappe.log_error(frappe.get_traceback(), str("Error for Return or Cancel Delivery Note: {0} Via LRPMT Returns".format(frappe.bold(delivery_note_doc.name))))
+            frappe.log_error(
+                frappe.get_traceback(),
+                str(
+                    "Error for Return or Cancel Delivery Note: {0} Via LRPMT Returns".format(
+                        frappe.bold(delivery_note_doc.name)
+                    )
+                ),
+            )
 
         frappe.db.commit()
 
@@ -866,8 +877,8 @@ def delete_or_cancel_draft_document():
 @frappe.whitelist()
 def return_quatity_or_cancel_delivery_note_via_lrpmt_returns(source_doc, method):
     """
-        Return Quantiies to stock from submitted delivery note and/or
-        Cancel draft delivery note if all items was not serviced
+    Return Quantiies to stock from submitted delivery note and/or
+    Cancel draft delivery note if all items was not serviced
     """
 
     source_doc = frappe.get_doc(frappe.parse_json(source_doc))
@@ -881,27 +892,29 @@ def return_quatity_or_cancel_delivery_note_via_lrpmt_returns(source_doc, method)
     drug_items = []
 
     for dni_item in source_doc.items:
-        drug_items.append({
-            "drug_name": dni_item.item_code,
-            "quantity_prescribed": dni_item.qty,
-            "quantity_to_return": dni_item.qty,
-            "reason": "Not Serviced",
-            "drug_condition": "Good",
-            "encounter_no": source_doc.reference_name,
-            "delivery_note_no": source_doc.name,
-            "status": status,
-            "dn_detail": dni_item.name,
-            "child_name": dni_item.reference_name
-        })
+        drug_items.append(
+            {
+                "drug_name": dni_item.item_code,
+                "quantity_prescribed": dni_item.qty,
+                "quantity_to_return": dni_item.qty,
+                "reason": "Not Serviced",
+                "drug_condition": "Good",
+                "encounter_no": source_doc.reference_name,
+                "delivery_note_no": source_doc.name,
+                "status": status,
+                "dn_detail": dni_item.name,
+                "child_name": dni_item.reference_name,
+            }
+        )
 
     target_doc = frappe.get_doc(
         dict(
-            doctype = "LRPMT Returns",
-            patient = source_doc.patient,
-            patient_name = source_doc.patient_name,
-            appointment = source_doc.hms_tz_appointment_no,
-            company = source_doc.company,
-            drug_items = drug_items
+            doctype="LRPMT Returns",
+            patient=source_doc.patient,
+            patient_name=source_doc.patient_name,
+            appointment=source_doc.hms_tz_appointment_no,
+            company=source_doc.company,
+            drug_items=drug_items,
         )
     )
 
@@ -915,10 +928,12 @@ def return_quatity_or_cancel_delivery_note_via_lrpmt_returns(source_doc, method)
         else:
             target_doc.submit()
             url = get_url_to_form(target_doc.doctype, target_doc.name)
-            frappe.msgprint("LRPMT Returns: <a href='{0}'>{1}</a> is submitted".format(
-					url, frappe.bold(target_doc.name)
-				))
-            
+            frappe.msgprint(
+                "LRPMT Returns: <a href='{0}'>{1}</a> is submitted".format(
+                    url, frappe.bold(target_doc.name)
+                )
+            )
+
             return True
 
     else:
@@ -1069,24 +1084,26 @@ def create_invoiced_items_if_not_created():
 
         frappe.db.commit()
 
+
 @frappe.whitelist()
 def auto_submit_nhif_patient_claim(setting_dict=None):
     """Routine to submit patient claims and will be triggered:
-        1. Every 00:01 am at night by cron job
-        2. By a button called 'Auto Submit Patient Claim' which is on Company NHIF settings
+    1. Every 00:01 am at night by cron job
+    2. By a button called 'Auto Submit Patient Claim' which is on Company NHIF settings
     """
     company_setting_detail = []
 
     if not setting_dict:
-        company_setting_detail = frappe.get_all("Company NHIF Settings",
-            filters={"enable": 1, "enable_auto_submit_of_claims": 1}, 
-            fields=["company", "submit_claim_year", "submit_claim_month"]
+        company_setting_detail = frappe.get_all(
+            "Company NHIF Settings",
+            filters={"enable": 1, "enable_auto_submit_of_claims": 1},
+            fields=["company", "submit_claim_year", "submit_claim_month"],
         )
     else:
         company_setting_detail.append(frappe._dict(json.loads(setting_dict)))
-    
+
     if len(company_setting_detail) == 0:
-        return 
+        return
 
     for detail in company_setting_detail:
         frappe.enqueue(
@@ -1097,17 +1114,21 @@ def auto_submit_nhif_patient_claim(setting_dict=None):
             setting_obj=detail,
         )
 
+
 def enqueue_auto_sending_of_patient_claims(setting_obj):
     from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 
-    patient_claims = frappe.get_all("NHIF Patient Claim", filters={
-        "company": setting_obj.company, 
-        "claim_month": setting_obj.submit_claim_month, 
-        "claim_year": setting_obj.submit_claim_year,
-        "is_ready_for_auto_submission": 1,
-        "docstatus": 0
-    })
-    
+    patient_claims = frappe.get_all(
+        "NHIF Patient Claim",
+        filters={
+            "company": setting_obj.company,
+            "claim_month": setting_obj.submit_claim_month,
+            "claim_year": setting_obj.submit_claim_year,
+            "is_ready_for_auto_submission": 1,
+            "docstatus": 0,
+        },
+    )
+
     if len(patient_claims) == 0:
         return
 
@@ -1125,8 +1146,8 @@ def enqueue_auto_sending_of_patient_claims(setting_obj):
 
     description = "CLAIM'S AUTO SUBMISSION SUMMARY\n\n\ncompany: {0}\n\nTotal Claims Prepared for auto submit: {1}\
         \n\nTotal claims Submitted: {2}\n\nTotal Claims failed: {3}".format(
-            setting_obj.company, len(patient_claims), success_count, failed_count
-        )
+        setting_obj.company, len(patient_claims), success_count, failed_count
+    )
     add_log(
         request_type="AutoSubmitFolios",
         request_url="",
@@ -1137,10 +1158,13 @@ def enqueue_auto_sending_of_patient_claims(setting_obj):
     )
     frappe.db.commit()
 
+
 @frappe.whitelist()
-def varify_service_approval_number_for_LRPM(patient, company, approval_number, template, item):
+def varify_service_approval_number_for_LRPM(
+    patient, company, approval_number, template, item
+):
     """Verify if the service approval number is valid for the given patient and item ref code
-    
+
     Arguments:
         patient {str} -- Patient number
         company {str} -- Company name
@@ -1160,40 +1184,44 @@ def varify_service_approval_number_for_LRPM(patient, company, approval_number, t
         elif templete_doctype == "Medication":
             item_code = template_name
 
-        item_ref_code = frappe.get_value("Item Customer Detail",
+        item_ref_code = frappe.get_value(
+            "Item Customer Detail",
             {"customer_name": "NHIF", "parent": item_code, "parenttype": "Item"},
-            "ref_code"
+            "ref_code",
         )
 
         if result.get("ItemCode") != item_ref_code:
-            frappe.msgprint(f"<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
-                This Approval Number: <b>{approval_number}</b> is not for this item: <b>{item}</b></h4>")
+            frappe.msgprint(
+                f"<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
+                This Approval Number: <b>{approval_number}</b> is not for this item: <b>{item}</b></h4>"
+            )
             return False
         return True
-    
+
     def validate_card_no(patient, result):
         card_no = frappe.get_value("Patient", patient, "card_no")
         if result.get("CardNo") != card_no:
-            frappe.msgprint(f"<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
-                This Approval Number: <b>{approval_number}</b> is not for this patient: <b>{patient}</b></h4>")
+            frappe.msgprint(
+                f"<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
+                This Approval Number: <b>{approval_number}</b> is not for this patient: <b>{patient}</b></h4>"
+            )
             return False
         return True
 
-
-    enable_nhif_api, nhifform_url = frappe.get_cached_value("Company NHIF Settings", company, ["enable", "nhifform_url"])
+    enable_nhif_api, nhifform_url = frappe.get_cached_value(
+        "Company NHIF Settings", company, ["enable", "nhifform_url"]
+    )
     if not enable_nhif_api:
-        frappe.msgprint(
-            _(f"Company <b>{company}</b> not enabled for NHIF Integration")
-        )
+        frappe.msgprint(_(f"Company <b>{company}</b> not enabled for NHIF Integration"))
         return
 
-    url = str(nhifform_url) + f"/formposting/api/v1/approval/GetAuthorizedService?ApprovalReferenceNo={approval_number}"
+    url = (
+        str(nhifform_url)
+        + f"/formposting/api/v1/approval/GetAuthorizedService?ApprovalReferenceNo={approval_number}"
+    )
     token = get_formservice_token(company)
 
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-    }
+    headers = {"Content-Type": "application/json", "Authorization": "Bearer " + token}
 
     r = requests.request("GET", url, headers=headers, timeout=120)
 
@@ -1208,8 +1236,10 @@ def varify_service_approval_number_for_LRPM(patient, company, approval_number, t
         )
         data = json.loads(r.text)
         if len(data) == 0:
-            frappe.msgprint(f"<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
-                This Approval Number: <b>{approval_number}</b> is not Valid, <br>Please check again</h4>")
+            frappe.msgprint(
+                f"<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
+                This Approval Number: <b>{approval_number}</b> is not Valid, <br>Please check again</h4>"
+            )
             return False
 
         if not validate_card_no(patient, data[0]):
@@ -1218,7 +1248,7 @@ def varify_service_approval_number_for_LRPM(patient, company, approval_number, t
             return False
         else:
             return data[0]
-        
+
     else:
         add_log(
             request_type="GetAuthorizedService",

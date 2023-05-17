@@ -20,7 +20,8 @@ from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from hms_tz.nhif.api.healthcare_utils import get_item_rate
 from frappe.utils import date_diff, getdate, nowdate
-from csf_tz import console
+
+# from csf_tz import console
 
 
 def before_insert(doc, method):
@@ -31,11 +32,12 @@ def before_insert(doc, method):
             )
         )
 
+
 @frappe.whitelist()
 def get_insurance_amount(
     insurance_subscription, billing_item, company, insurance_company
 ):
-    item_price =  get_item_rate(
+    item_price = get_item_rate(
         billing_item, company, insurance_subscription, insurance_company
     )
 
@@ -43,10 +45,10 @@ def get_insurance_amount(
     if insurance_company and "NHIF" not in insurance_company:
         discount_percent = get_discount_percent(insurance_company)
 
-        amount = item_price - (item_price * (discount_percent/100))
+        amount = item_price - (item_price * (discount_percent / 100))
 
         return amount, discount_percent
-    
+
     return item_price, discount_percent
 
 
@@ -68,7 +70,9 @@ def get_default_price_list(patient):
     if not price_list:
         customer = frappe.get_cached_value("Patient", patient, "customer")
         if customer:
-            price_list = frappe.get_cached_value("Customer", customer, "default_price_list")
+            price_list = frappe.get_cached_value(
+                "Customer", customer, "default_price_list"
+            )
     if not price_list:
         customer_group = frappe.get_cached_value("Customer", customer, "customer_group")
         frappe.get_cached_value("Customer Group", customer_group, "default_price_list")
@@ -179,7 +183,9 @@ def get_consulting_charge_item(appointment_type, practitioner):
     field_name = (
         "inpatient_visit_charge_item" if is_inpatient else "op_consulting_charge_item"
     )
-    charge_item = frappe.get_cached_value("Healthcare Practitioner", practitioner, field_name)
+    charge_item = frappe.get_cached_value(
+        "Healthcare Practitioner", practitioner, field_name
+    )
     return charge_item
 
 
@@ -212,12 +218,12 @@ def make_vital(appointment_doc, method):
         )
         if discount_percent > 0:
             appointment_doc.hms_tz_is_discount_applied = 1
-            frappe.msgprint("Discount of {0} is applied to this Patient: {1}".format(
+            frappe.msgprint(
+                "Discount of {0} is applied to this Patient: {1}".format(
                     frappe.bold(discount_percent), frappe.bold(appointment_doc.patient)
-                ), 
-                alert=True
+                ),
+                alert=True,
             )
-
 
     set_follow_up(appointment_doc, "invoice_appointment")
     if (not appointment_doc.ref_vital_signs) and (
@@ -248,13 +254,18 @@ def make_encounter(doc, method):
     if doc.doctype == "Vital Signs":
         if not doc.appointment or doc.inpatient_record:
             return
-        if frappe.get_value("Patient Appointment", doc.appointment, "status") == "Cancelled":
+        if (
+            frappe.get_value("Patient Appointment", doc.appointment, "status")
+            == "Cancelled"
+        ):
             frappe.throw("<b>Appointment is already cancelled</b>")
         source_name = doc.appointment
     elif doc.doctype == "Patient Appointment":
         if (
-            not doc.authorization_number and not doc.mode_of_payment
-        ) or doc.ref_patient_encounter or doc.status == "Cancelled":
+            (not doc.authorization_number and not doc.mode_of_payment)
+            or doc.ref_patient_encounter
+            or doc.status == "Cancelled"
+        ):
             return
         source_name = doc.name
     target_doc = None
@@ -319,7 +330,9 @@ def get_authorization_num(
     card_no = "CardNo=" + str(card_no)
     visit_type_id = (
         "&VisitTypeID="
-        + frappe.get_cached_value("Appointment Type", appointment_type, "visit_type_id")[:1]
+        + frappe.get_cached_value(
+            "Appointment Type", appointment_type, "visit_type_id"
+        )[:1]
     )
     referral_no = "&ReferralNo=" + str(referral_no)
     remarks = "&Remarks=" + str(remarks)
@@ -367,15 +380,20 @@ def get_authorization_num(
 
 
 def update_insurance_subscription(insurance_subscription, card, company):
-    subscription_doc = frappe.get_cached_doc("Healthcare Insurance Subscription", insurance_subscription)
-    
-    if subscription_doc.hms_tz_product_code != card["ProductCode"] or subscription_doc.hms_tz_scheme_id != card["SchemeID"]:
+    subscription_doc = frappe.get_cached_doc(
+        "Healthcare Insurance Subscription", insurance_subscription
+    )
+
+    if (
+        subscription_doc.hms_tz_product_code != card["ProductCode"]
+        or subscription_doc.hms_tz_scheme_id != card["SchemeID"]
+    ):
         plan = frappe.get_value(
             "NHIF Product",
             {"nhif_product_code": card["ProductCode"], "company": company},
             "healthcare_insurance_coverage_plan",
         )
-        
+
         if plan:
             plan_doc = frappe.get_cached_doc("Healthcare Insurance Coverage Plan", plan)
 
@@ -439,15 +457,25 @@ def set_follow_up(appointment_doc, method):
         diff = date_diff(appointment_doc.appointment_date, appointment.appointment_date)
         if appointment_doc.mode_of_payment:
             valid_days = int(
-                frappe.get_cached_value("Healthcare Settings", "Healthcare Settings", "valid_days")
+                frappe.get_cached_value(
+                    "Healthcare Settings", "Healthcare Settings", "valid_days"
+                )
             )
         else:
             valid_days = int(
-                frappe.get_cached_value("Healthcare Insurance Coverage Plan", {"coverage_plan_name": appointment_doc.coverage_plan_name}, "no_of_days_for_follow_up")
+                frappe.get_cached_value(
+                    "Healthcare Insurance Coverage Plan",
+                    {"coverage_plan_name": appointment_doc.coverage_plan_name},
+                    "no_of_days_for_follow_up",
+                )
             )
             if valid_days == 0:
                 valid_days = int(
-                    frappe.get_cached_value("Healthcare Insurance Company", appointment_doc.insurance_company, "no_of_days_for_follow_up")
+                    frappe.get_cached_value(
+                        "Healthcare Insurance Company",
+                        appointment_doc.insurance_company,
+                        "no_of_days_for_follow_up",
+                    )
                 )
         if diff <= valid_days:
             appointment_doc.follow_up = 1
@@ -491,11 +519,9 @@ def make_next_doc(doc, method):
             )
         if "NHIF" not in doc.insurance_company and not doc.daily_limit:
             doc.daily_limit = frappe.get_cached_value(
-                "Healthcare Insurance Coverage Plan",
-                coverage_plan,
-                "daily_limit"
+                "Healthcare Insurance Coverage Plan", coverage_plan, "daily_limit"
             )
-            
+
     if not doc.billing_item and doc.authorization_number:
         doc.billing_item = get_consulting_charge_item(
             doc.appointment_type, doc.practitioner
@@ -527,7 +553,9 @@ def make_next_doc(doc, method):
     # do not create vital sign or encounter if appointment is already cancelled
     if doc.status == "Cancelled":
         return
-    if frappe.get_cached_value("Healthcare Practitioner", doc.practitioner, "bypass_vitals"):
+    if frappe.get_cached_value(
+        "Healthcare Practitioner", doc.practitioner, "bypass_vitals"
+    ):
         make_encounter(doc, method)
     else:
         make_vital(doc, method)
@@ -536,31 +564,49 @@ def make_next_doc(doc, method):
 @frappe.whitelist()
 def validate_insurance_company(insurance_company: str) -> str:
     if frappe.get_value("Healthcare Insurance Company", insurance_company, "disabled"):
-        frappe.msgprint(_("<b>Insurance Company: <strong>{0}</strong> is disabled, Please choose different insurance subscription</b>".format(insurance_company)))
+        frappe.msgprint(
+            _(
+                "<b>Insurance Company: <strong>{0}</strong> is disabled, Please choose different insurance subscription</b>".format(
+                    insurance_company
+                )
+            )
+        )
         return True
     return False
+
 
 @frappe.whitelist()
 def validate_insurance_subscription(doc):
     if not doc.insurance_subscription:
         return
-    
-    if frappe.db.get_value("Healthcare Insurance Subscription", doc.insurance_subscription, "docstatus") == 0:
-        url = frappe.utils.get_link_to_form("Healthcare Insurance Subscription", doc.insurance_subscription)
+
+    if (
+        frappe.db.get_value(
+            "Healthcare Insurance Subscription", doc.insurance_subscription, "docstatus"
+        )
+        == 0
+    ):
+        url = frappe.utils.get_link_to_form(
+            "Healthcare Insurance Subscription", doc.insurance_subscription
+        )
         frappe.throw(
-            _(f"Insurance Subscription: <strong>{doc.insurance_subscription}</strong> is on Draft<br>\
-                Click here: <strong>{url}</strong> to submit Insurance Subscription")
+            _(
+                f"Insurance Subscription: <strong>{doc.insurance_subscription}</strong> is on Draft<br>\
+                Click here: <strong>{url}</strong> to submit Insurance Subscription"
+            )
         )
 
 
 def calculate_patient_age(patient):
     dob = frappe.get_value("Patient", patient, "dob")
     if not dob:
-        frappe.msgprint("<h4 style='background-color: LightCoral'>Please update date of birth for this patient</h4>")
+        frappe.msgprint(
+            "<h4 style='background-color: LightCoral'>Please update date of birth for this patient</h4>"
+        )
         return None
     diff = date_diff(nowdate(), dob)
-    years = diff//365
-    months = (diff -(years * 365))//30
+    years = diff // 365
+    months = (diff - (years * 365)) // 30
     return f"{years} Year(s) {months} Month(s)"
 
 
@@ -571,37 +617,47 @@ def get_discount_percent(insurance_company):
     has_price_discount, discount = frappe.get_cached_value(
         "Healthcare Insurance Company",
         insurance_company,
-        ["hms_tz_has_price_discount", "hms_tz_price_discount"]
+        ["hms_tz_has_price_discount", "hms_tz_price_discount"],
     )
     if has_price_discount and discount == 0:
-        frappe.throw(_("Please set discount(%) for this insurance company: {0}".format(
-            frappe.bold(insurance_company))))
-    
+        frappe.throw(
+            _(
+                "Please set discount(%) for this insurance company: {0}".format(
+                    frappe.bold(insurance_company)
+                )
+            )
+        )
+
     if has_price_discount and discount > 0:
         discount_percent = discount
-    
+
     return discount_percent
+
 
 def check_multiple_appointments(doc):
     if (
-        doc.coverage_plan_card_number and 
-        "NHIF" in doc.insurance_company and 
-        doc.appointment_type in ["Outpatient Visit", "Normal Visit"] and
-        doc.department not in ["Eye", "Optometrist", "Physiotherapy"]
+        doc.coverage_plan_card_number
+        and "NHIF" in doc.insurance_company
+        and doc.appointment_type in ["Outpatient Visit", "Normal Visit"]
+        and doc.department not in ["Eye", "Optometrist", "Physiotherapy"]
     ):
-        appointments = frappe.get_list("Patient Appointment", 
+        appointments = frappe.get_list(
+            "Patient Appointment",
             filters={
                 "patient": doc.patient,
                 "coverage_plan_card_number": doc.coverage_plan_card_number,
                 "appointment_date": frappe.utils.nowdate(),
                 "status": ["!=", "Cancelled"],
-                "name": ["!=", doc.name]
+                "name": ["!=", doc.name],
             },
-            fields=["name", "department", "practitioner"]
+            fields=["name", "department", "practitioner"],
         )
 
         if len(appointments) > 0:
             msg = f"Patient already has an appointment: <b>{appointments[0].name}</b> for Practitioner: <b>{appointments[0].practitioner}</b>. \
                 <br>It is adviced to have only one appointment per day."
             frappe.msgprint(msg)
-            frappe.msgprint(f"Patient already has an appointment for <b>{appointments[0].practitioner}</b>", alert=True)
+            frappe.msgprint(
+                f"Patient already has an appointment for <b>{appointments[0].practitioner}</b>",
+                alert=True,
+            )

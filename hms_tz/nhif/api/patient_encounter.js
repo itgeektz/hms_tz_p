@@ -405,8 +405,77 @@ frappe.ui.form.on('Patient Encounter', {
         } else {
             frappe.msgprint(__('Please select Patient'));
         }
+    },
+    cost_estimate: (frm) => {
+        if (!frm.doc.patient) {
+            frappe.msgprint(__('Please select Patient'));
+            return;
+        }
+        frappe.call({
+            method: "hms_tz.nhif.api.patient_encounter.get_encounter_cost_estimate",
+            args: {
+                encounter_doc: frm.doc
+            },
+            callback: function (r) {
+                if (r.message) {
+                    show_cost_estimate_model(frm, r.message);
+                }
+            }
+        });
     }
+
 });
+
+function show_cost_estimate_model (frm, cost_estimate) {
+    // create a dialog
+    const dialog = new frappe.ui.Dialog({
+        title: __('Cost Estimate'),
+        fields: [
+            {
+                fieldtype: 'HTML',
+                fieldname: 'cost_estimate_html',
+                label: __('Cost Estimate'),
+            }
+        ],
+        primary_action_label: __('Close'),
+        primary_action: () => {
+            dialog.hide();
+        }
+    });
+    // setup the html content
+    let cost_estimate_html = '<div class="container-fluid">';
+    cost_estimate_html += '<div class="row">';
+    cost_estimate_html += '<div class="col-md-12">';
+    cost_estimate_html += '<table class="table table-bordered">';
+    cost_estimate_html += '<thead>';
+    cost_estimate_html += '<tr>';
+    cost_estimate_html += '<th scope="col">Item</th>';
+    cost_estimate_html += '<th scope="col">Amount</th>';
+    cost_estimate_html += '</tr>';
+    cost_estimate_html += '</thead>';
+    cost_estimate_html += '<tbody>';
+    for (let item_type in cost_estimate.details) {
+        cost_estimate_html += '<tr>';
+        cost_estimate_html += '<td colspan="2" class="text-center"><strong>' + item_type + '</strong></td>';
+        cost_estimate_html += '</tr>';
+        for (let item of cost_estimate.details[item_type]) {
+            cost_estimate_html += '<tr>';
+            cost_estimate_html += '<td>' + item.item + '</td>';
+            cost_estimate_html += '<td>' + item.amount + '</td>';
+            cost_estimate_html += '</tr>';
+        }
+    }
+    cost_estimate_html += '<tr>';
+    cost_estimate_html += '<td colspan="2" class="text-center"><strong>Total Cost: ' + cost_estimate.total_cost + '</strong></td>';
+    cost_estimate_html += '</tr>';
+    cost_estimate_html += '</tbody>';
+    cost_estimate_html += '</table>';
+    cost_estimate_html += '</div>';
+    cost_estimate_html += '</div>';
+    cost_estimate_html += '</div>';
+    dialog.fields_dict.cost_estimate_html.$wrapper.html(cost_estimate_html);
+    dialog.show();
+}
 
 
 frappe.ui.form.on('Codification Table', {

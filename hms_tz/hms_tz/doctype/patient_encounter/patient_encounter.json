@@ -24,6 +24,7 @@
   "patient_age",
   "inpatient_record",
   "inpatient_status",
+  "cost_estimate",
   "column_break_6",
   "company",
   "encounter_date",
@@ -455,12 +456,17 @@
    "fieldname": "hms_tz_patient_history",
    "fieldtype": "Button",
    "label": "Patient History"
+  },
+  {
+   "fieldname": "cost_estimate",
+   "fieldtype": "Button",
+   "label": "Cost Estimate"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-05-13 15:23:02.087580",
+ "modified": "2023-05-17 22:38:58.921042",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Patient Encounter",
