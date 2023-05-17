@@ -162,12 +162,8 @@ frappe.ui.form.on('Patient Encounter', {
                         }
                     });
                     refresh_field('patient_encounter_preliminary_diagnosis');
-<<<<<<< HEAD
                     set_medical_code(frm, true);
-=======
-                    set_medical_code(frm);
                     frm.trigger("copy_from_preliminary_diagnosis");
->>>>>>> 8d28ab26 (chore: get chronic diagnosis and set to both preliminary and final diagnosis)
                 }
             }
         });
