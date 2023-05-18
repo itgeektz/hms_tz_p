@@ -272,18 +272,12 @@ frappe.ui.form.on('Patient Encounter', {
             } else {
                 set_final_diagnosis(frm, frm.doc.patient_encounter_preliminary_diagnosis);
             }
-<<<<<<< HEAD
-        });
-        refresh_field('patient_encounter_final_diagnosis');
-        set_medical_code(frm, true);
-=======
         } else {
             frappe.show_alert({
                 message: __(`There are no Preliminary Diagnosis`),
                 indicator: 'yellow'
             }, 5);
         }
->>>>>>> 9e21a5bc (chore: allow copying only selected preliminary diagnosis and set to final diagnosis)
     },
     encounter_category: function (frm) {
         if (frm.doc.patient_encounter_preliminary_diagnosis && frm.doc.patient_encounter_preliminary_diagnosis.length > 0) {
