@@ -242,27 +242,48 @@ frappe.ui.form.on('Patient Encounter', {
         if (frm.doc.docstatus == 1) {
             return;
         }
-        frm.doc.patient_encounter_preliminary_diagnosis.forEach(element => {
-            const row_idx = frm.doc.patient_encounter_final_diagnosis.findIndex(x => x.medical_code === element.medical_code);
-            if (row_idx === -1) {
-                let row = frappe.model.add_child(frm.doc, "Codification Table", "patient_encounter_final_diagnosis");
-                row.medical_code = element.medical_code;
-                row.code = element.code;
-                row.description = element.description;
-                row.mtuha = element.mtuha;
-                // frappe.show_alert({
-                //     message: __(`Medical Code '${element.medical_code}' added successfully`),
-                //     indicator: 'green'
-                // }, 5);
+        function set_final_diagnosis(frm, preliminary_diagnosis) {
+            preliminary_diagnosis.forEach(element => {
+                const row_idx = frm.doc.patient_encounter_final_diagnosis.findIndex(x => x.medical_code === element.medical_code);
+                if (row_idx === -1) {
+                    let row = frappe.model.add_child(frm.doc, "Codification Table", "patient_encounter_final_diagnosis");
+                    row.medical_code = element.medical_code;
+                    row.code = element.code;
+                    row.description = element.description;
+                    row.mtuha = element.mtuha;
+                    // frappe.show_alert({
+                    //     message: __(`Medical Code '${element.medical_code}' added successfully`),
+                    //     indicator: 'green'
+                    // }, 5);
+                } else {
+                    frappe.show_alert({
+                        message: __(`Medical Code '${element.medical_code}' already exists`),
+                        indicator: 'yellow'
+                    }, 5);
+                }
+            });
+            refresh_field('patient_encounter_final_diagnosis');
+            set_medical_code(frm);
+        }
+        if (frm.doc.patient_encounter_preliminary_diagnosis.length > 0) {
+            let selected = frm.get_field("patient_encounter_preliminary_diagnosis").grid.get_selected_children();
+            if (selected.length > 0) {
+                set_final_diagnosis(frm, selected);
             } else {
-                frappe.show_alert({
-                    message: __(`Medical Code '${element.medical_code}' already exists`),
-                    indicator: 'red'
-                }, 5);
+                set_final_diagnosis(frm, frm.doc.patient_encounter_preliminary_diagnosis);
             }
+<<<<<<< HEAD
         });
         refresh_field('patient_encounter_final_diagnosis');
         set_medical_code(frm, true);
+=======
+        } else {
+            frappe.show_alert({
+                message: __(`There are no Preliminary Diagnosis`),
+                indicator: 'yellow'
+            }, 5);
+        }
+>>>>>>> 9e21a5bc (chore: allow copying only selected preliminary diagnosis and set to final diagnosis)
     },
     encounter_category: function (frm) {
         if (frm.doc.patient_encounter_preliminary_diagnosis && frm.doc.patient_encounter_preliminary_diagnosis.length > 0) {
