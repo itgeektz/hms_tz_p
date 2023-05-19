@@ -489,7 +489,8 @@ function get_diagnosis_list (frm, table_name) {
     if (frm.doc[table_name]) {
         frm.doc[table_name].forEach(element => {
             if (!element.medical_code) return;
-            diagnosis_list.push(element.medical_code);
+            let d = String(element.medical_code) + "\n " + String(element.description);
+            diagnosis_list.push(d);
         });
     }
     return diagnosis_list;
