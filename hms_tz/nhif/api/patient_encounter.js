@@ -163,6 +163,7 @@ frappe.ui.form.on('Patient Encounter', {
                     });
                     refresh_field('patient_encounter_preliminary_diagnosis');
                     set_medical_code(frm, true);
+                    frm.trigger("copy_from_preliminary_diagnosis");
                 }
             }
         });
