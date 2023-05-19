@@ -51,12 +51,14 @@ doctype_js = {
     "Clinical Procedure": "nhif/api/clinical_procedure.js",
     "Medical Department": "nhif/api/medical_department.js",
     "Delivery Note": "nhif/api/delivery_note.js",
+    "Radiology Examination": "nhif/api/radiology_examination.js",
 }
 # csf_tz.nhif.api.patient_appointment
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
-doctype_list_js = {"Therapy Plan": "nhif/api/therapy_plan_list.js"}
 
-inpatient_record_list_js = {"doctype": "nhif/api/inpatient_record_list.js"}
+doctype_list_js = {
+    "Therapy Plan" : ["nhif/api/therapy_plan_list.js"],
+}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
@@ -118,9 +120,8 @@ inpatient_record_list_js = {"doctype": "nhif/api/inpatient_record_list.js"}
 
 doc_events = {
     "Patient Appointment": {
-        "validate": [
-            "hms_tz.nhif.api.patient_appointment.make_next_doc",
-        ]
+        "before_insert": "hms_tz.nhif.api.patient_appointment.before_insert",
+        "validate": "hms_tz.nhif.api.patient_appointment.make_next_doc",
     },
     "Vital Signs": {
         "on_submit": "hms_tz.nhif.api.patient_appointment.make_encounter",
@@ -160,16 +161,21 @@ doc_events = {
         "on_trash": "hms_tz.nhif.api.practitioner_availability.on_trash",
     },
     "Lab Test": {
+        "before_submit": "hms_tz.nhif.api.lab_test.before_submit",
         "on_submit": "hms_tz.nhif.api.lab_test.on_submit",
         "after_insert": "hms_tz.nhif.api.lab_test.after_insert",
         "on_trash": "hms_tz.nhif.api.lab_test.on_trash",
+        "on_cancel": "hms_tz.nhif.api.lab_test.on_cancel",
         "validate": "hms_tz.nhif.api.lab_test.validate",
     },
     "Radiology Examination": {
+        "before_submit": "hms_tz.nhif.api.radiology_examination.before_submit",
         "on_submit": "hms_tz.nhif.api.radiology_examination.on_submit",
         "validate": "hms_tz.nhif.api.radiology_examination.validate",
+        "on_cancel": "hms_tz.nhif.api.radiology_examination.on_cancel",
     },
     "Clinical Procedure": {
+        "before_submit": "hms_tz.nhif.api.clinical_procedure.before_submit",
         "on_submit": "hms_tz.nhif.api.clinical_procedure.on_submit",
         "validate": "hms_tz.nhif.api.clinical_procedure.validate",
     },
@@ -207,8 +213,12 @@ scheduler_events = {
     "hourly": ["hms_tz.nhif.api.healthcare_utils.set_uninvoiced_so_closed"],
     "daily": ["hms_tz.nhif.api.inpatient_record.daily_update_inpatient_occupancies"],
     "cron": {
-        # fire every saturday 2:30 am at night
-        "30 2 * * 6": [
+        # Routine for every day 00:01 am at night
+        "1 0 * * *": [
+            "hms_tz.nhif.api.healthcare_utils.auto_submit_nhif_patient_claim"
+        ],
+        # Routine for every day 2:30am at night
+        "30 2 * * *": [
             "hms_tz.nhif.api.healthcare_utils.delete_or_cancel_draft_document"
         ],
         # Routine for every 10min

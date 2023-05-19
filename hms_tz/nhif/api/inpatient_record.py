@@ -9,6 +9,7 @@ from frappe.utils import nowdate, nowtime
 from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_item_price
 from hms_tz.nhif.api.patient_appointment import get_mop_amount
 from hms_tz.nhif.api.patient_encounter import create_healthcare_docs_from_name
+from hms_tz.nhif.api.patient_appointment import get_discount_percent
 
 import json
 
@@ -77,10 +78,10 @@ def confirmed(row, doc):
     if row.invoiced or not row.left:
         return
     encounter = frappe.get_doc("Patient Encounter", doc.admission_encounter)
-    service_unit_type, warehouse = frappe.get_value(
+    service_unit_type, warehouse = frappe.get_cached_value(
         "Healthcare Service Unit", row.service_unit, ["service_unit_type", "warehouse"]
     )
-    item_code = frappe.get_value(
+    item_code = frappe.get_cached_value(
         "Healthcare Service Unit Type", service_unit_type, "item_code"
     )
     item_rate = 0
@@ -98,7 +99,7 @@ def confirmed(row, doc):
                 ).format(encounter.insurance_subscription, item_code)
             )
     elif encounter.mode_of_payment:
-        price_list = frappe.get_value(
+        price_list = frappe.get_cached_value(
             "Mode of Payment", encounter.mode_of_payment, "price_list"
         )
         if not price_list:
@@ -129,6 +130,11 @@ def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practi
     insurance_company = encounter.insurance_company
     if not insurance_subscription:
         return
+    
+    # apply discount if it is available on Heathcare Insurance Company
+    discount_percent = 0
+    if insurance_company and "NHIF" not in insurance_company:
+        discount_percent = get_discount_percent(insurance_company)
 
     items = []
     item = frappe.new_doc("Delivery Note Item")
@@ -136,7 +142,7 @@ def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practi
     # item.item_name = item_name
     item.warehouse = warehouse
     item.qty = 1
-    item.rate = item_rate
+    item.rate = item_rate - (item_rate * (discount_percent/100)) 
     item.reference_doctype = row.doctype
     item.reference_name = row.name
     item.description = "For Inpatient Record {0}".format(row.parent)
@@ -149,10 +155,10 @@ def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practi
             posting_time=nowtime(),
             set_warehouse=warehouse,
             company=encounter.company,
-            customer=frappe.get_value(
+            customer=frappe.get_cached_value(
                 "Healthcare Insurance Company", insurance_company, "customer"
             ),
-            currency=frappe.get_value("Company", encounter.company, "default_currency"),
+            currency=frappe.get_cached_value("Company", encounter.company, "default_currency"),
             items=items,
             reference_doctype=row.parenttype,
             reference_name=row.parent,
@@ -176,27 +182,36 @@ def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practi
 def set_beds_price(self):
     if not self.inpatient_occupancies:
         return
+    
+    # apply discount if it is available on Heathcare Insurance Company
+    discount_percent = 0
+    if self.insurance_company and "NHIF" not in self.insurance_company:
+        discount_percent = get_discount_percent(self.insurance_company)
+
     for bed in self.inpatient_occupancies:
         if bed.amount == 0:
             if self.insurance_subscription:
-                service_unit_type = frappe.get_value(
+                service_unit_type = frappe.get_cached_value(
                     "Healthcare Service Unit", bed.service_unit, "service_unit_type"
                 )
-                item_code = frappe.get_value(
+                item_code = frappe.get_cached_value(
                     "Healthcare Service Unit Type", service_unit_type, "item_code"
                 )
-                bed.amount = get_item_rate(
+                item_price = get_item_rate(
                     item_code, self.company, self.insurance_subscription
                 )
+                bed.amount = item_price - (item_price * (discount_percent/100))
+                if discount_percent > 0:
+                    bed.hms_tz_is_discount_applied = 1
                 payment_type = "Insurance"
             else:
                 mode_of_payment = frappe.get_value(
                     "Patient Encounter", self.admission_encounter, "mode_of_payment"
                 )
-                service_unit_type = frappe.get_value(
+                service_unit_type = frappe.get_cached_value(
                     "Healthcare Service Unit", bed.service_unit, "service_unit_type"
                 )
-                item_code = frappe.get_value(
+                item_code = frappe.get_cached_value(
                     "Healthcare Service Unit Type", service_unit_type, "item_code"
                 )
                 bed.amount = get_mop_amount(

@@ -70,6 +70,8 @@ frappe.ui.form.on('Codification Table', {
 frappe.ui.form.on('Drug Prescription', {
 	dosage: function (frm, cdt, cdn) {
 		frappe.model.set_value(cdt, cdn, "quantity", "");
+		frappe.model.set_value(cdt, cdn, "prescribe", "");
+		frappe.model.set_value(cdt, cdn, "amount", "");
 		frm.refresh_field("drug_prescription");
 	},
 });

@@ -57,7 +57,7 @@ def check_patient_info(patient, card_no, patient_name):
         return
     patient_info = get_patient_info(card_no)
     if patient_name != patient_info.get("FullName"):
-        patient_doc = frappe.get_doc("Patient", patient)
+        patient_doc = frappe.get_cached_doc("Patient", patient)
         patient_doc.patient_name = patient_info.get("FullName")
         patient_doc.first_name = patient_info.get("FirstName")
         patient_doc.middle_name = patient_info.get("MiddleName")

@@ -21,7 +21,7 @@ def validate(doc, method):
 
 
 def set_normals(doc):
-    dob = frappe.get_value("Patient", doc.patient, "dob")
+    dob = frappe.get_cached_value("Patient", doc.patient, "dob")
     age = dateutil.relativedelta.relativedelta(getdate(), dob).years
     for row in doc.normal_test_items:
         if not row.result_value:
@@ -104,11 +104,25 @@ def get_lab_test_template(lab_test_name):
         "Lab Test Template", {"lab_test_name": lab_test_name}
     )
     if template_id:
-        return frappe.get_doc("Lab Test Template", template_id)
+        return frappe.get_cached_doc("Lab Test Template", template_id)
     return False
 
 
-def on_submit(doc, methd):
+def before_submit(doc, method):
+    if doc.is_restricted and not doc.approval_number:
+            frappe.throw(_(
+                    f"Approval number is required for <b>{doc.radiology_examination_template}</b>. Please set the Approval Number."
+                )
+            )
+        
+    if doc.approval_number and doc.approval_status != "Verified":
+        frappe.throw(_(
+                f"Approval number: <b>{doc.approval_number}</b> for item: <b>{doc.radiology_examination_template}</b> is not verified.>br>\
+                    Please verify the Approval Number."
+            )
+        )
+
+def on_submit(doc, method):
     update_lab_prescription(doc)
     create_delivery_note(doc)
 
@@ -119,11 +133,11 @@ def create_delivery_note(doc):
         create_delivery_note_from_LRPT(doc, patient_encounter_doc)
 
 
-def after_insert(doc, methd):
+def after_insert(doc, method):
     create_sample_collection(doc)
 
 
-def on_trash(doc, methd):
+def on_trash(doc, method):
     sample_list = frappe.get_all(
         "Sample Collection",
         filters={
@@ -134,11 +148,27 @@ def on_trash(doc, methd):
     for item in sample_list:
         frappe.delete_doc("Sample Collection", item.name)
 
+def on_cancel(doc, method):
+    doc.flags.ignore_links = True
+
+    if doc.docstatus == 2:
+        frappe.db.set_value("Lab Prescription", doc.hms_tz_ref_childname, "lab_test", "")
+
+        new_lab_doc = frappe.copy_doc(doc)
+        new_lab_doc.status = "Draft"
+        new_lab_doc.workflow_state = None
+        new_lab_doc.amended_from = doc.name
+        new_lab_doc.save(ignore_permissions=True)
+
+        url = frappe.utils.get_url_to_form(new_lab_doc.doctype, new_lab_doc.name)
+        frappe.msgprint(f"Lab Test: <strong>{doc.name}</strong> is cancelled:<br>\
+            New Lab Test: <a href='{url}'><strong>{new_lab_doc.name}</strong></a> is successful created")
+        
 
 def create_sample_collection(doc):
     if not doc.template:
         return
-    template = frappe.get_doc("Lab Test Template", doc.template)
+    template = frappe.get_cached_doc("Lab Test Template", doc.template)
     if not template.sample_qty or not template.sample:
         return
 
@@ -166,9 +196,8 @@ def update_lab_prescription(doc):
     if doc.ref_doctype == "Patient Encounter":
         encounter_doc = frappe.get_doc("Patient Encounter", doc.ref_docname)
         for row in encounter_doc.lab_test_prescription:
-            if row.lab_test_code == doc.template:
-                frappe.db.set_value(
-                    row.doctype,
-                    row.name,
-                    {"lab_test": doc.name, "delivered_quantity": 1},
-                )
+            if row.name == doc.hms_tz_ref_childname and row.lab_test_code == doc.template:
+                frappe.db.set_value(row.doctype, row.name, {
+                    "lab_test": doc.name,
+                    "delivered_quantity": 1
+                })

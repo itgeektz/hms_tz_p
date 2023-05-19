@@ -29,7 +29,15 @@ frappe.ui.form.on('Patient Encounter', {
 					});
 				} else if (frm.doc.inpatient_status != 'Discharge Scheduled') {
 					frm.add_custom_button(__('Schedule Admission'), function() {
-						schedule_inpatient(frm);
+						frappe.call("hms_tz.nhif.api.patient_encounter.validate_admission_encounter", {
+							encounter: frm.doc.name
+						}).then(r => {
+							if (r.message) {
+								return 
+							} else {
+								schedule_inpatient(frm);
+							}
+						});
 					}).removeClass('btn-default').addClass('btn-warning').css({
 						'font-size': '14px', 'font-weight': 'bolder'
 					});
@@ -43,7 +51,7 @@ frappe.ui.form.on('Patient Encounter', {
 				if (frm.doc.patient) {
 					frappe.route_options = {'patient': frm.doc.patient};
 					console.log("Encounter route_options ==> " + frappe.route_options.patient)
-					frappe.set_route('patient_history');
+					frappe.set_route('tz-patient-history');
 				} else {
 					frappe.msgprint(__('Please select Patient'));
 				}
@@ -232,6 +240,7 @@ frappe.ui.form.on('Patient Encounter', {
 });
 
 var schedule_inpatient = function(frm) {
+	var count = 0
 	var dialog = new frappe.ui.Dialog({
 		title: 'Patient Admission',
 		fields: [
@@ -247,6 +256,8 @@ var schedule_inpatient = function(frm) {
 		],
 		primary_action_label: __('Order Admission'),
 		primary_action : function() {
+			if (count > 0) {return}
+
 			var args = {
 				patient: frm.doc.patient,
 				admission_encounter: frm.doc.name,
@@ -274,6 +285,7 @@ var schedule_inpatient = function(frm) {
 				freeze_message: __('Scheduling Patient Admission')
 			});
 			frm.refresh_fields();
+			count += 1
 			dialog.hide();
 		}
 	});

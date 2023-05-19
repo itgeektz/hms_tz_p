@@ -1,0 +1,27 @@
+{
+ "content": null,
+ "creation": "2023-04-19 23:53:34.971206",
+ "docstatus": 0,
+ "doctype": "Page",
+ "icon": "",
+ "idx": 0,
+ "modified": "2023-04-19 23:53:34.971206",
+ "modified_by": "Administrator",
+ "module": "Hms Tz",
+ "name": "tz-patient-history",
+ "owner": "Administrator",
+ "page_name": "tz-patient-history",
+ "restrict_to_domain": "Healthcare",
+ "roles": [
+  {
+   "role": "Healthcare Administrator"
+  },
+  {
+   "role": "Physician"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0
+}

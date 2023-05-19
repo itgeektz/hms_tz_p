@@ -38,12 +38,16 @@ frappe.ui.form.on('Patient Encounter', {
             };
         };
         set_medical_code(frm, true);
+
         if (frm.doc.duplicated == 1 || frm.doc.finalized || frm.doc.practitioner.includes("Direct")) {
             frm.remove_custom_button("Schedule Admission");
             frm.remove_custom_button("Refer Practitioner");
             frm.remove_custom_button("Vital Signs", "Create");
             frm.remove_custom_button("Medical Record", "Create");
             frm.remove_custom_button("Clinical Procedure", "Create");
+        }
+        if (frm.doc.duplicated == 1 && frm.doc.inpatient_record) {
+            frm.remove_custom_button("Schedule Discharge");
         }
         add_btn_final(frm);
         duplicate(frm);
@@ -99,6 +103,7 @@ frappe.ui.form.on('Patient Encounter', {
         };
 
         set_btn_properties(frm);
+        // set_delete_button_in_child_table(frm);
     },
 
     clear_history: function (frm) {
@@ -157,7 +162,8 @@ frappe.ui.form.on('Patient Encounter', {
                         }
                     });
                     refresh_field('patient_encounter_preliminary_diagnosis');
-                    set_medical_code(frm);
+                    set_medical_code(frm, true);
+                    frm.trigger("copy_from_preliminary_diagnosis");
                 }
             }
         });
@@ -169,7 +175,7 @@ frappe.ui.form.on('Patient Encounter', {
                 patient: frm.doc.patient,
                 encounter: frm.doc.name
             }).then(r => {
-                console.log(r.message);
+                // console.log(r.message);
             });
         }
     },
@@ -237,27 +243,42 @@ frappe.ui.form.on('Patient Encounter', {
         if (frm.doc.docstatus == 1) {
             return;
         }
-        frm.doc.patient_encounter_preliminary_diagnosis.forEach(element => {
-            const row_idx = frm.doc.patient_encounter_final_diagnosis.findIndex(x => x.medical_code === element.medical_code);
-            if (row_idx === -1) {
-                let row = frappe.model.add_child(frm.doc, "Codification Table", "patient_encounter_final_diagnosis");
-                row.medical_code = element.medical_code;
-                row.code = element.code;
-                row.description = element.description;
-                row.mtuha = element.mtuha;
-                // frappe.show_alert({
-                //     message: __(`Medical Code '${element.medical_code}' added successfully`),
-                //     indicator: 'green'
-                // }, 5);
+        function set_final_diagnosis(frm, preliminary_diagnosis) {
+            preliminary_diagnosis.forEach(element => {
+                const row_idx = frm.doc.patient_encounter_final_diagnosis.findIndex(x => x.medical_code === element.medical_code);
+                if (row_idx === -1) {
+                    let row = frappe.model.add_child(frm.doc, "Codification Table", "patient_encounter_final_diagnosis");
+                    row.medical_code = element.medical_code;
+                    row.code = element.code;
+                    row.description = element.description;
+                    row.mtuha = element.mtuha;
+                    // frappe.show_alert({
+                    //     message: __(`Medical Code '${element.medical_code}' added successfully`),
+                    //     indicator: 'green'
+                    // }, 5);
+                } else {
+                    frappe.show_alert({
+                        message: __(`Medical Code '${element.medical_code}' already exists`),
+                        indicator: 'yellow'
+                    }, 5);
+                }
+            });
+            refresh_field('patient_encounter_final_diagnosis');
+            set_medical_code(frm);
+        }
+        if (frm.doc.patient_encounter_preliminary_diagnosis.length > 0) {
+            let selected = frm.get_field("patient_encounter_preliminary_diagnosis").grid.get_selected_children();
+            if (selected.length > 0) {
+                set_final_diagnosis(frm, selected);
             } else {
-                frappe.show_alert({
-                    message: __(`Medical Code '${element.medical_code}' already exists`),
-                    indicator: 'red'
-                }, 5);
+                set_final_diagnosis(frm, frm.doc.patient_encounter_preliminary_diagnosis);
             }
-        });
-        refresh_field('patient_encounter_final_diagnosis');
-        set_medical_code(frm);
+        } else {
+            frappe.show_alert({
+                message: __(`There are no Preliminary Diagnosis`),
+                indicator: 'yellow'
+            }, 5);
+        }
     },
     encounter_category: function (frm) {
         if (frm.doc.patient_encounter_preliminary_diagnosis && frm.doc.patient_encounter_preliminary_diagnosis.length > 0) {
@@ -276,7 +297,7 @@ frappe.ui.form.on('Patient Encounter', {
             final_row.mtuha = "Other";
             refresh_field('patient_encounter_final_diagnosis');
         }
-        set_medical_code(frm);
+        set_medical_code(frm, true);
 
     },
     create_sales_invoice: function (frm) {
@@ -361,16 +382,117 @@ frappe.ui.form.on('Patient Encounter', {
                 frm.refresh();
             }
         });
+    },
+    hms_tz_reuse_lab_items: (frm) => {
+        let fields = ["lab_test_code as item", "lab_test_name as item_name", "creation as date"];
+        let value_dict = { "table_field": "lab_test_prescription", "item_field": "lab_test_code", "item_name_field": "lab_test_name" };
+        reuse_lrpmt_items(frm, "Lab Prescription", fields, value_dict, "Lab Items");
+    },
+    hms_tz_reuse_radiology_items: (frm) => {
+        let fields = ["radiology_examination_template as item", "radiology_procedure_name as item_name", "creation as date"];
+        let value_dict = { "table_field": "radiology_procedure_prescription", "item_field": "radiology_examination_template", "item_name_field": "radiology_procedure_name" };
+        reuse_lrpmt_items(frm, "Radiology Procedure Prescription", fields, value_dict, "Radiology Items");
+    },
+    hms_tz_reuse_procedure_items: (frm) => {
+        let fields = ["procedure as item", "procedure_name as item_name", "creation as date"];
+        let value_dict = { "table_field": "procedure_prescription", "item_field": "procedure", "item_name_field": "procedure_name" };
+        reuse_lrpmt_items(frm, "Procedure Prescription", fields, value_dict, "Procedure Items");
+    },
+    hms_tz_reuse_drug_items: (frm) => {
+        let fields = ["drug_code as item", "drug_name as item_name", "creation as date"];
+        let value_dict = { "table_field": "drug_prescription", "item_field": "drug_code", "item_name_field": "drug_name" };
+        reuse_lrpmt_items(frm, "Drug Prescription", fields, value_dict, "Drug Items");
+    },
+    hms_tz_reuse_therapy_items: (frm) => {
+        let fields = ["therapy_type as item", "therapy_type as item_name", "creation as date"];
+        let value_dict = { "table_field": "therapies", "item_field": "therapy_type", "item_name_field": "therapy_type" };
+        reuse_lrpmt_items(frm, "Therapy Plan Detail", fields, value_dict, "Therapy Items");
+    },
+    hms_tz_reuse_previous_diagnosis: (frm) => {
+        let fields = ["medical_code as item", "code as item_name", "description", "mtuha", "creation as date"];
+        let value_dict = { "table_field": "patient_encounter_preliminary_diagnosis", "item_field": "medical_code", "item_name_field": "code", "description_field": "description", "mtuha_field": "mtuha" };
+        reuse_lrpmt_items(frm, "Codification Table", fields, value_dict, "Previous Diagnosis", "Diagnosis");
+    },
+    hms_tz_patient_history: (frm) => {
+        if (frm.doc.patient) {
+            frappe.route_options = { 'patient': frm.doc.patient };
+            frappe.open_in_new_tab = true;
+            frappe.set_route('tz-patient-history',);
+        } else {
+            frappe.msgprint(__('Please select Patient'));
+        }
+    },
+    cost_estimate: (frm) => {
+        if (!frm.doc.patient) {
+            frappe.msgprint(__('Please select Patient'));
+            return;
+        }
+        frappe.call({
+            method: "hms_tz.nhif.api.patient_encounter.get_encounter_cost_estimate",
+            args: {
+                encounter_doc: frm.doc
+            },
+            callback: function (r) {
+                if (r.message) {
+                    show_cost_estimate_model(frm, r.message);
+                }
+            }
+        });
     }
+
 });
 
-frappe.ui.form.on('Drug Prescription', {
-    drug_prescription_add: function (frm, cdt, cdn) {
-        var row = frappe.get_doc(cdt, cdn);
-        if (!row.healthcare_service_unit) row.healthcare_service_unit = frm.doc.default_healthcare_service_unit;
-        refresh_field("drug_prescription");
+function show_cost_estimate_model (frm, cost_estimate) {
+    // create a dialog
+    const dialog = new frappe.ui.Dialog({
+        title: __('Cost Estimate'),
+        fields: [
+            {
+                fieldtype: 'HTML',
+                fieldname: 'cost_estimate_html',
+                label: __('Cost Estimate'),
+            }
+        ],
+        primary_action_label: __('Close'),
+        primary_action: () => {
+            dialog.hide();
+        }
+    });
+    // setup the html content
+    let cost_estimate_html = '<div class="container-fluid">';
+    cost_estimate_html += '<div class="row">';
+    cost_estimate_html += '<div class="col-md-12">';
+    cost_estimate_html += '<table class="table table-bordered">';
+    cost_estimate_html += '<thead>';
+    cost_estimate_html += '<tr>';
+    cost_estimate_html += '<th scope="col">Item</th>';
+    cost_estimate_html += '<th scope="col">Amount</th>';
+    cost_estimate_html += '</tr>';
+    cost_estimate_html += '</thead>';
+    cost_estimate_html += '<tbody>';
+    for (let item_type in cost_estimate.details) {
+        cost_estimate_html += '<tr>';
+        cost_estimate_html += '<td colspan="2" class="text-center"><strong>' + item_type + '</strong></td>';
+        cost_estimate_html += '</tr>';
+        for (let item of cost_estimate.details[item_type]) {
+            cost_estimate_html += '<tr>';
+            cost_estimate_html += '<td>' + item.item + '</td>';
+            cost_estimate_html += '<td>' + item.amount + '</td>';
+            cost_estimate_html += '</tr>';
+        }
     }
-});
+    cost_estimate_html += '<tr>';
+    cost_estimate_html += '<td colspan="2" class="text-center"><strong>Total Cost: ' + cost_estimate.total_cost + '</strong></td>';
+    cost_estimate_html += '</tr>';
+    cost_estimate_html += '</tbody>';
+    cost_estimate_html += '</table>';
+    cost_estimate_html += '</div>';
+    cost_estimate_html += '</div>';
+    cost_estimate_html += '</div>';
+    dialog.fields_dict.cost_estimate_html.$wrapper.html(cost_estimate_html);
+    dialog.show();
+}
+
 
 frappe.ui.form.on('Codification Table', {
     patient_encounter_preliminary_diagnosis_remove: set_medical_code,
@@ -383,7 +505,8 @@ function get_diagnosis_list (frm, table_name) {
     if (frm.doc[table_name]) {
         frm.doc[table_name].forEach(element => {
             if (!element.medical_code) return;
-            diagnosis_list.push(element.medical_code);
+            let d = String(element.medical_code) + "\n " + String(element.description);
+            diagnosis_list.push(d);
         });
     }
     return diagnosis_list;
@@ -391,8 +514,8 @@ function get_diagnosis_list (frm, table_name) {
 
 const medical_code_mapping = {
     "patient_encounter_preliminary_diagnosis": [
+        'radiology_procedure_prescription',
         'lab_test_prescription',
-        'radiology_procedure_prescription'
     ],
     "patient_encounter_final_diagnosis": [
         'procedure_prescription',
@@ -416,6 +539,20 @@ function set_medical_code (frm, reset_columns) {
 
             grid.fields_map.medical_code.options = options;
             grid.refresh();
+
+            // Set options for the medical_code field in the child table's child table
+            if (reset_columns) {
+                frm.fields_dict[fieldname].grid.grid_rows.forEach(row => {
+                    row.docfields.forEach(docfield => {
+                        if (docfield.fieldname === 'medical_code') {
+                            docfield.options = options;
+                        }
+                    });
+                });
+            }
+            frm.refresh_field(fieldname);
+            grid.refresh();
+            grid.setup_visible_columns();
         }
     }
 
@@ -495,6 +632,7 @@ var duplicate = function (frm) {
 frappe.ui.form.on('Lab Prescription', {
     lab_test_code: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
+        if (!row.lab_test_code) { return; }
         set_is_not_available_inhouse(frm, row, row.lab_test_code)
             .then(() => {
                 if (row.is_not_available_inhouse) {
@@ -505,8 +643,6 @@ frappe.ui.form.on('Lab Prescription', {
                 }
             });
 
-        if (!row.lab_test_code) { return; }
-        validate_stock_item(frm, row.lab_test_code, 1, row.healthcare_service_unit, "Lab Test Template");
     },
     is_not_available_inhouse: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
@@ -526,7 +662,6 @@ frappe.ui.form.on('Lab Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.lab_test_code, 1, row.healthcare_service_unit, "Lab Test Template");
         }
     },
 });
@@ -534,6 +669,7 @@ frappe.ui.form.on('Lab Prescription', {
 frappe.ui.form.on('Radiology Procedure Prescription', {
     radiology_examination_template: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
+        if (!row.radiology_examination_template) { return; }
         set_is_not_available_inhouse(frm, row, row.radiology_examination_template)
             .then(() => {
                 if (row.is_not_available_inhouse) {
@@ -544,8 +680,6 @@ frappe.ui.form.on('Radiology Procedure Prescription', {
                 }
             });
 
-        if (!row.radiology_examination_template) { return; }
-        validate_stock_item(frm, row.radiology_examination_template, 1, row.healthcare_service_unit, "Radiology Examination Template");
     },
     is_not_available_inhouse: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
@@ -565,7 +699,6 @@ frappe.ui.form.on('Radiology Procedure Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.radiology_examination_template, 1, row.healthcare_service_unit, "Radiology Examination Template");
         }
     },
 });
@@ -573,6 +706,7 @@ frappe.ui.form.on('Radiology Procedure Prescription', {
 frappe.ui.form.on('Procedure Prescription', {
     procedure: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
+        if (!row.procedure) { return; }
         set_is_not_available_inhouse(frm, row, row.procedure)
             .then(() => {
                 if (row.is_not_available_inhouse) {
@@ -583,8 +717,6 @@ frappe.ui.form.on('Procedure Prescription', {
                 }
             });
 
-        if (!row.procedure) { return; }
-        validate_stock_item(frm, row.procedure, 1, row.healthcare_service_unit, "Clinical Procedure Template");
     },
     is_not_available_inhouse: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
@@ -604,7 +736,6 @@ frappe.ui.form.on('Procedure Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.procedure, 1, row.healthcare_service_unit, "Clinical Procedure Template");
         }
     },
 });
@@ -612,6 +743,7 @@ frappe.ui.form.on('Procedure Prescription', {
 frappe.ui.form.on('Drug Prescription', {
     drug_code: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
+        if (!row.drug_code) { return; }
         set_is_not_available_inhouse(frm, row, row.drug_code)
             .then(() => {
                 if (row.is_not_available_inhouse) {
@@ -622,7 +754,6 @@ frappe.ui.form.on('Drug Prescription', {
                 }
 
             });
-        if (!row.drug_code) { return; }
         validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit, "Drug Prescription");
     },
     healthcare_service_unit: function (frm, cdt, cdn) {
@@ -656,11 +787,17 @@ frappe.ui.form.on('Drug Prescription', {
         frappe.model.set_value(cdt, cdn, "quantity", 0);
         frm.refresh_field("drug_prescription");
     },
+    drug_prescription_add: function (frm, cdt, cdn) {
+        var row = frappe.get_doc(cdt, cdn);
+        if (!row.healthcare_service_unit) row.healthcare_service_unit = frm.doc.default_healthcare_service_unit;
+        refresh_field("drug_prescription");
+    }
 });
 
 frappe.ui.form.on('Therapy Plan Detail', {
     therapy_type: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
+        if (!row.therapy_type) { return; }
         set_is_not_available_inhouse(frm, row, row.therapy_type)
             .then(() => {
                 if (row.is_not_available_inhouse) {
@@ -671,8 +808,6 @@ frappe.ui.form.on('Therapy Plan Detail', {
                 }
             });
 
-        if (!row.therapy_type) { return; }
-        validate_stock_item(frm, row.therapy_type, 1, row.healthcare_service_unit, "Therapy Type");
     },
     is_not_available_inhouse: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
@@ -692,7 +827,6 @@ frappe.ui.form.on('Therapy Plan Detail', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.therapy_type, 1, row.healthcare_service_unit, "Therapy Type");
         }
     },
 });
@@ -745,7 +879,8 @@ const set_is_not_available_inhouse = function (frm, row, template) {
         method: 'hms_tz.nhif.api.healthcare_utils.get_template_company_option',
         args: {
             'template': template,
-            'company': frm.doc.company
+            'company': frm.doc.company,
+            "method": "validate"
         },
         callback: function (data) {
             if (data.message) {
@@ -764,4 +899,242 @@ var set_btn_properties = (frm) => {
             'font-size': '16px', 'border-radius': '6px', 'cursor': 'pointer',
             'width': '180px',
         });
+    $('[data-fieldname="hms_tz_patient_history"]').removeClass('btn-default')
+        .addClass('btn-primary align-middle text-white font-weight-bold').css({
+            'font-size': '16px', 'border-radius': '6px', 'cursor': 'pointer',
+            'width': '180px',
+        });
 };
+
+var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller = "") => {
+    let filters = { "patient": frm.doc.patient, "appoitnemnt": frm.doc.appointment, "doctype": doctype, "fields": fields };
+    let d = new frappe.ui.Dialog({
+        title: "Select Item",
+        fields: [
+            {
+                fieldname: "item_category",
+                fieldtype: "Data",
+                read_only: 1,
+                Bold: 1,
+            },
+            {
+                fieldname: "no_of_visit_sb",
+                fieldtype: "Section Break"
+            },
+            {
+                fieldname: "number_of_visit",
+                fieldtype: "Int",
+                label: "Number of Visit",
+                reqd: 1,
+            },
+            {
+                fieldname: "include_cb",
+                fieldtype: "Column Break"
+            },
+            {
+                fieldname: "include_ipd_encounters",
+                fieldtype: "Check",
+                label: "Include IPD Encounters",
+                Bold: 1,
+            },
+            {
+                fieldname: "filters_cb",
+                fieldtype: "Column Break"
+            },
+            {
+                fieldname: "apply_filters",
+                fieldtype: "Button",
+                label: "Apply Filters",
+            },
+            {
+                fieldname: "space_sb",
+                fieldtype: "Section Break"
+            },
+            {
+                fieldname: "space",
+                fieldtype: "HTML"
+            }
+        ],
+    });
+    d.set_value("item_category", item_category);
+    let wrapper = d.fields_dict.space.$wrapper;
+
+    d.fields_dict.apply_filters.$input.click(() => {
+        if (!d.get_value("number_of_visit")) {
+            frappe.msgprint("<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
+                Please enter number of visit</h4>");
+            return;
+        }
+
+        filters.number_of_visit = d.get_value("number_of_visit");
+        filters.include_ipd_encounters = d.get_value("include_ipd_encounters");
+        frappe.dom.freeze(__("Please wait..."));
+        frappe.call({
+            method: "hms_tz.nhif.api.patient_encounter.get_previous_diagnosis_and_lrpmt_items_to_reuse",
+            args: {
+                kwargs: filters,
+                caller: caller
+            }
+        }).then(r => {
+            frappe.dom.unfreeze();
+            let records = r.message;
+            if (records.length > 0) {
+                let html = show_details(records, caller);
+                wrapper.html(html);
+            } else {
+                wrapper.append(`<div class="multiselect-empty-state"
+                    style="border: 1px solid #d1d8dd; border-radius: 3px; height: 200px; overflow: auto;">
+                    <span class="text-center" style="margin-top: -40px;">
+                        <i class="fa fa-2x fa-heartbeat text-extra-muted"></i>
+                        <p class="text-extra-muted text-center" style="font-size: 16px; font-weight: bold;">
+                        No Item(s) reuse</p>
+                    </span>
+                </div>`);
+            }
+        });
+    });
+
+    d.set_primary_action(__("Reuse Item"), function () {
+        let items = [];
+
+        wrapper.find('tr:has(input:checked)').each(function () {
+            if (caller == "Diagnosis") {
+                items.push({
+                    item: $(this).find("#item").attr("data-item"),
+                    item_name: $(this).find("#item_name").attr("data-item_name"),
+                    description: $(this).find("#description").attr("data-description"),
+                    mtuha: $(this).find("#mtuha").attr("data-mtuha"),
+                });
+            } else {
+                items.push({
+                    item: $(this).find("#item").attr("data-item"),
+                    item_name: $(this).find("#item_name").attr("data-item_name"),
+                });
+            }
+        });
+
+        if (items.length > 0) {
+            let field = String(value_dict.table_field);
+            if (caller == "Diagnosis") {
+                items.forEach((item) => {
+                    let new_row = {};
+                    new_row[value_dict.item_field] = item.item;
+                    new_row[value_dict.item_name_field] = item.item_name;
+                    new_row[value_dict.description_field] = item.description;
+                    new_row[value_dict.mtuha_field] = item.mtuha;
+                    let row = frm.add_child(field, new_row);
+                });
+            } else {
+                items.forEach((item) => {
+                    let new_row = {};
+                    new_row[value_dict.item_field] = item.item;
+                    new_row[value_dict.item_name_field] = item.item_name;
+                    let row = frm.add_child(field, new_row);
+                });
+            }
+            frm.refresh_field(field);
+            d.hide();
+
+        } else {
+            frappe.msgprint({
+                title: __('Message'),
+                indicator: 'red',
+                message: __(
+                    '<h4 class="text-center" style="background-color: #D3D3D3; font-weight: bold;">\
+                    No any Item selected<h4>'
+                )
+            });
+        }
+    });
+
+    d.$body.find("button[data-fieldtype='Button']").removeClass("btn-default").addClass("btn-info");
+    d.$wrapper.find('.modal-content').css({
+        "width": "650px",
+        "max-height": "1000px",
+        "overflow": "auto",
+    });
+
+    d.show();
+};
+
+var show_details = (data, caller = "") => {
+    let html = `<table class="table table-hover" style="width:100%;">`;
+    if (caller == "Diagnosis") {
+        html += `
+            <colgroup>
+                <col width="5%">
+                <col width=17%">
+                <col width="10%">
+                <col width="26%">
+                <col width="22%">
+                <col width="20%">
+            </colgroup>
+            <tr style="background-color: #D3D3D3;">
+                <th></th>
+                <th>Medical Code</th>
+                <th>Code Name</th>
+                <th>Description</th>
+                <th>Mtuha</th>
+                <th>Date of Service</th>
+            </tr>`;
+
+        data.forEach(row => {
+            html += `<tr>
+                        <td><input type="checkbox"/></td>
+                        <td id="item" data-item="${row.item}">${row.item}</td>
+                        <td id="item_name" data-item_name="${row.item_name}">${row.item_name}</td>
+                        <td id="description" data-description="${row.description}">${row.description}</td>
+                        <td id="mtuha" data-mtuha="${row.mtuha}">${row.mtuha}</td>
+                        <td id="date" data-date="${frappe.datetime.get_datetime_as_string(row.date)}">${frappe.datetime.get_datetime_as_string(row.date)}</td>
+                    </tr>`;
+        });
+    } else {
+        html += `
+            <colgroup>
+                <col width="5%">
+                <col width=30%">
+                <col width="35%">
+                <col width="30%">
+            </colgroup>
+            <tr style="background-color: #D3D3D3;">
+                <th></th>
+                <th>Item</th>
+                <th>Item Name</th>
+                <th>Date of Service</th>
+            </tr>`;
+
+        data.forEach(row => {
+            html += `<tr>
+                        <td><input type="checkbox"/></td>
+                        <td id="item" data-item="${row.item}">${row.item}</td>
+                        <td id="item_name" data-item_name="${row.item_name}">${row.item_name}</td>
+                        <td id="date" data-date="${frappe.datetime.get_datetime_as_string(row.date)}">${frappe.datetime.get_datetime_as_string(row.date)}</td>
+                    </tr>`;
+        });
+    }
+    html += `</table>`;
+    return html;
+};
+
+
+function set_delete_button_in_child_table (frm, child_table_fields) {
+    if (frm.doc.docstatus != 0) {
+        return;
+    }
+    $.each(child_table_fields, function (i, child_table_field) {
+        if (frm.fields_dict[child_table_field]) {
+            $.each(frm.fields_dict[child_table_field].grid.grid_rows, function (i, row) {
+                if (!row.doc.__islocal) {
+                    if (!row.wrapper.find('.grid-row-delete').length) {
+                        $(row.wrapper).find('.grid-row-check').after('<button class="btn btn-default btn-xs grid-row-delete" style="margin-left: 5px;"><i class="fa fa-trash-o text-danger"></i></button>');
+                        row.wrapper.find('.grid-row-delete').on('click', function () {
+                            frappe.model.clear_doc(row.doc.doctype, row.doc.name);
+                            row.remove();
+                        });
+                    }
+                }
+            });
+        }
+    }
+    );
+}

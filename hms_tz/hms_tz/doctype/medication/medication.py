@@ -14,7 +14,10 @@ class Medication(Document):
         self.enable_disable_item()
 
     def after_insert(self):
-        create_item_from_medication(self)
+        try:
+            create_item_from_medication(self)
+        except Exception as e:
+            frappe.log_error(frappe.get_traceback(), "Medication Item Creation Error")
 
     def on_update(self):
         if self.change_in_item:

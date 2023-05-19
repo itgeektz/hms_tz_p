@@ -17,12 +17,16 @@ from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from hms_tz.nhif.api.healthcare_utils import remove_special_characters
 from datetime import date
 from frappe.utils.background_jobs import enqueue
+from hms_tz.nhif.doctype.nhif_product.nhif_product import add_product
 
 
 def validate(doc, method):
     # validate date of birth
     if date.today() < getdate(doc.dob):
         frappe.throw(_("The date of birth cannot be later than today's date"))
+    
+    check_card_number(doc.card_no, doc.is_new(), doc.name, "validate")
+
     # replace initial 0 with 255 and remove all the unnecessray characters
     doc.mobile = remove_special_characters(doc.mobile)
     if doc.mobile[0] == "0":
@@ -65,7 +69,7 @@ def get_patient_info(card_no=None):
         frappe.throw(_("No companies found to connect to NHIF"))
     token = get_nhifservice_token(company)
 
-    nhifservice_url = frappe.get_value(
+    nhifservice_url = frappe.get_cached_value(
         "Company NHIF Settings", company, "nhifservice_url"
     )
     headers = {"Authorization": "Bearer " + token}
@@ -115,7 +119,7 @@ def get_patient_info(card_no=None):
 def update_patient_history(doc):
     # Remarked till multi company setting is required and feasible from Patient doctype 2021-03-20 19:57:14
     # company = get_default_company()
-    # update_history = frappe.get_value(
+    # update_history = frappe.get_cached_value(
     #     "Company NHIF Settings", company, "update_patient_history")
     # if not update_history:
     #     return
@@ -139,12 +143,16 @@ def update_patient_history(doc):
 
 
 @frappe.whitelist()
-def check_card_number(card_no, is_new=None, patient=None):
+def check_card_number(card_no, is_new=None, patient=None, caller=None):
+    if not card_no:
+        return "false"
     filters = {"insurance_card_detail": ["like", "%" + card_no + "%"]}
     if not is_new and patient:
         filters["name"] = ["!=", patient]
     patients = frappe.get_all("Patient", filters=filters)
     if len(patients):
+        if caller:
+            frappe.throw(f"Cardno: <b>{card_no}</b> used with patient: <b>{patient}</b>, Please change Cardno to Proceed")
         return patients[0].name
     else:
         return "false"
@@ -152,6 +160,10 @@ def check_card_number(card_no, is_new=None, patient=None):
 
 def create_subscription(doc):
     if not frappe.db.exists("NHIF Product", {"nhif_product_code": doc.product_code}):
+        company = get_default_company()
+        if company:
+            add_product(company, doc.get("product_code"), None)
+
         return
     subscription_list = frappe.get_list(
         "Healthcare Insurance Subscription",
@@ -164,23 +176,11 @@ def create_subscription(doc):
             )
         )
         return
-    plan = frappe.get_list(
-        "Healthcare Insurance Coverage Plan",
-        {"nhif_employername": doc.nhif_employername},
-        "name",
+    plan = frappe.db.get_list(
+        "NHIF Product",
+        {"nhif_product_code": doc.product_code},
+        "healthcare_insurance_coverage_plan",
     )
-
-    if len(plan) == 0:
-        plan = frappe.db.get_list(
-            "NHIF Product",
-            {"nhif_product_code": doc.product_code},
-            "healthcare_insurance_coverage_plan",
-        )
-        if len(plan) != 0:
-            plan_name = plan[0].healthcare_insurance_coverage_plan
-    else:
-        plan_name = plan[0].name
-
     if len(plan) == 0:
         frappe.msgprint(
             _(
@@ -191,7 +191,8 @@ def create_subscription(doc):
             alert=True,
         )
         return
-    plan_doc = frappe.get_doc("Healthcare Insurance Coverage Plan", plan_name)
+
+    plan_doc = frappe.get_cached_doc("Healthcare Insurance Coverage Plan", plan[0].healthcare_insurance_coverage_plan)
     sub_doc = frappe.new_doc("Healthcare Insurance Subscription")
     sub_doc.patient = doc.name
     sub_doc.insurance_company = plan_doc.insurance_company
@@ -202,7 +203,7 @@ def create_subscription(doc):
     frappe.msgprint(
         _(
             "<h3>AUTO</h3> Healthcare Insurance Subscription {0} is created for {1}"
-        ).format(sub_doc.name, plan_name)
+        ).format(sub_doc.name, plan[0].healthcare_insurance_coverage_plan)
     )
 
 
@@ -238,11 +239,19 @@ def update_cash_limit(kwargs):
     patient_list = frappe.get_all("Patient", {"status": "Active"}, pluck="name")
     for name in patient_list:
         try:
-            doc = frappe.get_doc("Patient", name)
-            if flt(doc.cash_limit) != flt(data.get("new_value")):
-                doc.cash_limit = flt(data.get("new_value"))
+            doc = frappe.get_cached_doc("Patient", name)
+            if flt(doc.cash_limit) != flt(data.get('new_value')):
+                doc.cash_limit = flt(data.get('new_value'))
                 doc.db_update()
         except Exception:
             frappe.log_error(frappe.get_traceback())
 
     frappe.db.commit()
+
+
+@frappe.whitelist()
+def validate_missing_patient_dob(patient: str):
+    patient_name, dob = frappe.get_value("Patient", patient, ["patient_name", "dob"])
+    if not dob:
+        return False
+    return True

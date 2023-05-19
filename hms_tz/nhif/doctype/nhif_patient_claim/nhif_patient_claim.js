@@ -15,19 +15,23 @@ frappe.ui.form.on('NHIF Patient Claim', {
 	},
 
 	refresh(frm) {
+		$("[data-action='delete_all_rows']").hide();
 		if (frm.doc.docstatus === 0 && frm.doc.authorization_no) {
 			frm.add_custom_button(__("Merge Claims"), function () {
 				frm.dirty()
-				frm.call('get_appointments', {self: frm.doc})
+				frappe.dom.freeze(__("Please wait....."));
+				frm.call('get_appointments', { self: frm.doc })
 				.then(r => {
 					frm.save()
 					frm.refresh()
+					frappe.dom.unfreeze();
 				});
 			});
 		}
 	},
 
-	onload: function(frm) {
+	onload: function (frm) {
+		$("[data-action='delete_all_rows']").hide();
 		if (frm.doc.patient && frm.doc.patient_appointment) {
 			frappe.db.get_list('LRPMT Returns', {
 				fields:['name'],
@@ -58,5 +62,13 @@ frappe.ui.form.on('NHIF Patient Claim', {
 				}
 			});
 		};
+	},
+
+	is_ready_for_auto_submission: (frm) => {
+		if (frm.doc.is_ready_for_auto_submission == 1) {
+			frm.set_value("reviewed_by", frappe.user.full_name());
+		} else {
+			frm.set_value("reviewed_by", "");
+		}
 	}
 });

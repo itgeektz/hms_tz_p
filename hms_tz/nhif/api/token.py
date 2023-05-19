@@ -59,7 +59,7 @@ def make_token_request(doc, url, headers, payload, fields):
 
 
 def get_nhifservice_token(company):
-    setting_doc = frappe.get_doc("Company NHIF Settings", company)
+    setting_doc = frappe.get_cached_doc("Company NHIF Settings", company)
     if (
         setting_doc.nhifservice_expiry
         and setting_doc.nhifservice_expiry > now_datetime()
@@ -81,7 +81,7 @@ def get_nhifservice_token(company):
 
 
 def get_claimsservice_token(company):
-    setting_doc = frappe.get_doc("Company NHIF Settings", company)
+    setting_doc = frappe.get_cached_doc("Company NHIF Settings", company)
     if (
         setting_doc.claimsserver_expiry
         and setting_doc.claimsserver_expiry > now_datetime()
@@ -103,7 +103,7 @@ def get_claimsservice_token(company):
 
 
 def get_formservice_token(company):
-    company_nhif_doc = frappe.get_doc("Company NHIF Settings", company)
+    company_nhif_doc = frappe.get_cached_doc("Company NHIF Settings", company)
     if not company_nhif_doc.enable:
         frappe.throw(_("Company {0} not enabled for NHIF Integration".format(company)))
 

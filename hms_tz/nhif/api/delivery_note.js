@@ -1,5 +1,11 @@
 frappe.ui.form.on("Delivery Note", {
     refresh(frm) {
+        $('[data-label="Not%20Serviced"]').parent().hide();
+        $('[data-label="Request%20Changes"]').parent().hide();
+        $('[data-label="Make%20Changes"]').parent().hide();
+        $('[data-label="Issue%20Returns"]').parent().hide();
+        $('[data-label="Return"]').parent().hide();
+        
         if (!frappe.user.has_role("DN Changed Allowed")) {
             // hide button to add rows of delivery note item
             frm.get_field("items").grid.cannot_add_rows = true;
@@ -10,6 +16,12 @@ frappe.ui.form.on("Delivery Note", {
         }
     },
     onload(frm){
+        $('[data-label="Not%20Serviced"]').parent().hide();
+        $('[data-label="Request%20Changes"]').parent().hide();
+        $('[data-label="Make%20Changes"]').parent().hide();
+        $('[data-label="Issue%20Returns"]').parent().hide();
+        $('[data-label="Return"]').parent().hide();
+
         if (!frappe.user.has_role("DN Changed Allowed")) {
             // hide button to add rows of delivery note item
             frm.get_field("items").grid.cannot_add_rows = true;
@@ -19,6 +31,39 @@ frappe.ui.form.on("Delivery Note", {
             $("*[data-fieldname='items']").find(".grid-remove-all-rows").hide();
         }
     },
+    hms_tz_lrpmt_returns: (frm) => {
+        frappe.call({
+            method: "hms_tz.nhif.api.healthcare_utils.return_quatity_or_cancel_delivery_note_via_lrpmt_returns",
+            args: {
+                source_doc: frm.doc,
+                method: "From Front End"
+            },
+            freeze: true,
+            callback: (r) => {
+                if (r.message == true) {
+                    frm.refresh()
+                } else {
+                    frappe.set_route("FORM", "LRPMT Returns", r.message);
+                }
+            },
+        })
+    },
+    hms_tz_medicatiion_change_request: (frm) => {
+        if (!frm.doc.hms_tz_comment) {
+            frappe.msgprint("<b>Please write an item(s) to be changed on the comment field</b>");
+            return 
+        }
+        frappe.call({
+            method: "hms_tz.nhif.doctype.medication_change_request.medication_change_request.create_medication_change_request_from_dn",
+            args: {
+                doctype: frm.doc.doctype,
+                name: frm.doc.name
+            },
+            freeze: true,
+            callback: (r) => {
+            },
+        });
+    }
 });
 
 frappe.ui.form.on("Delivery Note Item", {
@@ -31,6 +76,40 @@ frappe.ui.form.on("Delivery Note Item", {
             frm.fields_dict.items.grid.wrapper.find('.grid-move-row').hide();
         }
     },
+    approval_number: (frm, cdt, cdn) => {
+        let row = locals[cdt][cdn]
+        if (row.approval_number != "" && row.approval_number != undefined) {
+            frappe.dom.freeze(__("Verifying Approval Number..."));
+            frappe.call("hms_tz.nhif.api.healthcare_utils.varify_service_approval_number_for_LRPM", {
+                patient: frm.doc.patient,
+                company: frm.doc.company,
+                approval_number: row.approval_number,
+                template: "Medication",
+                item: row.item_code,
+            }).then(r => {
+                frappe.dom.unfreeze();
+                if (r.message) {
+                    let data = r.message;
+                    row.approval_type = "NHIF"
+                    row.approval_status = "Verified"
+                    row.authorized_item_id = data.AuthorizedItemID;
+                    row.service_authorization_id = data.ServiceAuthorizationID;
+                    frappe.show_alert({
+                        message: __("<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
+                            Approval Number is Valid</h4>"),
+                        indicator: "green"
+                    }, 10);
+                } else {
+                    row.approval_number = ""
+                    frappe.show_alert({
+                        message: __("<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
+                            Approval Number is not Valid</h4>"),
+                        indicator: "Red"
+                    }, 10);
+                }
+            });
+        }
+    }
 });
 
 frappe.ui.form.on("Original Delivery Note Item", {
