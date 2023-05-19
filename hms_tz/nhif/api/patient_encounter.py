@@ -816,7 +816,7 @@ def add_chronic_diagnosis(patient, encounter):
 
     prev_diagnos = len(patient_doc.codification_table)
     medical_codes = []
-    if not patient_doc.codification_table:
+    if len(patient_doc.codification_table) == 0:
         for row in encounter_doc.patient_encounter_preliminary_diagnosis:
             patient_doc.append("codification_table", row)
         patient_doc.save(ignore_permissions=True)
@@ -847,6 +847,64 @@ def get_chronic_medications(patient):
         fields=["*"],
     )
     return data
+
+@frappe.whitelist()
+def add_chronic_medications(patient, encounter, items):
+    def clear_fields(drug_row):
+        for field in ["name", "owner", "creation", "modified", "modified_by", "docstatus", "parent", "parentfield", "parenttype", "doctype", "idx"]:
+            if isinstance(drug_row, dict):
+                row = frappe.parse_json(drug_row)
+                del row[field]
+                drug_row = frappe._dict(row)
+            elif isinstance(drug_row, object):
+                    row = drug_row.as_dict()
+                    del row[field]
+                    drug_row = frappe._dict(row)
+            else:
+                raise ValueError("Unknown type for drug_row")
+
+        return drug_row
+    
+    patient_doc = frappe.get_doc("Patient", patient)
+    encounter_doc = frappe.get_doc("Patient Encounter", encounter)
+
+    chronic_drug_items = []
+    items = frappe.parse_json(items)
+    if len(items) > 0:
+        chronic_drug_items = items
+    else:
+        chronic_drug_items = encounter_doc.drug_prescription
+
+    if len(chronic_drug_items) == 0:
+        frappe.throw(_("No Chronic medications to add"))
+
+    medications = []
+    prev_chronic_medications = len(patient_doc.chronic_medications)
+    if len(patient_doc.chronic_medications) == 0:
+        for row in chronic_drug_items:
+            new_row = clear_fields(row)
+            patient_doc.append("chronic_medications", new_row)
+        patient_doc.save(ignore_permissions=True)
+
+    else:
+        for d in patient_doc.chronic_medications:
+            for row in chronic_drug_items:
+                new_row = clear_fields(row)
+                if d.drug_code == new_row.drug_code:
+                    d.update(new_row)
+                    medications.append(d.drug_code)
+                    continue
+        
+        for d_row in chronic_drug_items:
+            d_new_row = clear_fields(d_row)
+            if d_new_row.drug_code not in medications:
+                patient_doc.append("chronic_medications", d_new_row)
+        patient_doc.save(ignore_permissions=True)
+
+    if len(patient_doc.chronic_medications) > prev_chronic_medications:
+        frappe.msgprint("Chronic medication added successfully")
+    else:
+        frappe.msgprint("Chronic medication already exist")
 
 
 def validate_totals(doc):

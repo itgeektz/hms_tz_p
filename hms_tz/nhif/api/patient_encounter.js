@@ -239,6 +239,17 @@ frappe.ui.form.on('Patient Encounter', {
             }
         });
     },
+    add_chronic_medications: (frm) => {
+        if (frm.doc.docstatus == 0) {
+            frappe.call('hms_tz.nhif.api.patient_encounter.add_chronic_medications', {
+                patient: frm.doc.patient,
+                encounter: frm.doc.name,
+                items: frm.get_field('drug_prescription').grid.get_selected_children()
+            }).then(r => {
+                // console.log(r.message);
+            })
+        }
+    },
     copy_from_preliminary_diagnosis: function (frm) {
         if (frm.doc.docstatus == 1) {
             return;
