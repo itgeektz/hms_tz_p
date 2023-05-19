@@ -450,7 +450,7 @@ def set_follow_up(appointment_doc, method):
         "name": ["!=", appointment_doc.name],
         "insurance_subscription": appointment_doc.insurance_subscription,
         "department": appointment_doc.department,
-        "status": "Closed",
+        #"status": "Closed",
     }
     appointment = get_previous_appointment(appointment_doc.patient, filters)
     if appointment and appointment_doc.appointment_date:
@@ -487,7 +487,7 @@ def set_follow_up(appointment_doc, method):
                 return
             appointment_doc.invoiced = 1
             appointment_doc.paid_amount = 0
-            # frappe.msgprint(_("Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"), alert=True)
+            frappe.msgprint(_("Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"), alert=True)
         else:
             appointment_doc.follow_up = 0
             # frappe.msgprint(_("This appointment requires to be paid for!"), alert=True)
