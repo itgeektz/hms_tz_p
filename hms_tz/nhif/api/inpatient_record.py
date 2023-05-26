@@ -228,8 +228,6 @@ def set_beds_price(self):
 
 def after_insert(doc, method):
     create_healthcare_docs_from_name(doc.admission_encounter)
-<<<<<<< HEAD
-=======
 
 @frappe.whitelist()
 def make_deposit(inpatient_record, deposit_amount, mode_of_payment):
@@ -272,4 +270,4 @@ def make_deposit(inpatient_record, deposit_amount, mode_of_payment):
     except Exception as e:
         frappe.msgprint(_(f"Error: <b>{e}</b>"))
         return False
->>>>>>> ce73db78 (feat: allow making deposit/creating payment entry from Ipatient Record and from IPD Billing Report)
+ 
