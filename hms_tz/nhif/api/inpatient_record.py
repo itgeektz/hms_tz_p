@@ -5,12 +5,13 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import nowdate, nowtime
+from frappe.utils import nowdate, nowtime, get_url_to_form
 from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_item_price
 from hms_tz.nhif.api.patient_appointment import get_mop_amount
 from hms_tz.nhif.api.patient_encounter import create_healthcare_docs_from_name
 from hms_tz.nhif.api.patient_appointment import get_discount_percent
-
+from erpnext.accounts.party import get_party_account
+from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 import json
 
 
@@ -227,3 +228,48 @@ def set_beds_price(self):
 
 def after_insert(doc, method):
     create_healthcare_docs_from_name(doc.admission_encounter)
+<<<<<<< HEAD
+=======
+
+@frappe.whitelist()
+def make_deposit(inpatient_record, deposit_amount, mode_of_payment):
+    if float(deposit_amount) <= 0:
+        frappe.throw(_("<b>Deposit amount cannot be less than or equal to zero</b>"))
+
+    if not mode_of_payment:
+        frappe.throw(_("The mode of payment is required"))
+    
+    inpatient_record_doc = frappe.get_doc("Inpatient Record", inpatient_record)
+    if inpatient_record_doc.insurance_subscription:
+        frappe.throw(_("You cannot make deposit for insurance patient"))
+    
+    customer = frappe.get_cached_value("Patient", inpatient_record_doc.patient, "customer")
+
+    try:
+        payment = frappe.new_doc("Payment Entry")
+        payment.posting_date = nowdate()
+        payment.payment_type = "Receive"
+        payment.party_type = "Customer"
+        payment.party = customer
+        payment.company = inpatient_record_doc.company
+        payment.mode_of_payment = str(mode_of_payment)
+        payment.paid_from = get_party_account("Customer", customer, inpatient_record_doc.company)
+        payment.paid_to = get_bank_cash_account(mode_of_payment, inpatient_record_doc.company)["account"]
+        payment.paid_amount = float(deposit_amount)
+        payment.received_amount = float(deposit_amount)
+        payment.source_exchange_rate = 1
+        payment.target_exchange_rate = 1
+        payment.setup_party_account_field()
+        payment.set_missing_values()
+        payment.save()
+        payment.reload()
+        payment.submit()
+        url = get_url_to_form(payment.doctype, payment.name)
+        frappe.msgprint("Payment Entry: <a href='{0}'>{1}</a> for Deposit is created successful".format(
+            url, frappe.bold(payment.name)
+        ))
+        return payment.name
+    except Exception as e:
+        frappe.msgprint(_(f"Error: <b>{e}</b>"))
+        return False
+>>>>>>> ce73db78 (feat: allow making deposit/creating payment entry from Ipatient Record and from IPD Billing Report)
