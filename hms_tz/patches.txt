@@ -13,7 +13,4 @@ hms_tz.patches.custom_fields.reuse_lrpmt_items_custom_fields_on_encounter
 hms_tz.patches.custom_fields.custom_fields_for_lrpmt_template
 hms_tz.patches.custom_fields.reuse_previous_diagnosis_custom_fields_on_encounter
 hms_tz.patches.custom_fields.custom_fields_of_approval_number_for_lrpm_docs
-<<<<<<< HEAD
-=======
 hms_tz.patches.custom_fields.create_department_custom_field_on_patient_referral
->>>>>>> cc8a43a8 (feat: allow practitioner to refer patients per department wise)
