@@ -5,45 +5,6 @@ from erpnext.accounts.utils import get_balance_on
 
 
 class LimitChangeRequest(Document):
-<<<<<<< HEAD
-    def validate(self):
-        set_missing_values(self)
-
-    def on_submit(self):
-        if self.inpatient_record:
-            frappe.db.set_value(
-                "Inpatient Record", self.inpatient_record, "cash_limit", self.cash_limit
-            )
-
-            inpatient_record_doc = frappe.get_doc(
-                "Inpatient Record", self.inpatient_record
-            )
-
-            if inpatient_record_doc.cash_limit == self.cash_limit:
-                frappe.msgprint(
-                    "Inpatient Record: {0} of Patient {1} - {2} has been updated with new cash limit: {3}".format(
-                        frappe.bold(self.inpatient_record),
-                        frappe.bold(self.patient),
-                        frappe.bold(self.patient_name),
-                        frappe.bold(self.cash_limit),
-                    )
-                )
-
-    def on_cancel(self):
-        old_cash_limit = frappe.get_value(
-            "Patient", {"name": self.patient}, "cash_limit"
-        )
-        frappe.db.set_value(
-            "Inpatient Record", self.inpatient_record, "cash_limit", old_cash_limit
-        )
-
-
-def set_missing_values(self):
-    conditions = {}
-    if self.patient:
-        conditions["patient"] = self.patient
-        conditions["docstatus"] = 1
-=======
 	def before_insert(self):
 		self.set_missing_values()
 	
@@ -151,19 +112,3 @@ def set_missing_values(self):
 		self.posting_date = nowdate()
 		self.posting_time = nowtime()
 		self.requested_by = frappe.utils.get_fullname(frappe.session.user)
-
->>>>>>> 142e43da (feat: allow limit change request to work for cash IPD and Non-NHIF insurance's patients (OPD and IPD))
-
-    if self.company:
-        conditions["company"] = self.company
-
-    encounters = frappe.get_all(
-        "Patient Encounter",
-        filters=conditions,
-        fields=["name", "encounter_date", "appointment", "inpatient_record"],
-        order_by="encounter_date desc",
-        page_length=1,
-    )
-    if encounters:
-        self.appointment_no = encounters[0]["appointment"]
-        self.inpatient_record = encounters[0]["inpatient_record"]
