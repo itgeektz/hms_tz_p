@@ -342,7 +342,7 @@ def on_submit_validation(doc, method):
         doc.patient_age = calculate_patient_age(doc.patient)
 
     # Run on_submit
-    validate_totals(doc)
+    validate_totals(doc, method)
 
 
 def checkـforـduplicate(doc, method):
@@ -849,7 +849,7 @@ def get_chronic_medications(patient):
     return data
 
 
-def validate_totals(doc):
+def validate_totals(doc, method):
     if (
         not doc.insurance_company
         or not doc.insurance_subscription
@@ -916,12 +916,13 @@ def validate_totals(doc):
             doc.current_total += item_rate * quantity
     diff = doc.daily_limit - doc.current_total - doc.previous_total
     if diff < 0:
-        frappe.throw(
+        msgThrow(
             _(
-                "The total daily limit of {0} for the Insurance Subscription {1} has"
-                " been exceeded by {2}. <br> Please contact the reception to increase"
-                " the limit or prescribe the items"
-            ).format(doc.daily_limit, doc.insurance_subscription, diff)
+                f"The total daily limit of <b>{doc.daily_limit}</b> for the Insurance Subscription <b>{doc.insurance_subscription}</b> has \
+                been exceeded by <b>{diff}</b>. <br> Please contact the reception to increase \
+                limit or prescribe the items"
+            ),
+            method=method,
         )
 
 
