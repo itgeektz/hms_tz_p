@@ -1036,13 +1036,17 @@ def update_inpatient_record_consultancy(doc):
         row.consultation_item = item_code
         row.rate = rate
         row.encounter = doc.name
+<<<<<<< HEAD
 
+=======
+        row.healthcare_practitioner = doc.practitioner
+>>>>>>> ab1c2381 (feat: show practitioner name on inpatient consultancy, Aim is to show which practitiner attended the patient)
         if discount_percent > 0:
             row.hms_tz_is_discount_applied = 1
 
         record_doc.save(ignore_permissions=True)
         frappe.msgprint(
-            _("Inpatient Consultancy record added for item {0}").format(item_code),
+            _(f"Inpatient Consultancy record added for item {item_code}"),
             alert=True,
         )
 
