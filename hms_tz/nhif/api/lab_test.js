@@ -22,6 +22,14 @@ frappe.ui.form.on('Lab Test', {
             };
         });
     },
+    onload: (frm) => {
+        if (frm.doc.patient) {
+            frm.add_custom_button(__('Patient History'), function () {
+                frappe.route_options = { 'patient': frm.doc.patient };
+                frappe.set_route('tz-patient-history');
+            });
+        }
+    },
     approval_number: (frm) => {
         frm.fields_dict.approval_number.$input.focusout(() => {
             if (frm.doc.approval_number != "" && frm.doc.approval_number != undefined) {
