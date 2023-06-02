@@ -3,96 +3,6 @@ from frappe import _, get_cached_value
 from frappe.utils import flt, nowdate, getdate
 from erpnext.accounts.utils import get_balance_on
 
-<<<<<<< HEAD
-
-def execute(filters=None):
-    args = frappe._dict(filters or {})
-
-    columns = get_columns()
-    data, dashboard = get_data(args)
-
-    return columns, data, None, None, dashboard
-
-
-def get_columns():
-    columns = [
-        {"fieldname": "date", "fieldtype": "date", "label": _("Date"), "width": 120},
-        {
-            "fieldname": "service_unit",
-            "fieldtype": "Data",
-            "label": _("Service Unit"),
-            "width": 120,
-        },
-        {
-            "fieldname": "total_bed_charges",
-            "fieldtype": "Currency",
-            "label": _("Bed Charges"),
-            "width": 120,
-        },
-        {
-            "fieldname": "total_cons_charges",
-            "fieldtype": "Currency",
-            "label": _("Consultation Charges"),
-            "width": 120,
-        },
-        {
-            "fieldname": "total_lab_amount",
-            "fieldtype": "Currency",
-            "label": _("Lab Amount"),
-            "width": 120,
-        },
-        {
-            "fieldname": "total_radiology_amount",
-            "fieldtype": "Currency",
-            "label": _("Radiology Amount"),
-            "width": 120,
-        },
-        {
-            "fieldname": "total_procedure_amount",
-            "fieldtype": "Currency",
-            "label": _("Procedure Amount"),
-            "width": 120,
-        },
-        {
-            "fieldname": "total_drug_amount",
-            "fieldtype": "Currency",
-            "label": _("Medication Amount"),
-            "width": 120,
-        },
-        {
-            "fieldname": "total_therapy_amount",
-            "fieldtype": "Currency",
-            "label": _("Therapies Amount"),
-            "width": 120,
-        },
-        {
-            "fieldname": "grand_total",
-            "fieldtype": "Currency",
-            "label": _("Amount Used Per Day"),
-            "width": 120,
-        },
-    ]
-
-    return columns
-
-
-def get_data(args):
-    service_list = []
-    date_list = []
-    single_transaction_per_day = []
-    mult_transaction_per_day = []
-    transactions = get_transaction_data(args)
-    for record in transactions:
-        total_amount = (
-            flt(record["bed_charges"])
-            + flt(record["cons_charges"])
-            + flt(record["lab_amount"])
-            + flt(record["radiology_amount"])
-            + flt(record["procedure_amount"])
-            + flt(record["drug_amount"])
-            + flt(record["therapy_amount"])
-        )
-=======
 def execute(filters=None):
 	args = frappe._dict(filters or {})
 	if filters.get('summarized_view') == 1:
@@ -163,7 +73,6 @@ def get_summarized_data(args):
 		
 		for mult_transaction in mult_transaction_per_day:
 			mult_transaction_date = mult_transaction['date'].strftime('%Y-%m-%d')
->>>>>>> 1d8479c1 (feat: functionality to display item-wise and total-wise reports in the IPD report)
 
         date_d = record["date"].strftime("%Y-%m-%d")
         if date_d not in date_list:
@@ -396,7 +305,6 @@ def get_last_row(args, data):
     sorted_data = sorted(data, key=lambda x: x["date"])
     report_summary = get_report_summary(args, sorted_data)
 
-<<<<<<< HEAD
     for n in range(0, len(sorted_data)):
         total_beds += sorted_data[n]["total_bed_charges"]
         total_cons += sorted_data[n]["total_cons_charges"]
@@ -422,23 +330,6 @@ def get_last_row(args, data):
         }
     )
     return sorted_data, report_summary
-=======
-	for n in range(0, len(sorted_data)):
-		total_beds += sorted_data[n]['total_bed_charges']
-		total_cons += sorted_data[n]['total_cons_charges']
-		total_labs += sorted_data[n]['total_lab_amount']
-		total_radiology += sorted_data[n]['total_radiology_amount']
-		total_procedure += sorted_data[n]['total_procedure_amount']
-		total_drug += sorted_data[n]['total_drug_amount']
-		total_therapy += sorted_data[n]['total_therapy_amount']
-		total_grand += sorted_data[n]['grand_total']
-	
-	sorted_data.append({
-		'date': 'Total', 'service_unit': '', 'total_bed_charges': total_beds, 'total_cons_charges': total_cons,
-		'total_lab_amount': total_labs, 'total_radiology_amount': total_radiology, 'total_procedure_amount': total_procedure,
-		'total_drug_amount': total_drug, 'total_therapy_amount': total_therapy, 'grand_total': total_grand
-	})
-	return sorted_data, report_summary
 
 # itemized data report
 def get_data(filters):
@@ -1110,4 +1001,3 @@ def get_report_summary_2(filters, total_amount):
 			"currency": currency
 		}
 	]		
->>>>>>> 1d8479c1 (feat: functionality to display item-wise and total-wise reports in the IPD report)
