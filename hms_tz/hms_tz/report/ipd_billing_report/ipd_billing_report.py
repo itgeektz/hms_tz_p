@@ -462,8 +462,8 @@ def get_data(filters):
 			cash_lrpmt_data = get_cash_lrpmt_transaction(filters)
 			if cash_lrpmt_data: data += cash_lrpmt_data
 
-			insurance_lrpmt_data = get_insurance_lrpmt_transaction(filters)
-			if insurance_lrpmt_data: data += insurance_lrpmt_data
+# 			insurance_lrpmt_data = get_insurance_lrpmt_transaction(filters)
+# 			if insurance_lrpmt_data: data += insurance_lrpmt_data
 			
 			ipd_beds = get_ipd_occupancy_transactions(filters)
 			if ipd_beds: data += ipd_beds
@@ -509,8 +509,8 @@ def get_data(filters):
 			cash_lrpmt_data = get_cash_lrpmt_transaction(filters)
 			if cash_lrpmt_data: data += cash_lrpmt_data
 
-			insurance_lrpmt_data = get_insurance_lrpmt_transaction(filters)
-			if insurance_lrpmt_data: data += insurance_lrpmt_data
+# 			insurance_lrpmt_data = get_insurance_lrpmt_transaction(filters)
+# 			if insurance_lrpmt_data: data += insurance_lrpmt_data
 
 			data = sorted(data, key=lambda d: d['date'])
 
@@ -547,8 +547,8 @@ def get_data(filters):
 			cash_lrpmt_data = get_cash_lrpmt_transaction(filters)
 			if cash_lrpmt_data: data += cash_lrpmt_data
 
-			insurance_lrpmt_data = get_insurance_lrpmt_transaction(filters)
-			if insurance_lrpmt_data: data += insurance_lrpmt_data
+# 			insurance_lrpmt_data = get_insurance_lrpmt_transaction(filters)
+# 			if insurance_lrpmt_data: data += insurance_lrpmt_data
 			
 			ipd_beds = get_ipd_occupancy_transactions(filters)
 			if ipd_beds: data += ipd_beds
