@@ -769,6 +769,31 @@ frappe.ui.form.on('Drug Prescription', {
     },
     prescribe: function (frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
+        frappe.db.get_value("Company", frm.doc.company,
+            ["auto_set_pharmacy_on_patient_encounter", "opd_cash_pharmacy",
+                "opd_insurance_pharmacy", "ipd_cash_pharmacy", "ipd_insurance_pharmacy"]
+        )
+            .then(r => {
+                let values = r.message;
+                if (row.prescribe && frm.doc.insurance_subscription) {
+                    if (values.auto_set_pharmacy_on_patient_encounter == 1) {
+                        if (frm.doc.inpatient_record) {
+                            frappe.model.set_value(cdt, cdn, "healthcare_service_unit", values.ipd_cash_pharmacy);
+                        } else {
+                            frappe.model.set_value(cdt, cdn, "healthcare_service_unit", values.opd_cash_pharmacy);
+                        }
+                    }
+                } else if (!row.prescribe && frm.doc.insurance_subscription) {
+                    if (values.auto_set_pharmacy_on_patient_encounter == 1) {
+                        if (frm.doc.inpatient_record) {
+                            frappe.model.set_value(cdt, cdn, "healthcare_service_unit", values.ipd_insurance_pharmacy);
+                        } else {
+                            frappe.model.set_value(cdt, cdn, "healthcare_service_unit", values.opd_insurance_pharmacy);
+                        }
+                    }
+                }
+                frm.refresh_field("drug_prescription");
+            });
         if (row.prescribe || !row.drug_code) {
             frappe.model.set_value(cdt, cdn, "override_subscription", 0);
         }
