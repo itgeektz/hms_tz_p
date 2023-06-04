@@ -217,18 +217,14 @@ def on_submit_validation(doc, method):
                             alert=True,
                         )
             if not row.is_not_available_inhouse:
-                old_method = method
-                if doc.insurance_subscription and not row.prescribe:
-                    method = "validate"
                 validate_stock_item(
                     row.get(value),
                     quantity,
                     doc.company,
+                    row.get("prescribe"),
                     healthcare_service_unit=row.get("healthcare_service_unit"),
                     method=method,
                 )
-                if doc.insurance_subscription:
-                    method = old_method
 
     if prescribed_list:
         msgPrint(
@@ -466,13 +462,33 @@ def validate_stock_item(
     healthcare_service,
     qty,
     company,
+    prescribe,
     warehouse=None,
     healthcare_service_unit=None,
     caller="Unknown",
-    method="throw",
+    method=None,
 ):
-    # frappe.msgprint(_("{0} warehouse passed. <br> {1} healthcare service unit passed").format(warehouse, healthcare_service_unit), alert=True)
-    # frappe.msgprint(_("{0} healthcare_service. <br>").format(healthcare_service), alert=True)
+    setting_doc = frappe.get_cached_doc("Healthcare Settings")
+    if caller == "Drug Prescription":
+        method = "validate"
+
+    elif prescribe == 0:
+        if setting_doc.only_alert_if_less_stock_of_drug_item_for_insurance_in_pe == 1:
+            method = "validate"
+        elif setting_doc.stop_encounter_if_less_stock_of_drug_item_for_insurance_in_pe == 1:
+            method = method
+        else:
+            frappe.throw("<b>Please set the stock validation method (either only alert or stop when less stock) in Healthcare Settings for Insurance Patients</b>")
+    
+    elif prescribe == 1:
+        if setting_doc.only_alert_if_less_stock_of_drug_item_for_cash_in_pe == 1:
+            method = "validate"
+        elif setting_doc.stop_encounter_if_less_stock_of_drug_item_for_cash_in_pe == 1:
+            method = method
+        else:
+            frappe.throw("<b>Please set the stock validation method (either only alert or stop when less stock) in Healthcare Settings for Cash Patients</b>")
+    
+
     if caller != "Drug Prescription" and not healthcare_service_unit:
         return
 
@@ -500,13 +516,8 @@ def validate_stock_item(
             # This is to avoid socketio diconnection when bench is restarted but user session is on.
             msgThrow(
                 _(
-                    "Available quantity for item: <h4 style='background-color:"
-                    " LightCoral'>{0} is {3}</h4>In {1}/{2}."
-                ).format(
-                    item_info.get("item_code"),
-                    warehouse,
-                    healthcare_service_unit,
-                    stock_qty,
+                    f"Available quantity for item: <h4 style='background-color:\
+                    LightCoral'>{item_info.get('item_code')} is {stock_qty}</h4>In {warehouse}/{healthcare_service_unit}."
                 ),
                 method,
             )
