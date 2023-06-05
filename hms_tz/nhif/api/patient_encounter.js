@@ -24,6 +24,7 @@ frappe.ui.form.on('Patient Encounter', {
                 });
             });
         };
+        set_empty_row_on_all_child_tables(frm);
 
     },
     refresh: function (frm) {
@@ -355,7 +356,7 @@ frappe.ui.form.on('Patient Encounter', {
                     name: doc.lab_bundle,
                     doctype: "Lab Bundle"
                 },
-                callback (r) {
+                callback(r) {
                     console.log(r);
                     if (r.message) {
                         for (var row in r.message.lab_bundle_item) {
@@ -442,7 +443,7 @@ frappe.ui.form.on('Patient Encounter', {
 
 });
 
-function show_cost_estimate_model (frm, cost_estimate) {
+function show_cost_estimate_model(frm, cost_estimate) {
     // create a dialog
     const dialog = new frappe.ui.Dialog({
         title: __('Cost Estimate'),
@@ -500,7 +501,7 @@ frappe.ui.form.on('Codification Table', {
     medical_code: set_medical_code,
 });
 
-function get_diagnosis_list (frm, table_name) {
+function get_diagnosis_list(frm, table_name) {
     const diagnosis_list = [];
     if (frm.doc[table_name]) {
         frm.doc[table_name].forEach(element => {
@@ -525,8 +526,8 @@ const medical_code_mapping = {
     ]
 };
 
-function set_medical_code (frm, reset_columns) {
-    function set_options_for_fields (fields, from_table) {
+function set_medical_code(frm, reset_columns) {
+    function set_options_for_fields(fields, from_table) {
         const options = get_diagnosis_list(frm, from_table);
 
         for (const fieldname of fields) {
@@ -561,7 +562,14 @@ function set_medical_code (frm, reset_columns) {
     }
 };
 
-function validate_medical_code (frm) {
+function validate_medical_code(frm) {
+    let values_mapping = {
+        "lab_test_prescription": "lab_test_code",
+        "radiology_procedure_prescription": "radiology_examination_template",
+        "procedure_prescription": "procedure",
+        "drug_prescription": "drug_code",
+        "therapies": "therapy_type",
+    };
     for (const [from_table, fields] of Object.entries(medical_code_mapping)) {
         const options = get_diagnosis_list(frm, from_table);
 
@@ -569,7 +577,7 @@ function validate_medical_code (frm) {
             if (!frm.doc[fieldname]) continue;
 
             frm.doc[fieldname].forEach(element => {
-                if (!options.includes(element.medical_code)) {
+                if (element[values_mapping[fieldname]] && !options.includes(element.medical_code)) {
                     frappe.throw(__(`The Medical Code in the
                     ${frm.fields_dict[fieldname].df.label} table
                     at line ${element.idx} is empty or does not exist in the
@@ -1116,8 +1124,7 @@ var show_details = (data, caller = "") => {
     return html;
 };
 
-
-function set_delete_button_in_child_table (frm, child_table_fields) {
+function set_delete_button_in_child_table(frm, child_table_fields) {
     if (frm.doc.docstatus != 0) {
         return;
     }
@@ -1137,4 +1144,13 @@ function set_delete_button_in_child_table (frm, child_table_fields) {
         }
     }
     );
+}
+
+var set_empty_row_on_all_child_tables = (frm) => {
+    let table_fieldnames = ["system_and_symptoms", "patient_encounter_preliminary_diagnosis", "lab_test_prescription", "radiology_procedure_prescription",
+        "patient_encounter_final_diagnosis", "procedure_prescription", "therapies", "diet_recommendation"];
+
+    table_fieldnames.forEach((fieldname) => {
+        frm.fields_dict[fieldname].grid.add_new_row()
+    });
 }
