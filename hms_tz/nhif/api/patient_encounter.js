@@ -8,6 +8,7 @@ frappe.ui.form.on('Patient Encounter', {
         validate_medical_code(frm);
     },
     onload: function (frm) {
+        control_practitioners_to_submit_others_encounters(frm);
         add_btn_final(frm);
         // duplicate(frm);
         set_btn_properties(frm);
@@ -28,6 +29,7 @@ frappe.ui.form.on('Patient Encounter', {
 
     },
     refresh: function (frm) {
+        control_practitioners_to_submit_others_encounters(frm);
         frm.fields_dict['drug_prescription'].grid.get_field('healthcare_service_unit').get_query = function (doc, cdt, cdn) {
             return {
                 filters:
@@ -105,6 +107,7 @@ frappe.ui.form.on('Patient Encounter', {
 
         set_btn_properties(frm);
         // set_delete_button_in_child_table(frm);
+        
     },
 
     clear_history: function (frm) {
@@ -1210,3 +1213,29 @@ var set_empty_row_on_all_child_tables = (frm) => {
         frm.fields_dict[fieldname].grid.add_new_row()
     });
 }
+
+var control_practitioners_to_submit_others_encounters = (frm) => {
+    if (frm.doc.encounter_category != "Direct Cash" && !frm.doc.inpatient_record) {
+        frappe.db.get_single_value("Healthcare Settings", "allow_practitioner_to_take_other_encounters")
+            .then(value => {
+                if (value == 0) {
+                    frappe.db.get_value("Healthcare Practitioner", { user_id: frappe.session.user }, "name")
+                        .then(r => {
+                            let practitioner = r.message;
+
+                            if (practitioner.name && practitioner.name != frm.doc.practitioner) {
+                                frm.set_intro("");
+                                frm.disable_save();
+                                frm.set_read_only();
+                                frm.clear_custom_buttons();
+                                frm.toggle_display(["section_break_28", "sb_test_prescription", "radiology_procedures_section", "sb_procedures", "medication_action_sb", "sb_drug_prescription",
+                                    "rehabilitation_section", "diet_recommendation_section", "examination_detail"], false);
+                                frm.toggle_enable(["system_and_symptoms", "patient_encounter_preliminary_diagnosis", "lab_test_prescription", "radiology_procedure_prescription",
+                                    "patient_encounter_final_diagnosis", "procedure_prescription", "drug_prescription", "therapies", "diet_recommendation"], true);
+                                frm.set_intro(__("This is not your encounter so cannot be edited."), true);
+                            }
+                        });
+                }
+            });
+    }
+ };
