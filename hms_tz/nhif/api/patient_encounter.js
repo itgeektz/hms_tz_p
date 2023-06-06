@@ -1039,12 +1039,6 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
 
     d.show();
 
-<<<<<<< HEAD
-var show_details = (data, caller = "") => {
-    let html = `<table class="table table-hover" style="width:100%;">`;
-    if (caller == "Diagnosis") {
-        html += `
-=======
     function get_items(filters, wrapper, caller) {
         frappe.dom.freeze(__("Please wait..."));
         frappe.call({
@@ -1077,7 +1071,6 @@ var show_details = (data, caller = "") => {
         let html = `<table class="table table-hover" style="width:100%;">`;
         if (caller == "Diagnosis") {
             html += `
->>>>>>> d1353a06 (feat: set default number of visit to be 5 for reuse of previous items and previous diagnosis)
             <colgroup>
                 <col width="5%">
                 <col width=17%">
@@ -1132,11 +1125,6 @@ var show_details = (data, caller = "") => {
         html += `</table>`;
         return html;
     }
-<<<<<<< HEAD
-    html += `</table>`;
-    return html;
-=======
->>>>>>> d1353a06 (feat: set default number of visit to be 5 for reuse of previous items and previous diagnosis)
 };
 
 
