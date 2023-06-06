@@ -719,17 +719,14 @@ def create_delivery_note_per_encounter(patient_encounter_doc, method):
 
             item.reference_doctype = row.doctype
             item.reference_name = row.name
-            item.description = (
-                row.drug_name
-                + " for "
-                + (row.dosage or "No Prescription Dosage")
-                + " for "
-                + (row.period or "No Prescription Period")
-                + " with "
-                + row.medical_code
-                + " and doctor notes: "
-                + (row.comment or "Take medication as per dosage.")
-            )
+            item.description = ", \n".join([
+                "frequency: " + str(row.get("dosage") or "No Prescription Dosage"),
+                "period: " + str(row.get("period") or "No Prescription Period"),
+                "dosage_form: " + str(row.get("dosage_form") or ""),
+                "interval: " + str(row.get("interval") or ""),
+                "interval_uom: " + str(row.get("interval_uom") or ""),
+                "Doctor's comment: " + (row.get("comment") or "Take medication as per dosage."),
+            ])
             items.append(item)
             row.drug_prescription_created = 1
             row.db_update()
