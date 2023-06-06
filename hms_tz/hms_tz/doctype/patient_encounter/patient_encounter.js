@@ -50,12 +50,11 @@ frappe.ui.form.on('Patient Encounter', {
 			frm.add_custom_button(__('Patient History'), function() {
 				if (frm.doc.patient) {
 					frappe.route_options = {'patient': frm.doc.patient};
-					console.log("Encounter route_options ==> " + frappe.route_options.patient)
 					frappe.set_route('tz-patient-history');
 				} else {
 					frappe.msgprint(__('Please select Patient'));
 				}
-			},'View');
+			});
 
 			frm.add_custom_button(__('Vital Signs'), function() {
 				create_vital_signs(frm);
