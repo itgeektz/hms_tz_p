@@ -51,6 +51,36 @@ def on_trash(doc, method):
             "Patient Medical Record", pmr_doc.name, ignore_permissions=True
         )
 
+# regency rock: 95
+def before_insert(doc, method):
+    if doc.company:
+        pharmacy_details = frappe.get_value("Company", doc.company,
+            ["auto_set_pharmacy_on_patient_encounter", "opd_cash_pharmacy", 
+             "opd_insurance_pharmacy", "ipd_cash_pharmacy", "ipd_insurance_pharmacy"],
+            as_dict=1
+        )
+        if pharmacy_details.auto_set_pharmacy_on_patient_encounter == 0:
+            return
+        
+        if doc.mode_of_payment:
+            if doc.inpatient_record:
+                if not pharmacy_details.ipd_cash_pharmacy:
+                    frappe.throw(_("<b>Please set IPD Cash Pharmacy in Company to allow auto set of pharmacy</b>"))
+                doc.default_healthcare_service_unit = pharmacy_details.ipd_cash_pharmacy
+            else:
+                if not pharmacy_details.opd_cash_pharmacy:
+                    frappe.throw(_("<b>Please set OPD Cash Pharmacy in Company to allow auto set of pharmacy</b>"))
+                doc.default_healthcare_service_unit = pharmacy_details.opd_cash_pharmacy
+            
+        elif doc.insurance_subscription:
+            if doc.inpatient_record:
+                if not pharmacy_details.ipd_insurance_pharmacy:
+                    frappe.throw(_("<b>Please set IPD Insurance Pharmacy in Company to allow auto set of pharmacy</b>"))
+                doc.default_healthcare_service_unit = pharmacy_details.ipd_insurance_pharmacy
+            else:
+                if not pharmacy_details.opd_insurance_pharmacy:
+                    frappe.throw(_("<b>Please set OPD Insurance Pharmacy in Company to allow auto set of pharmacy</b>"))
+                doc.default_healthcare_service_unit = pharmacy_details.opd_insurance_pharmacy
 
 def on_submit_validation(doc, method):
     child_tables = {
