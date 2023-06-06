@@ -1726,21 +1726,32 @@ def get_previous_diagnosis_and_lrpmt_items_to_reuse(kwargs, caller):
         diagnosis = frappe.get_all(
             kwargs.doctype,
             fields=kwargs.get("fields"),
+<<<<<<< HEAD
             filters={
                 "parent": ["in", encounters],
                 "parentfield": "patient_encounter_final_diagnosis",
             },
+=======
+            filters={"parent": ["in", encounters], "parentfield":"patient_encounter_final_diagnosis"},
+            order_by="creation desc"
+
+>>>>>>> d1353a06 (feat: set default number of visit to be 5 for reuse of previous items and previous diagnosis)
         )
         data = list({v["item"]: v for v in diagnosis}.values())
     else:
         items = frappe.get_all(
             kwargs.doctype,
             fields=kwargs.get("fields"),
+<<<<<<< HEAD
             filters={
                 "parent": ["in", encounters],
                 "is_cancelled": 0,
                 "is_not_available_inhouse": 0,
             },
+=======
+            filters={"parent": ["in", encounters], "is_cancelled": 0, "is_not_available_inhouse": 0},
+            order_by="creation desc"
+>>>>>>> d1353a06 (feat: set default number of visit to be 5 for reuse of previous items and previous diagnosis)
         )
         unique_items = []
         for item in items:

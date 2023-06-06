@@ -925,6 +925,7 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
                 fieldname: "number_of_visit",
                 fieldtype: "Int",
                 label: "Number of Visit",
+                default: 5,
                 reqd: 1,
             },
             {
@@ -959,6 +960,11 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
     d.set_value("item_category", item_category);
     let wrapper = d.fields_dict.space.$wrapper;
 
+    filters.number_of_visit = d.get_value("number_of_visit");
+    if (filters.number_of_visit) {
+        get_items(filters, wrapper, caller);
+    }
+
     d.fields_dict.apply_filters.$input.click(() => {
         if (!d.get_value("number_of_visit")) {
             frappe.msgprint("<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
@@ -968,33 +974,10 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
 
         filters.number_of_visit = d.get_value("number_of_visit");
         filters.include_ipd_encounters = d.get_value("include_ipd_encounters");
-        frappe.dom.freeze(__("Please wait..."));
-        frappe.call({
-            method: "hms_tz.nhif.api.patient_encounter.get_previous_diagnosis_and_lrpmt_items_to_reuse",
-            args: {
-                kwargs: filters,
-                caller: caller
-            }
-        }).then(r => {
-            frappe.dom.unfreeze();
-            let records = r.message;
-            if (records.length > 0) {
-                let html = show_details(records, caller);
-                wrapper.html(html);
-            } else {
-                wrapper.append(`<div class="multiselect-empty-state"
-                    style="border: 1px solid #d1d8dd; border-radius: 3px; height: 200px; overflow: auto;">
-                    <span class="text-center" style="margin-top: -40px;">
-                        <i class="fa fa-2x fa-heartbeat text-extra-muted"></i>
-                        <p class="text-extra-muted text-center" style="font-size: 16px; font-weight: bold;">
-                        No Item(s) reuse</p>
-                    </span>
-                </div>`);
-            }
-        });
+        get_items(filters, wrapper, caller);
     });
 
-    d.set_primary_action(__("Reuse Item"), function () {
+    d.set_primary_action(__("Reuse Item"), () => {
         let items = [];
 
         wrapper.find('tr:has(input:checked)').each(function () {
@@ -1055,12 +1038,46 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
     });
 
     d.show();
-};
 
+<<<<<<< HEAD
 var show_details = (data, caller = "") => {
     let html = `<table class="table table-hover" style="width:100%;">`;
     if (caller == "Diagnosis") {
         html += `
+=======
+    function get_items(filters, wrapper, caller) {
+        frappe.dom.freeze(__("Please wait..."));
+        frappe.call({
+            method: "hms_tz.nhif.api.patient_encounter.get_previous_diagnosis_and_lrpmt_items_to_reuse",
+            args: {
+                kwargs: filters,
+                caller: caller
+            }
+        }).then(r => {
+            frappe.dom.unfreeze();
+            let records = r.message;
+            if (records.length > 0) {
+                let html = show_details(records, caller);
+                wrapper.html(html);
+            } else {
+                wrapper.html("");
+                wrapper.append(`<div class="multiselect-empty-state"
+                    style="border: 1px solid #d1d8dd; border-radius: 3px; height: 200px; overflow: auto;">
+                    <span class="text-center" style="margin-top: -40px;">
+                        <i class="fa fa-2x fa-heartbeat text-extra-muted"></i>
+                        <p class="text-extra-muted text-center" style="font-size: 16px; font-weight: bold;">
+                        No Item(s) reuse</p>
+                    </span>
+                </div>`);
+            }
+        });
+    }
+
+    function show_details(data, caller = ""){
+        let html = `<table class="table table-hover" style="width:100%;">`;
+        if (caller == "Diagnosis") {
+            html += `
+>>>>>>> d1353a06 (feat: set default number of visit to be 5 for reuse of previous items and previous diagnosis)
             <colgroup>
                 <col width="5%">
                 <col width=17%">
@@ -1078,8 +1095,8 @@ var show_details = (data, caller = "") => {
                 <th>Date of Service</th>
             </tr>`;
 
-        data.forEach(row => {
-            html += `<tr>
+            data.forEach(row => {
+                html += `<tr>
                         <td><input type="checkbox"/></td>
                         <td id="item" data-item="${row.item}">${row.item}</td>
                         <td id="item_name" data-item_name="${row.item_name}">${row.item_name}</td>
@@ -1087,9 +1104,9 @@ var show_details = (data, caller = "") => {
                         <td id="mtuha" data-mtuha="${row.mtuha}">${row.mtuha}</td>
                         <td id="date" data-date="${frappe.datetime.get_datetime_as_string(row.date)}">${frappe.datetime.get_datetime_as_string(row.date)}</td>
                     </tr>`;
-        });
-    } else {
-        html += `
+            });
+        } else {
+            html += `
             <colgroup>
                 <col width="5%">
                 <col width=30%">
@@ -1103,17 +1120,23 @@ var show_details = (data, caller = "") => {
                 <th>Date of Service</th>
             </tr>`;
 
-        data.forEach(row => {
-            html += `<tr>
+            data.forEach(row => {
+                html += `<tr>
                         <td><input type="checkbox"/></td>
                         <td id="item" data-item="${row.item}">${row.item}</td>
                         <td id="item_name" data-item_name="${row.item_name}">${row.item_name}</td>
                         <td id="date" data-date="${frappe.datetime.get_datetime_as_string(row.date)}">${frappe.datetime.get_datetime_as_string(row.date)}</td>
                     </tr>`;
-        });
+            });
+        }
+        html += `</table>`;
+        return html;
     }
+<<<<<<< HEAD
     html += `</table>`;
     return html;
+=======
+>>>>>>> d1353a06 (feat: set default number of visit to be 5 for reuse of previous items and previous diagnosis)
 };
 
 
