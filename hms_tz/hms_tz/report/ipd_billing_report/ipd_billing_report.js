@@ -37,7 +37,31 @@ frappe.query_reports["IPD Billing Report"] = {
 			"label": __("Company"),
 			"options": "Company",
 			"reqd": 1
-		}
+		},
+		{
+			fieldname: 'patient_type',
+			label: __('Patient Type'),
+			fieldtype: 'Select',
+			options: ["", 'Out-Patient', 'In-Patient'],
+			reqd: 0,
+		},
+		{
+			fieldname: "from_date",
+			label: __("From Date"),
+			fieldtype: "Date",
+			reqd: 0,
+		},
+		{
+			fieldname: "to_date",
+			label: __("To Date"),
+			fieldtype: "Date",
+			reqd: 0,
+		},
+		{
+			"fieldname": "summarized_view", 
+			"fieldtype": "Check", 
+			"label": __("Summarized View")
+		},
 	],
 	'formatter': (value, row, column, data, default_formatter) => {
 		value = default_formatter(value, row, column, data);
