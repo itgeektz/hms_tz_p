@@ -7,6 +7,12 @@ frappe.ui.form.on('Clinical Procedure', {
     onload: function(frm) {
         frm.remove_custom_button('Start');
         frm.remove_custom_button('Complete');
+        if (frm.doc.patient) {
+            frm.add_custom_button(__('Patient History'), function () {
+                frappe.route_options = { 'patient': frm.doc.patient };
+                frappe.set_route('tz-patient-history');
+            });
+        }
     },
     
     approval_number: (frm) => {

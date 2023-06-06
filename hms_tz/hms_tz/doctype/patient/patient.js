@@ -28,8 +28,8 @@ frappe.ui.form.on('Patient', {
 		if (frm.doc.patient_name && frappe.user.has_role('Healthcare Practitioner')) {
 			frm.add_custom_button(__('Patient History'), function() {
 				frappe.route_options = {'patient': frm.doc.name};
-				frappe.set_route('patient_history');
-			},'View');
+				frappe.set_route('tz-patient-history');
+			});
 		}
 		if(!frm.doc.__islocal && frm.doc.inpatient_record){
 			frm.add_custom_button(__("IP Record"), function(){

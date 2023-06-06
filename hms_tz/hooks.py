@@ -52,6 +52,7 @@ doctype_js = {
     "Medical Department": "nhif/api/medical_department.js",
     "Delivery Note": "nhif/api/delivery_note.js",
     "Radiology Examination": "nhif/api/radiology_examination.js",
+    "Company": "nhif/api/company.js",
 }
 # csf_tz.nhif.api.patient_appointment
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
@@ -141,6 +142,7 @@ doc_events = {
         "validate": "hms_tz.nhif.api.patient_encounter.on_submit_validation",
         "on_trash": "hms_tz.nhif.api.patient_encounter.on_trash",
         "on_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
+        "before_insert": "hms_tz.nhif.api.patient_encounter.before_insert",
     },
     "Healthcare Service Order": {
         "before_insert": "hms_tz.nhif.api.service_order.set_missing_values",

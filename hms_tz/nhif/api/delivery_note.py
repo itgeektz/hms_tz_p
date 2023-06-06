@@ -52,14 +52,19 @@ def update_dosage_details(item):
             return
         
         drug_doc = frappe.get_doc("Drug Prescription", reference_dn)
-        description = (
-            drug_doc.drug_name
-            + " for "  + (drug_doc.dosage or "No Prescription Dosage")
-            + " for "  + (drug_doc.period or "No Prescription Period")
-            + " with "  + drug_doc.medical_code
-            + " and doctor notes: " + (drug_doc.comment or "Take medication as per dosage.")
-        )
+
+        description = ", \n".join([
+            "frequency: " + str(drug_doc.get("dosage") or "No Prescription Dosage"),
+            "period: " + str(drug_doc.get("period") or "No Prescription Period"),
+            "dosage_form: " + str(drug_doc.get("dosage_form") or ""),
+            "interval: " + str(drug_doc.get("interval") or ""),
+            "interval_uom: " + str(drug_doc.get("interval_uom") or ""),
+            "Doctor's comment: " + (drug_doc.get("comment") or "Take medication as per dosage."),
+        ])
+
         item.description = description
+        item.reference_doctype = drug_doc.doctype
+        item.reference_name = drug_doc.name
 
 def onload(doc, method):
     for item in doc.items:
@@ -108,6 +113,26 @@ def check_for_medication_category(item):
         ), alert=True)
 
 def set_missing_values(doc):
+    if doc.form_sales_invoice:
+        if not doc.hms_tz_appointment_no or not doc.healthcare_practitioner:
+            si_reference_dn = frappe.get_value(
+                "Sales Invoice Item", doc.items[0].si_detail, "reference_dn"
+            )
+
+            if si_reference_dn:
+                parent_encounter = frappe.get_value(
+                    "Drug Prescription", si_reference_dn, "parent"
+                )
+                doc.reference_name = parent_encounter
+                doc.reference_doctype = "Patient Encounter"
+                (
+                    doc.hms_tz_appointment_no,
+                    doc.healthcare_practitioner,
+                ) = frappe.get_value(
+                    "Patient Encounter",
+                    parent_encounter,
+                    ["appointment", "practitioner"],
+                )
     if (
         not doc.patient
         and doc.reference_doctype
@@ -120,25 +145,6 @@ def set_missing_values(doc):
             
     if not doc.hms_tz_phone_no and doc.patient:
         doc.hms_tz_phone_no = frappe.get_cached_value('Patient', doc.patient, 'mobile')
-    
-    if doc.form_sales_invoice:
-        if not doc.hms_tz_appointment_no or not doc.healthcare_practitioner:
-            si_reference_dn = frappe.get_value(
-                "Sales Invoice Item", doc.items[0].si_detail, "reference_dn"
-            )
-
-            if si_reference_dn:
-                parent_encounter = frappe.get_value(
-                    "Drug Prescription", si_reference_dn, "parent"
-                )
-                (
-                    doc.hms_tz_appointment_no,
-                    doc.healthcare_practitioner,
-                ) = frappe.get_value(
-                    "Patient Encounter",
-                    parent_encounter,
-                    ["appointment", "practitioner"],
-                )
 
 
 def before_submit(doc, method):
