@@ -12,5 +12,11 @@ frappe.ui.form.on('Therapy Plan', {
 			frm.clear_custom_buttons();
 			// frm.remove_custom_button("Create")
 		}
+		if (frm.doc.patient) {
+			frm.add_custom_button(__('Patient History'), () => {
+				frappe.route_options = { 'patient': frm.doc.patient };
+				frappe.set_route('tz-patient-history');
+			});
+		}
 	},
 });
