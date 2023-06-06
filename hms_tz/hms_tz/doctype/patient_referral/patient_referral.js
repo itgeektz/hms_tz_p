@@ -9,6 +9,7 @@ frappe.ui.form.on('Patient Referral', {
 					frappe.route_options = {
 						'patient': frm.doc.patient,
 						'practitioner': frm.doc.referred_to_practitioner,
+						'department': frm.doc.department,
 						'patient_referral': frm.doc.name,
 						'company': frm.doc.company,
 					};
