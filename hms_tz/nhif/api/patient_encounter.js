@@ -1151,7 +1151,7 @@ var control_practitioners_to_submit_others_encounters = (frm) => {
                         .then(r => {
                             let practitioner = r.message;
 
-                            if (practitioner != frm.doc.practitioner) {
+                            if (practitioner.name && practitioner.name != frm.doc.practitioner) {
                                 frm.set_intro("");
                                 frm.disable_save();
                                 frm.set_read_only();
