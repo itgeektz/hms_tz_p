@@ -24,6 +24,7 @@ frappe.ui.form.on('Patient Encounter', {
                 });
             });
         };
+        set_empty_row_on_all_child_tables(frm);
 
     },
     refresh: function (frm) {
@@ -562,6 +563,14 @@ function set_medical_code(frm, reset_columns) {
 };
 
 function validate_medical_code(frm) {
+    let values_mapping = {
+        "lab_test_prescription": "lab_test_code",
+        "radiology_procedure_prescription": "radiology_examination_template",
+        "procedure_prescription": "procedure",
+        "drug_prescription": "drug_code",
+        "therapies": "therapy_type",
+    };
+  
     for (const [from_table, fields] of Object.entries(medical_code_mapping)) {
         const options = get_diagnosis_list(frm, from_table);
 
@@ -569,7 +578,7 @@ function validate_medical_code(frm) {
             if (!frm.doc[fieldname]) continue;
 
             frm.doc[fieldname].forEach(element => {
-                if (!options.includes(element.medical_code)) {
+                if (element[values_mapping[fieldname]] && !options.includes(element.medical_code)) {
                     frappe.throw(__(`The Medical Code in the
                     ${frm.fields_dict[fieldname].df.label} table
                     at line ${element.idx} is empty or does not exist in the
@@ -1160,7 +1169,6 @@ var show_details = (data, caller = "") => {
     return html;
 };
 
-
 function set_delete_button_in_child_table(frm, child_table_fields) {
     if (frm.doc.docstatus != 0) {
         return;
@@ -1191,5 +1199,14 @@ var auto_calculate_drug_quantity = (frm, drug_item) => {
         }
     }).then(r => {
         frappe.model.set_value(drug_item.doctype, drug_item.name, "quantity", r.message);
+    });
+}
+
+var set_empty_row_on_all_child_tables = (frm) => {
+    let table_fieldnames = ["system_and_symptoms", "patient_encounter_preliminary_diagnosis", "lab_test_prescription", "radiology_procedure_prescription",
+        "patient_encounter_final_diagnosis", "procedure_prescription", "therapies", "diet_recommendation"];
+
+    table_fieldnames.forEach((fieldname) => {
+        frm.fields_dict[fieldname].grid.add_new_row()
     });
 }
