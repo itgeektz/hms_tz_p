@@ -754,7 +754,7 @@ frappe.ui.form.on('Drug Prescription', {
                 }
 
             });
-        validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit, "Drug Prescription");
+        validate_stock_item(frm, row.drug_code, row.prescribe, row.quantity, row.healthcare_service_unit, "Drug Prescription");
     },
     healthcare_service_unit: function (frm, cdt, cdn) {
         if (frm.healthcare_service_unit) frm.trigger("drug_code");
@@ -805,7 +805,7 @@ frappe.ui.form.on('Drug Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.override_subscription) {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
-            validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit, "Drug Prescription");
+            validate_stock_item(frm, row.drug_code, row.prescribe, row.quantity, row.healthcare_service_unit, "Drug Prescription");
         }
     },
     dosage: function (frm, cdt, cdn) {
@@ -875,7 +875,7 @@ frappe.ui.form.on('Therapy Plan Detail', {
 });
 
 
-const validate_stock_item = function (frm, healthcare_service, qty = 1, healthcare_service_unit = "", caller = "Unknown") {
+const validate_stock_item = function (frm, healthcare_service, prescribe=0, qty = 1, healthcare_service_unit = "", caller = "Unknown") {
     if (healthcare_service_unit == "") {
         healthcare_service_unit = frm.doc.healthcare_service_unit;
     }
@@ -885,6 +885,7 @@ const validate_stock_item = function (frm, healthcare_service, qty = 1, healthca
             'healthcare_service': healthcare_service,
             'qty': qty,
             'company': frm.doc.company,
+            'prescribe': prescribe,
             'caller': caller,
             'healthcare_service_unit': healthcare_service_unit
         },
