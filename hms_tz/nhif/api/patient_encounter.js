@@ -1143,7 +1143,7 @@ function set_delete_button_in_child_table (frm, child_table_fields) {
 }
 
 var control_practitioners_to_submit_others_encounters = (frm) => {
-    if (frm.doc.encounter_category != "Direct Cash") {
+    if (frm.doc.encounter_category != "Direct Cash" && !frm.doc.inpatient_record) {
         frappe.db.get_single_value("Healthcare Settings", "allow_practitioner_to_take_other_encounters")
             .then(value => {
                 if (value == 0) {
