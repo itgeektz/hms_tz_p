@@ -12,9 +12,22 @@
   "appointment_no",
   "column_break_4",
   "company",
+  "posting_date",
+  "posting_time",
+  "section_break_eivze",
+  "is_cash_inpatient",
+  "is_non_nhif_patient",
+  "previous_cash_limit",
+  "current_total_deposit",
+  "column_break_ow3sm",
   "inpatient_record",
+  "insurance_company",
   "cash_limit",
+  "section_break_fbdtz",
+  "requested_by",
   "naming_series",
+  "column_break_edzow",
+  "approved_by",
   "amended_from"
  ],
  "fields": [
@@ -75,9 +88,8 @@
   },
   {
    "fieldname": "cash_limit",
-   "fieldtype": "Currency",
-   "label": "Cash Limit",
-   "reqd": 1
+   "fieldtype": "Float",
+   "label": "Cash/Daily Limit"
   },
   {
    "fieldname": "naming_series",
@@ -86,12 +98,82 @@
    "options": "HLC-LCR-.YYYY.-",
    "read_only": 1,
    "set_only_once": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "posting_time",
+   "fieldtype": "Time",
+   "label": "Posting Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_eivze",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_cash_inpatient",
+   "fieldtype": "Check",
+   "label": "Is Cash In-Patient"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_non_nhif_patient",
+   "fieldtype": "Check",
+   "label": "Is Non-NHIF Patient"
+  },
+  {
+   "fieldname": "column_break_ow3sm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "insurance_company",
+   "fieldtype": "Data",
+   "label": "Insurance Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_fbdtz",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Data",
+   "label": "Requested By",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_edzow",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Data",
+   "label": "Approved By",
+   "read_only": 1
+  },
+  {
+   "fieldname": "previous_cash_limit",
+   "fieldtype": "Float",
+   "label": "Previous Cash/Daily Limit",
+   "read_only": 1
+  },
+  {
+   "fieldname": "current_total_deposit",
+   "fieldtype": "Float",
+   "label": "Current Total Deposited Amount",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-12-19 18:33:46.007412",
+ "modified": "2023-05-29 19:37:17.421675",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Limit Change Request",
