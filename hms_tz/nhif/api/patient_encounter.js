@@ -777,7 +777,14 @@ frappe.ui.form.on('Drug Prescription', {
                 }
 
             });
+<<<<<<< HEAD
         validate_stock_item(frm, row.drug_code, row.prescribe, row.quantity, row.healthcare_service_unit, "Drug Prescription");
+=======
+        validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit, "Drug Prescription");
+
+        // shm rock: 169
+        validate_medication_class(frm, row.drug_code);
+>>>>>>> bf41a3eb (feat: validate medication class and alert it on patient encounters and delivery note if validate medication class is ticked on company)
     },
     healthcare_service_unit: function (frm, cdt, cdn) {
         if (frm.healthcare_service_unit) frm.trigger("drug_code");
@@ -1227,6 +1234,7 @@ var auto_calculate_drug_quantity = (frm, drug_item) => {
     });
 }
 
+<<<<<<< HEAD
 var set_empty_row_on_all_child_tables = (frm) => {
     let table_fieldnames = ["system_and_symptoms", "patient_encounter_preliminary_diagnosis", "lab_test_prescription", "radiology_procedure_prescription",
         "patient_encounter_final_diagnosis", "procedure_prescription", "therapies", "diet_recommendation"];
@@ -1261,3 +1269,33 @@ var control_practitioners_to_submit_others_encounters = (frm) => {
             });
     }
  };
+=======
+var validate_medication_class = (frm, drug_item) => {
+    frappe.call({
+        method: "hms_tz.nhif.api.patient_encounter.validate_medication_class",
+        args: {
+            company: frm.doc.company,
+            encounter: frm.doc.name,
+            patient: frm.doc.patient,
+            drug_item: drug_item,
+            caller: "Front End"
+        }
+    }).then(r => {
+        if (r.message) {
+            let data = r.message;
+            frappe.show_alert({
+                message: __(
+                    `<p class="text-left">Item: <strong>${__(data.drug_item)}</strong>
+                    with same Medication Class ${__(data.medication_class)}\
+                    was lastly prescribed on: <strong>${__(data.prescribed_date)}</strong><br>\
+                    Therefore item with same <b>medication class</b> were suppesed to be\
+                    prescribed after: <strong>${__(data.valid_days)}</strong> days
+                    </p>`
+                ),
+                indicator: 'red',
+                title: __("Medication Class Validation")
+            }, 30);
+        }
+    });
+}
+>>>>>>> bf41a3eb (feat: validate medication class and alert it on patient encounters and delivery note if validate medication class is ticked on company)
