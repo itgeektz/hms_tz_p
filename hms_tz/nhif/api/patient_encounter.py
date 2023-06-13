@@ -178,19 +178,8 @@ def on_submit_validation(doc, method):
                     doc.insurance_subscription
                     and healthcare_doc.medication_category == "Category S Medication"
                 ):
-<<<<<<< HEAD
-                    frappe.msgprint(
-                        "Item: {0} is Category S Medication".format(
-                            frappe.bold(row.get(child.get("item")))
-                        ),
-                        alert=True,
-                    )
-
-=======
                     frappe.msgprint(f"Item: {row.get(child.get('item'))} is Category S Medication", alert=True)
                 
-                # if 
->>>>>>> bf41a3eb (feat: validate medication class and alert it on patient encounters and delivery note if validate medication class is ticked on company)
                 # auto calculating quantity
                 if not row.quantity:
                     row.quantity = get_drug_quantity(row)
@@ -1411,14 +1400,10 @@ def show_last_prescribed(doc, method):
                 )
                 if val_msg:
                     valid_days_msg += val_msg
-<<<<<<< HEAD
-
-=======
                 
                 # SHM Rock#: 169
                 validate_medication_class(doc.company, doc.name, doc.patient, row.drug_code)
         
->>>>>>> bf41a3eb (feat: validate medication class and alert it on patient encounters and delivery note if validate medication class is ticked on company)
         if valid_days_msg:
             frappe.msgprint(
                 _(
