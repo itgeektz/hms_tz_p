@@ -1230,6 +1230,15 @@ var auto_calculate_drug_quantity = (frm, drug_item) => {
     });
 }
 
+var set_empty_row_on_all_child_tables = (frm) => {
+    let table_fieldnames = ["system_and_symptoms", "patient_encounter_preliminary_diagnosis", "lab_test_prescription", "radiology_procedure_prescription",
+        "patient_encounter_final_diagnosis", "procedure_prescription", "therapies", "diet_recommendation"];
+
+    table_fieldnames.forEach((fieldname) => {
+        frm.fields_dict[fieldname].grid.add_new_row()
+    });
+}
+
 var control_practitioners_to_submit_others_encounters = (frm) => {
     if (frm.doc.encounter_category != "Direct Cash" && !frm.doc.inpatient_record) {
         frappe.db.get_single_value("Healthcare Settings", "allow_practitioner_to_take_other_encounters")
