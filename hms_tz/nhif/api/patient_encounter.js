@@ -777,14 +777,10 @@ frappe.ui.form.on('Drug Prescription', {
                 }
 
             });
-<<<<<<< HEAD
-        validate_stock_item(frm, row.drug_code, row.prescribe, row.quantity, row.healthcare_service_unit, "Drug Prescription");
-=======
         validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit, "Drug Prescription");
 
         // shm rock: 169
         validate_medication_class(frm, row.drug_code);
->>>>>>> bf41a3eb (feat: validate medication class and alert it on patient encounters and delivery note if validate medication class is ticked on company)
     },
     healthcare_service_unit: function (frm, cdt, cdn) {
         if (frm.healthcare_service_unit) frm.trigger("drug_code");
@@ -1234,16 +1230,6 @@ var auto_calculate_drug_quantity = (frm, drug_item) => {
     });
 }
 
-<<<<<<< HEAD
-var set_empty_row_on_all_child_tables = (frm) => {
-    let table_fieldnames = ["system_and_symptoms", "patient_encounter_preliminary_diagnosis", "lab_test_prescription", "radiology_procedure_prescription",
-        "patient_encounter_final_diagnosis", "procedure_prescription", "therapies", "diet_recommendation"];
-
-    table_fieldnames.forEach((fieldname) => {
-        frm.fields_dict[fieldname].grid.add_new_row()
-    });
-}
-
 var control_practitioners_to_submit_others_encounters = (frm) => {
     if (frm.doc.encounter_category != "Direct Cash" && !frm.doc.inpatient_record) {
         frappe.db.get_single_value("Healthcare Settings", "allow_practitioner_to_take_other_encounters")
@@ -1255,7 +1241,7 @@ var control_practitioners_to_submit_others_encounters = (frm) => {
 
                             if (practitioner.name && practitioner.name != frm.doc.practitioner) {
                                 frm.set_intro("");
-                                frm.disable_save();
+                                frm.disable_form();
                                 frm.set_read_only();
                                 frm.clear_custom_buttons();
                                 frm.toggle_display(["section_break_28", "sb_test_prescription", "radiology_procedures_section", "sb_procedures", "medication_action_sb", "sb_drug_prescription",
@@ -1269,7 +1255,7 @@ var control_practitioners_to_submit_others_encounters = (frm) => {
             });
     }
  };
-=======
+
 var validate_medication_class = (frm, drug_item) => {
     frappe.call({
         method: "hms_tz.nhif.api.patient_encounter.validate_medication_class",
@@ -1298,4 +1284,3 @@ var validate_medication_class = (frm, drug_item) => {
         }
     });
 }
->>>>>>> bf41a3eb (feat: validate medication class and alert it on patient encounters and delivery note if validate medication class is ticked on company)
