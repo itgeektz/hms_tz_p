@@ -1999,7 +1999,6 @@ def validate_medication_class(company, encounter, patient, drug_item, caller="Ba
             Therefore item with same <b>medication class</b> were supposed to be prescribed after: <strong>{valid_days}</strong> days"))
 
 def set_practitioner_name(doc, method):
-    frappe.msgprint(str(method))
     submitting_healthcare_practitioner = frappe.db.get_value(
         "Healthcare Practitioner", {"user_id": frappe.session.user, "hms_tz_company": doc.company},
         ["name", "practitioner_name"],
