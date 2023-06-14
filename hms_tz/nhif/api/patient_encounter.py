@@ -189,17 +189,10 @@ def on_submit_validation(doc, method):
                 if not row.quantity:
                     row.quantity = get_drug_quantity(row)
 
-<<<<<<< HEAD
-
-    # Run on_submit
-    submitting_healthcare_practitioner = frappe.db.get_value(
-        "Healthcare Practitioner", {"user_id": frappe.session.user}, ["name"]
-    )
-    if submitting_healthcare_practitioner:
-        doc.practitioner = submitting_healthcare_practitioner
-
-=======
->>>>>>> 87095d73 (chore: set practitionier name and throw if practitioner name is missing before submitting the encounter)
+    
+    #shm rock: 151
+    set_practitioner_name(doc, method)
+    
     # Run on_submit?
     prescribed_list = ""
     for key, value in child_tables.items():
@@ -272,13 +265,7 @@ def on_submit_validation(doc, method):
             ),
             method,
         )
-<<<<<<< HEAD
-=======
     
-    #shm rock: 151
-    set_practitioner_name(doc, method)
->>>>>>> 87095d73 (chore: set practitionier name and throw if practitioner name is missing before submitting the encounter)
-
     insurance_subscription = doc.insurance_subscription
 
     if not insurance_subscription:
@@ -1952,9 +1939,6 @@ def get_drug_quantity(drug_item):
     if quantity > 0:
         return quantity
     else:
-<<<<<<< HEAD
-        return 0
-=======
         return 0
 
 @frappe.whitelist()
@@ -2027,10 +2011,9 @@ def set_practitioner_name(doc, method):
         doc.practitioner_name = submitting_healthcare_practitioner.practitioner_name
     
     elif doc.encounter_category == "Appointment":
-        if method != "validate":
+        if method not in ("before_insert", "validate"):
             frappe.throw(_(f"Please set user id: <b>{frappe.session.user}</b>\
                 in Healthcare Practitioner<br>\
                 so as to set the correct practitioner, who submitting this encounter"
             ))
     
->>>>>>> 87095d73 (chore: set practitionier name and throw if practitioner name is missing before submitting the encounter)
