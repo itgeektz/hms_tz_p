@@ -4,9 +4,13 @@ frappe.ui.form.on('Patient Encounter', {
             frappe.throw(__("Final diagnosis mandatory before submit"));
         }
     },
-    validate: function (frm) {
-        validate_medical_code(frm);
-    },
+
+    // Rock Regency#: 102
+    // remove medical code restriction: 03-07-2023
+    // validate: function (frm) {
+    //     validate_medical_code(frm);
+    // },
+    
     onload: function (frm) {
         control_practitioners_to_submit_others_encounters(frm);
         add_btn_final(frm);
