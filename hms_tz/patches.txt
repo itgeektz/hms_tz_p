@@ -18,12 +18,9 @@ hms_tz.patches.custom_fields.enable_auto_quantity_calculation_custom_field
 hms_tz.patches.custom_fields.edit_daily_limit_custom_field_on_patient_appointment
 hms_tz.patches.custom_fields.add_practitioner_name_on_ipd_cons_custom_field
 hms_tz.patches.property_setter.ed_section_property_setter
-<<<<<<< HEAD
 hms_tz.patches.custom_fields.auto_set_pharmacy_on_encounter_custom_fields
 hms_tz.patches.custom_fields.validate_stock_items_settings_custom_fields
 hms_tz.patches.custom_fields.control_practitioner_to_take_other_encounters
 hms_tz.patches.custom_fields.create_and_arrange_drug_action_custom_fields
-=======
 hms_tz.patches.custom_fields.custom_fields_for_medication_class_validation_on_patient_encounter
 hms_tz.patches.custom_fields.custom_fields_for_medical_code
->>>>>>> cb7ec3a9 (feat: allow configuration for medical code validation to remove medical code restrictions)
