@@ -51,7 +51,6 @@ def on_trash(doc, method):
             "Patient Medical Record", pmr_doc.name, ignore_permissions=True
         )
 
-<<<<<<< HEAD
 # regency rock: 95
 def before_insert(doc, method):
     if doc.company:
@@ -83,8 +82,6 @@ def before_insert(doc, method):
                     frappe.throw(_("<b>Please set OPD Insurance Pharmacy in Company to allow auto set of pharmacy</b>"))
                 doc.default_healthcare_service_unit = pharmacy_details.opd_insurance_pharmacy
 
-=======
->>>>>>> cb7ec3a9 (feat: allow configuration for medical code validation to remove medical code restrictions)
 def on_submit_validation(doc, method):
     child_tables = {
         "lab_test_prescription": "lab_test_code",
@@ -273,16 +270,12 @@ def on_submit_validation(doc, method):
             method,
         )
 
-<<<<<<< HEAD
-=======
     if not doc.patient_age:
         doc.patient_age = calculate_patient_age(doc.patient)
     
     validate_medical_code(doc, method)
 
->>>>>>> cb7ec3a9 (feat: allow configuration for medical code validation to remove medical code restrictions)
     insurance_subscription = doc.insurance_subscription
-
     if not insurance_subscription:
         return
 
@@ -372,12 +365,6 @@ def on_submit_validation(doc, method):
         if coverage_info.maximum_number_of_claims == 0:
             continue
 
-<<<<<<< HEAD
-    if not doc.patient_age:
-        doc.patient_age = calculate_patient_age(doc.patient)
-
-=======
->>>>>>> cb7ec3a9 (feat: allow configuration for medical code validation to remove medical code restrictions)
     # Run on_submit
     validate_totals(doc, method)
 
@@ -1925,9 +1912,6 @@ def get_drug_quantity(drug_item):
     if quantity > 0:
         return quantity
     else:
-<<<<<<< HEAD
-        return 0
-=======
         return 0
 
 @frappe.whitelist()
@@ -2046,4 +2030,3 @@ def validate_medical_code(doc, method):
                         ),
                         method
                     )
->>>>>>> cb7ec3a9 (feat: allow configuration for medical code validation to remove medical code restrictions)
