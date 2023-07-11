@@ -61,8 +61,8 @@ class NHIFPatientClaim(Document):
                     self.name, self.patient_appointment
                 )
             )
-        if self.allow_changes == 1:
-            track_changes_of_claim_items(self)
+        # if self.allow_changes == 1:
+        #     track_changes_of_claim_items(self)
 
     def on_trash(self):
         frappe.set_value(
