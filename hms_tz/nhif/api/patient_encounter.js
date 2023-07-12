@@ -777,7 +777,10 @@ frappe.ui.form.on('Drug Prescription', {
                 }
 
             });
-        validate_stock_item(frm, row.drug_code, row.prescribe, row.quantity, row.healthcare_service_unit, "Drug Prescription");
+        validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit, "Drug Prescription");
+
+        // shm rock: 169
+        validate_medication_class(frm, row.drug_code);
     },
     healthcare_service_unit: function (frm, cdt, cdn) {
         if (frm.healthcare_service_unit) frm.trigger("drug_code");
@@ -1247,7 +1250,7 @@ var control_practitioners_to_submit_others_encounters = (frm) => {
 
                             if (practitioner.name && practitioner.name != frm.doc.practitioner) {
                                 frm.set_intro("");
-                                frm.disable_save();
+                                frm.disable_form();
                                 frm.set_read_only();
                                 frm.clear_custom_buttons();
                                 frm.toggle_display(["section_break_28", "sb_test_prescription", "radiology_procedures_section", "sb_procedures", "medication_action_sb", "sb_drug_prescription",
@@ -1261,3 +1264,32 @@ var control_practitioners_to_submit_others_encounters = (frm) => {
             });
     }
  };
+
+var validate_medication_class = (frm, drug_item) => {
+    frappe.call({
+        method: "hms_tz.nhif.api.patient_encounter.validate_medication_class",
+        args: {
+            company: frm.doc.company,
+            encounter: frm.doc.name,
+            patient: frm.doc.patient,
+            drug_item: drug_item,
+            caller: "Front End"
+        }
+    }).then(r => {
+        if (r.message) {
+            let data = r.message;
+            frappe.show_alert({
+                message: __(
+                    `<p class="text-left">Item: <strong>${__(data.drug_item)}</strong>
+                    with same Medication Class ${__(data.medication_class)}\
+                    was lastly prescribed on: <strong>${__(data.prescribed_date)}</strong><br>\
+                    Therefore item with same <b>medication class</b> were suppesed to be\
+                    prescribed after: <strong>${__(data.valid_days)}</strong> days
+                    </p>`
+                ),
+                indicator: 'red',
+                title: __("Medication Class Validation")
+            }, 30);
+        }
+    });
+}

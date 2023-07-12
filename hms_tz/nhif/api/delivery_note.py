@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 import json
+from frappe.utils import date_diff, nowdate
 from hms_tz.nhif.api.healthcare_utils import update_dimensions
 
 
@@ -13,10 +14,8 @@ def validate(doc, method):
     check_item_for_out_of_stock(doc)
     update_dimensions(doc)
 
-
 def after_insert(doc, method):
     set_original_item(doc)
-
 
 def set_original_item(doc):
     for item in doc.items:
@@ -77,23 +76,23 @@ def onload(doc, method):
                     item.stock_uom,
                 ),
             )
-
+        check_for_medication_category(item)
+        validate_medication_class(doc, item)
 
 def set_prescribed(doc):
     for item in doc.items:
-        items_list = frappe.db.sql(
-            """
-        select dn.posting_date, dni.item_code, dni.stock_qty, dni.uom from `tabDelivery Note` dn
-        inner join `tabDelivery Note Item` dni on dni.parent = dn.name
-                        where dni.item_code = %s
-                        and dn.patient = %s
-                        and dn.docstatus = 1
-                        order by posting_date desc
-                        limit 1"""
-            % ("%s", "%s"),
-            (item.item_code, doc.patient),
-            as_dict=1,
-        )
+        items_list = frappe.db.sql(f"""
+            SELECT dn.posting_date, dni.item_code, dni.stock_qty, dni.uom
+            FROM `tabDelivery Note` dn
+            INNER JOIN `tabDelivery Note Item` dni on dni.parent = dn.name
+            WHERE dni.item_code = {frappe.db.escape(item.item_code)}
+                AND dn.patient = {frappe.db.escape(doc.patient)}
+                AND dn.name != {frappe.db.escape(doc.name)}
+                AND dn.docstatus = 1
+            ORDER BY posting_date desc
+            LIMIT 1
+        """, as_dict=1)
+
         if len(items_list):
             item.last_qty_prescribed = items_list[0].get("stock_qty")
             item.last_date_prescribed = items_list[0].get("posting_date")
@@ -108,9 +107,50 @@ def check_for_medication_category(item):
     }, "medication_category")
 
     if is_category_s_medication == "Category S Medication":
-        frappe.msgprint("Item: {0} is Category S Medication".format(
-            frappe.bold(item.item_code)
-        ), alert=True)
+        frappe.msgprint(f"Item: <b>{item.item_code}</b> is Category S Medication", alert=True)
+
+def validate_medication_class(doc, row):
+    """Validate medication class based on company settings
+    
+    Args:
+        doc (Document): Delivery Note
+        row (dict): Delivery Note Item
+    """
+
+    validate_medication_class = frappe.get_cached_value("Company", doc.company, "validate_medication_class")
+    if int(validate_medication_class) == 0:
+        return
+
+    medication_class = frappe.get_cached_value("Medication", {"item": row.item_code}, "medication_class")
+    if not medication_class:
+        return
+    
+    medication_class_list = frappe.db.sql(f"""
+        SELECT dn.posting_date, dni.item_code, mc.prescribed_after as valid_days
+        FROM `tabDelivery Note` dn
+        INNER JOIN `tabDelivery Note Item` dni on dni.parent = dn.name
+        INNER JOIN `tabMedication` m on m.item = dni.item_code
+        INNER JOIN `tabMedication Class` mc on mc.name = m.medication_class
+        WHERE dn.docstatus = 1
+            AND dn.patient = {frappe.db.escape(doc.patient)}
+            AND dn.name != {frappe.db.escape(doc.name)}
+            AND mc.name = {frappe.db.escape(medication_class)}
+        ORDER BY posting_date desc
+        LIMIT 1
+    """, as_dict=1)
+
+    prescribed_date = medication_class_list[0].posting_date
+    item_code = medication_class_list[0].item_code
+    valid_days = medication_class_list[0].valid_days
+    if not int(valid_days):
+        return
+    
+    if int(date_diff(nowdate(), prescribed_date)) < int(valid_days):
+        frappe.msgprint(_(f"Item: <strong>{item_code}</strong> with same Medication Class: <strong>{medication_class}</strong>\
+            was lastly prescribed on: <strong>{prescribed_date}</strong><br>\
+            Therefore item with same <b>medication class</b> were supposed to be prescribed after: <strong>{valid_days}</strong> days")
+        )
+    
 
 def set_missing_values(doc):
     if doc.form_sales_invoice:
