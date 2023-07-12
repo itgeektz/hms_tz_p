@@ -68,12 +68,28 @@ frappe.ui.form.on('Codification Table', {
 });
 
 frappe.ui.form.on('Drug Prescription', {
-	dosage: function (frm, cdt, cdn) {
-		frappe.model.set_value(cdt, cdn, "quantity", "");
-		frappe.model.set_value(cdt, cdn, "prescribe", "");
-		frappe.model.set_value(cdt, cdn, "amount", "");
+	dosage: (frm, cdt, cdn) => {
+		frappe.model.set_value(cdt, cdn, "quantity", 0);
+		frappe.model.set_value(cdt, cdn, "prescribe", 0);
+		frappe.model.set_value(cdt, cdn, "amount", 0);
+
+		let row = locals[cdt][cdn];
+		if (row.dosage && row.period) {
+			auto_calculate_drug_quantity(frm, row);
+		} else {
+			frappe.model.set_value(cdt, cdn, "quantity", 0);
+		}
 		frm.refresh_field("drug_prescription");
 	},
+	period: (frm, cdt, cdn) => {
+		let row = locals[cdt][cdn];
+		if (row.dosage && row.period) {
+			auto_calculate_drug_quantity(frm, row);
+		} else {
+			frappe.model.set_value(cdt, cdn, "quantity", 0);
+		}
+		frm.refresh_field("drug_prescription");
+	}
 });
 
 const set_patient_encounter = (frm) => {
@@ -101,7 +117,8 @@ const get_final_diagnosis = (frm) => {
 	const diagnosis_list = [];
 	if (frm.doc.patient_encounter_final_diagnosis) {
 		frm.doc.patient_encounter_final_diagnosis.forEach(element => {
-			diagnosis_list.push(element.medical_code);
+			let d = String(element.medical_code) + "\n " + String(element.description);
+			diagnosis_list.push(d);
 		});
 		return diagnosis_list;
 	}
@@ -110,7 +127,7 @@ const get_final_diagnosis = (frm) => {
 const set_medical_code = (frm) => {
 	const final_diagnosis = get_final_diagnosis(frm);
 	frappe.meta.get_docfield("Drug Prescription", "medical_code", frm.doc.name).options = final_diagnosis;
-	refresh_field("drug_prescription");
+	frm.refresh_field("drug_prescription");
 	frm.refresh_fields();
 };
 
@@ -186,4 +203,15 @@ const get_items_on_change_of_delivery_note = (frm) => {
 			}
 		});
 	}
+}
+
+var auto_calculate_drug_quantity = (frm, drug_item) => {
+	frappe.call({
+		method: "hms_tz.nhif.api.patient_encounter.get_drug_quantity",
+		args: {
+			drug_item: drug_item,
+		}
+	}).then(r => {
+		frappe.model.set_value(drug_item.doctype, drug_item.name, "quantity", r.message);
+	});
 }
