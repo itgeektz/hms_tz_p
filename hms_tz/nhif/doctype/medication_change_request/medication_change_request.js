@@ -101,7 +101,8 @@ const get_final_diagnosis = (frm) => {
 	const diagnosis_list = [];
 	if (frm.doc.patient_encounter_final_diagnosis) {
 		frm.doc.patient_encounter_final_diagnosis.forEach(element => {
-			diagnosis_list.push(element.medical_code);
+			let d = String(element.medical_code) + "\n " + String(element.description);
+			diagnosis_list.push(d);
 		});
 		return diagnosis_list;
 	}
@@ -110,7 +111,7 @@ const get_final_diagnosis = (frm) => {
 const set_medical_code = (frm) => {
 	const final_diagnosis = get_final_diagnosis(frm);
 	frappe.meta.get_docfield("Drug Prescription", "medical_code", frm.doc.name).options = final_diagnosis;
-	refresh_field("drug_prescription");
+	frm.refresh_field("drug_prescription");
 	frm.refresh_fields();
 };
 
