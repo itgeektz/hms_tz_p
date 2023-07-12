@@ -12,8 +12,11 @@ frappe.ui.form.on('Healthcare Insurance Subscription', {
             if (!frm.doc.coverage_plan_card_number) return
 
             setTimeout(() => {
+                frappe.show_alert({
+                    message: __('<b>Healthcare Insurance Subscription is submitted</b>'),
+                    'indicator': 'success'
+                });
                 frm.save("Submit")
-                frappe.msgprint("Healthcare Insurance Subscription is submitted")
             }, 10000);
         }
     },
