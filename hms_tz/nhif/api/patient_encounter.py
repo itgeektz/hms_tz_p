@@ -178,6 +178,7 @@ def on_submit_validation(doc, method):
                     doc.insurance_subscription
                     and healthcare_doc.medication_category == "Category S Medication"
                 ):
+<<<<<<< HEAD
                     frappe.msgprint(
                         "Item: {0} is Category S Medication".format(
                             frappe.bold(row.get(child.get("item")))
@@ -185,6 +186,10 @@ def on_submit_validation(doc, method):
                         alert=True,
                     )
 
+=======
+                    frappe.msgprint(f"Item: {row.get(child.get('item'))} is Category S Medication", alert=True)
+                
+>>>>>>> f54f6c8f (feat: auto calculation of qty of medicationi change request if enabled on healthcare settings)
                 # auto calculating quantity
                 if not row.quantity:
                     row.quantity = get_drug_quantity(row)
