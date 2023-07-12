@@ -4,19 +4,13 @@ frappe.ui.form.on('Patient Encounter', {
             frappe.throw(__("Final diagnosis mandatory before submit"));
         }
     },
-<<<<<<< HEAD
-    validate: function (frm) {
-        validate_medical_code(frm);
-    },
-=======
 
     // Rock Regency#: 102
     // remove medical code restriction: 03-07-2023
     // validate: function (frm) {
     //     validate_medical_code(frm);
     // },
-
->>>>>>> d0d09867 (fix: showing medical codes on child tables of patient encounter after reuse of previous diagnosis)
+    
     onload: function (frm) {
         control_practitioners_to_submit_others_encounters(frm);
         add_btn_final(frm);
@@ -109,11 +103,7 @@ frappe.ui.form.on('Patient Encounter', {
                     "company": frm.doc.company,
                     "name": ["like", "%Pharmacy%"]
                 }
-<<<<<<< HEAD
             };
-=======
-            }
->>>>>>> d0d09867 (fix: showing medical codes on child tables of patient encounter after reuse of previous diagnosis)
         });
         if (!frm.doc.practitioner.includes("Direct")) {
             frm.toggle_reqd("examination_detail", 1);
@@ -125,13 +115,8 @@ frappe.ui.form.on('Patient Encounter', {
     },
 
     clear_history: function (frm) {
-<<<<<<< HEAD
         frm.set_value("examination_detail", "");
         frm.refresh_field("examination_detail");
-=======
-        frm.set_value("examination_detail", "")
-        frm.refresh_field("examination_detail")
->>>>>>> d0d09867 (fix: showing medical codes on child tables of patient encounter after reuse of previous diagnosis)
     },
 
     default_healthcare_service_unit: function (frm) {
@@ -407,11 +392,7 @@ frappe.ui.form.on('Patient Encounter', {
             frappe.msgprint(`<p class='text-center font-weight-bold h6' style='background-color: #DCDCDC; font-size: 12pt;'>\
                 This encounter has insurance of <b>${__(frm.doc.insurance_coverage_plan)}</b>,\
                 no need to convert this encounter to inpatient encounter </p>`);
-<<<<<<< HEAD
             return;
-=======
-            return
->>>>>>> d0d09867 (fix: showing medical codes on child tables of patient encounter after reuse of previous diagnosis)
         }
         frappe.call('hms_tz.nhif.api.patient_encounter.convert_opd_encounter_to_ipd_encounter', {
             encounter: frm.doc.name
@@ -422,7 +403,6 @@ frappe.ui.form.on('Patient Encounter', {
         });
     },
     hms_tz_reuse_lab_items: (frm) => {
-<<<<<<< HEAD
         let fields = ["lab_test_code as item", "lab_test_name as item_name", "creation as date"];
         let value_dict = { "table_field": "lab_test_prescription", "item_field": "lab_test_code", "item_name_field": "lab_test_name" };
         reuse_lrpmt_items(frm, "Lab Prescription", fields, value_dict, "Lab Items");
@@ -477,38 +457,7 @@ frappe.ui.form.on('Patient Encounter', {
                 }
             }
         });
-=======
-        let fields = ["lab_test_code as item", "lab_test_name as item_name", "creation as date"]
-        let value_dict = { "table_field": "lab_test_prescription", "item_field": "lab_test_code", "item_name_field": "lab_test_name" }
-        reuse_lrpmt_items(frm, "Lab Prescription", fields, value_dict, "Lab Items")
-    },
-    hms_tz_reuse_radiology_items: (frm) => {
-        let fields = ["radiology_examination_template as item", "radiology_procedure_name as item_name", "creation as date"]
-        let value_dict = { "table_field": "radiology_procedure_prescription", "item_field": "radiology_examination_template", "item_name_field": "radiology_procedure_name" }
-        reuse_lrpmt_items(frm, "Radiology Procedure Prescription", fields, value_dict, "Radiology Items")
-    },
-    hms_tz_reuse_procedure_items: (frm) => {
-        let fields = ["procedure as item", "procedure_name as item_name", "creation as date"]
-        let value_dict = { "table_field": "procedure_prescription", "item_field": "procedure", "item_name_field": "procedure_name" }
-        reuse_lrpmt_items(frm, "Procedure Prescription", fields, value_dict, "Procedure Items")
-    },
-    hms_tz_reuse_drug_items: (frm) => {
-        let fields = ["drug_code as item", "drug_name as item_name", "creation as date"]
-        let value_dict = { "table_field": "drug_prescription", "item_field": "drug_code", "item_name_field": "drug_name" }
-        reuse_lrpmt_items(frm, "Drug Prescription", fields, value_dict, "Drug Items")
-    },
-    hms_tz_reuse_therapy_items: (frm) => {
-        let fields = ["therapy_type as item", "therapy_type as item_name", "creation as date"]
-        let value_dict = { "table_field": "therapies", "item_field": "therapy_type", "item_name_field": "therapy_type" }
-        reuse_lrpmt_items(frm, "Therapy Plan Detail", fields, value_dict, "Therapy Items")
-    },
-    hms_tz_reuse_previous_diagnosis: (frm) => {
-        let fields = ["medical_code as item", "code as item_name", "description", "mtuha", "creation as date"]
-        let value_dict = { "table_field": "patient_encounter_preliminary_diagnosis", "item_field": "medical_code", "item_name_field": "code", "description_field": "description", "mtuha_field": "mtuha" }
-        reuse_lrpmt_items(frm, "Codification Table", fields, value_dict, "Previous Diagnosis", "Diagnosis")
->>>>>>> d0d09867 (fix: showing medical codes on child tables of patient encounter after reuse of previous diagnosis)
     }
-
 });
 
 function show_cost_estimate_model(frm, cost_estimate) {
@@ -831,7 +780,10 @@ frappe.ui.form.on('Drug Prescription', {
                 }
 
             });
-        validate_stock_item(frm, row.drug_code, row.prescribe, row.quantity, row.healthcare_service_unit, "Drug Prescription");
+        validate_stock_item(frm, row.drug_code, row.quantity, row.healthcare_service_unit, "Drug Prescription");
+
+        // shm rock: 169
+        validate_medication_class(frm, row.drug_code);
     },
     healthcare_service_unit: function (frm, cdt, cdn) {
         if (frm.healthcare_service_unit) frm.trigger("drug_code");
@@ -1127,12 +1079,9 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
                     new_row[value_dict.description_field] = item.description;
                     new_row[value_dict.mtuha_field] = item.mtuha;
                     let row = frm.add_child(field, new_row);
-<<<<<<< HEAD
                 });
-=======
                 })
                 set_medical_code(frm, true);
->>>>>>> d0d09867 (fix: showing medical codes on child tables of patient encounter after reuse of previous diagnosis)
             } else {
                 items.forEach((item) => {
                     let new_row = {};
@@ -1306,7 +1255,7 @@ var control_practitioners_to_submit_others_encounters = (frm) => {
 
                             if (practitioner.name && practitioner.name != frm.doc.practitioner) {
                                 frm.set_intro("");
-                                frm.disable_save();
+                                frm.disable_form();
                                 frm.set_read_only();
                                 frm.clear_custom_buttons();
                                 frm.toggle_display(["section_break_28", "sb_test_prescription", "radiology_procedures_section", "sb_procedures", "medication_action_sb", "sb_drug_prescription",
@@ -1320,3 +1269,32 @@ var control_practitioners_to_submit_others_encounters = (frm) => {
             });
     }
  };
+
+var validate_medication_class = (frm, drug_item) => {
+    frappe.call({
+        method: "hms_tz.nhif.api.patient_encounter.validate_medication_class",
+        args: {
+            company: frm.doc.company,
+            encounter: frm.doc.name,
+            patient: frm.doc.patient,
+            drug_item: drug_item,
+            caller: "Front End"
+        }
+    }).then(r => {
+        if (r.message) {
+            let data = r.message;
+            frappe.show_alert({
+                message: __(
+                    `<p class="text-left">Item: <strong>${__(data.drug_item)}</strong>
+                    with same Medication Class ${__(data.medication_class)}\
+                    was lastly prescribed on: <strong>${__(data.prescribed_date)}</strong><br>\
+                    Therefore item with same <b>medication class</b> were suppesed to be\
+                    prescribed after: <strong>${__(data.valid_days)}</strong> days
+                    </p>`
+                ),
+                indicator: 'red',
+                title: __("Medication Class Validation")
+            }, 30);
+        }
+    });
+}

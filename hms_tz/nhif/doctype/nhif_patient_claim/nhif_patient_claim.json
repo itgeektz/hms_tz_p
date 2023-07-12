@@ -55,6 +55,8 @@
   "nhif_patient_claim_disease",
   "section_break_30",
   "nhif_patient_claim_item",
+  "original_section_break",
+  "original_nhif_patient_claim_item",
   "hms_tz_claim_appointment_list"
  ],
  "fields": [
@@ -398,12 +400,24 @@
    "fieldname": "coverage_plan_name",
    "fieldtype": "Data",
    "label": "Coverage Plan Name"
+  },
+  {
+   "fieldname": "original_nhif_patient_claim_item",
+   "fieldtype": "Table",
+   "options": "Original NHIF Patient Claim Item",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "original_section_break",
+   "fieldtype": "Section Break",
+   "label": "Original NHIF Patient Claim Item"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-01-16 17:50:03.396971",
+ "modified": "2023-06-08 15:15:23.999156",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim",
