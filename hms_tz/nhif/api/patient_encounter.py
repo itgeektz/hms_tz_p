@@ -53,6 +53,9 @@ def on_trash(doc, method):
 
 # regency rock: 95
 def before_insert(doc, method):
+    doc.encounter_date = nowdate()
+    doc.encounter_time = nowtime()
+    
     if doc.company:
         pharmacy_details = frappe.get_value("Company", doc.company,
             ["auto_set_pharmacy_on_patient_encounter", "opd_cash_pharmacy", 
