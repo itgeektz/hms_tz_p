@@ -178,13 +178,8 @@ def on_submit_validation(doc, method):
                     doc.insurance_subscription
                     and healthcare_doc.medication_category == "Category S Medication"
                 ):
-                    frappe.msgprint(
-                        "Item: {0} is Category S Medication".format(
-                            frappe.bold(row.get(child.get("item")))
-                        ),
-                        alert=True,
-                    )
-
+                    frappe.msgprint(f"Item: {row.get(child.get('item'))} is Category S Medication", alert=True)
+                
                 # auto calculating quantity
                 if not row.quantity:
                     row.quantity = get_drug_quantity(row)
@@ -1362,6 +1357,11 @@ def show_last_prescribed(doc, method):
         msg = None
         valid_days_msg = ""
         for row in doc.drug_prescription:
+            if row.is_cancelled or row.is_not_available_inhouse:
+                continue
+
+            item_code = frappe.get_cached_value("Medication", row.drug_code, "item")
+
             medication_list = frappe.db.sql(
                 """
             select dn.posting_date, dni.item_code, dni.stock_qty, dni.uom from `tabDelivery Note` dn
@@ -1372,7 +1372,7 @@ def show_last_prescribed(doc, method):
                             order by posting_date desc
                             limit 1"""
                 % ("%s", "%s"),
-                (row.drug_code, doc.patient),
+                (item_code, doc.patient),
                 as_dict=1,
             )
             if len(medication_list) > 0:
@@ -1384,7 +1384,7 @@ def show_last_prescribed(doc, method):
                         + "</strong>"
                         + " qty: <strong>"
                         + str(medication_list[0].get("stock_qty"))
-                        + "</strong>, prescribed last on: <strong>"
+                        + "</strong>, prescribed lastly on: <strong>"
                         + str(medication_list[0].get("posting_date"))
                     )
                     + "</strong><br>"
@@ -1398,7 +1398,10 @@ def show_last_prescribed(doc, method):
                 )
                 if val_msg:
                     valid_days_msg += val_msg
-
+                
+                # SHM Rock#: 169
+                validate_medication_class(doc.company, doc.name, doc.patient, row.drug_code)
+        
         if valid_days_msg:
             frappe.msgprint(
                 _(
