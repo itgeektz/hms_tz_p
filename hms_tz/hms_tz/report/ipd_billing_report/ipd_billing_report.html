@@ -1,0 +1,233 @@
+<style>
+    .print-format {
+        padding-left: 10mm;
+        padding-right: 5mm;
+        padding-top: 0mm;
+        font-size: 10pt;
+    }
+
+    .print-format table {
+        width: 100% !important;
+        table-layout: fixed;
+    }
+
+    .print-format td,
+    .print-format th {
+        vertical-align: top !important;
+        padding: 1px !important;
+    }
+
+    hr {
+        margin-top: 10px;
+        margin-bottom: 5px;
+    }
+
+    @media screen {
+        .print-format {
+            padding-left: 10mm;
+            padding-right: 5mm;
+            padding-top: 0mm;
+            font-size: 10pt;
+            width: 8.5in;
+            height: 11in;
+        }
+
+        .print-format table {
+            width: 100% !important;
+            table-layout: fixed;
+        }
+
+        .print-format td,
+        .print-format th {
+            vertical-align: top !important;
+            padding: 1px !important;
+        }
+
+        hr {
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+    }
+</style>
+
+<table cellspacing=0 cellpadding=0 style="border: 0px solid black;">
+    <colgroup>
+        <col style="width: 100%" />
+    </colgroup>
+    <thead>
+        <tr>
+            <td>
+                <p class="manifest-header text-center">
+                    <!-- <img src="/files/SHMH Letterhead 2021-04-28.png" style="width: 100% !important;" />
+                    <br><br>
+                    <hr>
+
+                    <hr> -->
+                </p>
+            </td>
+        </tr>
+        <p style="font-size: 20pt; font-family: Arial, Helvetica, sans-serif; text-align: center;">
+            Patient Partial Invoice Reciept
+        </p>
+    </thead>
+    <tbody>
+        <tr>
+            <td style="text-align: center">
+                <table class="table" style="width: 100%;">
+                    <colgroup>
+                        <col style="width: 27%" />
+                        <col style="width: 29%" />
+                        <col style="width: 25%" />
+                        <col style="width: 25%" />
+                    </colgroup>
+                    <tbody>
+                        <tr>
+                            <td style="text-align:left; border: 0px"><b>Patient:</b></td>
+                            <td style="text-align:left; border: 0px">{%= data[0].patient %}</td>
+                            <td style="text-align:left; border: 0px"><b>Appointment Type:</b></td>
+                            <td style="text-align:left; border: 0px">{%= data[0].appointment_type %}</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left; border: 0px"><b>Patient Name:</b></td>
+                            <td style="text-align:left; border: 0px">{%= data[0].patient_name %}</td>
+                            <td style="text-align:left; border: 0px"><b>Appointment Date:</b></td>
+                            <td style="text-align:left; border: 0px">{%= data[0].date %}</td>
+                        </tr>
+                        {% if (data[0].insurance_company != "") { %}
+                        <tr>
+                            <td style="text-align:left; border: 0px"><b>Insurance:</b></td>
+                            <td style="text-align:left; border: 0px">{%= data[0].insurance_company %}</td>
+                            <td style="text-align:left; border: 0px"><b>Authorization No:</b></td>
+                            <td style="text-align:left; border: 0px">{%= data[0].authorization_number %}</td>
+
+                        </tr>
+                        <tr>
+                            <td style="text-align:left; border: 0px"><b>Coverage Name:</b></td>
+                            <td style="text-align:left; border: 0px">{%= data[0].coverage_plan_name %}</td>
+                            <td style="text-align:left; border: 0px"><b>Card Number:</b></td>
+                            <td style="text-align:left; border: 0px">{%= data[0].coverage_plan_card_number %}</td>
+                        </tr>
+                        {% } %}
+
+                        {% if (data[0].admitted_date) { %}
+                        <tr>
+                            <td style="text-align:left; border: 0px"><b>Admitted Date:</b></td>
+                            <td style="text-align:left; border: 0px">{%= data[0].admitted_date %}</td>
+                            <td style="text-align:left; border: 0px"><b>Discharge Date:</b></td>
+                            <td style="text-align:left; border: 0px">{%= data[0].discharge_date %}</td>
+                        </tr>
+                        {% } %}
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table class="table table-bordered">
+                    <colgroup>
+                        <col style="width: 5%" />
+                        <col style="width: 12%" />
+                        <col style="width: 33%" />
+                        <col style="width: 10%" />
+                        <col style="width: 20%" />
+                        <col style="width: 20%" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th style="text-align:center">{%= __("#") %}</th>
+                            <th style="text-align:center">{%= __("Date") %}</th>
+                            <th style="text-align:left">{%= __("Item Name") %}</th>
+                            <th style="text-align:center">{%= __("Quantity") %}</th>
+                            <th style="text-align:center">{%= __("Price") %}</th>
+                            <th style="text-align:center">{%= __("Total Price") %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        {% var categoryData = {}; %}
+                        {% var total_amount = 0; %}
+                        {% var sortedCategories = []; %}
+                        
+                        {% for(var i = 0, l = data.length; i < l; i++) { %}
+                            {% var category = data[i].category; %}
+                            {% var amount = data[i].amount; %}
+                            
+                            {% if (!categoryData[category]) { %}
+                                {% categoryData[category] = [] %}
+                                {% sortedCategories.push(category); %} 
+                            {% } %}
+                            
+                            {% categoryData[category].push(data[i]); %}
+                            {% total_amount += amount; %}
+                            
+                        {% } %}
+                        
+                        {% sortedCategories.sort(function(a, b) {
+                            if (a === 'Consultations/Service Charges') return -1;
+                            if (b === 'Consultations/Service Charges') return 1;
+                            if (a === 'Services') return -1;
+                            if (b === 'Services') return 1;
+                            return 0;
+                        }); %}
+                        
+                        {% var count = 1; %}
+                        {% for (var i = 0; i < sortedCategories.length; i++) { %}
+                            {% var category = sortedCategories[i]; %}
+                                
+                            <tr>
+                                <td colspan="7" style="text-align: center; font-size: 15px; padding-top: 20px; padding-bottom: 25px;">
+                                    <strong>{%= (category === 'Services') ? 'Bed Charges' : category %}</strong>
+                                </td>
+                            </tr>
+                            
+                            {% for (var j = 0, k = categoryData[category].length; j < k; j++) { %}
+                                {% var item = categoryData[category][j]; %}
+                                
+                                <tr>
+                                    <td style="text-align: center;">{{ count }}</td>
+                                    <td style="text-align: left;">{{ item.date }}</td>
+                                    <td style="text-align: left;">{{ item.description }}</td>
+                                    <td style="text-align: center;">{{ item.quantity }}</td>
+                                    <td style="text-align: right;">{{ item.rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
+                                    <td style="text-align: right;">{{ item.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
+                                </tr>
+                                
+                                {% count = count + 1; %}
+                            {% } %}
+                        {% } %}
+                        
+
+</tbody>
+<tfoot>
+    <!-- <tr>
+        <th style="text-align: left; " colspan="5">Total</th>
+        <th style="text-align: right; ">{%= total_amount.toLocaleString(undefined,
+            {minimumFractionDigits: 2,
+            maximumFractionDigits: 2}) %}</th>
+    </tr> -->
+</tfoot>
+</table>
+</td>
+</tr>
+<tr>
+    <td>
+        <div style="padding-bottom: 3px; margin-top: 0px; margin-bottom: 0px; border: 0;">
+            <div class="col-xs-6 column-break">
+                <div class="row">
+                    <div class="col-xs-4 text-left">
+                        <label>Printed By: </label>
+                    </div>
+                    <div class="col-xs-7  value">
+                        {% for(var i=0, l=data.length; i<l; i++) { %} {%=data[i][("printed_by")] %} {% } %} </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-4 text-left">
+                        <label>Signature:</label>
+                    </div>
+                </div>
+            </div>
+    </td>
+</tr>
+</tbody>
+</table>

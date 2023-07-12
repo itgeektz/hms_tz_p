@@ -178,25 +178,16 @@ def on_submit_validation(doc, method):
                     doc.insurance_subscription
                     and healthcare_doc.medication_category == "Category S Medication"
                 ):
-                    frappe.msgprint(
-                        "Item: {0} is Category S Medication".format(
-                            frappe.bold(row.get(child.get("item")))
-                        ),
-                        alert=True,
-                    )
-
+                    frappe.msgprint(f"Item: {row.get(child.get('item'))} is Category S Medication", alert=True)
+                
                 # auto calculating quantity
                 if not row.quantity:
                     row.quantity = get_drug_quantity(row)
 
-
-    # Run on_submit
-    submitting_healthcare_practitioner = frappe.db.get_value(
-        "Healthcare Practitioner", {"user_id": frappe.session.user}, ["name"]
-    )
-    if submitting_healthcare_practitioner:
-        doc.practitioner = submitting_healthcare_practitioner
-
+    
+    #shm rock: 151
+    set_practitioner_name(doc, method)
+    
     # Run on_submit?
     prescribed_list = ""
     for key, value in child_tables.items():
@@ -1171,6 +1162,11 @@ def enqueue_on_update_after_submit(doc_name):
 
 def before_submit(doc, method):
     set_amounts(doc)
+    #shm rock: 151
+    set_practitioner_name(doc, method)
+    if doc.inpatient_record:
+        validate_patient_balance_vs_patient_costs(doc)
+    
     encounter_create_sales_invoice = frappe.get_cached_value(
         "Encounter Category", doc.encounter_category, "create_sales_invoice"
     )
@@ -1340,6 +1336,11 @@ def show_last_prescribed(doc, method):
         msg = None
         valid_days_msg = ""
         for row in doc.drug_prescription:
+            if row.is_cancelled or row.is_not_available_inhouse:
+                continue
+
+            item_code = frappe.get_cached_value("Medication", row.drug_code, "item")
+
             medication_list = frappe.db.sql(
                 """
             select dn.posting_date, dni.item_code, dni.stock_qty, dni.uom from `tabDelivery Note` dn
@@ -1350,7 +1351,7 @@ def show_last_prescribed(doc, method):
                             order by posting_date desc
                             limit 1"""
                 % ("%s", "%s"),
-                (row.drug_code, doc.patient),
+                (item_code, doc.patient),
                 as_dict=1,
             )
             if len(medication_list) > 0:
@@ -1362,7 +1363,7 @@ def show_last_prescribed(doc, method):
                         + "</strong>"
                         + " qty: <strong>"
                         + str(medication_list[0].get("stock_qty"))
-                        + "</strong>, prescribed last on: <strong>"
+                        + "</strong>, prescribed lastly on: <strong>"
                         + str(medication_list[0].get("posting_date"))
                     )
                     + "</strong><br>"
@@ -1376,7 +1377,10 @@ def show_last_prescribed(doc, method):
                 )
                 if val_msg:
                     valid_days_msg += val_msg
-
+                
+                # SHM Rock#: 169
+                validate_medication_class(doc.company, doc.name, doc.patient, row.drug_code)
+        
         if valid_days_msg:
             frappe.msgprint(
                 _(
@@ -1971,6 +1975,24 @@ def validate_medication_class(company, encounter, patient, drug_item, caller="Ba
         frappe.msgprint(_(f"Item: <strong>{drug_code}</strong> with same Medication Class: <strong>{medication_class}</strong> was lastly prescribed on: <strong>{prescribed_date}</strong><br>\
             Therefore item with same <b>medication class</b> were supposed to be prescribed after: <strong>{valid_days}</strong> days"))
 
+def set_practitioner_name(doc, method):
+    submitting_healthcare_practitioner = frappe.db.get_value(
+        "Healthcare Practitioner", {"user_id": frappe.session.user, "hms_tz_company": doc.company},
+        ["name", "practitioner_name"],
+        as_dict=1
+    )
+
+    if submitting_healthcare_practitioner:
+        doc.practitioner = submitting_healthcare_practitioner.name
+        doc.practitioner_name = submitting_healthcare_practitioner.practitioner_name
+    
+    elif doc.encounter_category == "Appointment":
+        if method not in ("before_insert", "validate"):
+            frappe.throw(_(f"Please set user id: <b>{frappe.session.user}</b>\
+                in Healthcare Practitioner<br>\
+                so as to set the correct practitioner, who submitting this encounter"
+            ))
+    
 def validate_medical_code(doc, method):
     """
         Validate medical code on patient encounter based on the configuration
