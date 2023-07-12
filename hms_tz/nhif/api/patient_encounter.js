@@ -1080,7 +1080,6 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
                     new_row[value_dict.mtuha_field] = item.mtuha;
                     let row = frm.add_child(field, new_row);
                 });
-                })
                 set_medical_code(frm, true);
             } else {
                 items.forEach((item) => {
