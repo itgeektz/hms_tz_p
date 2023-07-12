@@ -68,12 +68,28 @@ frappe.ui.form.on('Codification Table', {
 });
 
 frappe.ui.form.on('Drug Prescription', {
-	dosage: function (frm, cdt, cdn) {
-		frappe.model.set_value(cdt, cdn, "quantity", "");
-		frappe.model.set_value(cdt, cdn, "prescribe", "");
-		frappe.model.set_value(cdt, cdn, "amount", "");
+	dosage: (frm, cdt, cdn) => {
+		frappe.model.set_value(cdt, cdn, "quantity", 0);
+		frappe.model.set_value(cdt, cdn, "prescribe", 0);
+		frappe.model.set_value(cdt, cdn, "amount", 0);
+
+		let row = locals[cdt][cdn];
+		if (row.dosage && row.period) {
+			auto_calculate_drug_quantity(frm, row);
+		} else {
+			frappe.model.set_value(cdt, cdn, "quantity", 0);
+		}
 		frm.refresh_field("drug_prescription");
 	},
+	period: (frm, cdt, cdn) => {
+		let row = locals[cdt][cdn];
+		if (row.dosage && row.period) {
+			auto_calculate_drug_quantity(frm, row);
+		} else {
+			frappe.model.set_value(cdt, cdn, "quantity", 0);
+		}
+		frm.refresh_field("drug_prescription");
+	}
 });
 
 const set_patient_encounter = (frm) => {
@@ -187,4 +203,15 @@ const get_items_on_change_of_delivery_note = (frm) => {
 			}
 		});
 	}
+}
+
+var auto_calculate_drug_quantity = (frm, drug_item) => {
+	frappe.call({
+		method: "hms_tz.nhif.api.patient_encounter.get_drug_quantity",
+		args: {
+			drug_item: drug_item,
+		}
+	}).then(r => {
+		frappe.model.set_value(drug_item.doctype, drug_item.name, "quantity", r.message);
+	});
 }

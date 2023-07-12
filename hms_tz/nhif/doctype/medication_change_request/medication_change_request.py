@@ -17,6 +17,7 @@ from hms_tz.nhif.api.patient_encounter import validate_stock_item
 from hms_tz.nhif.api.patient_appointment import get_mop_amount, get_discount_percent
 from frappe.model.workflow import apply_workflow
 from frappe.utils import get_url_to_form
+from hms_tz.nhif.api.patient_encounter import get_drug_quantity
 
 class MedicationChangeRequest(Document):
     def validate(self):
@@ -49,6 +50,10 @@ class MedicationChangeRequest(Document):
                         + "</b>, is not available inhouse".format(
                             frappe.bold(drug.drug_code)
                     ))
+                
+                # auto calculating quantity
+                if not drug.quantity:
+                    drug.quantity = get_drug_quantity(drug)
                 
                 validate_stock_item(drug.drug_code, drug.quantity, self.company, drug.doctype, drug.healthcare_service_unit, caller="unknown", method="validate")
                 
