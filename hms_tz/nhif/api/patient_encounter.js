@@ -458,7 +458,6 @@ frappe.ui.form.on('Patient Encounter', {
             }
         });
     }
-
 });
 
 function show_cost_estimate_model(frm, cost_estimate) {
@@ -1081,6 +1080,8 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
                     new_row[value_dict.mtuha_field] = item.mtuha;
                     let row = frm.add_child(field, new_row);
                 });
+                })
+                set_medical_code(frm, true);
             } else {
                 items.forEach((item) => {
                     let new_row = {};
@@ -1141,7 +1142,7 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
         });
     }
 
-    function show_details(data, caller = ""){
+    function show_details(data, caller = "") {
         let html = `<table class="table table-hover" style="width:100%;">`;
         if (caller == "Diagnosis") {
             html += `
