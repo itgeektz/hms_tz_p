@@ -28,7 +28,10 @@ def before_submit(doc, method):
                     f"Approval number is required for <b>{doc.procedure_template}</b>. Please set the Approval Number."
                 )
             )
-        
+    
+    # 2023-07-13
+    # stop this validation for now
+    return
     if doc.approval_number and doc.approval_status != "Verified":
         frappe.throw(_(
                 f"Approval number: <b>{doc.approval_number}</b> for item: <b>{doc.procedure_template}</b> is not verified.>br>\

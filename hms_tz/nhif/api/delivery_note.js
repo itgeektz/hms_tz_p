@@ -77,6 +77,9 @@ frappe.ui.form.on("Delivery Note Item", {
         }
     },
     approval_number: (frm, cdt, cdn) => {
+        // 2023-07-13
+        // stop this validation for now
+        return
         let row = locals[cdt][cdn]
         if (row.approval_number != "" && row.approval_number != undefined) {
             frappe.dom.freeze(__("Verifying Approval Number..."));

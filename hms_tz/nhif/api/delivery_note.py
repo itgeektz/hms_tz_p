@@ -192,9 +192,14 @@ def before_submit(doc, method):
         frappe.throw(
             "<h4 class='font-weight-bold bg-warning text-center'>\
             This Delivery Note can't be submitted because all Items\
+<<<<<<< HEAD
                 are not available in stock</h4>"
         )
 
+=======
+                are not available in stock</h4>")
+    
+>>>>>>> 36c43126 (fix: disable validation of service approval number as NHIF is not supporting the API for production use)
     for item in doc.items:
         if item.is_restricted and not item.approval_number:
             frappe.throw(_(
@@ -202,6 +207,9 @@ def before_submit(doc, method):
                 )
             )
         
+        # 2023-07-13
+        # stop this validation for now
+        return
         if item.approval_number and item.approval_status != "Verified":
             frappe.throw(_(
                     f"Approval number: <b>{item.approval_number}</b> for item: <b>{item.item_code}</b> is not verified.\
