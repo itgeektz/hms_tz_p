@@ -202,12 +202,9 @@ def before_submit(doc, method):
                 )
             )
         
-<<<<<<< HEAD
-=======
         # 2023-07-13
         # stop this validation for now
         continue
->>>>>>> c929c618 (chore: set default healthcare service unit for each item  drug prescription after setting chronic medications)
         if item.approval_number and item.approval_status != "Verified":
             frappe.throw(_(
                     f"Approval number: <b>{item.approval_number}</b> for item: <b>{item.item_code}</b> is not verified.\
