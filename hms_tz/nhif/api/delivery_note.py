@@ -194,7 +194,6 @@ def before_submit(doc, method):
             This Delivery Note can't be submitted because all Items\
                 are not available in stock</h4>"
         )
-
     for item in doc.items:
         if item.is_restricted and not item.approval_number:
             frappe.throw(_(
