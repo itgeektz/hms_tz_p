@@ -31,6 +31,9 @@ frappe.ui.form.on('Lab Test', {
         }
     },
     approval_number: (frm) => {
+        // 2023-07-13
+        // stop this validation for now
+        return
         frm.fields_dict.approval_number.$input.focusout(() => {
             if (frm.doc.approval_number != "" && frm.doc.approval_number != undefined) {
                 frappe.dom.freeze(__("Verifying Approval Number..."));
