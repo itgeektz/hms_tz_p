@@ -231,6 +231,7 @@ frappe.ui.form.on('Patient Encounter', {
                             row.occurrence = element.occurrence;
                             row.occurence_period = element.occurence_period;
                             row.note = element.note;
+                            frm.trigger("default_healthcare_service_unit");
                             frappe.show_alert({
                                 message: __(`Drug '${element.drug_code}' added successfully`),
                                 indicator: 'green'
