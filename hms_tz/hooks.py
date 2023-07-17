@@ -58,7 +58,7 @@ doctype_js = {
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 
 doctype_list_js = {
-    "Therapy Plan" : ["nhif/api/therapy_plan_list.js"],
+    "Therapy Plan": ["nhif/api/therapy_plan_list.js"],
 }
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -187,6 +187,8 @@ doc_events = {
         "after_insert": "hms_tz.nhif.api.delivery_note.after_insert",
         "before_submit": "hms_tz.nhif.api.delivery_note.before_submit",
         "on_submit": "hms_tz.nhif.api.delivery_note.on_submit",
+        "on_cancel": "hms_tz.nhif.api.delivery_note.on_cancel",
+        "on_update_after_submit": "hms_tz.nhif.api.delivery_note.on_update_after_submit",
     },
     "Inpatient Record": {
         "validate": "hms_tz.nhif.api.inpatient_record.validate",
