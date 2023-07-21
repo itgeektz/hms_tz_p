@@ -1,0 +1,145 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:package_name",
+ "creation": "2023-07-16 22:34:56.937095",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "package_name",
+  "column_break_uwl0m",
+  "disabled",
+  "package_image",
+  "description_section",
+  "description",
+  "healthcare_services_section",
+  "price_list",
+  "services",
+  "consultations",
+  "section_break_b6omw",
+  "total_actual_item_price",
+  "column_break_ktbee",
+  "total_price_of_services",
+  "column_break_cgj2g",
+  "price_of_package"
+ ],
+ "fields": [
+  {
+   "fieldname": "package_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Package Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_uwl0m",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled"
+  },
+  {
+   "fieldname": "price_list",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Price List",
+   "options": "Price List",
+   "reqd": 1
+  },
+  {
+   "fieldname": "package_image",
+   "fieldtype": "Attach Image",
+   "label": "Package Image"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "description_section",
+   "fieldtype": "Section Break",
+   "label": "Description"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Description"
+  },
+  {
+   "fieldname": "healthcare_services_section",
+   "fieldtype": "Section Break",
+   "label": "Healthcare Services"
+  },
+  {
+   "fieldname": "services",
+   "fieldtype": "Table",
+   "label": "Services",
+   "options": "Healthcare Package Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_b6omw",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total_actual_item_price",
+   "fieldtype": "Float",
+   "label": "Total Actual Item Price"
+  },
+  {
+   "fieldname": "column_break_ktbee",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_cgj2g",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_price_of_services",
+   "fieldtype": "Float",
+   "label": "Total Price of Services"
+  },
+  {
+   "fieldname": "price_of_package",
+   "fieldtype": "Float",
+   "label": "Price of Package"
+  },
+  {
+   "fieldname": "consultations",
+   "fieldtype": "Table",
+   "label": "Consultations",
+   "options": "Healthcare Package Consultation"
+  }
+ ],
+ "image_field": "package_image",
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "max_attachments": 3,
+ "modified": "2023-07-18 15:27:28.849749",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "Healthcare Package",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "price_of_package",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "package_name",
+ "track_changes": 1,
+ "translated_doctype": 1
+}

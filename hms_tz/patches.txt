@@ -25,3 +25,7 @@ hms_tz.patches.custom_fields.create_and_arrange_drug_action_custom_fields
 hms_tz.patches.custom_fields.custom_fields_for_medication_class_validation_on_patient_encounter
 hms_tz.patches.custom_fields.custom_fields_for_medical_code
 hms_tz.patches.property_setter.referring_practitioner_on_patient_referrals
+<<<<<<< HEAD
+=======
+hms_tz.patches.custom_fields.healthcare_package_field_on_pa_and_pe
+>>>>>>> cbfa94e4 (feat: Healthcare Package)

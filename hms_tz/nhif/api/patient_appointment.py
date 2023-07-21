@@ -293,11 +293,15 @@ def make_encounter(doc, method):
     encounter_doc.encounter_category = "Appointment"
 
     encounter_doc.save(ignore_permissions=True)
+    frappe.msgprint(_("Patient Encounter {0} created".format(encounter_doc.name)))
+
     if doc.doctype == "Patient Appointment":
         doc.ref_patient_encounter = encounter_doc.name
         doc.db_update()
 
-    frappe.msgprint(_("Patient Encounter {0} created".format(encounter_doc.name)))
+        if doc.healthcare_package_order:
+            return encounter_doc.name
+
 
 
 @frappe.whitelist()
@@ -450,7 +454,7 @@ def set_follow_up(appointment_doc, method):
         "name": ["!=", appointment_doc.name],
         "insurance_subscription": appointment_doc.insurance_subscription,
         "department": appointment_doc.department,
-        #"status": "Closed",
+        "status": "Closed",
     }
     appointment = get_previous_appointment(appointment_doc.patient, filters)
     if appointment and appointment_doc.appointment_date:
