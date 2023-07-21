@@ -4,9 +4,15 @@
 frappe.ui.form.on('Healthcare Package Order', {
 	refresh: (frm) => {
 		frm.get_field("consultations").grid.cannot_add_rows = true;
+		if (frm.doc.create_sales_invoice) {
+			frm.set_df_property("payment_type", "read_only", 1);
+			frm.set_df_property("mode_of_payment", "read_only", 1);
+		}
 	},
 	onload: (frm) => {
 		frm.get_field("consultations").grid.cannot_add_rows = true
+		frm.set_df_property("payment_type", "read_only", 1);
+		frm.set_df_property("mode_of_payment", "read_only", 1);
 	},
 	healthcare_package: (frm) => {
 		if (frm.doc.healthcare_package) {
@@ -18,7 +24,7 @@ frappe.ui.form.on('Healthcare Package Order', {
 					package_doc.consultations.forEach((row) => {
 						let child = frm.add_child("consultations", {
 							"consultation_item": row.consultation_item,
-							"consultation_fee": row.service_price,
+							// "consultation_fee": row.service_price,
 						});
 					});
 					frm.refresh_field("consultations");
@@ -36,6 +42,16 @@ frappe.ui.form.on('Healthcare Package Order', {
 			frm.set_value("insurance_subscription", null);
 		}
 	},
+	create_sales_invoice: (frm) => {
+		console.log("create_sales_invoice")
+		frm.call("create_sales_invoice", {
+			self: frm.doc
+		}).then((r) => {
+			if (r.message) {
+				frm.refresh();
+			}
+		});
+	}
 });
 
 let show_package_items = (frm, package_doc) => {
@@ -54,20 +70,21 @@ let show_package_items = (frm, package_doc) => {
 					<tr>
 						<th>Healthcare Service Type</th>
 						<th>Healthcare Service</th>
-						<th>Service Price</th>
 					</tr>
 				</thead>
 				<tbody>`;
+		// <th>Service Price</th>
 
 		if (package_doc.consultations.length > 0) {
 			package_doc.consultations.forEach((row) => {
 				html += `<tr>
 					<td style="border: 1px solid #dddddd; padding: 8px;">Consultation</td>
 					<td style="border: 1px solid #dddddd; padding: 8px;">${row.consultation_item}</td>
-					<td class="text-right" style="border: 1px solid #dddddd; padding: 8px;">
-						${frappe.format(row.service_price, { fieldtype: "Currency", options: "currency" })}
-					</td>
+					
 				</tr>`;
+				// <td class="text-right" style="border: 1px solid #dddddd; padding: 8px;">
+				// 	${frappe.format(row.service_price, { fieldtype: "Currency", options: "currency" })}
+				// </td>
 			});
 		}
 

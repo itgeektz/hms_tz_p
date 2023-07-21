@@ -10,7 +10,11 @@
   "healthcare_service",
   "price_list",
   "actual_item_price",
-  "service_price"
+  "service_price",
+  "column_break_9diyu",
+  "quantity",
+  "dosage",
+  "period"
  ],
  "fields": [
   {
@@ -48,12 +52,39 @@
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Service Price"
+  },
+  {
+   "fieldname": "column_break_9diyu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval: doc.healthcare_service_type == \"Medication\"",
+   "fieldname": "quantity",
+   "fieldtype": "Float",
+   "label": "Quantity",
+   "mandatory_depends_on": "eval: doc.healthcare_service_type == \"Medication\""
+  },
+  {
+   "depends_on": "eval: doc.healthcare_service_type == \"Medication\"",
+   "fieldname": "dosage",
+   "fieldtype": "Link",
+   "label": "Dosage",
+   "mandatory_depends_on": "eval: doc.healthcare_service_type == \"Medication\"",
+   "options": "Prescription Dosage"
+  },
+  {
+   "depends_on": "eval: doc.healthcare_service_type == \"Medication\"",
+   "fieldname": "period",
+   "fieldtype": "Link",
+   "label": "Period",
+   "mandatory_depends_on": "eval: doc.healthcare_service_type == \"Medication\"",
+   "options": "Prescription Duration"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2023-07-16 22:38:00.672950",
+ "modified": "2023-07-21 18:51:04.958497",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Healthcare Package Item",

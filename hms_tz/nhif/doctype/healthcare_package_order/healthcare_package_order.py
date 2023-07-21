@@ -3,9 +3,19 @@
 
 import frappe
 import time
-from frappe.utils import nowdate, nowtime
+from frappe.utils import nowdate, nowtime, getdate
 from frappe.model.document import Document
 from hms_tz.nhif.api.patient_appointment import make_encounter
+try:
+	from healthcare.healthcare.doctype.healthcare_settings.healthcare_settings import (
+		get_receivable_account,
+		get_income_account,
+		)
+except ImportError:
+    from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
+        get_receivable_account,
+        get_income_account,
+    )
 
 class HealthcarePackageOrder(Document):
 	def before_insert(self):
@@ -93,6 +103,49 @@ class HealthcarePackageOrder(Document):
 			    "finalized": 1,
 			    "encounter_type": "Final"
 			})
+	
+	@frappe.whitelist()
+	def create_sales_invoice(self):
+		self = frappe.parse_json(self)
+		invoice = frappe.new_doc("Sales Invoice")
+		invoice.patient = self.patient
+		invoice.customer = frappe.get_cached_value(
+            "Patient", self.patient, "customer"
+        )
+		invoice.due_date = nowdate()
+		invoice.company = self.company
+		invoice.debit_to = get_receivable_account(self.company)
+		invoice.healthcare_practitioner = "Healthcare Package"
+
+		item = invoice.append("items", {})
+		item.item_code = "Healthcare Package"
+		item.description = "Healthcare Package: " + self.healthcare_package
+		item.rate = self.total_price
+		item.amount = self.total_price
+		item.qty = 1
+		item.cost_center = frappe.get_cached_value("Company", self.company, "cost_center")
+		item.reference_dt = "Healthcare Package Order"
+		item.reference_dn = self.name
+		item.income_account = get_income_account("Healthcare Package", self.company)
+		
+		if self.mode_of_payment and self.total_price > 0:
+			invoice.is_pos = 1
+			payment = invoice.append("payments", {})
+			payment.mode_of_payment = self.mode_of_payment
+			payment.amount = self.total_price
+
+		invoice.set_taxes()
+		invoice.set_missing_values(for_validate=True)
+		invoice.flags.ignore_mandatory = True
+		invoice.save()
+		invoice.calculate_taxes_and_totals()
+		invoice.submit()
+		self.paid = 1
+		self.sales_invoice = invoice.name
+		self.save(ignore_permissions=True)
+		frappe.msgprint(f"Sales Invoice {invoice.name} created")
+		return True
+
 
 def create_single_appointment(doc, row, appointment_type, is_pratictioner_consultation=False):
 	appointment = frappe.new_doc("Patient Appointment")
@@ -145,12 +198,26 @@ def update_encounter_items(encounter_doc, package_doc, has_items):
 		if has_items:
 			for d in get_table_field_map():
 				if row.healthcare_service_type == d["template"]:
-					encounter_doc.append(d["table"], {
+					new_row =  {
 						d["field"]: row.healthcare_service,
 						"prescribe": 1 if encounter_doc.mode_of_payment else 0,
 						"medical_code": str("ICD-10 R69") + "\n " + str("Illness, unspecified"),
 						"amount": row.service_price,
-					})
+					}
+
+					if row.healthcare_service_type == "Radiology Examination Template":
+						new_row["radiology_test_comment"] = "Heqalthcare Package"
+
+					if row.healthcare_service_type == "Medication":
+						new_row["quantity"] = row.quantity
+						new_row["dosage"] = row.dosage
+						new_row["period"] = row.period
+						new_row["healthcare_service_unit"] = encounter_doc.default_healthcare_service_unit
+					
+					if row.healthcare_service_type == "Therapy Type":
+						new_row["no_of_sessions"] = 1
+					
+					encounter_doc.append(d["table"], new_row)
 	item_table += "</p>"
 	encounter_doc.examination_detail = item_table
 
