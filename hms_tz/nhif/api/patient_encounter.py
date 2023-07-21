@@ -96,8 +96,10 @@ def on_submit_validation(doc, method):
     }
     if doc.encounter_type == "Initial":
         doc.reference_encounter = doc.name
-    show_last_prescribed(doc, method)
-    show_last_prescribed_for_lrpt(doc, method)
+    
+    if not doc.healthcare_package_order:
+        show_last_prescribed(doc, method)
+        show_last_prescribed_for_lrpt(doc, method)
 
     checkـforـduplicate(doc, method)
 
@@ -187,10 +189,14 @@ def on_submit_validation(doc, method):
                 if not row.quantity:
                     row.quantity = get_drug_quantity(row)
 
+<<<<<<< HEAD
     
     #shm rock: 151
     set_practitioner_name(doc, method)
     
+=======
+
+>>>>>>> 12e66307 (feat: prevent duplicate and undo set final of encounters having healthcare package order)
     # Run on_submit?
     prescribed_list = ""
     for key, value in child_tables.items():
@@ -240,8 +246,15 @@ def on_submit_validation(doc, method):
                     healthcare_service_unit=row.get("healthcare_service_unit"),
                     method=method,
                 )
+<<<<<<< HEAD
 
     if prescribed_list:
+=======
+                if doc.insurance_subscription:
+                    method = old_method
+            
+    if prescribed_list and not doc.healthcare_package_order:
+>>>>>>> 12e66307 (feat: prevent duplicate and undo set final of encounters having healthcare package order)
         msgPrint(
             _(
                 "{0}<BR>The above been prescribed. <b>Request the patient to visit the"
@@ -268,6 +281,9 @@ def on_submit_validation(doc, method):
         doc.patient_age = calculate_patient_age(doc.patient)
     
     validate_medical_code(doc, method)
+    
+    # shm rock: 151
+    set_practitioner_name(doc, method)
 
     insurance_subscription = doc.insurance_subscription
     if not insurance_subscription:
@@ -378,6 +394,9 @@ def checkـforـduplicate(doc, method):
 @frappe.whitelist()
 def duplicate_encounter(encounter):
     doc = frappe.get_doc("Patient Encounter", encounter)
+    if doc.healthcare_package_order:
+        frappe.throw(_("Cannot duplicate an encounter of healthcare package order, Please let the patient to create appointment again"))
+
     if not doc.docstatus == 1 or doc.encounter_type == "Final" or doc.duplicated == 1:
         frappe.msgprint(
             _(
@@ -546,13 +565,23 @@ def validate_stock_item(
 
 def on_submit(doc, method):
     if (
-        not doc.insurance_subscription and doc.inpatient_record
+        not doc.insurance_subscription and
+        doc.inpatient_record and
+        not doc.healthcare_package_order
     ):  # Cash inpatient billing
         inpatient_billing(doc, method)
     else:  # insurance patient
         on_submit_validation(doc, method)
         create_healthcare_docs(doc, method)
         create_delivery_note(doc, method)
+    
+    if (
+        doc.healthcare_package_order and
+        not doc.insurance_subscription and
+        not doc.inpatient_record
+    ):
+        create_items_from_healthcare_package_orders(doc, method)
+    
     if doc.inpatient_record:
         update_inpatient_record_consultancy(doc)
 
@@ -1164,12 +1193,24 @@ def enqueue_on_update_after_submit(doc_name):
     on_update_after_submit(frappe.get_doc("Patient Encounter", doc_name), "enqueue")
 
 def before_submit(doc, method):
+<<<<<<< HEAD
     set_amounts(doc)
     #shm rock: 151
     set_practitioner_name(doc, method)
     if doc.inpatient_record:
         validate_patient_balance_vs_patient_costs(doc)
     
+=======
+    if not doc.healthcare_package_order:
+        set_amounts(doc)
+
+    # shm rock: 151
+    set_practitioner_name(doc, method)
+
+    if doc.inpatient_record:
+        validate_patient_balance_vs_patient_costs(doc)
+
+>>>>>>> 12e66307 (feat: prevent duplicate and undo set final of encounters having healthcare package order)
     encounter_create_sales_invoice = frappe.get_cached_value(
         "Encounter Category", doc.encounter_category, "create_sales_invoice"
     )
@@ -1192,8 +1233,7 @@ def before_submit(doc, method):
                     "Cannot Submit Encounter",
                 )
             )
-    if doc.inpatient_record:
-        validate_patient_balance_vs_patient_costs(doc)
+
 
 @frappe.whitelist()
 def undo_finalized_encounter(cur_encounter, ref_encounter=None):
@@ -1989,8 +2029,17 @@ def set_practitioner_name(doc, method):
         doc.practitioner = submitting_healthcare_practitioner.name
         doc.practitioner_name = submitting_healthcare_practitioner.practitioner_name
     
+<<<<<<< HEAD
     elif doc.encounter_category == "Appointment":
         if method not in ("before_insert", "validate"):
+=======
+    elif (
+        doc.encounter_category == "Appointment" and
+        not doc.healthcare_package_order and
+        doc.practitioner not in ["Direct Cash","Direct Insurance"]
+    ):
+        if method not in ("before_insert","validate"):
+>>>>>>> 12e66307 (feat: prevent duplicate and undo set final of encounters having healthcare package order)
             frappe.throw(_(f"Please set user id: <b>{frappe.session.user}</b>\
                 in Healthcare Practitioner<br>\
                 so as to set the correct practitioner, who submitting this encounter"
@@ -2055,3 +2104,27 @@ def validate_medical_code(doc, method):
                         ),
                         method
                     )
+
+def create_items_from_healthcare_package_orders(doc, method):
+    child_tables_list = [
+        "lab_test_prescription",
+        "radiology_procedure_prescription",
+        "procedure_prescription",
+    ]
+    for child_table_field in child_tables_list:
+        if doc.get(child_table_field):
+            child_table = doc.get(child_table_field)
+            for child in child_table:
+                if child.is_cancelled:
+                    continue
+                if child.doctype == "Lab Prescription":
+                    create_individual_lab_test(doc, child)
+                elif child.doctype == "Radiology Procedure Prescription":
+                    create_individual_radiology_examination(
+                        doc, child
+                    )
+                elif child.doctype == "Procedure Prescription":
+                    create_individual_procedure_prescription(
+                        doc, child
+                    )
+    create_delivery_note(doc, method)

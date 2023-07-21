@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+import time
 from frappe.utils import nowdate, nowtime
 from frappe.model.document import Document
 from hms_tz.nhif.api.patient_appointment import make_encounter
@@ -12,8 +13,6 @@ class HealthcarePackageOrder(Document):
 	
 	def validate(self):
 		self.set_total_price()
-		self.create_appointemnts()
-		self.create_encounters()
 
 	def before_submit(self):
 		self.validate_consultaion_details()
@@ -63,9 +62,9 @@ class HealthcarePackageOrder(Document):
 		self.non_consultation_appointment = non_consultation_appointment
 
 		# create appointment with consultation fee
-		# for row in self.consultations:
-		# 	consultation_appointment = create_single_appointment(self, row, appointment_type, True)
-		# 	row.appointment = consultation_appointment
+		for row in self.consultations:
+			consultation_appointment = create_single_appointment(self, row, appointment_type, True)
+			row.appointment = consultation_appointment
 	
 	def create_encounters(self):
 		if self.non_consultation_appointment:
@@ -74,19 +73,26 @@ class HealthcarePackageOrder(Document):
 			self.db_set("non_consultation_encounter", encounter, update_modified=False)
 			self.update_encounter_details(encounter, True)
 
-		# for row in self.consultations:
-		# 	if row.appointment:
-		# 		appointment_doc = frappe.get_doc("Patient Appointment", row.appointment)
-		# 		encounter = make_encounter(appointment_doc, "patient_encounter")
-		# 		row.db_set("encounter", encounter, update_modified=False)
-		# 		self.update_encounter_details(encounter)
+		for row in self.consultations:
+			if row.appointment:
+				appointment_doc = frappe.get_doc("Patient Appointment", row.appointment)
+				encounter = make_encounter(appointment_doc, "patient_encounter")
+				row.db_set("encounter", encounter, update_modified=False)
+				self.update_encounter_details(encounter)
 	
 	def update_encounter_details(self, encounter, has_items=False):
 		package_doc = frappe.get_doc("Healthcare Package", self.healthcare_package)
 		encounter_doc = frappe.get_doc("Patient Encounter", encounter)
 		update_encounter_items(encounter_doc, package_doc, has_items)
 		encounter_doc.save(ignore_permissions=True)
-		# encounter_doc.submit()
+
+		if has_items:
+			encounter_doc.submit()
+			time.sleep(10)
+			frappe.db.set_value(encounter_doc.doctype, encounter_doc.name, {
+			    "finalized": 1,
+			    "encounter_type": "Final"
+			})
 
 def create_single_appointment(doc, row, appointment_type, is_pratictioner_consultation=False):
 	appointment = frappe.new_doc("Patient Appointment")
@@ -135,14 +141,14 @@ def update_encounter_items(encounter_doc, package_doc, has_items):
 			})
 	
 	for row in package_doc.services:
-		item_table += f"{template_map[row.healthcare_service_type]}: {row.healthcare_service}\<br>"
+		item_table += f"{template_map[row.healthcare_service_type]}: {row.healthcare_service}<br>"
 		if has_items:
 			for d in get_table_field_map():
 				if row.healthcare_service_type == d["template"]:
 					encounter_doc.append(d["table"], {
 						d["field"]: row.healthcare_service,
 						"prescribe": 1 if encounter_doc.mode_of_payment else 0,
-						"medical_code": "ICD-10 R69\n Illness, unspecified ",
+						"medical_code": str("ICD-10 R69") + "\n " + str("Illness, unspecified"),
 						"amount": row.service_price,
 					})
 	item_table += "</p>"

@@ -129,7 +129,7 @@
    "options": "HLC-HP-.YYYY.-"
   },
   {
-   "depends_on": "eval: doc.mode_of_payment",
+   "depends_on": "eval: doc.mode_of_payment && !doc.sales_invoice",
    "fieldname": "create_sales_invoice",
    "fieldtype": "Button",
    "label": "Create Sales Invoice"
@@ -177,12 +177,14 @@
   {
    "fieldname": "non_consultation_appointment",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Non Consultation Appointment",
    "options": "Patient Appointment"
   },
   {
    "fieldname": "non_consultation_encounter",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Non Consultation Encounter",
    "options": "Patient Encounter"
   },
@@ -196,7 +198,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-07-21 13:31:17.175616",
+ "modified": "2023-07-21 16:35:33.490018",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Healthcare Package Order",
