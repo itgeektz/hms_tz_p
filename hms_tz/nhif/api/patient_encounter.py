@@ -279,7 +279,7 @@ def on_submit_validation(doc, method):
     if not insurance_subscription:
         return
 
-    if not doc.healthcare_service_unit:
+    if not doc.healthcare_service_unit and not doc.healthcare_package_order:
         frappe.throw(_("Healthcare Service Unit not set"))
     healthcare_insurance_coverage_plan = frappe.get_cached_value(
         "Healthcare Insurance Subscription",
@@ -673,6 +673,7 @@ def create_delivery_note_per_encounter(patient_encounter_doc, method):
     if (
         not patient_encounter_doc.insurance_subscription
         and not patient_encounter_doc.inpatient_record
+        and not patient_encounter_doc.healthcare_package_order
     ):
         return
     # Create list of warehouses to process delivery notes by warehouses
@@ -780,11 +781,16 @@ def create_delivery_note_per_encounter(patient_encounter_doc, method):
         if (
             not patient_encounter_doc.insurance_subscription
             and patient_encounter_doc.inpatient_record
+            or (
+                patient_encounter_doc.mode_of_payment and
+                patient_encounter_doc.healthcare_package_order
+            )
         ):
             encounter_customer = frappe.get_cached_value(
                 "Patient", patient_encounter_doc.patient, "customer"
             )
             insurance_coverage_plan = ""
+
         elif not encounter_customer:
             encounter_customer = frappe.get_cached_value(
                 "Healthcare Insurance Company",

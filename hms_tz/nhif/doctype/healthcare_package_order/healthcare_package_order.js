@@ -4,15 +4,41 @@
 frappe.ui.form.on('Healthcare Package Order', {
 	refresh: (frm) => {
 		frm.get_field("consultations").grid.cannot_add_rows = true;
+		frm.get_field("consultations").$wrapper.find(".grid-remove-rows").hide();
+		frm.get_field("consultations").$wrapper.find(".grid-remove-all-rows").hide();
+
 		if (frm.doc.create_sales_invoice) {
 			frm.set_df_property("payment_type", "read_only", 1);
 			frm.set_df_property("mode_of_payment", "read_only", 1);
 		}
+		frm.set_query('insurance_subscription', function () {
+			return {
+				filters: {
+					"is_active": 1,
+					"docstatus": 1,
+					"insurance_company": ["not like", "NHIF"],
+					"patient": frm.doc.patient
+				}
+			};
+		});
 	},
 	onload: (frm) => {
 		frm.get_field("consultations").grid.cannot_add_rows = true
-		frm.set_df_property("payment_type", "read_only", 1);
-		frm.set_df_property("mode_of_payment", "read_only", 1);
+		frm.get_field("consultations").$wrapper.find(".grid-remove-rows").hide();
+		frm.get_field("consultations").$wrapper.find(".grid-remove-all-rows").hide();
+		if (frm.doc.create_sales_invoice) {
+			frm.set_df_property("payment_type", "read_only", 1);
+			frm.set_df_property("mode_of_payment", "read_only", 1);
+		}
+		frm.set_query('insurance_subscription', function () {
+			return {
+				filters: {
+					'is_active': 1,
+					'docstatus': 1,
+					'patient': frm.doc.patient
+				}
+			};
+		});
 	},
 	healthcare_package: (frm) => {
 		if (frm.doc.healthcare_package) {
@@ -43,15 +69,34 @@ frappe.ui.form.on('Healthcare Package Order', {
 		}
 	},
 	create_sales_invoice: (frm) => {
-		console.log("create_sales_invoice")
+		if (frm.is_dirty()) {
+			frappe.msgprint(__("<b>Please save the document before creating Sales Invoice</b>"));
+			return;
+		}
+
+		frappe.dom.freeze(__("Creating Sales Invoice..."));
 		frm.call("create_sales_invoice", {
 			self: frm.doc
 		}).then((r) => {
+			frappe.dom.unfreeze();
 			if (r.message) {
+				frm.set_df_property("payment_type", "read_only", 1);
+				frm.set_df_property("mode_of_payment", "read_only", 1);
 				frm.refresh();
 			}
 		});
 	}
+});
+
+frappe.ui.form.on('Healthcare Package Order Consultation', {
+	form_render: (frm, cdt, cdn) => {
+		frm.get_field("consultations").grid.wrapper.find(".grid-delete-row").hide();
+		frm.get_field("consultations").grid.wrapper.find(".grid-move-row").hide();
+		frm.get_field("consultations").grid.wrapper.find(".grid-duplicate-row").hide();
+		frm.get_field("consultations").grid.wrapper.find(".grid-append-row").hide();
+		frm.get_field("consultations").grid.wrapper.find(".grid-insert-row").hide();
+		frm.get_field("consultations").grid.wrapper.find(".grid-insert-row-below").hide();
+	},
 });
 
 let show_package_items = (frm, package_doc) => {
@@ -91,12 +136,12 @@ let show_package_items = (frm, package_doc) => {
 		if (package_doc.services.length > 0) {
 			package_doc.services.forEach((row) => {
 				html += `<tr>
-				<td style="border: 1px solid #dddddd; padding: 8px;">${row.healthcare_service_type}</td>
-				<td style="border: 1px solid #dddddd; padding: 8px;">${row.healthcare_service}</td>
-				<td class="text-right" style="border: 1px solid #dddddd; padding: 8px;">
-					${frappe.format(row.service_price, { fieldtype: "Currency", options: "currency" })}
-				</td>
-			</tr>`;
+					<td style="border: 1px solid #dddddd; padding: 8px;">${row.healthcare_service_type}</td>
+					<td style="border: 1px solid #dddddd; padding: 8px;">${row.healthcare_service}</td>
+				</tr>`;
+				// <td class="text-right" style="border: 1px solid #dddddd; padding: 8px;">
+				// 	${frappe.format(row.service_price, { fieldtype: "Currency", options: "currency" })}
+				// </td>
 			});
 		}
 		html += `</tbody></table>`;

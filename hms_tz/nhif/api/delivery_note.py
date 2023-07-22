@@ -168,6 +168,9 @@ def validate_medication_class(doc, row):
         as_dict=1,
     )
 
+    if len(medication_class_list) == 0:
+        return
+    
     prescribed_date = medication_class_list[0].posting_date
     item_code = medication_class_list[0].item_code
     valid_days = medication_class_list[0].valid_days

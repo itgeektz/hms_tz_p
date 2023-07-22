@@ -639,6 +639,9 @@ def get_discount_percent(insurance_company):
 
 
 def check_multiple_appointments(doc):
+    if doc.healthcare_package_order:
+        return
+    
     if (
         doc.coverage_plan_card_number
         and "NHIF" in doc.insurance_company
