@@ -146,7 +146,6 @@ class HealthcarePackageOrder(Document):
 		frappe.msgprint(f"Sales Invoice {invoice.name} created")
 		return True
 
-
 def create_single_appointment(doc, row, appointment_type, is_pratictioner_consultation=False):
 	appointment = frappe.new_doc("Patient Appointment")
 	appointment.company = doc.company
@@ -157,6 +156,7 @@ def create_single_appointment(doc, row, appointment_type, is_pratictioner_consul
 	appointment.appointment_type = appointment_type
 	if doc.payment_type == "Insurance":
 		appointment.insurance_subscription = doc.insurance_subscription
+		appointment.authorization_number = doc.authorization_number
 	if doc.payment_type == "Cash":
 		appointment.mode_of_payment = doc.mode_of_payment
 		appointment.invoiced = 1
@@ -220,7 +220,6 @@ def update_encounter_items(encounter_doc, package_doc, has_items):
 					encounter_doc.append(d["table"], new_row)
 	item_table += "</p>"
 	encounter_doc.examination_detail = item_table
-
 
 def get_table_field_map():
 	field_table_map = [

@@ -25,6 +25,7 @@
   "payment_type",
   "mode_of_payment",
   "insurance_subscription",
+  "authorization_number",
   "column_break_ms7tu",
   "total_price",
   "paid",
@@ -193,12 +194,19 @@
    "fieldtype": "Float",
    "label": "Total Price",
    "read_only": 1
+  },
+  {
+   "depends_on": "eval: doc.insurance_subscription",
+   "fieldname": "authorization_number",
+   "fieldtype": "Data",
+   "label": "Authorization Number",
+   "mandatory_depends_on": "eval: doc.insurance_subscription"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-07-21 16:35:33.490018",
+ "modified": "2023-07-22 14:27:31.429453",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Healthcare Package Order",
