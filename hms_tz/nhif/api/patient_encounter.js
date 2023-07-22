@@ -564,10 +564,6 @@ function set_medical_code(frm, reset_columns) {
             grid.fields_map.medical_code.options = options;
             grid.refresh();
 
-<<<<<<< HEAD
-            // Set options for the medical_code field in the child table's child table
-=======
->>>>>>> 12e66307 (feat: prevent duplicate and undo set final of encounters having healthcare package order)
             if (reset_columns) {
                 frm.fields_dict[fieldname].grid.grid_rows.forEach(row => {
                     row.docfields.forEach(docfield => {
@@ -1306,8 +1302,6 @@ var validate_medication_class = (frm, drug_item) => {
         }
     });
 }
-<<<<<<< HEAD
-=======
 
 var validate_healthcare_package_order_items = (frm) => {
     if (frm.doc.healthcare_package_order) {
@@ -1323,4 +1317,3 @@ var validate_healthcare_package_order_items = (frm) => {
         }
     }
 }
->>>>>>> 12e66307 (feat: prevent duplicate and undo set final of encounters having healthcare package order)
