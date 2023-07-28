@@ -33,6 +33,9 @@ class PatientDiscountRequest(Document):
 		self.approved_by = get_fullname(frappe.session.user)
 		self.apply_cash_discount()
 	
+	def on_submit(self):
+		self.apply_insurance_discount()
+	
 	def set_missing_values(self):
 		self.posting_date = nowdate()
 		self.posting_time = nowtime()
@@ -144,6 +147,20 @@ class PatientDiscountRequest(Document):
 			)
 			frappe.msgprint(f"Discount applied on Sales Invoice: {self.sales_invoice}", alert=True)
 
+	def apply_insurance_discount(self):
+		if self.appointment:
+			frappe.enqueue(
+				method=equeue_apply_insurance_discount,
+				queue='default',
+				timeout=100000,
+				is_async=True, 
+				job_name="apply_insurance_discount",
+				kwargs={"self": self}
+			)
+			frappe.msgprint(
+				f"Equeued applying discount for Non NHIF Insurance",
+				alert=True
+			)
 
 @frappe.whitelist()
 def get_item_details(invoice_no, item_category, item_code):
@@ -234,3 +251,144 @@ def get_items(invoice_no, reference_dt=None, reset_options=None):
 	if reset_options:
 		return item_codes
 	return items
+
+def equeue_apply_insurance_discount(kwargs):
+	self = kwargs.get("self")
+	url  = get_url_to_form("Patient Discount Request", self.name)
+
+	def apply_discount_on_appointment(self, url):
+		if not self.appointment:
+			return
+		
+		discount_amount = 0
+		appointment_doc = frappe.get_doc("Patient Appointment", self.appointment)
+		if self.discount_percent:
+			discount_amount = appointment_doc.paid_amount * (self.discount_percent/100)
+		elif self.discount_amount:
+			discount_amount = self.discount_amount
+		
+		frappe.db.set_value("Patient Appointment", self.appointment, {
+			"paid_amount": appointment_doc.paid_amount - discount_amount,
+			"hms_tz_is_discount_applied": 1,
+		})
+
+		appointment_doc.add_comment(
+			comment_type="Comment",
+			text=f"Discount was successfully applied on this Patient Appointment: <b>{appointment_doc.name}</b><br><br>\
+				Please refer to Patient Discount Request: <a href='{url}'><b>{self.name}</b></a> for more details."
+		)
+
+	def apply_discount_on_encounters(self, url, table_field_to_apply_discount_on=None):
+		encounters = frappe.get_all("Patient Encounter", filters={"appointment": self.appointment}, fields=["name"], pluck="name")
+		if len(encounters) == 0:
+			return
+		
+		for encounter in encounters:
+			encounter_doc = frappe.get_doc("Patient Encounter", encounter)
+
+			for table_field in [
+				"lab_test_prescription",
+				"radiology_procedure_prescription",
+				"procedure_prescription",
+				"drug_prescription",
+				"therapy_plan_detail",
+			]:
+				if table_field_to_apply_discount_on and table_field != table_field_to_apply_discount_on:
+					continue
+				
+				if not encounter_doc.get(table_field):
+					continue
+
+				for row in encounter_doc.get(table_field):
+					if row.hms_tz_is_discount_applied:
+						continue
+
+					enc_discount = 0
+					if self.discount_percent:
+						enc_discount = row.amount * (self.discount_percent/100)
+					elif self.discount_amount:
+						enc_discount = self.discount_amount
+					
+					frappe.db.set_value(row.doctype, row.name, {
+						"amount": row.amount - enc_discount,
+						"hms_tz_is_discount_applied": 1,
+					})
+			
+				encounter_doc.add_comment(
+					comment_type="Comment",
+					text=f"Discount was successfully applied on this  Patient Encounter: <b>{encounter_doc.name}</b><br><br>\
+						Please refer to Patient Discount Request: <a href='{url}'><b>{self.name}</b></a> for more details."
+				)
+
+	def apply_discount_on_inpatient(self, url):
+		if not self.inpatient_record:
+			return
+		
+		inpatient_record_doc = frappe.get_doc("Inpatient Record", self.inpatient_record)
+
+		discounted_items = []
+		for bed in inpatient_record_doc.inpatient_occupancies:
+			if bed.hms_tz_is_discount_applied:
+				continue
+
+			disocunt_amount = 0
+			if self.discount_percent:
+				disocunt_amount = bed.amount * (self.discount_percent/100)
+			elif self.discount_amount:
+				disocunt_amount = self.discount_amount
+			
+			frappe.db.set_value("Inpatient Occupancy", bed.name, {
+				"amount": bed.amount - disocunt_amount,
+				"hms_tz_is_discount_applied": 1,
+			})
+
+			discounted_items.append(bed.name)
+		
+		for cons in inpatient_record_doc.consultancy:
+			if cons.hms_tz_is_discount_applied:
+				continue
+
+			disocunt_amount = 0
+			if self.discount_percent:
+				disocunt_amount = cons.rate * (self.discount_percent/100)
+			elif self.discount_amount:
+				disocunt_amount = self.discount_amount
+			
+			frappe.db.set_value("Inpatient Consultancy", cons.name, {
+				"amount": cons.rate - disocunt_amount,
+				"hms_tz_is_discount_applied": 1,
+			})
+
+			discounted_items.append(cons.name)
+
+		if len(discounted_items) > 0:
+			inpatient_record_doc.add_comment(
+				comment_type="Comment",
+				text=f"Discount was successfully applied on this Inpatient Record: <b>{inpatient_record_doc.name}</b><br><br>\
+					Please refer to Patient Discount Request: <a href='{url}'><b>{self.name}</b></a> for more details."
+			)
+	
+	if self.item_category == "All Items":
+		apply_discount_on_appointment(self, url)
+		apply_discount_on_encounters(self, url)
+		apply_discount_on_inpatient(self, url)
+	elif self.item_category == "All OPD Consultations":
+		apply_discount_on_appointment(self, url)
+	elif self.item_category == "All Lab Prescriptions":
+		table_field_to_apply_discount_on = "lab_test_prescription"
+		apply_discount_on_encounters(self, url, table_field_to_apply_discount_on)
+	elif self.item_category == "All Radiology Procedure Prescription":
+		table_field_to_apply_discount_on = "radiology_procedure_prescription"
+		apply_discount_on_encounters(self, url, table_field_to_apply_discount_on)
+	elif self.item_category == "All Procedure Prescriptions":
+		table_field_to_apply_discount_on = "procedure_prescription"
+		apply_discount_on_encounters(self, url, table_field_to_apply_discount_on)
+	elif self.item_category == "All Therapy Plan Details":
+		table_field_to_apply_discount_on = "therapy_plan_detail"
+		apply_discount_on_encounters(self, url, table_field_to_apply_discount_on)
+	elif self.item_category == "All Drug Prescriptions":
+		table_field_to_apply_discount_on = "drug_prescription"
+		apply_discount_on_encounters(self, url, table_field_to_apply_discount_on)
+	elif self.item_category == "All Other Items":
+		apply_discount_on_inpatient(self, url)
+
