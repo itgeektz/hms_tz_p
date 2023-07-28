@@ -31,7 +31,7 @@ class PatientDiscountRequest(Document):
 	
 	def before_submit(self):
 		self.approved_by = get_fullname(frappe.session.user)
-	
+		self.apply_cash_discount()
 	
 	def set_missing_values(self):
 		self.posting_date = nowdate()
@@ -116,7 +116,33 @@ class PatientDiscountRequest(Document):
 				self.total_actual_amount += flt(item.actual_price)
 				self.total_amount_after_discount += flt(item.amount_after_discount)
 				self.total_discounted_amount += flt(item.discount_amount)
-	
+
+	def apply_cash_discount(self):
+		if self.sales_invoice and not self.appointment:
+			url  = get_url_to_form("Patient Discount Request", self.name)
+			si_doc = frappe.get_doc("Sales Invoice", self.sales_invoice)
+
+			if self.apply_discount_on in ["Grand Total", "Net Total"]:
+				si_doc.apply_discount_on = self.apply_discount_on
+				si_doc.additional_discount_percent = self.discount_percent if self.discount_percent else 0
+				si_doc.discount_amount = self.discount_amount if self.discount_amount else 0
+
+			elif self.apply_discount_on in ["Single Items", "Group of Items"]:
+				for item in self.items:
+					for row in si_doc.items:
+						if item.si_detail == row.name and item.item_code == row.item_code:
+							row.discount_percentage = self.discount_percent if self.discount_percent else 0
+							row.discount_amount = item.discount_amount if item.discount_amount else 0
+			
+			si_doc.hms_tz_discount_status = "Approved"
+			si_doc.save(ignore_permissions=True)
+			si_doc.reload()
+			si_doc.add_comment(
+				comment_type="Comment",
+				text=f"Discount was successfully applied on this Sales Invoice: <b>{si_doc.name}</b><br><br>\
+					Please refer to Patient Discount Request: <a href='{url}'><b>{self.name}</b></a> for more details."
+			)
+			frappe.msgprint(f"Discount applied on Sales Invoice: {self.sales_invoice}", alert=True)
 
 
 @frappe.whitelist()
