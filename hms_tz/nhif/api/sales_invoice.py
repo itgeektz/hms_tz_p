@@ -50,7 +50,9 @@ def before_submit(doc, method):
                 "Sales invoice not paid in full.<BR><BR>Make sure that full paid amount is entered in <b>Mode of Payments table.</b>"
             )
         )
-
+    
+    if doc.hms_tz_discount_requested == 1 and doc.hms_tz_discount_status == "Pending":
+        frappe.throw(_("Patient Discount Request is still pending. Please wait for approval before submitting this invoice."))
 
 def on_submit(doc, method):
     create_healthcare_docs(doc, method)
@@ -112,6 +114,7 @@ def update_drug_prescription(doc):
                 )
                 if not dn_name:
                     return
+<<<<<<< HEAD
                 frappe.db.set_value(
                     "Drug Prescription",
                     item.reference_dn,
@@ -121,3 +124,18 @@ def update_drug_prescription(doc):
                         "invoiced": 1,
                     },
                 )
+=======
+                frappe.db.set_value("Drug Prescription", item.reference_dn, {
+                    "sales_invoice_number": doc.name,
+                    "drug_prescription_created": 1,
+                    "invoiced": 1
+                })
+
+@frappe.whitelist()
+def get_discount_items(invoice_no):
+    items = frappe.get_all(
+        "Sales Invoice Item", filters={"parent": invoice_no},
+        fields=["item_code", "item_name", "amount", "reference_dt", "name"], order_by="reference_dt desc"
+    )
+    return items
+>>>>>>> 56518bc8 (feat: automate requesting of discount directly from sales invoice)

@@ -392,3 +392,35 @@ def equeue_apply_insurance_discount(kwargs):
 	elif self.item_category == "All Other Items":
 		apply_discount_on_inpatient(self, url)
 
+@frappe.whitelist()
+def get_patient_discount_request(data):
+	data = frappe.parse_json(data)
+	pdr = frappe.new_doc("Patient Discount Request")
+	pdr.patient = data.get("patient")
+	pdr.customer = data.get("customer")
+	pdr.company = data.get("company")
+	pdr.payment_type = data.get("payment_type")
+	pdr.apply_discount_on = data.get("apply_discount_on")
+	pdr.item_category = data.get("item_category")
+	pdr.sales_invoice = data.get("sales_invoice")
+	pdr.appointment = data.get("appointment")
+	pdr.discount_criteria = data.get("discount_criteria")
+	pdr.discount_percent = data.get("discount_percent")
+	pdr.discount_amount = data.get("discount_amount")
+	pdr.reason_for_discount = data.get("reason_for_discount")
+
+	if data.get("items"):
+		for item in data.get("items"):
+			pdr.append("items", {
+				"item_category": item.get("reference_dt"),
+				"item_code": item.get("item_code"),
+				"actual_price": item.get("actual_price"),
+				"discount_amount": item.get("discount_amount"),
+				"amount_after_discount": item.get("amount_after_discount"),
+				"sales_invoice": item.get("sales_invoice"),
+				"si_detail": item.get("si_detail"),
+			})
+	
+	pdr.save(ignore_permissions=True)
+	pdr.reload()
+	return pdr.name
