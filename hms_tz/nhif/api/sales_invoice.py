@@ -114,7 +114,6 @@ def update_drug_prescription(doc):
                 )
                 if not dn_name:
                     return
-<<<<<<< HEAD
                 frappe.db.set_value(
                     "Drug Prescription",
                     item.reference_dn,
@@ -124,12 +123,6 @@ def update_drug_prescription(doc):
                         "invoiced": 1,
                     },
                 )
-=======
-                frappe.db.set_value("Drug Prescription", item.reference_dn, {
-                    "sales_invoice_number": doc.name,
-                    "drug_prescription_created": 1,
-                    "invoiced": 1
-                })
 
 @frappe.whitelist()
 def get_discount_items(invoice_no):
@@ -138,4 +131,3 @@ def get_discount_items(invoice_no):
         fields=["item_code", "item_name", "amount", "reference_dt", "name"], order_by="reference_dt desc"
     )
     return items
->>>>>>> 56518bc8 (feat: automate requesting of discount directly from sales invoice)
