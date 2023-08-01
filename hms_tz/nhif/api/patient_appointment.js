@@ -800,12 +800,31 @@ const add_btns = (frm) => {
     }
 
     var vitals_btn_required = false;
-    const valid_days = get_value("Healthcare Settings", "Healthcare Settings", "valid_days");
-    const appointment = get_previous_appointment(frm, { name: ["!=", frm.doc.name], insurance_subscription: frm.doc.insurance_subscription, department: frm.doc.department, status: "Closed" });
+    var valid_days = null
+    if (frm.doc.insurance_subscription) {
+        valid_days = get_value("Healthcare Insurance Coverage Plan", frm.doc.coverage_plan_name, "no_of_days_for_follow_up")
+
+        if (!valid_days || valid_days == 0) {
+            valid_days = get_value("Healthcare Insurance Company", frm.doc.insurance_company, "no_of_days_for_follow_up")
+        }
+    } else if (frm.doc.mode_of_payment) {
+        valid_days = get_value("Healthcare Settings", "Healthcare Settings", "valid_days");
+    }
+
+    let filters = {
+        name: ["!=", frm.doc.name],
+        department: frm.doc.department,
+        status: "Closed"
+    }
+    if (frm.doc.insurance_subscription) {
+        filters.insurance_subscription = frm.doc.insurance_subscription;
+    }
+    const appointment = get_previous_appointment(frm, filters);
     if (typeof appointment != "undefined") {
         const last_appointment_date = appointment.appointment_date;
         const diff = frappe.datetime.get_day_diff(frm.doc.appointment_date, last_appointment_date);
-        if (diff > 0 && diff <= valid_days) {
+        console.log(diff)
+        if (diff >= 0 && diff <= valid_days) {
             vitals_btn_required = true;
             if (!frm.doc.invoiced) {
                 frm.set_value("invoiced", 1);
