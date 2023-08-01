@@ -103,7 +103,6 @@ var make_deposit = (inpatient_record) => {
 	],
 
 		(data) => {
-			frappe.dom.freeze(__("Making Deposit..."));
 			frappe.call({
 				method: "hms_tz.nhif.api.inpatient_record.make_deposit",
 				args: {
@@ -111,8 +110,9 @@ var make_deposit = (inpatient_record) => {
 					deposit_amount: data.deposit_amount,
 					mode_of_payment: data.mode_of_payment,
 				},
+				freeze: true,
+				freeze_message: __("Making Deposit..."),
 			}).then((r) => {
-				frappe.dom.unfreeze();
 				if (r.message) {
 					frm.reload_doc();
 				}

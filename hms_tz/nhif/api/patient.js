@@ -53,12 +53,13 @@ frappe.ui.form.on('Patient', {
             }
         });
         if (exists) return;
-        frappe.dom.freeze(__("Please wait..."))
         frappe.call({
             method: 'hms_tz.nhif.api.patient.get_patient_info',
             args: {
                 'card_no': frm.doc.card_no,
             },
+            freeze: true,
+            freeze_message: __("Please Wait..."),
             callback: function (data) {
                 if (data.message) {
                     const card = data.message;
@@ -130,7 +131,6 @@ frappe.ui.form.on('Patient', {
                         update_patient_info(frm, card);
                     }
                 }
-                frappe.dom.unfreeze()
             }
         });
     },

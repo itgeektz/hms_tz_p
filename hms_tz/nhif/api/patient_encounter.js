@@ -1119,15 +1119,15 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
     d.show();
 
     function get_items(filters, wrapper, caller) {
-        frappe.dom.freeze(__("Please wait..."));
         frappe.call({
             method: "hms_tz.nhif.api.patient_encounter.get_previous_diagnosis_and_lrpmt_items_to_reuse",
             args: {
                 kwargs: filters,
                 caller: caller
-            }
+            },
+            freeze: true,
+            freeze_message: __("Please wait...")
         }).then(r => {
-            frappe.dom.unfreeze();
             let records = r.message;
             if (records.length > 0) {
                 let html = show_details(records, caller);

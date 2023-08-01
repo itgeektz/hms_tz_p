@@ -74,11 +74,14 @@ frappe.ui.form.on('Healthcare Package Order', {
 			return;
 		}
 
-		frappe.dom.freeze(__("Creating Sales Invoice..."));
-		frm.call("create_sales_invoice", {
-			self: frm.doc
+		frm.call({
+			method: "create_sales_invoice",
+			args: {
+				self: frm.doc
+			},
+			freeze: true,
+			freeze_message: __("Creating Sales Invoice..."),
 		}).then((r) => {
-			frappe.dom.unfreeze();
 			if (r.message) {
 				frm.set_df_property("payment_type", "read_only", 1);
 				frm.set_df_property("mode_of_payment", "read_only", 1);
