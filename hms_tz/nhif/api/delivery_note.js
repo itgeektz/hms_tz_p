@@ -82,15 +82,18 @@ frappe.ui.form.on("Delivery Note Item", {
         return
         let row = locals[cdt][cdn]
         if (row.approval_number != "" && row.approval_number != undefined) {
-            frappe.dom.freeze(__("Verifying Approval Number..."));
-            frappe.call("hms_tz.nhif.api.healthcare_utils.varify_service_approval_number_for_LRPM", {
-                patient: frm.doc.patient,
-                company: frm.doc.company,
-                approval_number: row.approval_number,
-                template: "Medication",
-                item: row.item_code,
+            frappe.call({
+                method: "hms_tz.nhif.api.healthcare_utils.varify_service_approval_number_for_LRPM",
+                args: {
+                    patient: frm.doc.patient,
+                    company: frm.doc.company,
+                    approval_number: row.approval_number,
+                    template: "Medication",
+                    item: row.item_code,
+                },
+                freeze: true,
+                freeze_message: __("Verifying Approval Number..."),
             }).then(r => {
-                frappe.dom.unfreeze();
                 if (r.message) {
                     let data = r.message;
                     row.approval_type = "NHIF"

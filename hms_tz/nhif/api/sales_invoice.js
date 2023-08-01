@@ -668,15 +668,15 @@ var get_patient_discount_request = (frm, data, items = null) => {
 	data["sales_invoice"] = frm.doc.name;
 	data["payment_type"] = "Cash";
 
-	frappe.dom.freeze(__("Please wait..."));
 	return frappe.call({
 		method: "hms_tz.nhif.doctype.patient_discount_request.patient_discount_request.get_patient_discount_request",
 		args: {
 			data: data,
-		}
+		},
+		freeze: true,
+		freeze_message: __("Please wait..."),
 	}).then(r => {
 		if (r.message) {
-			frappe.dom.unfreeze();
 			frappe.msgprint({
 				title: __("Message"),
 				indicator: "green",

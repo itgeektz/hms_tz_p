@@ -14,15 +14,18 @@ frappe.ui.form.on("Radiology Examination", {
         return
         frm.fields_dict.approval_number.$input.focusout(() => {
             if (frm.doc.approval_number != "" && frm.doc.approval_number != undefined) {
-                frappe.dom.freeze(__("Verifying Approval Number..."));
-                frappe.call("hms_tz.nhif.api.healthcare_utils.varify_service_approval_number_for_LRPM", {
+                frappe.call({
+                    method: "hms_tz.nhif.api.healthcare_utils.varify_service_approval_number_for_LRPM", 
+                    args: {
                     patient: frm.doc.patient,
                     company: frm.doc.company,
                     approval_number: frm.doc.approval_number,
                     template: "Radiology Examination Template",
-                    item: frm.doc.radiology_examination_template,
+                        item: frm.doc.radiology_examination_template,
+                    },
+                    freeze: true,
+                    freeze_message: __("Verifying Approval Number..."),
                 }).then(r => {
-                    frappe.dom.unfreeze();
                     if (r.message) {
                         frappe.show_alert({
                             message: __("<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
