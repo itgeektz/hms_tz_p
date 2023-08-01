@@ -60,6 +60,24 @@ frappe.ui.form.on('Patient Discount Request', {
 			frm.set_value("appointment", "");
 		}
 	},
+	discount_percent: (frm) => {
+		if (frm.doc.items.length > 0) {
+			frm.doc.items.forEach((row) => {
+				row.discount_amount = (row.actual_price * frm.doc.discount_percent) / 100;
+				row.amount_after_discount = row.actual_price - row.discount_amount;
+			});
+			frm.refresh_field("items");
+		}
+	},
+	discount_amount: (frm) => {
+		if (frm.doc.items.length > 0) {
+			frm.doc.items.forEach((row) => {
+				row.discount_amount = frm.doc.discount_amount;
+				row.amount_after_discount = row.actual_price - frm.doc.discount_amount;
+			});
+			frm.refresh_field("items");
+		}
+	},
 	set_field_properties: (frm) => {
 		if (frm.doc.payment_type == "Non NHIF Insurance") {
 			frm.set_df_property("apply_discount_on", "options", ["Group of Items"]);
