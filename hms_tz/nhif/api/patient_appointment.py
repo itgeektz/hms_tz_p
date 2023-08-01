@@ -303,7 +303,6 @@ def make_encounter(doc, method):
             return encounter_doc.name
 
 
-
 @frappe.whitelist()
 def get_authorization_num(
     insurance_subscription,
@@ -452,10 +451,12 @@ def get_previous_appointment(patient, filters=None):
 def set_follow_up(appointment_doc, method):
     filters = {
         "name": ["!=", appointment_doc.name],
-        "insurance_subscription": appointment_doc.insurance_subscription,
         "department": appointment_doc.department,
         "status": "Closed",
     }
+    if appointment_doc.insurance_subscription:
+        filters["insurance_subscription"] = appointment_doc.insurance_subscription
+    
     appointment = get_previous_appointment(appointment_doc.patient, filters)
     if appointment and appointment_doc.appointment_date:
         diff = date_diff(appointment_doc.appointment_date, appointment.appointment_date)
@@ -491,7 +492,12 @@ def set_follow_up(appointment_doc, method):
                 return
             appointment_doc.invoiced = 1
             appointment_doc.paid_amount = 0
-            frappe.msgprint(_("Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"), alert=True)
+            frappe.msgprint(
+                _(
+                    "Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"
+                ),
+                alert=True,
+            )
         else:
             appointment_doc.follow_up = 0
             # frappe.msgprint(_("This appointment requires to be paid for!"), alert=True)
@@ -641,7 +647,7 @@ def get_discount_percent(insurance_company):
 def check_multiple_appointments(doc):
     if doc.healthcare_package_order:
         return
-    
+
     if (
         doc.coverage_plan_card_number
         and "NHIF" in doc.insurance_company
