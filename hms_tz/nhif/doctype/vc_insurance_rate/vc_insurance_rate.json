@@ -1,13 +1,13 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2022-03-01 15:43:54.327753",
+ "creation": "2022-03-01 15:40:23.979083",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "coverage_plan",
   "document_type",
-  "service",
   "vc_rate",
   "company_rate"
  ],
@@ -18,14 +18,6 @@
    "in_list_view": 1,
    "label": "Document Type",
    "options": "DocType",
-   "reqd": 1
-  },
-  {
-   "fieldname": "service",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Service",
-   "options": "Item",
    "reqd": 1
   },
   {
@@ -41,15 +33,23 @@
    "in_list_view": 1,
    "label": "Payable Company Rate",
    "reqd": 1
+  },
+  {
+   "fieldname": "coverage_plan",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Insurance Coverage Plan",
+   "options": "Healthcare Insurance Coverage Plan",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-03-01 15:43:54.327753",
+ "modified": "2023-08-02 18:15:10.628307",
  "modified_by": "Administrator",
- "module": "Hms Tz",
- "name": "Excluded Service Rate",
+ "module": "NHIF",
+ "name": "VC Insurance Rate",
  "owner": "Administrator",
  "permissions": [],
  "sort_field": "modified",
