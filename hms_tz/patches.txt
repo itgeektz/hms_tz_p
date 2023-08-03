@@ -28,7 +28,11 @@ hms_tz.patches.property_setter.referring_practitioner_on_patient_referrals
 hms_tz.patches.custom_fields.healthcare_package_field_on_pa_and_pe
 hms_tz.patches.property_setter.property_setter_for_discount_on_sales_invoice
 hms_tz.patches.custom_fields.custom_fields_for_discount_on_sales_invoice
+<<<<<<< HEAD
 hms_tz.patches.custom_fields.custom_fields_for_healthcare_notes_template_on_clinical_procedure 
 hms_tz.patches.custom_fields.limit_exceed_custom_field_on_lrpmt_childs
 hms_tz.patches.custom_fields.price_list_for_patien_encounter
 hms_tz.patches.custom_fields.allowed_price_list_for_medication
+=======
+hms_tz.patches.custom_fields.add_submitter_name_on_lrpm_docs_for_vc_purposes
+>>>>>>> 6bed5f8a (feat: add custom field on LRPM docs to rigester detials of a user who submitted LRPM documents)
