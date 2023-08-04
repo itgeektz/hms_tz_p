@@ -72,11 +72,6 @@ class LimitChangeRequest(Document):
         if not flt(self.cash_limit) or flt(self.cash_limit) == 0:
             frappe.throw("<b>Cash/Daily Limit is required</b>")
 
-<<<<<<< HEAD
-		self.posting_date = nowdate()
-		self.posting_time = nowtime()
-		self.requested_by = frappe.utils.get_fullname(frappe.session.user)
-=======
         if flt(self.previous_cash_limit) and flt(self.cash_limit) <= flt(
             self.previous_cash_limit
         ):
@@ -218,4 +213,3 @@ class LimitChangeRequest(Document):
             create_healthcare_docs_per_encounter(encounter_doc)
             create_delivery_note_per_encounter(encounter_doc, "on_submit")
             create_therapy_plan(encounter_doc)
->>>>>>> 4b852b93 (feat: allow submitting of patient encounter when daily limit is exceeded for non NHIF insurance patients)
