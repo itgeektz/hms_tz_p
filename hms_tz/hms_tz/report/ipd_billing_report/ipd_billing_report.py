@@ -136,32 +136,6 @@ def get_summarized_data(args):
         for mult_transaction in mult_transaction_per_day:
             mult_transaction_date = mult_transaction["date"].strftime("%Y-%m-%d")
 
-        date_d = record["date"].strftime("%Y-%m-%d")
-        if date_d not in date_list:
-            date_list.append(date_d)
-            record.update({"total_amount": total_amount})
-            single_transaction_per_day.append(record)
-        else:
-            record.update({"total_amount": total_amount})
-            mult_transaction_per_day.append(record)
-
-    for single_transaction in single_transaction_per_day:
-        service_unit = ""
-        mult_bed_charges = (
-            mult_cons_charges
-        ) = (
-            mult_lab_amount
-        ) = (
-            mult_radiology_amount
-        ) = (
-            mult_procedure_amount
-        ) = mult_drug_amount = mult_therapy_amount = mult_total_amount = 0
-
-        single_transaction_date = single_transaction["date"].strftime("%Y-%m-%d")
-
-        for mult_transaction in mult_transaction_per_day:
-            mult_transaction_date = mult_transaction["date"].strftime("%Y-%m-%d")
-
             if single_transaction_date == mult_transaction_date:
                 mult_bed_charges += flt(mult_transaction["bed_charges"])
                 mult_cons_charges += flt(mult_transaction["cons_charges"])
@@ -174,32 +148,28 @@ def get_summarized_data(args):
 
                 service_unit += mult_transaction["service_unit"]
 
-            service_list.append(
-                {
-                    "date": single_transaction_date,
-                    "service_unit": single_transaction["service_unit"] or service_unit,
-                    "total_bed_charges": flt(single_transaction["bed_charges"])
-                    + mult_bed_charges,
-                    "total_cons_charges": flt(single_transaction["cons_charges"])
-                    + mult_cons_charges,
-                    "total_lab_amount": flt(single_transaction["lab_amount"])
-                    + mult_lab_amount,
-                    "total_radiology_amount": flt(
-                        single_transaction["radiology_amount"]
-                    )
-                    + mult_radiology_amount,
-                    "total_procedure_amount": flt(
-                        single_transaction["procedure_amount"]
-                    )
-                    + mult_procedure_amount,
-                    "total_drug_amount": flt(single_transaction["drug_amount"])
-                    + mult_drug_amount,
-                    "total_therapy_amount": flt(single_transaction["therapy_amount"])
-                    + mult_therapy_amount,
-                    "grand_total": flt(single_transaction["total_amount"])
-                    + mult_total_amount,
-                }
-            )
+        service_list.append(
+            {
+                "date": single_transaction_date,
+                "service_unit": single_transaction["service_unit"] or service_unit,
+                "total_bed_charges": flt(single_transaction["bed_charges"])
+                + mult_bed_charges,
+                "total_cons_charges": flt(single_transaction["cons_charges"])
+                + mult_cons_charges,
+                "total_lab_amount": flt(single_transaction["lab_amount"])
+                + mult_lab_amount,
+                "total_radiology_amount": flt(single_transaction["radiology_amount"])
+                + mult_radiology_amount,
+                "total_procedure_amount": flt(single_transaction["procedure_amount"])
+                + mult_procedure_amount,
+                "total_drug_amount": flt(single_transaction["drug_amount"])
+                + mult_drug_amount,
+                "total_therapy_amount": flt(single_transaction["therapy_amount"])
+                + mult_therapy_amount,
+                "grand_total": flt(single_transaction["total_amount"])
+                + mult_total_amount,
+            }
+        )
 
     return get_last_row(args, service_list)
 
