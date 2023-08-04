@@ -1998,17 +1998,17 @@ def get_drug_quantity(drug_item):
             strength_count = dosage.default_strength
         if strength_count > 0:
             if drug_row.interval and drug_row.interval_uom:
-                if drug_row.interval_uom == "Day" and drug_row.interval < period.get_days():
+                if drug_row.interval_uom == "Day" and drug_row.interval:
                     quantity = strength_count * (period.get_days() / drug_row.interval)
-                elif drug_row.interval_uom == "Hour" and drug_row.interval < period.get_hours():
+                elif drug_row.interval_uom == "Hour" and drug_row.interval:
                     quantity = strength_count * (period.get_hours() / drug_row.interval)
             else:
                 quantity = strength_count * period.get_days()
 
         elif drug_row.interval and drug_row.interval_uom:
-            if drug_row.interval_uom == "Day" and drug_row.interval < period.get_days():
+            if drug_row.interval_uom == "Day" and drug_row.interval:
                 quantity = period.get_days() / drug_row.interval
-            elif drug_row.interval_uom == "Hour" and drug_row.interval < period.get_hours():
+            elif drug_row.interval_uom == "Hour" and drug_row.interval:
                 quantity = period.get_hours() / drug_row.interval
 
     if quantity > 0:
