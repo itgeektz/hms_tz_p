@@ -84,6 +84,27 @@ def before_insert(doc, method):
                 if not pharmacy_details.opd_insurance_pharmacy:
                     frappe.throw(_("<b>Please set OPD Insurance Pharmacy in Company to allow auto set of pharmacy</b>"))
                 doc.default_healthcare_service_unit = pharmacy_details.opd_insurance_pharmacy
+    set_price_list(doc)
+
+
+def set_price_list(doc):
+    price_list = None
+    if doc.insurance_subscription:
+        hic_plan = frappe.get_cached_value(
+            "Healthcare Insurance Subscription",
+            doc.insurance_subscription,
+            "healthcare_insurance_coverage_plan",
+        )
+        price_list = frappe.get_cached_value(
+            "Healthcare Insurance Coverage Plan", hic_plan, "price_list"
+        )
+    elif doc.mode_of_payment:
+        price_list = frappe.get_cached_value(
+            "Mode of Payment", doc.mode_of_payment, "price_list"
+        )
+    if price_list:
+        doc.price_list = price_list
+        
 
 def on_submit_validation(doc, method):
     child_tables = {
