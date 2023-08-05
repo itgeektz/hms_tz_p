@@ -2199,3 +2199,35 @@ def create_items_from_healthcare_package_orders(doc, method):
                         doc, child
                     )
     create_delivery_note(doc, method)
+
+
+@frappe.whitelist()
+def get_filterd_drug(doctype, txt, searchfield, start, page_len, filters):
+    """
+        Get filtered drug based on the search criteria
+        and retrun Mediction if it is not disabled and allowed price list is set
+    """
+    conditions = "MD.disabled = 0"
+    if txt:
+        conditions += f" AND MD.name LIKE '%{txt}%'"
+    if filters.get("price_list"):
+        conditions += f" AND APL.price_list = '{filters.get('price_list')}'" 
+
+    data = frappe.db.sql(f"""
+        SELECT
+            MD.name, MD.national_drug_code, MD.generic_name, MD.strength_text
+        FROM
+            `tabMedication` MD
+        inner join
+            `tabAllowed Price List` APL
+        on
+            MD.name = APL.parent
+        WHERE
+              {conditions}
+        ORDER BY
+            name ASC
+        LIMIT
+            {start}, {page_len}
+    """)
+
+    return data

@@ -86,9 +86,11 @@ frappe.ui.form.on('Patient Encounter', {
         });
         frm.set_query('drug_code', 'drug_prescription', function () {
             return {
-                filters: {
-                    disabled: 0
-                }
+              query: "hms_tz.nhif.api.patient_encounter.get_filterd_drug",
+              filters: {
+                price_list: frm.doc.price_list,
+                disabled: 0,
+              },
             };
         });
         frm.set_query('therapy_type', 'therapies', function () {
