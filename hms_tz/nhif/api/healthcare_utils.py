@@ -688,18 +688,17 @@ def create_individual_procedure_prescription(source_doc, child):
     )
     doc.ref_doctype = source_doc.doctype
     doc.ref_docname = source_doc.name
+    doc.hms_tz_ref_childname = child.name
     doc.invoiced = 1
     doc.service_comment = (
         (child.medical_code or "No ICD Code") + " : " + (child.comments or "No Comment")
     )
-    doc.hms_tz_ref_childname = child.name
 
     doc.save(ignore_permissions=True)
     if doc.get("name"):
+        url = get_url_to_form(doc.doctype, doc.name)
         frappe.msgprint(
-            _("Clinical Procedure {0} created successfully.").format(
-                frappe.bold(doc.name)
-            )
+            f"Clinical Procedure: <a href='{url}'><strong>{doc.name}</strong></a> is created successfully"
         )
 
         child.procedure_created = 1
