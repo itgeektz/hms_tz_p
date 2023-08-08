@@ -15,6 +15,7 @@ def execute(filters=None):
         return
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     columns = [
         {
             "fieldname": "practitioner",
@@ -28,24 +29,49 @@ def execute(filters=None):
     commission_doc, excluded_services_map = get_commission_doc(filters)
     data = get_lab_commissions(filters, commission_doc, excluded_services_map)
     # data = get_appointment_consultancy(filters, visiting_rates)
+=======
+    data = []
+>>>>>>> 256f8fd7 (feat: show cash and insurance vc rates for radiology, procedure and opd appointments)
 
-    # visiting_rates = frappe.get_all(
-    #     "Visiting Rate",
-    #     filters={"parent": commission_name[0].name},
-    #     fields=["funding_provider", "document_type", "vc_rate", "company_rate"],
-    # )
+    (
+        commission_doc,
+        excluded_services_map,
+        vc_lab_users,
+        vc_radiology_users,
+    ) = get_commission_doc_details(filters)
 
-    # excluded_service_rates = frappe.get_all(
-    #     "Excluded Service Rate",
-    #     filters={"parent": commission_name[0].name},
-    #     fields=["document_type", "service", "vc_rate", "company_rate"],
-    # )
+    data += get_opd_commissions(
+        filters, commission_doc.cash_rates, commission_doc.insurance_rates
+    )
+    data += get_procedure_commissions(
+        filters,
+        commission_doc.cash_rates,
+        commission_doc.insurance_rates,
+        excluded_services_map,
+    )
+    data += get_lab_commissions(
+        filters,
+        commission_doc.cash_rates,
+        commission_doc.insurance_rates,
+        excluded_services_map,
+        vc_lab_users,
+    )
+    data += get_radiology_commissions(
+        filters,
+        commission_doc.cash_rates,
+        commission_doc.insurance_rates,
+        excluded_services_map,
+        vc_radiology_users,
+    )
+    if len(data) == 0:
+        frappe.msgprint("No records found")
+        return []
 
     columns = get_columns(filters)
+    dashboard = get_report_summary(filters, data)
 
-    # data += get_procedure_consultancy(filters, visiting_rates, excluded_service_rates)
-
-    return columns, data
+    # return columns, data
+    return columns, data, None, None, dashboard
 
 
 def get_columns(filters):
@@ -91,15 +117,15 @@ def get_columns(filters):
             "width": "160px",
         },
         {
-            "fieldname": "no_of_patients",
+            "fieldname": "patient_count",
             "fieldtype": "Int",
             "label": _("Patient Count"),
             "width": "100px",
         },
         {
-            "fieldname": "no_of_tests",
+            "fieldname": "item_count",
             "fieldtype": "Int",
-            "label": _("Test Count"),
+            "label": _("Item Count"),
             "width": "100px",
         },
         {
@@ -159,10 +185,7 @@ def get_columns(filters):
     return columns
 
 
-def get_commission_doc(filters):
-    insurance_rates = []
-    cash_rates = []
-    excluded_rates = []
+def get_commission_doc_details(filters):
     vc_lab_users = []
     vc_radiology_users = []
 
@@ -179,10 +202,9 @@ def get_commission_doc(filters):
     commission_doc = frappe.get_doc("Visiting Comission", commission_list[0].name)
     excluded_services_map = {}
     for row in commission_doc.excluded_service_rates:
-        excluded_services_map.setdefault(row.document_type, []).append(
-            row.healthcare_service
-        )
+        excluded_services_map.setdefault(row.document_type, []).append(row)
 
+<<<<<<< HEAD
     return commission_doc, excluded_services_map
 >>>>>>> a6711458 (feat: show cash and insurance vc rates for lab records)
 
@@ -263,70 +285,221 @@ def get_lab_commissions(filters, commission_doc, excluded_services_map):
     lab_test = dt("Lab Test")
     prescription = dt("Lab Prescription")
     case_wh = None
-    if filters.get("vc_technician"):
-        case_wh = lab_test.hms_tz_user_id == filters.get("vc_technician")
-    else:
-        case_wh = lab_test.hms_tz_user_id != ""
+=======
+    vc_lab_users = [row.user_field for row in commission_doc.lab_users]
+    vc_radiology_users = [row.user_field for row in commission_doc.radiology_users]
 
-    lab_records = (
-        frappe.qb.from_(lab_test)
-        .inner_join(prescription)
-        .on(
-            lab_test.hms_tz_ref_childname == prescription.name
-            and lab_test.ref_docname == prescription.parent
-        )
+    return commission_doc, excluded_services_map, vc_lab_users, vc_radiology_users
+
+
+def get_opd_commissions(filters, cash_rates, insurance_rates):
+>>>>>>> 256f8fd7 (feat: show cash and insurance vc rates for radiology, procedure and opd appointments)
+    if filters.get("vc_technician"):
+        return []
+
+    appointment = dt("Patient Appointment")
+    encounter = dt("Patient Encounter")
+    case_wh = None
+    if filters.get("practitioner"):
+        case_wh = appointment.practitioner == filters.get("practitioner")
+    else:
+        case_wh = appointment.practitioner.isnotnull()
+
+    appointment_records = (
+        frappe.qb.from_(appointment)
+        .inner_join(encounter)
+        .on(appointment.name == encounter.appointment)
         .select(
-            lab_test.template,
-            lab_test.hms_tz_submitted_by,
-            lab_test.hms_tz_user_id,
-            prescription.prescribe,
-            Sum(prescription.amount).as_("amount"),
-            Count(lab_test.patient).distinct().as_("no_of_patients"),
-            Count(lab_test.template).as_("no_of_tests"),
+            appointment.practitioner,
+            appointment.billing_item,
+            appointment.coverage_plan_name,
+            appointment.insurance_subscription,
+            appointment.paid_amount,
+            Sum(appointment.paid_amount).as_("amount"),
+            Count(appointment.patient).distinct().as_("patient_count"),
+            Count(appointment.billing_item).as_("item_count"),
             Case()
-            .when(prescription.prescribe == 0, lab_test.hms_tz_insurance_coverage_plan)
+            .when(
+                appointment.insurance_subscription != "", appointment.coverage_plan_name
+            )
             .else_("CASH")
             .as_("mode"),
         )
         .where(
-            (lab_test.ref_doctype == "Patient Encounter")
-            & (lab_test.ref_docname == prescription.parent)
-            & (lab_test.hms_tz_ref_childname == prescription.name)
-            & (lab_test.docstatus == 1)
+            (appointment.status == "Closed")
+            & (appointment.follow_up == 0)
+            & (encounter.follow_up == 0)
+            & (encounter.duplicated == 0)
+            & (encounter.encounter_type == "Final")
         )
         .where(
             (
-                (lab_test.submitted_date >= filters.get("from_date"))
-                & (lab_test.submitted_date <= filters.get("to_date"))
-                & (lab_test.company == filters.get("company"))
+                (appointment.appointment_date >= filters.get("from_date"))
+                & (appointment.appointment_date <= filters.get("to_date"))
+                & (appointment.company == filters.get("company"))
                 & case_wh
             )
         )
         .groupby(
             Case()
-            .when(prescription.prescribe == 0, lab_test.hms_tz_insurance_coverage_plan)
+            .when(
+                appointment.insurance_subscription != "", appointment.coverage_plan_name
+            )
             .else_("CASH")
             .as_("mode"),
-            lab_test.hms_tz_user_id,
-            lab_test.template,
+            appointment.practitioner,
+            appointment.billing_item,
+        )
+    ).run(as_dict=1)
+
+    appointment_list = []
+    for row in appointment_records:
+        if row.mode == "CASH":
+            for rate_row in cash_rates:
+                if rate_row.document_type == "Patient Appointment":
+                    appointment_list.append(
+                        {
+                            "practitioner": row.practitioner,
+                            "vc_technician": "",
+                            "billing_item": row.billing_item,
+                            "patient_count": row.patient_count,
+                            "item_count": row.item_count,
+                            "mode": row.mode,
+                            "paid_amount": row.amount,
+                            "vc_amount": flt(row.amount * flt(rate_row.vc_rate / 100)),
+                            "company_amount": flt(
+                                row.amount * flt(rate_row.company_rate / 100)
+                            ),
+                        }
+                    )
+        elif row.mode != "CASH":
+            coverage_plan = frappe.get_cached_value(
+                "Healthcare Insurance Coverage Plan",
+                {"coverage_plan_name": row.mode},
+                "name",
+            )
+            for rate_row in insurance_rates:
+                if (
+                    rate_row.coverage_plan == coverage_plan
+                    and rate_row.document_type == "Patient Appointment"
+                ):
+                    appointment_list.append(
+                        {
+                            "practitioner": row.practitioner,
+                            "vc_technician": "",
+                            "billing_item": row.billing_item,
+                            "patient_count": row.patient_count,
+                            "item_count": row.item_count,
+                            "mode": row.mode,
+                            "paid_amount": row.amount,
+                            "vc_amount": flt(row.amount * flt(rate_row.vc_rate / 100)),
+                            "company_amount": flt(
+                                row.amount * flt(rate_row.company_rate / 100)
+                            ),
+                        }
+                    )
+    return appointment_list
+
+
+def get_lab_commissions(
+    filters, cash_rates, insurance_rates, excluded_services_map, vc_lab_users
+):
+    if filters.get("practitioner"):
+        return []
+
+    lab = dt("Lab Test")
+    prescription = dt("Lab Prescription")
+    case_wh = None
+    if filters.get("vc_technician"):
+        case_wh = lab.hms_tz_user_id == filters.get("vc_technician")
+    else:
+        case_wh = lab.hms_tz_user_id.isnotnull()
+
+    lab_records = (
+        frappe.qb.from_(lab)
+        .inner_join(prescription)
+        .on(
+            lab.hms_tz_ref_childname == prescription.name
+            and lab.ref_docname == prescription.parent
+            and lab.template == prescription.lab_test_code
+        )
+        .select(
+            lab.template,
+            lab.hms_tz_submitted_by,
+            lab.hms_tz_user_id,
+            prescription.prescribe,
+            Sum(prescription.amount).as_("amount"),
+            Count(lab.patient).distinct().as_("patient_count"),
+            Count(lab.template).as_("item_count"),
+            Case()
+            .when(prescription.prescribe == 0, lab.hms_tz_insurance_coverage_plan)
+            .else_("CASH")
+            .as_("mode"),
+        )
+        .where(
+            (lab.ref_doctype == "Patient Encounter")
+            & (lab.ref_docname == prescription.parent)
+            & (lab.hms_tz_ref_childname == prescription.name)
+            & (lab.docstatus == 1)
+        )
+        .where(
+            (
+                (lab.submitted_date >= filters.get("from_date"))
+                & (lab.submitted_date <= filters.get("to_date"))
+                & (lab.company == filters.get("company"))
+                & (lab.workflow_state == "Lab Results Reviewed")
+                & case_wh
+            )
+        )
+        .groupby(
+            Case()
+            .when(prescription.prescribe == 0, lab.hms_tz_insurance_coverage_plan)
+            .else_("CASH")
+            .as_("mode"),
+            lab.hms_tz_user_id,
+            lab.template,
         )
     ).run(as_dict=1)
 
     lab_list = []
-    excluded_lab_tests = []
+    excluded_lab_tests = excluded_services_map.get("Lab Test Template", [])
+    lab_test_templates = [row.healthcare_service for row in excluded_lab_tests]
+
     for row in lab_records:
-        if row.template in excluded_services_map.get("Lab Test", []):
-            excluded_lab_tests.append(row)
+        if row.hms_tz_user_id not in vc_lab_users:
+            continue
+
+        if row.template in lab_test_templates:
+            for excluded_lab_test in excluded_lab_tests:
+                if row.template == excluded_lab_test.healthcare_service:
+                    lab_list.append(
+                        {
+                            "practitioner": "",
+                            "vc_technician": row.hms_tz_submitted_by,
+                            "billing_item": row.template,
+                            "patient_count": row.patient_count,
+                            "item_count": row.item_count,
+                            "mode": row.mode,
+                            "paid_amount": row.amount,
+                            "vc_amount": flt(
+                                row.amount * flt(excluded_lab_test.vc_rate / 100)
+                            ),
+                            "company_amount": flt(
+                                row.amount * flt(excluded_lab_test.company_rate / 100)
+                            ),
+                        }
+                    )
+
         elif row.prescribe == 1 and row.mode == "CASH":
-            for rate_row in commission_doc.cash_rates:
+            for rate_row in cash_rates:
                 if rate_row.document_type == "Lab Test":
                     lab_list.append(
                         {
                             "practitioner": "",
                             "vc_technician": row.hms_tz_submitted_by,
                             "billing_item": row.template,
-                            "no_of_patients": row.no_of_patients,
-                            "no_of_tests": row.no_of_tests,
+                            "patient_count": row.patient_count,
+                            "item_count": row.item_count,
                             "mode": row.mode,
                             "paid_amount": row.amount,
                             "vc_amount": flt(row.amount * flt(rate_row.vc_rate / 100)),
@@ -336,14 +509,16 @@ def get_lab_commissions(filters, commission_doc, excluded_services_map):
                         }
                     )
         elif row.prescribe == 0 and row.mode != "CASH":
-            coverage_plan = frappe.get_cached_value(
-                "Healthcare Insurance Coverage Plan",
-                {"coverage_plan_name": row.mode},
-                "name",
-            )
-            for rate_row in commission_doc.insurance_rates:
+            coverage_plan_name = None
+            if row.mode == "NH001~":
+                coverage_plan_name = frappe.get_cached_value(
+                    "Healthcare Insurance Coverage Plan",
+                    {"name": row.mode},
+                    "coverage_plan_name",
+                )
+            for rate_row in insurance_rates:
                 if (
-                    rate_row.coverage_plan == coverage_plan
+                    rate_row.coverage_plan == row.mode
                     and rate_row.document_type == "Lab Test"
                 ):
                     lab_list.append(
@@ -351,9 +526,11 @@ def get_lab_commissions(filters, commission_doc, excluded_services_map):
                             "practitioner": "",
                             "vc_technician": row.hms_tz_submitted_by,
                             "billing_item": row.template,
-                            "no_of_patients": row.no_of_patients,
-                            "no_of_tests": row.no_of_tests,
-                            "mode": row.mode,
+                            "patient_count": row.patient_count,
+                            "item_count": row.item_count,
+                            "mode": (
+                                coverage_plan_name if coverage_plan_name else row.mode
+                            ),
                             "paid_amount": row.amount,
                             "vc_amount": flt(row.amount * flt(rate_row.vc_rate / 100)),
                             "company_amount": flt(
@@ -365,123 +542,323 @@ def get_lab_commissions(filters, commission_doc, excluded_services_map):
 >>>>>>> a6711458 (feat: show cash and insurance vc rates for lab records)
 
 
-def get_procedure_consultancy(filters, visiting_rates, excluded_service_rates):
-    conditions = ""
-    if filters.get("from_date") and filters.get("to_date"):
-        conditions += " AND cp.start_date between %(from_date)s and %(to_date)s"
-
-    if filters.get("company"):
-        conditions += " AND cp.company = %(company)s"
-
+def get_radiology_commissions(
+    filters, cash_rates, insurance_rates, excluded_services_map, vc_radiology_users
+):
     if filters.get("practitioner"):
-        conditions += " AND cp.practitioner = %(practitioner)s"
+        return []
 
-    procedures = frappe.db.sql(
-        """
-		SELECT cp.practitioner, cp.procedure_template AS billing_item,
-		cp.insurance_company AS mode, SUM(pp.amount) AS paid_amount,
-		COUNT(cp.patient) AS patients, "Clinical Procedure" AS cl_doc
-		FROM `tabClinical Procedure` cp
-		INNER JOIN `tabProcedure Prescription` pp ON cp.ref_docname = pp.parent
-			AND cp.procedure_template = pp.procedure AND pp.prescribe = 0
-		WHERE cp.insurance_company != ""
-		AND cp.status = "Completed" {conditions}
-		GROUP BY mode, cp.procedure_template, cp.practitioner
+    radiology = dt("Radiology Examination")
+    prescription = dt("Radiology Procedure Prescription")
+    case_wh = None
+    if filters.get("vc_technician"):
+        case_wh = radiology.hms_tz_user_id == filters.get("vc_technician")
+    else:
+        case_wh = radiology.hms_tz_user_id.isnotnull()
 
-		UNION ALL
+    radiology_records = (
+        frappe.qb.from_(radiology)
+        .inner_join(prescription)
+        .on(
+            radiology.hms_tz_ref_childname == prescription.name
+            and radiology.ref_docname == prescription.parent
+            and radiology.radiology_examination_template
+            == prescription.radiology_examination_template
+        )
+        .select(
+            radiology.radiology_examination_template,
+            radiology.hms_tz_submitted_by,
+            radiology.hms_tz_user_id,
+            prescription.prescribe,
+            Sum(prescription.amount).as_("amount"),
+            Count(radiology.patient).distinct().as_("patient_count"),
+            Count(radiology.radiology_examination_template).as_("item_count"),
+            Case()
+            .when(prescription.prescribe == 0, radiology.hms_tz_insurance_coverage_plan)
+            .else_("CASH")
+            .as_("mode"),
+        )
+        .where(
+            (radiology.ref_doctype == "Patient Encounter")
+            & (radiology.ref_docname == prescription.parent)
+            & (radiology.hms_tz_ref_childname == prescription.name)
+            & (radiology.docstatus == 1)
+        )
+        .where(
+            (
+                (radiology.hms_tz_submitted_date >= filters.get("from_date"))
+                & (radiology.hms_tz_submitted_date <= filters.get("to_date"))
+                & (radiology.company == filters.get("company"))
+                & (radiology.workflow_state == "Submitted")
+                & case_wh
+            )
+        )
+        .groupby(
+            Case()
+            .when(prescription.prescribe == 0, radiology.hms_tz_insurance_coverage_plan)
+            .else_("CASH")
+            .as_("mode"),
+            radiology.hms_tz_user_id,
+            radiology.radiology_examination_template,
+        )
+    ).run(as_dict=1)
 
-		SELECT cp.practitioner, cp.procedure_template AS billing_item,
-		"CASH PROCEDURE" AS mode, SUM(pp.amount) AS paid_amount,
-		COUNT(cp.patient) AS patients, "Clinical Procedure" AS cl_doc
-		FROM `tabClinical Procedure` cp
-		INNER JOIN `tabProcedure Prescription` pp ON cp.ref_docname = pp.parent
-			AND cp.procedure_template = pp.procedure AND pp.prescribe = 1
-		WHERE cp.insurance_company is null
-		AND cp.status = "Completed"  {conditions}
-		GROUP BY cp.practitioner, mode, cp.procedure_template
-	""".format(
-            conditions=conditions
-        ),
-        filters,
-        as_dict=1,
+    radiology_list = []
+    excluded_radiologies = excluded_services_map.get(
+        "Radiology Examination Template", []
     )
+    radiology_templates = [row.healthcare_service for row in excluded_radiologies]
 
-    service_list = []
-    excluded_list = []
-
-    for procedure in procedures:
-        for excluded_service in excluded_service_rates:
-            if excluded_service.service not in excluded_list:
-                excluded_list.append(excluded_service.service)
-
-            if (
-                procedure.cl_doc == excluded_service.document_type
-                and procedure.billing_item == excluded_service.service
-            ):
-                paid_amount = procedure.paid_amount or 0
-
-                vc_amount = flt(paid_amount * flt(excluded_service.vc_rate / 100))
-                company_amount = flt(
-                    paid_amount * flt(excluded_service.company_rate / 100)
-                )
-
-                procedure.update(
-                    {
-                        "paid_amount": paid_amount,
-                        "vc_amount": vc_amount,
-                        "company_amount": company_amount,
-                    }
-                )
-
-                service_list.append(procedure)
-
-        if procedure.billing_item in excluded_list:
+    for row in radiology_records:
+        if row.hms_tz_user_id not in vc_radiology_users:
             continue
 
-        else:
-            for rate_category in visiting_rates:
+        if row.radiology_examination_template in radiology_templates:
+            for excluded_radiology in excluded_radiologies:
                 if (
-                    procedure.mode == "NHIF"
-                    and procedure.cl_doc == rate_category.document_type
-                    and procedure.mode == rate_category.funding_provider
+                    row.radiology_examination_template
+                    == excluded_radiology.healthcare_service
                 ):
-                    paid_amount = procedure.paid_amount or 0
-
-                    vc_amount = flt(paid_amount * flt(rate_category.vc_rate / 100))
-                    company_amount = flt(
-                        paid_amount * flt(rate_category.company_rate / 100)
-                    )
-
-                    procedure.update(
+                    radiology_list.append(
                         {
-                            "paid_amount": paid_amount,
-                            "vc_amount": vc_amount,
-                            "company_amount": company_amount,
+                            "practitioner": "",
+                            "vc_technician": row.hms_tz_submitted_by,
+                            "billing_item": row.radiology_examination_template,
+                            "patient_count": row.patient_count,
+                            "item_count": row.item_count,
+                            "mode": row.mode,
+                            "paid_amount": row.amount,
+                            "vc_amount": flt(
+                                row.amount * flt(excluded_radiology.vc_rate / 100)
+                            ),
+                            "company_amount": flt(
+                                row.amount * flt(excluded_radiology.company_rate / 100)
+                            ),
                         }
                     )
 
-                    service_list.append(procedure)
-
-                if (
-                    procedure.mode != "NHIF"
-                    and procedure.cl_doc == rate_category.document_type
-                    and rate_category.funding_provider == "Other"
-                ):
-                    paid_amount = procedure.paid_amount or 0
-
-                    vc_amount = flt(paid_amount * flt(rate_category.vc_rate / 100))
-                    company_amount = flt(
-                        paid_amount * flt(rate_category.company_rate / 100)
-                    )
-
-                    procedure.update(
+        elif row.prescribe == 1 and row.mode == "CASH":
+            for rate_row in cash_rates:
+                if rate_row.document_type == "Radiology Examination":
+                    radiology_list.append(
                         {
-                            "paid_amount": paid_amount,
-                            "vc_amount": vc_amount,
-                            "company_amount": company_amount,
+                            "practitioner": "",
+                            "vc_technician": row.hms_tz_submitted_by,
+                            "billing_item": row.radiology_examination_template,
+                            "patient_count": row.patient_count,
+                            "item_count": row.item_count,
+                            "mode": row.mode,
+                            "paid_amount": row.amount,
+                            "vc_amount": flt(row.amount * flt(rate_row.vc_rate / 100)),
+                            "company_amount": flt(
+                                row.amount * flt(rate_row.company_rate / 100)
+                            ),
+                        }
+                    )
+        elif row.prescribe == 0 and row.mode != "CASH":
+            coverage_plan_name = None
+            if row.mode == "NH001~":
+                coverage_plan_name = frappe.get_cached_value(
+                    "Healthcare Insurance Coverage Plan",
+                    {"name": row.mode},
+                    "coverage_plan_name",
+                )
+            for rate_row in insurance_rates:
+                if (
+                    rate_row.coverage_plan == row.mode
+                    and rate_row.document_type == "Radiology Examination"
+                ):
+                    radiology_list.append(
+                        {
+                            "practitioner": "",
+                            "vc_technician": row.hms_tz_submitted_by,
+                            "billing_item": row.radiology_examination_template,
+                            "patient_count": row.patient_count,
+                            "item_count": row.item_count,
+                            "mode": (
+                                coverage_plan_name if coverage_plan_name else row.mode
+                            ),
+                            "paid_amount": row.amount,
+                            "vc_amount": flt(row.amount * flt(rate_row.vc_rate / 100)),
+                            "company_amount": flt(
+                                row.amount * flt(rate_row.company_rate / 100)
+                            ),
+                        }
+                    )
+    return radiology_list
+
+
+def get_procedure_commissions(
+    filters, cash_rates, insurance_rates, excluded_services_map
+):
+    if filters.get("vc_technician"):
+        return []
+
+    procedure = dt("Clinical Procedure")
+    prescription = dt("Procedure Prescription")
+    case_wh = None
+    if filters.get("practitioner"):
+        case_wh = procedure.practitioner == filters.get("practitioner")
+    else:
+        case_wh = procedure.practitioner.isnotnull()
+
+    procedure_records = (
+        frappe.qb.from_(procedure)
+        .inner_join(prescription)
+        .on(
+            procedure.hms_tz_ref_childname == prescription.name
+            and procedure.ref_docname == prescription.parent
+            and procedure.procedure_template == prescription.procedure
+        )
+        .select(
+            procedure.procedure_template,
+            procedure.practitioner,
+            prescription.prescribe,
+            Sum(prescription.amount).as_("amount"),
+            Count(procedure.patient).distinct().as_("patient_count"),
+            Count(procedure.procedure_template).as_("item_count"),
+            Case()
+            .when(prescription.prescribe == 0, procedure.hms_tz_insurance_coverage_plan)
+            .else_("CASH")
+            .as_("mode"),
+        )
+        .where(
+            (procedure.ref_doctype == "Patient Encounter")
+            & (procedure.ref_docname == prescription.parent)
+            & (procedure.hms_tz_ref_childname == prescription.name)
+            & (procedure.docstatus == 1)
+        )
+        .where(
+            (
+                (procedure.hms_tz_submitted_date >= filters.get("from_date"))
+                & (procedure.hms_tz_submitted_date <= filters.get("to_date"))
+                & (procedure.company == filters.get("company"))
+                & (procedure.workflow_state == "Completed")
+                & case_wh
+            )
+        )
+        .groupby(
+            Case()
+            .when(prescription.prescribe == 0, procedure.hms_tz_insurance_coverage_plan)
+            .else_("CASH")
+            .as_("mode"),
+            procedure.practitioner,
+            procedure.procedure_template,
+        )
+    ).run(as_dict=1)
+
+    procedure_list = []
+    excluded_procedures = excluded_services_map.get("Clinical Procedure Template", [])
+    excluded_procedure_templates = [
+        row.healthcare_service for row in excluded_procedures
+    ]
+
+    for row in procedure_records:
+        if row.procedure_template in excluded_procedure_templates:
+            for excluded_procedure in excluded_procedures:
+                if row.procedure_template == excluded_procedure.healthcare_service:
+                    procedure_list.append(
+                        {
+                            "practitioner": row.practitioner,
+                            "vc_technician": "",
+                            "billing_item": row.procedure_template,
+                            "patient_count": row.patient_count,
+                            "item_count": row.item_count,
+                            "mode": row.mode,
+                            "paid_amount": row.amount,
+                            "vc_amount": flt(
+                                row.amount * flt(excluded_procedure.vc_rate / 100)
+                            ),
+                            "company_amount": flt(
+                                row.amount * flt(excluded_procedure.company_rate / 100)
+                            ),
                         }
                     )
 
-                    service_list.append(procedure)
+        elif row.prescribe == 1 and row.mode == "CASH":
+            for rate_row in cash_rates:
+                if rate_row.document_type == "Clinical Procedure":
+                    procedure_list.append(
+                        {
+                            "practitioner": row.practitioner,
+                            "vc_technician": "",
+                            "billing_item": row.procedure_template,
+                            "patient_count": row.patient_count,
+                            "item_count": row.item_count,
+                            "mode": row.mode,
+                            "paid_amount": row.amount,
+                            "vc_amount": flt(row.amount * flt(rate_row.vc_rate / 100)),
+                            "company_amount": flt(
+                                row.amount * flt(rate_row.company_rate / 100)
+                            ),
+                        }
+                    )
+        elif row.prescribe == 0 and row.mode != "CASH":
+            coverage_plan_name = None
+            if row.mode == "NH001~":
+                coverage_plan_name = frappe.get_cached_value(
+                    "Healthcare Insurance Coverage Plan",
+                    {"name": row.mode},
+                    "coverage_plan_name",
+                )
+            for rate_row in insurance_rates:
+                if (
+                    rate_row.coverage_plan == row.mode
+                    and rate_row.document_type == "Clinical Procedure"
+                ):
+                    procedure_list.append(
+                        {
+                            "practitioner": row.practitioner,
+                            "vc_technician": "",
+                            "billing_item": row.procedure_template,
+                            "patient_count": row.patient_count,
+                            "item_count": row.item_count,
+                            "mode": (
+                                coverage_plan_name if coverage_plan_name else row.mode
+                            ),
+                            "paid_amount": row.amount,
+                            "vc_amount": flt(row.amount * flt(rate_row.vc_rate / 100)),
+                            "company_amount": flt(
+                                row.amount * flt(rate_row.company_rate / 100)
+                            ),
+                        }
+                    )
+    return procedure_list
 
-    return service_list
+
+def get_report_summary(args, summary_data):
+    total_paid_amount = sum(
+        [flt(row.get("paid_amount")) for row in summary_data if row.get("paid_amount")]
+    )
+    total_vc_amount = sum(
+        [flt(row.get("vc_amount")) for row in summary_data if row.get("vc_amount")]
+    )
+    total_company_amount = sum(
+        [
+            flt(row.get("company_amount"))
+            for row in summary_data
+            if row.get("company_amount")
+        ]
+    )
+
+    currency = frappe.get_cached_value("Company", args.company, "default_currency")
+    return [
+        {
+            "value": total_paid_amount,
+            "label": _("Total Paid Amount"),
+            "datatype": "Currency",
+            "currency": currency,
+        },
+        {
+            "value": total_vc_amount,
+            "label": _("Total VC Amount"),
+            "datatype": "Currency",
+            "currency": currency,
+        },
+        {
+            "value": total_company_amount,
+            "label": _("Total Company Amount"),
+            "datatype": "Currency",
+            "currency": currency,
+        },
+    ]
