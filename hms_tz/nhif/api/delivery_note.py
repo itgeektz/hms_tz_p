@@ -295,6 +295,7 @@ def before_submit(doc, method):
 =======
     doc.hms_tz_submitted_by = get_fullname(frappe.session.user)
     doc.hms_tz_user_id = frappe.session.user
+    doc.hms_tz_submitted_date = nowdate()
 
 >>>>>>> d1a97a08 (feat: set details of the user who submit the LRPM documents)
 

@@ -7,7 +7,7 @@ import frappe
 from frappe import _
 from hms_tz.nhif.api.healthcare_utils import create_delivery_note_from_LRPT
 from hms_tz.nhif.api.healthcare_utils import get_restricted_LRPT
-from frappe.utils import getdate, get_fullname
+from frappe.utils import getdate, get_fullname, nowdate
 
 
 def validate(doc, method):
@@ -26,6 +26,7 @@ def before_submit(doc, method):
 
     doc.hms_tz_submitted_by = get_fullname(frappe.session.user)
     doc.hms_tz_user_id = frappe.session.user
+    doc.hms_tz_submitted_date = nowdate()
 
     # 2023-07-13
     # stop this validation for now

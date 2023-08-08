@@ -15,8 +15,12 @@ from hms_tz.nhif.api.healthcare_utils import (
 from hms_tz.hms_tz.doctype.clinical_procedure.clinical_procedure import (
     insert_clinical_procedure_to_medical_record,
 )
+<<<<<<< HEAD
 from frappe.utils import getdate, get_fullname
 >>>>>>> d1a97a08 (feat: set details of the user who submit the LRPM documents)
+=======
+from frappe.utils import getdate, get_fullname, nowdate
+>>>>>>> fec88737 (feat: populate values on fields like 'submitted by', 'user id' and 'submitted date' on submit of procedure, radiology and lab test)
 
 
 def validate(doc, methd):
@@ -40,6 +44,7 @@ def before_submit(doc, method):
 
     doc.hms_tz_submitted_by = get_fullname(frappe.session.user)
     doc.hms_tz_user_id = frappe.session.user
+    doc.hms_tz_submitted_date = nowdate()
 
     # 2023-07-13
     # stop this validation for now
