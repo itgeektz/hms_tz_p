@@ -66,6 +66,7 @@
                 </p>
             </td>
         </tr>
+
         <p style="font-size: 20pt; font-family: Arial, Helvetica, sans-serif; text-align: center;">
             Patient Partial Invoice Reciept
         </p>
@@ -133,13 +134,13 @@
                         <col style="width: 20%" />
                     </colgroup>
                     <thead>
-                        <tr>
-                            <th style="text-align:center">{%= __("#") %}</th>
-                            <th style="text-align:center">{%= __("Date") %}</th>
-                            <th style="text-align:left">{%= __("Item Name") %}</th>
-                            <th style="text-align:center">{%= __("Quantity") %}</th>
-                            <th style="text-align:center">{%= __("Price") %}</th>
-                            <th style="text-align:center">{%= __("Total Price") %}</th>
+                        <tr >
+                            <th style="text-align:center; background-color: #f2f2f2; font-weight: bold;">{%= __("#") %}</th>
+                            <th style="text-align:center; background-color: #f2f2f2; font-weight: bold;">{%= __("Date") %}</th>
+                            <th style="text-align:center; background-color: #f2f2f2; font-weight: bold;">{%= __("Item Name") %}</th>
+                            <th style="text-align:center; background-color: #f2f2f2; font-weight: bold; ">{%= __("Quantity") %}</th>
+                            <th style="text-align:center; background-color: #f2f2f2; font-weight: bold; ">{%= __("Price") %}</th>
+                            <th style="text-align:center; background-color: #f2f2f2; font-weight: bold;">{%= __("Total Price") %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -189,45 +190,89 @@
                                     <td style="text-align: left;">{{ item.description }}</td>
                                     <td style="text-align: center;">{{ item.quantity }}</td>
                                     <td style="text-align: right;">{{ item.rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
-                                    <td style="text-align: right;">{{ item.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
+                                    <td style="text-align: right;">{{ item.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</td>
                                 </tr>
                                 
                                 {% count = count + 1; %}
                             {% } %}
                         {% } %}
+                    </tbody>
+                    <tfoot>
                         
-
-</tbody>
-<tfoot>
-    <!-- <tr>
-        <th style="text-align: left; " colspan="5">Total</th>
-        <th style="text-align: right; ">{%= total_amount.toLocaleString(undefined,
-            {minimumFractionDigits: 2,
-            maximumFractionDigits: 2}) %}</th>
-    </tr> -->
-</tfoot>
-</table>
-</td>
-</tr>
-<tr>
-    <td>
-        <div style="padding-bottom: 3px; margin-top: 0px; margin-bottom: 0px; border: 0;">
-            <div class="col-xs-6 column-break">
-                <div class="row">
-                    <div class="col-xs-4 text-left">
-                        <label>Printed By: </label>
+                    </tfoot>
+                </table>
+            </td>
+        </tr>
+    </tbody>
+    <tfoot>
+        <tr>
+            <td>
+                <table class="table table-hover table-bordered table-sm" style="width: 100%; border-collapse: collapse; border: 1px solid #ccc;">
+                    <colgroup>
+                        <col style="width: 33%" />
+                        <col style="width: 33%" />
+                        <col style="width: 33%" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th style="border: 1px solid #ccc; padding: 8px; background-color: #f2f2f2; text-align: center; font-weight: bold;">
+                                Total Deposited Amount:
+                            </th>
+                            <th style="border: 1px solid #ccc; padding: 8px; background-color: #f2f2f2; text-align: center; font-weight: bold;">
+                                Total Amount Used:
+                            </th>
+                            <th style="border: 1px solid #ccc; padding: 8px; background-color: #f2f2f2; text-align: center; font-weight: bold;">
+                                Current Balance:
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="text-align: right;font-weight: bold; border: 1px solid #ccc; ">
+                                {% for (var i = 0, l = data.length; i < l; i++) { %}
+                                    {% if (data[i]["total_deposited_amount"] !== undefined) { %}
+                                        {%= data[i]["total_deposited_amount"].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %}
+                                    {% } %}
+                                {% } %}
+                            </td>
+                            <td style="text-align: right;font-weight: bold; border: 1px solid #ccc; ">
+                                {% for (var i = 0, l = data.length; i < l; i++) { %}
+                                    {% if (data[i]["total_amount_used"] !== undefined) { %}
+                                        {%= data[i]["total_amount_used"].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %}
+                                    {% } %}
+                                {% } %}
+                            </td>
+                            <td style="text-align: right;font-weight: bold; border: 1px solid #ccc; ">
+                                {% for (var i = 0, l = data.length; i < l; i++) { %}
+                                    {% if (data[i]["current_balance"] !== undefined) { %}
+                                        {%= data[i]["current_balance"].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %}
+                                    {% } %}
+                                {% } %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div style="padding-bottom: 3px; margin-top: 0px; margin-bottom: 0px; border: 0;">
+                    <div class="col-xs-6 column-break">
+                        <div class="row">
+                            <div class="col-xs-4 text-left">
+                                <label>Printed By: </label>
+                            </div>
+                            <div class="col-xs-7  value">
+                                {% for(var i=0, l=data.length; i<l; i++) { %} {%=data[i][("printed_by")] %} {% } %} </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-4 text-left">
+                                <label>Signature:</label>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-xs-7  value">
-                        {% for(var i=0, l=data.length; i<l; i++) { %} {%=data[i][("printed_by")] %} {% } %} </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-4 text-left">
-                        <label>Signature:</label>
-                    </div>
-                </div>
-            </div>
-    </td>
-</tr>
-</tbody>
+            </td>
+        </tr>
+    </tfoot>
 </table>
