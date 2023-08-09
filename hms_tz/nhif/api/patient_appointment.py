@@ -172,7 +172,7 @@ def invoice_appointment(name):
         appointment_doc.ref_sales_invoice = sales_invoice.name
         appointment_doc.invoiced = 1
         appointment_doc.db_update()
-        make_next_doc(appointment_doc, "validate")
+        make_next_doc(appointment_doc, "validate", from_hook=False)
         return "true"
 
 
@@ -456,7 +456,7 @@ def set_follow_up(appointment_doc, method):
     }
     if appointment_doc.insurance_subscription:
         filters["insurance_subscription"] = appointment_doc.insurance_subscription
-    
+
     appointment = get_previous_appointment(appointment_doc.patient, filters)
     if appointment and appointment_doc.appointment_date:
         diff = date_diff(appointment_doc.appointment_date, appointment.appointment_date)
@@ -503,7 +503,7 @@ def set_follow_up(appointment_doc, method):
             # frappe.msgprint(_("This appointment requires to be paid for!"), alert=True)
 
 
-def make_next_doc(doc, method):
+def make_next_doc(doc, method, from_hook=True):
     validate_insurance_subscription(doc)
     check_multiple_appointments(doc)
     if doc.is_new():
@@ -552,8 +552,8 @@ def make_next_doc(doc, method):
                     )
                 )
             )
-    if doc.ref_sales_invoice:
-        doc.invoiced = 1
+    if from_hook:
+        set_follow_up(doc, method)
 
     if not doc.patient_age:
         doc.patient_age = calculate_patient_age(doc.patient)
