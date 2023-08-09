@@ -42,8 +42,10 @@ frappe.query_reports["IPD Billing Report"] = {
 			fieldname: 'patient_type',
 			label: __('Patient Type'),
 			fieldtype: 'Select',
-			options: ["", 'Out-Patient', 'In-Patient'],
-			reqd: 0,
+			// options: ["", 'Out-Patient', 'In-Patient'],
+			options: ['In-Patient'],
+			default: 'In-Patient',
+			reqd: 1,
 		},
 		{
 			fieldname: "from_date",
