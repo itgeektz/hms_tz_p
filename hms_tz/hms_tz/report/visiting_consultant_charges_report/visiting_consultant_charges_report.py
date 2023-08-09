@@ -1,5 +1,3 @@
-# Copyright (c) 2022, Aakvatech and contributors
-# For license information, please see license.txt
 
 import frappe
 from frappe import _
@@ -9,29 +7,11 @@ from frappe.query_builder.functions import Sum, Count
 from pypika import Case
 
 
-
 def execute(filters=None):
     if not filters:
         return
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    columns = [
-        {
-            "fieldname": "practitioner",
-            "fieldtype": "Data",
-            "label": _("Healthcare Practitioner"),
-        },
-        {"fieldname": "billing_item", "fieldtype": "Data", "label": _("Item")},
-        {"fieldname": "patients", "fieldtype": "Data", "label": _("Patients")},
-        {"fieldname": "mode", "fieldtype": "Data", "label": _("Mode")},
-=======
-    commission_doc, excluded_services_map = get_commission_doc(filters)
-    data = get_lab_commissions(filters, commission_doc, excluded_services_map)
-    # data = get_appointment_consultancy(filters, visiting_rates)
-=======
     data = []
->>>>>>> 256f8fd7 (feat: show cash and insurance vc rates for radiology, procedure and opd appointments)
 
     (
         commission_doc,
@@ -134,15 +114,10 @@ def get_columns(filters):
             "label": _("Mode"),
             "width": "160px",
         },
->>>>>>> a6711458 (feat: show cash and insurance vc rates for lab records)
         {
             "fieldname": "paid_amount",
             "fieldtype": "Currency",
             "label": _("Paid Amount"),
-<<<<<<< HEAD
-        },
-        {"fieldname": "vc_amount", "fieldtype": "Currency", "label": _("Vc Amount")},
-=======
             "width": "120px",
         },
         {
@@ -151,34 +126,10 @@ def get_columns(filters):
             "label": _("Vc Amount"),
             "width": "120px",
         },
->>>>>>> a6711458 (feat: show cash and insurance vc rates for lab records)
         {
             "fieldname": "company_amount",
             "fieldtype": "Currency",
             "label": _("Company Amount"),
-<<<<<<< HEAD
-        },
-    ]
-
-    commission_name = frappe.get_all("Visiting Comission")
-
-    visiting_rates = frappe.get_all(
-        "Visiting Rate",
-        filters={"parent": commission_name[0].name},
-        fields=["funding_provider", "document_type", "vc_rate", "company_rate"],
-    )
-
-    excluded_service_rates = frappe.get_all(
-        "Excluded Service Rate",
-        filters={"parent": commission_name[0].name},
-        fields=["document_type", "service", "vc_rate", "company_rate"],
-    )
-
-    data = get_appointment_consultancy(filters, visiting_rates)
-    data += get_procedure_consultancy(filters, visiting_rates, excluded_service_rates)
-
-    return columns, data
-=======
             "width": "120px",
         },
     ]
@@ -204,88 +155,6 @@ def get_commission_doc_details(filters):
     for row in commission_doc.excluded_service_rates:
         excluded_services_map.setdefault(row.document_type, []).append(row)
 
-<<<<<<< HEAD
-    return commission_doc, excluded_services_map
->>>>>>> a6711458 (feat: show cash and insurance vc rates for lab records)
-
-
-def get_appointment_consultancy(filters, visiting_rates):
-    conditions = ""
-    if filters.get("from_date") and filters.get("to_date"):
-        conditions += (
-            " AND Date(pa.appointment_date) between %(from_date)s and %(to_date)s"
-        )
-
-    if filters.get("company"):
-        conditions += " AND pa.company = %(company)s"
-        conditions += " AND pe.company = %(company)s"
-
-    if filters.get("practitioner"):
-        conditions += " AND pa.practitioner = %(practitioner)s"
-        conditions += " AND pe.practitioner = %(practitioner)s"
-
-    records = frappe.db.sql(
-        """
-		SELECT COUNT(pa.patient) AS patients, pa.billing_item, SUM(pa.paid_amount) AS paid_amount,
-			pa.practitioner, if(pa.insurance_company != "", pa.insurance_company, "CASH OPD") AS mode,
-			"Patient Appointment" AS pa_doc
-		FROM `tabPatient Appointment` pa
-		INNER JOIN `tabPatient Encounter` pe ON pa.name = pe.appointment
-		WHERE pa.status = "Closed"
-		AND pa.follow_up = 0
-		AND pe.encounter_type = "Final"
-		AND pe.duplicated = 0 {conditions}
-		GROUP BY pa.practitioner, mode, pa.billing_item
-	""".format(
-            conditions=conditions
-        ),
-        filters,
-        as_dict=1,
-    )
-
-    consultancies = []
-    for record in records:
-        for rate_category in visiting_rates:
-            if (
-                record.mode == "NHIF"
-                and record.pa_doc == rate_category.document_type
-                and record.mode == rate_category.funding_provider
-            ):
-                vc_amount = flt(record.paid_amount * flt(rate_category.vc_rate / 100))
-                company_amount = flt(
-                    record.paid_amount * flt(rate_category.company_rate / 100)
-                )
-                record.update(
-                    {"vc_amount": vc_amount, "company_amount": company_amount}
-                )
-
-                consultancies.append(record)
-
-            if (
-                record.mode != "NHIF"
-                and record.pa_doc == rate_category.document_type
-                and rate_category.funding_provider == "Other"
-            ):
-                vc_amount = flt(record.paid_amount * flt(rate_category.vc_rate / 100))
-                company_amount = flt(
-                    record.paid_amount * flt(rate_category.company_rate / 100)
-                )
-                record.update(
-                    {"vc_amount": vc_amount, "company_amount": company_amount}
-                )
-
-                consultancies.append(record)
-
-    return consultancies
-<<<<<<< HEAD
-=======
-
-
-def get_lab_commissions(filters, commission_doc, excluded_services_map):
-    lab_test = dt("Lab Test")
-    prescription = dt("Lab Prescription")
-    case_wh = None
-=======
     vc_lab_users = [row.user_field for row in commission_doc.lab_users]
     vc_radiology_users = [row.user_field for row in commission_doc.radiology_users]
 
@@ -293,7 +162,6 @@ def get_lab_commissions(filters, commission_doc, excluded_services_map):
 
 
 def get_opd_commissions(filters, cash_rates, insurance_rates):
->>>>>>> 256f8fd7 (feat: show cash and insurance vc rates for radiology, procedure and opd appointments)
     if filters.get("vc_technician"):
         return []
 
@@ -539,7 +407,6 @@ def get_lab_commissions(
                         }
                     )
     return lab_list
->>>>>>> a6711458 (feat: show cash and insurance vc rates for lab records)
 
 
 def get_radiology_commissions(
