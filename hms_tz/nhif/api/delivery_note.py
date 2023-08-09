@@ -61,19 +61,7 @@ def update_dosage_details(item):
             return
 
         drug_doc = frappe.get_doc("Drug Prescription", reference_dn)
-<<<<<<< HEAD
-
-        description = ", \n".join(
-            [
-                "frequency: " + str(drug_doc.get("dosage") or "No Prescription Dosage"),
-                "period: " + str(drug_doc.get("period") or "No Prescription Period"),
-                "dosage_form: " + str(drug_doc.get("dosage_form") or ""),
-                "interval: " + str(drug_doc.get("interval") or ""),
-                "interval_uom: " + str(drug_doc.get("interval_uom") or ""),
-                "Doctor's comment: "
-                + (drug_doc.get("comment") or "Take medication as per dosage."),
-            ]
-=======
+        
         description = (
             drug_doc.drug_name
             + " for "
@@ -84,7 +72,6 @@ def update_dosage_details(item):
             + drug_doc.medical_code
             + " and doctor notes: "
             + (drug_doc.comment or "Take medication as per dosage.")
->>>>>>> d1a97a08 (feat: set details of the user who submit the LRPM documents)
         )
 
         item.description = description
@@ -231,34 +218,9 @@ def set_missing_values(doc):
         doc.patient = frappe.get_value(
             "Patient Encounter", doc.reference_name, "patient"
         )
-<<<<<<< HEAD
 
     if not doc.hms_tz_phone_no and doc.patient:
         doc.hms_tz_phone_no = frappe.get_cached_value("Patient", doc.patient, "mobile")
-=======
-
-    if not doc.hms_tz_phone_no and doc.patient:
-        doc.hms_tz_phone_no = frappe.get_cached_value("Patient", doc.patient, "mobile")
-
-    if doc.form_sales_invoice:
-        if not doc.hms_tz_appointment_no or not doc.healthcare_practitioner:
-            si_reference_dn = frappe.get_value(
-                "Sales Invoice Item", doc.items[0].si_detail, "reference_dn"
-            )
-
-            if si_reference_dn:
-                parent_encounter = frappe.get_value(
-                    "Drug Prescription", si_reference_dn, "parent"
-                )
-                (
-                    doc.hms_tz_appointment_no,
-                    doc.healthcare_practitioner,
-                ) = frappe.get_value(
-                    "Patient Encounter",
-                    parent_encounter,
-                    ["appointment", "practitioner"],
-                )
->>>>>>> d1a97a08 (feat: set details of the user who submit the LRPM documents)
 
 
 def before_submit(doc, method):
@@ -268,10 +230,6 @@ def before_submit(doc, method):
             This Delivery Note can't be submitted because all Items\
                 are not available in stock</h4>"
         )
-<<<<<<< HEAD
-=======
-
->>>>>>> d1a97a08 (feat: set details of the user who submit the LRPM documents)
     for item in doc.items:
         if item.is_restricted and not item.approval_number:
             frappe.throw(
@@ -291,13 +249,10 @@ def before_submit(doc, method):
                 )
             )
 
-<<<<<<< HEAD
-=======
     doc.hms_tz_submitted_by = get_fullname(frappe.session.user)
     doc.hms_tz_user_id = frappe.session.user
     doc.hms_tz_submitted_date = nowdate()
 
->>>>>>> d1a97a08 (feat: set details of the user who submit the LRPM documents)
 
 def on_submit(doc, method):
     update_drug_prescription(doc)
