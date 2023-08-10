@@ -11,6 +11,7 @@ from hms_tz.nhif.api.healthcare_utils import (
 )
 from frappe.utils import getdate, get_fullname
 import dateutil
+from frappe.query_builder import DocType
 
 
 def validate(doc, method):
@@ -186,6 +187,25 @@ def create_sample_collection(doc):
     if not template.sample_qty or not template.sample:
         return
 
+    sample = DocType("Sample Collection")
+    sample_docname = (
+        frappe.qb.from_(sample)
+        .select(sample.name)
+        .where(
+            (sample.ref_doctype == doc.ref_doctype)
+            & (sample.ref_docname == doc.ref_docname)
+            & (sample.sample == template.sample)
+        )
+        .run(as_dict=True)
+    )
+
+    if len(sample_docname) > 0:
+        sample_doc = frappe.get_doc("Sample Collection", sample_docname[0].name)
+        sample_doc.append("lab_tests", {"lab_test": doc.name})
+        sample_doc.save(ignore_permissions=True)
+        frappe.msgprint(_(f"Sample Collection: {sample_doc.name} updated"), alert=True)
+        return
+
     sample_doc = frappe.new_doc("Sample Collection")
     sample_doc.patient = doc.patient
     sample_doc.patient_name = doc.patient_name
@@ -196,8 +216,9 @@ def create_sample_collection(doc):
     sample_doc.sample_uom = template.sample_uom
     sample_doc.sample_qty = template.sample_qty
     sample_doc.sample_details = template.sample_details
-    sample_doc.ref_doctype = doc.doctype
-    sample_doc.ref_docname = doc.name
+    sample_doc.ref_doctype = doc.ref_doctype
+    sample_doc.ref_docname = doc.ref_docname
+    sample_doc.append("lab_tests", {"lab_test": doc.name})
 
     sample_doc.flags.ignore_permissions = True
     sample_doc.insert()
