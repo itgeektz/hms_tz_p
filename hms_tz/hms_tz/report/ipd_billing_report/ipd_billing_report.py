@@ -215,7 +215,7 @@ def get_transaction_data(args):
 		AND lrpmt.prescribe = 1
 		AND lrpmt.is_not_available_inhouse = 0
 		AND lrpmt.is_cancelled = 0
-		AND lrpmt.invoiced = 1
+		AND lrpmt.invoiced = 0
 		group by pe.encounter_date
 
 		union all
@@ -233,7 +233,7 @@ def get_transaction_data(args):
 		AND lrpmt.prescribe = 1
 		AND lrpmt.is_not_available_inhouse = 0
 		AND lrpmt.is_cancelled = 0
-		AND lrpmt.invoiced = 1
+		AND lrpmt.invoiced = 0
 		group by pe.encounter_date
 
 		union all
@@ -251,7 +251,7 @@ def get_transaction_data(args):
 		AND lrpmt.prescribe = 1
 		AND lrpmt.is_not_available_inhouse = 0
 		AND lrpmt.is_cancelled = 0
-		AND lrpmt.invoiced = 1
+		AND lrpmt.invoiced = 0
 		group by pe.encounter_date
 		
 		union all
@@ -270,7 +270,7 @@ def get_transaction_data(args):
 		AND lrpmt.prescribe = 1
 		AND lrpmt.is_not_available_inhouse = 0
 		AND lrpmt.is_cancelled = 0
-		AND lrpmt.invoiced = 1
+		AND lrpmt.invoiced = 0
 		group by pe.encounter_date
 
 		union all
@@ -288,7 +288,7 @@ def get_transaction_data(args):
 		AND lrpmt.prescribe = 1
 		AND lrpmt.is_not_available_inhouse = 0
 		AND lrpmt.is_cancelled = 0
-		AND lrpmt.invoiced = 1
+		AND lrpmt.invoiced = 0
 		group by pe.encounter_date
 
 		union all
@@ -298,7 +298,7 @@ def get_transaction_data(args):
 			sum(ipd.amount) as bed_charges, 0 as cons_charges
         from `tabInpatient Occupancy` ipd
         where ipd.is_confirmed = 1
-		AND ipd.invoiced = 1
+		AND ipd.invoiced = 0
         AND ipd.parent = %(inpatient_record)s
 		group by date(ipd.check_in)
 
@@ -309,7 +309,7 @@ def get_transaction_data(args):
 			0 as bed_charges, sum(ipd.rate) as cons_charges
 		from `tabInpatient Consultancy` ipd
 		where ipd.is_confirmed = 1
-		AND ipd.hms_tz_invoiced = 1
+		AND ipd.hms_tz_invoiced = 0
         AND ipd.parent = %(inpatient_record)s
 		group by date(ipd.date)
 	""",
@@ -587,7 +587,7 @@ def get_ipd_occupancy_transactions(filters):
 			INNER JOIN `tabHealthcare Service Unit Type` hsut ON hsu.service_unit_type = hsut.name
 			INNER JOIN `tabPatient Appointment` pa ON ipd_rec.patient_appointment = pa.name
 		WHERE ipd_occ.is_confirmed = 1
-        AND ipd_occ.invoiced = 1
+        AND ipd_occ.invoiced = 0
 		AND ipd_rec.admission_encounter IN (
 			SELECT pe.name FROM `tabPatient Encounter` pe
 			WHERE pe.docstatus = 1 {pe_conditions}
@@ -630,7 +630,7 @@ def get_ipd_consultancy_transactions(filters):
 			INNER JOIN `tabPatient Appointment` pa ON ipd_rec.patient_appointment = pa.name
 			INNER JOIN `tabItem` it ON ipd_cons.consultation_item = it.item_name
 		WHERE ipd_cons.is_confirmed = 1
-        AND ipd_cons.hms_tz_invoiced = 1
+        AND ipd_cons.hms_tz_invoiced = 0
 		AND ipd_cons.encounter IN (
 			SELECT pe.name FROM `tabPatient Encounter` pe
 			WHERE pe.docstatus = 1 {pe_conditions}
@@ -673,7 +673,7 @@ def get_cash_lrpmt_transaction(filters):
 			LEFT JOIN `tabInpatient Record` ipd_rec ON pa.name = ipd_rec.patient_appointment AND pe.name = ipd_rec.admission_encounter
 		WHERE lrpmt.prescribe = 1
 		AND lrpmt.is_cancelled = 0
-		AND lrpmt.invoiced = 1
+		AND lrpmt.invoiced = 0
 		AND lrpmt.is_not_available_inhouse = 0
 		AND lrpmt.parent IN (
 			SELECT pe.name FROM `tabPatient Encounter` pe
@@ -707,7 +707,7 @@ def get_cash_lrpmt_transaction(filters):
 			LEFT JOIN `tabInpatient Record` ipd_rec ON pa.name = ipd_rec.patient_appointment AND pe.name = ipd_rec.admission_encounter
 		WHERE lrpmt.prescribe = 1
 		AND lrpmt.is_cancelled = 0
-		AND lrpmt.invoiced = 1
+		AND lrpmt.invoiced = 0
 		AND lrpmt.is_not_available_inhouse = 0
 		AND lrpmt.parent IN (
 			SELECT pe.name FROM `tabPatient Encounter` pe
@@ -740,7 +740,7 @@ def get_cash_lrpmt_transaction(filters):
 			LEFT JOIN `tabInpatient Record` ipd_rec ON pa.name = ipd_rec.patient_appointment AND pe.name = ipd_rec.admission_encounter
 		WHERE lrpmt.prescribe = 1
 		AND lrpmt.is_cancelled = 0
-		AND lrpmt.invoiced = 1
+		AND lrpmt.invoiced = 0
 		AND lrpmt.is_not_available_inhouse = 0
 		AND lrpmt.parent IN (
 			SELECT pe.name FROM `tabPatient Encounter` pe
@@ -774,7 +774,7 @@ def get_cash_lrpmt_transaction(filters):
 			LEFT JOIN `tabInpatient Record` ipd_rec ON pa.name = ipd_rec.patient_appointment AND pe.name = ipd_rec.admission_encounter
 		WHERE lrpmt.prescribe = 1
 		AND lrpmt.is_cancelled = 0
-		AND lrpmt.invoiced = 1
+		AND lrpmt.invoiced = 0
 		AND lrpmt.is_not_available_inhouse = 0
 		AND lrpmt.parent IN (
 			SELECT pe.name FROM `tabPatient Encounter` pe
@@ -808,7 +808,7 @@ def get_cash_lrpmt_transaction(filters):
 			LEFT JOIN `tabInpatient Record` ipd_rec ON pa.name = ipd_rec.patient_appointment AND pe.name = ipd_rec.admission_encounter
 		WHERE lrpmt.prescribe = 1
 		AND lrpmt.is_cancelled = 0
-		AND lrpmt.invoiced = 1
+		AND lrpmt.invoiced = 0
 		AND lrpmt.is_not_available_inhouse = 0
 		AND lrpmt.parent IN (
 			SELECT pe.name FROM `tabPatient Encounter` pe
