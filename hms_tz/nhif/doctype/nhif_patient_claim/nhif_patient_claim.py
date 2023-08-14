@@ -29,14 +29,10 @@ from hms_tz.nhif.api.healthcare_utils import (
 import os
 from frappe.utils.pdf import get_pdf
 from PyPDF2 import PdfFileWriter
-<<<<<<< HEAD
 # import html2text
-=======
-import html2text
 from hms_tz.nhif.doctype.nhif_tracking_claim_change.nhif_tracking_claim_change import (
     track_changes_of_claim_items,
 )
->>>>>>> a5bff692 (chore: set name of practitioner in line item of nhif patient claim item table)
 
 
 class NHIFPatientClaim(Document):
