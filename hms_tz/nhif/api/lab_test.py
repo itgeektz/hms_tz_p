@@ -201,7 +201,14 @@ def create_sample_collection(doc):
 
     if len(sample_docname) > 0:
         sample_doc = frappe.get_doc("Sample Collection", sample_docname[0].name)
-        sample_doc.append("lab_tests", {"lab_test": doc.name})
+        sample_doc.append(
+            "lab_tests",
+            {
+                "lab_test": doc.name,
+                "lab_test_tempate": template.name,
+                "test_abbr": template.abbr,
+            },
+        )
         sample_doc.save(ignore_permissions=True)
         frappe.msgprint(_(f"Sample Collection: {sample_doc.name} updated"), alert=True)
         return
@@ -218,7 +225,14 @@ def create_sample_collection(doc):
     sample_doc.sample_details = template.sample_details
     sample_doc.ref_doctype = doc.ref_doctype
     sample_doc.ref_docname = doc.ref_docname
-    sample_doc.append("lab_tests", {"lab_test": doc.name})
+    sample_doc.append(
+        "lab_tests",
+        {
+            "lab_test": doc.name,
+            "lab_test_tempate": template.name,
+            "test_abbr": template.abbr,
+        },
+    )
 
     sample_doc.flags.ignore_permissions = True
     sample_doc.insert()
