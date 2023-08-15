@@ -864,6 +864,11 @@ class NHIFPatientClaim(Document):
             item.folio_item_id = item.folio_item_id or str(uuid.uuid1())
             item.date_created = item.date_created or nowdate()
             item.folio_id = item.folio_id or self.folio_id
+
+            # Regency rock: 110
+            if item.status == "Draft":
+                continue
+
             self.total_amount += item.amount_claimed
         for item in self.nhif_patient_claim_disease:
             item.folio_id = item.folio_id or self.folio_id
