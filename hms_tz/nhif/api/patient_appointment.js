@@ -14,12 +14,21 @@ frappe.ui.form.on('Patient Appointment', {
         // this will stop getting authorization number for cancelled appointment and
         // vital sign will not be created
         frm.trigger("check_for_cancelled_appointment");
+        if (frm.doc.healthcare_package_order) {
+            frm.disable_form();
+        }
         set_filters(frm);
         frm.trigger("update_primary_action");
         frm.trigger("toggle_reqd_referral_no");
         add_btns(frm);
         frm.trigger("mandatory_fields");
         set_auth_number_reqd(frm);
+
+        if (frm.doc.status == 'Open' || (frm.doc.status == 'Scheduled' && !frm.doc.__islocal)) {
+            frm.add_custom_button(__('Reschedule'), function () {
+                check_and_set_availability(frm);
+            });
+        }
     },
     referring_practitioner: function (frm) {
         frm.set_value("healthcare_referrer", frm.doc.referring_practitioner);
@@ -119,7 +128,7 @@ frappe.ui.form.on('Patient Appointment', {
             frm.toggle_reqd("referring_practitioner", false);
             frm.toggle_enable("referring_practitioner", false);
         }
-        
+
         if (frm.doc.appointment_type == "Emergency") {
             if (frm.doc.insurance_subscription) {
                 frm.toggle_display(['remarks'], true);
@@ -153,7 +162,7 @@ frappe.ui.form.on('Patient Appointment', {
         }
     },
     get_insurance_amount: function (frm) {
-        if (!frm.doc.insurance_subscription || !frm.doc.billing_item) {
+        if (!frm.doc.insurance_subscription || !frm.doc.billing_item || frm.doc.healthcare_package_order) {
             return;
         }
         frappe.call({
@@ -172,7 +181,7 @@ frappe.ui.form.on('Patient Appointment', {
         });
     },
     get_mop_amount: function (frm) {
-        if (!frm.doc.mode_of_payment || !frm.doc.billing_item) {
+        if (!frm.doc.mode_of_payment || !frm.doc.billing_item || frm.doc.healthcare_package_order) {
             return;
         }
         if (frm.doc.billing_item && !frm.doc.insurance_subscription) {
@@ -193,7 +202,7 @@ frappe.ui.form.on('Patient Appointment', {
         }
     },
     get_consulting_charge_item: function (frm) {
-        if (!frm.doc.practitioner || !frm.doc.appointment_type) {
+        if (!frm.doc.practitioner || !frm.doc.appointment_type || frm.doc.healthcare_package_order) {
             return;
         }
         frappe.call({
@@ -221,10 +230,10 @@ frappe.ui.form.on('Patient Appointment', {
                     frappe.msgprint("<h4 style='background-color:LightCoral'>Please update date of birth for this patient</h4>");
                 }
             }),
-            setTimeout(() => {
-                frm.toggle_display('mode_of_payment', true);
-                frm.toggle_display('paid_amount', true);
-            }, 100);
+                setTimeout(() => {
+                    frm.toggle_display('mode_of_payment', true);
+                    frm.toggle_display('paid_amount', true);
+                }, 100);
             frm.set_value("insurance_subscription", "");
             if (!frm.doc.ref_vital_signs) {
                 frm.set_df_property("follow_up", "read_only", 0);
@@ -279,7 +288,7 @@ frappe.ui.form.on('Patient Appointment', {
                     if (card.AuthorizationStatus == 'ACCEPTED') {
                         frm.set_value("authorization_number", card.AuthorizationNo);
                         frm.set_value("nhif_employer_name", card.EmployerName);
-                        frm.save(); 
+                        frm.save();
                         frappe.show_alert({
                             message: __("Authorization Number is updated"),
                             indicator: 'green'
@@ -306,6 +315,9 @@ frappe.ui.form.on('Patient Appointment', {
         frm.trigger("mandatory_fields");
     },
     update_primary_action: function (frm) {
+        if (frm.doc.healthcare_package_order) {
+            return;
+        }
         if (frm.is_new()) {
             if (!frm.doc.mode_of_payment && !frm.doc.insurance_subscription) {
                 frm.page.set_primary_action(__('Pending'), () => {
@@ -359,7 +371,7 @@ frappe.ui.form.on('Patient Appointment', {
         }
     },
     send_vfd: function (frm) {
-        if (!frm.doc.ref_sales_invoice) return;
+        if (!frm.doc.ref_sales_invoice || frm.doc.healthcare_package_order) return;
         frappe.call({
             method: 'hms_tz.nhif.api.patient_appointment.send_vfd',
             args: {
@@ -384,6 +396,322 @@ frappe.ui.form.on('Patient Appointment', {
         }
     }
 });
+
+
+const check_and_set_availability = (frm) => {
+    let selected_slot = null;
+    let service_unit = null;
+    let duration = null;
+    let practitioner_availability = null
+
+    show_availability();
+
+    function show_empty_state(practitioner, appointment_date) {
+        frappe.msgprint({
+            title: __('Not Available'),
+            message: __('Healthcare Practitioner {0} not available on {1}', [practitioner.bold(), appointment_date.bold()]),
+            indicator: 'red'
+        });
+    }
+
+    function show_availability() {
+        let selected_practitioner = '';
+        let d = new frappe.ui.Dialog({
+            title: __('Available slots'),
+            fields: [
+                {
+                    fieldname: "practitioner",
+                    label: "Healthcare Practitioner",
+                    fieldtype: 'Link',
+                    options: 'Healthcare Practitioner',
+                    reqd: 1,
+                    get_query: () => {
+                        return {
+                            filters: {
+                                "status": "Active",
+                                "hms_tz_company": frm.doc.company
+
+                            }
+                        };
+                    }
+                },
+                { fieldtype: 'Column Break' },
+                {
+                    fieldname: "appointment_date",
+                    label: "Date",
+                    fieldtype: "Date",
+                    reqd: 1,
+                },
+                { fieldtype: "Section Break" },
+                { fieldtype: "HTML", fieldname: "available_slots" }
+
+            ],
+            primary_action_label: __("Book"),
+            primary_action: function () {
+                frm.set_value('appointment_time', selected_slot);
+                if (!frm.doc.duration) {
+                    frm.set_value('duration', duration);
+                }
+                frm.set_value('practitioner', d.get_value('practitioner'));
+                frm.set_value('practitioner_availability', practitioner_availability || '');
+                frm.set_value('appointment_date', d.get_value('appointment_date'));
+                if (service_unit) {
+                    frm.set_value('service_unit', service_unit);
+                }
+                if (!frm.doc.department) {
+                    frappe.db.get_value("Healthcare Practitioner", d.get_value("practitioner"), "department")
+                        .then(r => {
+                            if (r && r.department) {
+                                frm.set_value('department', r.department);
+                            }
+                        });
+                }
+                d.hide();
+                frm.enable_save();
+                frm.save();
+                d.get_primary_btn().attr('disabled', true);
+                if (frm.doc.patient_referral) {
+                    frappe.db.set_value('Patient Referral', frm.doc.patient_referral, {
+                        status: 'Completed',
+                    }).then(r => {
+                    })
+                }
+            }
+        });
+
+        d.set_values({
+            'practitioner': frm.doc.practitioner,
+            'appointment_date': frappe.datetime.get_today()
+        });
+
+
+        // disable dialog action initially
+        d.get_primary_btn().attr('disabled', true);
+
+        // Field Change Handler
+        let fd = d.fields_dict;
+
+        d.fields_dict['appointment_date'].df.onchange = () => {
+            if (frappe.datetime.get_today() > d.get_value('appointment_date')) {
+                d.get_primary_btn().attr('disabled', true);
+                frappe.msgprint('Older date or time cannot be selected in this appointment.')
+            }
+            show_slots(d, fd);
+        };
+        d.fields_dict['practitioner'].df.onchange = () => {
+            if (d.get_value('practitioner') && d.get_value('practitioner') != selected_practitioner) {
+                selected_practitioner = d.get_value('practitioner');
+                show_slots(d, fd);
+            }
+        };
+
+        d.$wrapper.find('.modal-dialog').css({
+            "width": "800px",
+            "max-height": "1600px",
+            "overflow": "auto",
+        });
+        d.show();
+    }
+
+    function show_slots(d, fd) {
+        if (d.get_value('appointment_date') && d.get_value('practitioner')) {
+            fd.available_slots.html('');
+            frappe.call({
+                method: 'hms_tz.hms_tz.doctype.patient_appointment.patient_appointment.get_availability_data',
+                args: {
+                    practitioner: d.get_value('practitioner'),
+                    date: d.get_value('appointment_date')
+                },
+                callback: (r) => {
+                    let data = r.message;
+                    if (data.slot_details.length > 0 || data.present_events.length > 0) {
+                        let $wrapper = d.fields_dict.available_slots.$wrapper;
+
+                        // make buttons for each slot
+                        let slot_details = data.slot_details;
+                        let slot_html = '';
+                        for (let i = 0; i < slot_details.length; i++) {
+                            slot_html = slot_html + `<label>${slot_details[i].slot_name}</label>`;
+                            slot_html = slot_html + `<br/>` + slot_details[i].avail_slot.map(slot => {
+                                let appointment_count = 0;
+                                let disabled = false;
+                                let start_str = slot.from_time;
+                                let slot_start_time = moment(slot.from_time, 'HH:mm:ss');
+                                let slot_to_time = moment(slot.to_time, 'HH:mm:ss');
+                                let interval = (slot_to_time - slot_start_time) / 60000 | 0;
+                                // iterate in all booked appointments, update the start time and duration
+                                slot_details[i].appointments.forEach(function (booked) {
+                                    let booked_moment = moment(booked.appointment_time, 'HH:mm:ss');
+                                    let end_time = booked_moment.clone().add(booked.duration, 'minutes');
+                                    // Deal with 0 duration appointments
+                                    if (booked_moment.isSame(slot_start_time) || booked_moment.isBetween(slot_start_time, slot_to_time)) {
+                                        if (booked.duration == 0) {
+                                            disabled = true;
+                                            return false;
+                                        }
+                                    }
+                                    // Check for overlaps considering appointment duration
+                                    if (slot_details[i].allow_overlap != 1) {
+                                        if (slot_start_time.isBefore(end_time) && slot_to_time.isAfter(booked_moment)) {
+                                            // There is an overlap
+                                            disabled = true;
+                                            return false;
+                                        }
+                                    }
+                                    else {
+                                        if (slot_start_time.isBefore(end_time) && slot_to_time.isAfter(booked_moment)) {
+                                            appointment_count++
+                                        }
+                                        if (appointment_count >= slot_details[i].service_unit_capacity) {
+                                            // There is an overlap
+                                            disabled = true;
+                                            return false;
+                                        }
+                                    }
+                                });
+                                //iterate in all absent events and disable the slots
+                                slot_details[i].absent_events.forEach(function (event) {
+                                    let event_from_time = moment(event.from_time, 'HH:mm:ss');
+                                    let event_to_time = moment(event.to_time, 'HH:mm:ss');
+                                    // Check for overlaps considering event start and end time
+                                    if (slot_start_time.isBefore(event_to_time) && slot_to_time.isAfter(event_from_time)) {
+                                        // There is an overlap
+                                        disabled = true;
+                                        return false;
+                                    }
+                                });
+                                let count = ''
+                                if (slot_details[i].allow_overlap == 1 && slot_details[i].service_unit_capacity > 1) {
+                                    count = '' - '' + (slot_details[i].service_unit_capacity - appointment_count)
+                                    // document.getElementById("count").style.fontSize = "xx-large";
+                                }
+                                return `<button class="btn btn-default"
+									data-name=${start_str}
+									data-duration=${interval}
+									data-service-unit="${slot_details[i].service_unit || ''}"
+									style="margin: 0 10px 10px 0; width: 72px;" ${disabled ? 'disabled="disabled"' : ""}>
+									${start_str.substring(0, start_str.length - 3)} ${count}
+								</button>`;
+                            }).join("");
+                            slot_html = slot_html + `<br/>`;
+                        }
+                        if (data.present_events && data.present_events.length > 0) {
+                            slot_html = slot_html + `<br/>`;
+                            var present_events = data.present_events
+                            for (let i = 0; i < present_events.length; i++) {
+
+                                slot_html = slot_html + `<label>${present_events[i].slot_name}</label>`;
+                                slot_html = slot_html + `<br/>` + present_events[i].avail_slot.map(slot => {
+                                    let appointment_count = 0;
+                                    let disabled = false;
+                                    let start_str = slot.from_time;
+                                    let slot_start_time = moment(slot.from_time, 'HH:mm:ss');
+                                    let slot_to_time = moment(slot.to_time, 'HH:mm:ss');
+                                    let interval = (slot_to_time - slot_start_time) / 60000 | 0;
+                                    //checking current time in slot
+                                    var today = frappe.datetime.nowdate();
+                                    if (today == d.get_value('appointment_date')) {
+                                        // disable before  current  time in current date
+                                        var curr_time = moment(frappe.datetime.now_time(), 'HH:mm:ss');
+                                        if (slot_start_time.isBefore(curr_time)) {
+                                            disabled = true;
+                                        }
+                                    }
+                                    //iterate in all booked appointments, update the start time and duration
+                                    present_events[i].appointments.forEach(function (booked) {
+                                        let booked_moment = moment(booked.appointment_time, 'HH:mm:ss');
+                                        let end_time = booked_moment.clone().add(booked.duration, 'minutes');
+                                        // Deal with 0 duration appointments
+                                        if (booked_moment.isSame(slot_start_time) || booked_moment.isBetween(slot_start_time, slot_to_time)) {
+                                            if (booked.duration == 0) {
+                                                disabled = true;
+                                                return false;
+                                            }
+                                        }
+                                        // Check for overlaps considering appointment duration
+                                        if (present_events[i].allow_overlap != 1) {
+                                            if (slot_start_time.isBefore(end_time) && slot_to_time.isAfter(booked_moment)) {
+                                                // There is an overlap
+                                                disabled = true;
+                                                return false;
+                                            }
+                                        }
+                                        else {
+                                            if (slot_start_time.isBefore(end_time) && slot_to_time.isAfter(booked_moment)) {
+                                                appointment_count++
+                                            }
+                                            if (appointment_count >= present_events[i].service_unit_capacity) {
+                                                // There is an overlap
+                                                disabled = true;
+                                                return false;
+                                            }
+                                        }
+                                    });
+                                    //iterate in all absent events and disable the slots
+                                    present_events[i].absent_events.forEach(function (event) {
+                                        let event_from_time = moment(event.from_time, 'HH:mm:ss');
+                                        let event_to_time = moment(event.to_time, 'HH:mm:ss');
+                                        // Check for overlaps considering event start and end time
+                                        if (slot_start_time.isBefore(event_to_time) && slot_to_time.isAfter(event_from_time)) {
+                                            // There is an overlap
+                                            disabled = true;
+                                            return false;
+                                        }
+                                    });
+                                    let count = ''
+                                    if (present_events[i].allow_overlap == 1 && present_events[i].service_unit_capacity > 1) {
+                                        count = '' - '' + (present_events[i].service_unit_capacity - appointment_count)
+                                    }
+                                    return `<button class="btn btn-default"
+										data-name=${start_str}
+										data-duration=${interval}
+										data-service-unit="${present_events[i].service_unit || ''}"
+										data-availability="${present_events[i].availability || ''}"
+										flag-fixed-duration=${1}
+										style="margin: 0 10px 10px 0; width: 72px;" ${disabled ? 'disabled="disabled"' : ""}>
+										${start_str.substring(0, start_str.length - 3)} ${count}
+									</button>`;
+                                }).join("");
+                                slot_html = slot_html + `<br/>`;
+                            }
+                        }
+                        $wrapper
+                            .css('margin-bottom', 0)
+                            .addClass('text-center')
+                            .html(slot_html);
+
+                        // primtary button when clicked
+                        $wrapper.on('click', 'button', function () {
+                            if (frappe.datetime.get_today() > d.get_value('appointment_date')) {
+                                d.get_primary_btn().attr('disabled', true);
+                                frappe.msgprint('Older date or time cannot be selected in this appointment.')
+                                return
+                            }
+                            let $btn = $(this);
+                            $wrapper.find('button').removeClass('btn-primary');
+                            $btn.addClass('btn-primary');
+                            selected_slot = $btn.attr('data-name');
+                            service_unit = $btn.attr('data-service-unit');
+                            duration = $btn.attr('data-duration');
+                            practitioner_availability = $btn.attr('data-availability')
+                            // enable dialog action
+                            d.get_primary_btn().attr('disabled', null);
+                        });
+
+
+                    } else {
+                        //	fd.available_slots.html('Please select a valid date.'.bold())
+                        show_empty_state(d.get_value('practitioner'), d.get_value('appointment_date'));
+                    }
+                },
+                freeze: true,
+                freeze_message: __('Fetching records......')
+            });
+        } else {
+            fd.available_slots.html(__('Appointment date and Healthcare Practitioner are Mandatory').bold());
+        }
+    }
+};
 
 
 const set_filters = function (frm) {
@@ -460,14 +788,43 @@ const get_value = (doctype, name, field) => {
 };
 
 const add_btns = (frm) => {
-    if (!frm.doc.patient || frm.is_new() || frm.doc.invoiced || frm.doc.status == "Closed" || frm.doc.status == "Cancelled") return;
+    if (
+        !frm.doc.patient ||
+        frm.is_new() ||
+        frm.doc.invoiced ||
+        frm.doc.status == "Closed" ||
+        frm.doc.status == "Cancelled" ||
+        frm.doc.healthcare_package_order
+    ) {
+        return;
+    }
+
     var vitals_btn_required = false;
-    const valid_days = get_value("Healthcare Settings", "Healthcare Settings", "valid_days");
-    const appointment = get_previous_appointment(frm, { name: ["!=", frm.doc.name], insurance_subscription: frm.doc.insurance_subscription, department: frm.doc.department, status: "Closed" });
+    var valid_days = null
+    if (frm.doc.insurance_subscription) {
+        valid_days = get_value("Healthcare Insurance Coverage Plan", frm.doc.coverage_plan_name, "no_of_days_for_follow_up")
+
+        if (!valid_days || valid_days == 0) {
+            valid_days = get_value("Healthcare Insurance Company", frm.doc.insurance_company, "no_of_days_for_follow_up")
+        }
+    } else if (frm.doc.mode_of_payment) {
+        valid_days = get_value("Healthcare Settings", "Healthcare Settings", "valid_days");
+    }
+
+    let filters = {
+        name: ["!=", frm.doc.name],
+        department: frm.doc.department,
+        status: "Closed"
+    }
+    if (frm.doc.insurance_subscription) {
+        filters.insurance_subscription = frm.doc.insurance_subscription;
+    }
+    const appointment = get_previous_appointment(frm, filters);
     if (typeof appointment != "undefined") {
         const last_appointment_date = appointment.appointment_date;
         const diff = frappe.datetime.get_day_diff(frm.doc.appointment_date, last_appointment_date);
-        if (diff > 0 && diff <= valid_days) {
+        console.log(diff)
+        if (diff >= 0 && diff <= valid_days) {
             vitals_btn_required = true;
             if (!frm.doc.invoiced) {
                 frm.set_value("invoiced", 1);
@@ -530,7 +887,8 @@ const set_auth_number_reqd = frm => {
 
 const validate_insurance_company = (frm) => {
     frappe.call('hms_tz.nhif.api.patient_appointment.validate_insurance_company', {
-        insurance_company: frm.doc.insurance_company })
+        insurance_company: frm.doc.insurance_company
+    })
         .then(r => {
             if (r.message) {
                 frm.set_value("insurance_subscription", "");

@@ -9,8 +9,12 @@
   "date_and_time",
   "machine_make",
   "machine_model",
+  "column_break_wfukg",
+  "sample_collection",
   "lab_test_name",
   "lab_test",
+  "machine_id",
+  "section_break_iladr",
   "message"
  ],
  "fields": [
@@ -52,14 +56,33 @@
    "fieldname": "message",
    "fieldtype": "Code",
    "label": "Message"
+  },
+  {
+   "fieldname": "machine_id",
+   "fieldtype": "Data",
+   "label": "Machine ID"
+  },
+  {
+   "fieldname": "column_break_wfukg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_iladr",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "sample_collection",
+   "fieldtype": "Data",
+   "label": "Sample Collection"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2021-02-07 08:32:20.466379",
+ "modified": "2023-08-04 23:33:08.570236",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Lab Machine Message",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
@@ -78,5 +101,6 @@
  "quick_entry": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "track_changes": 1
 }

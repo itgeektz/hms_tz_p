@@ -22,6 +22,22 @@ def on_submit(doc, methd):
     update_procedure_prescription(doc)
     create_delivery_note(doc)
 
+def before_submit(doc, method):
+    if doc.is_restricted and not doc.approval_number:
+            frappe.throw(_(
+                    f"Approval number is required for <b>{doc.procedure_template}</b>. Please set the Approval Number."
+                )
+            )
+    
+    # 2023-07-13
+    # stop this validation for now
+    return
+    if doc.approval_number and doc.approval_status != "Verified":
+        frappe.throw(_(
+                f"Approval number: <b>{doc.approval_number}</b> for item: <b>{doc.procedure_template}</b> is not verified.>br>\
+                    Please verify the Approval Number."
+            )
+        )
 
 def create_delivery_note(doc):
     if doc.ref_doctype and doc.ref_docname and doc.ref_doctype == "Patient Encounter":

@@ -14,6 +14,22 @@ def validate(doc, method):
         is_restricted = get_restricted_LRPT(doc)
         doc.is_restricted = is_restricted
 
+def before_submit(doc, method):
+    if doc.is_restricted and not doc.approval_number:
+            frappe.throw(_(
+                    f"Approval number is required for <b>{doc.radiology_examination_template}</b>. Please set the Approval Number."
+                )
+            )
+    
+    # 2023-07-13
+    # stop this validation for now
+    return
+    if doc.approval_number and doc.approval_status != "Verified":
+        frappe.throw(_(
+                f"Approval number: <b>{doc.approval_number}</b> for item: <b>{doc.radiology_examination_template}</b> is not verified.>br>\
+                    Please verify the Approval Number."
+            )
+        )
 
 def on_submit(doc, method):
     update_radiology_procedure_prescription(doc)

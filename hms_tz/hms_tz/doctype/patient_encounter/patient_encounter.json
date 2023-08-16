@@ -17,12 +17,14 @@
   "appointment",
   "appointment_type",
   "patient",
+  "hms_tz_patient_history",
   "patient_name",
   "triage",
   "patient_sex",
   "patient_age",
   "inpatient_record",
   "inpatient_status",
+  "cost_estimate",
   "column_break_6",
   "company",
   "encounter_date",
@@ -448,15 +450,27 @@
    "label": "Claim Status",
    "options": "\nPending\nApproved\nRejected",
    "read_only": 1
+  },
+  {
+   "depends_on": "patient",
+   "fieldname": "hms_tz_patient_history",
+   "fieldtype": "Button",
+   "label": "Patient History"
+  },
+  {
+   "fieldname": "cost_estimate",
+   "fieldtype": "Button",
+   "label": "Cost Estimate"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2021-03-21 11:45:48.960965",
+ "modified": "2023-05-17 22:38:58.921042",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Patient Encounter",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
@@ -480,6 +494,7 @@
  "show_name_in_global_search": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "title_field": "title",
  "track_changes": 1,
  "track_seen": 1

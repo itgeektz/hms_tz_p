@@ -12,7 +12,12 @@ from frappe import _
 class LabTestTemplate(Document):
     def after_insert(self):
         if not self.item:
-            create_item_from_template(self)
+            try:
+                create_item_from_template(self)
+            except Exception as e:
+                frappe.log_error(
+                    frappe.get_traceback(), "Lab Test Template Item Creation Error"
+                )
 
     def validate(self):
         if self.is_billable and (not self.lab_test_rate or self.lab_test_rate <= 0.0):

@@ -1,0 +1,40 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2023-07-02 08:38:50.331607",
+ "disable_prepared_report": 0,
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "json": "{}",
+ "letter_head": "SHM-Hospital Letter Head",
+ "modified": "2023-07-02 08:40:08.783815",
+ "modified_by": "Administrator",
+ "module": "Hms Tz",
+ "name": "LRPMT returns",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "LRPMT Returns",
+ "report_name": "LRPMT returns",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Healthcare Practitioner"
+  },
+  {
+   "role": "Healthcare Lab Tech"
+  },
+  {
+   "role": "LRPT Returns"
+  },
+  {
+   "role": "Medication Returns"
+  }
+ ]
+}

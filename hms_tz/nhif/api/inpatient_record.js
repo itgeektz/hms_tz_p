@@ -12,6 +12,12 @@ frappe.ui.form.on('Inpatient Record', {
         //hide button to delete rows of consultancy
         $('*[data-fieldname="inpatient_consultancy"]').find('.grid-remove-rows').hide();
         $('*[data-fieldname="inpatient_consultancy"]').find('.grid-remove-all-rows').hide();
+
+        if (!frm.doc.insurance_subscription) {
+            frm.add_custom_button(__("Make Deposit"), () => {
+                make_deposit(frm);
+            }).removeClass("btn-default").addClass("btn-warning font-weight-bold");
+        }
     },
 });
 
@@ -77,3 +83,46 @@ frappe.ui.form.on('Inpatient Consultancy', {
         frm.save();
     },
 });
+
+var make_deposit = (frm) => {
+    frappe.prompt([
+        {
+            "fieldname": "deposit_amount",
+            "fieldtype": "Currency",
+            "label": "Deposit Amount",
+            "description": "make sure you write the correct amount",
+            "reqd": 1,
+        },
+        {
+            "fieldname": "md_cb",
+            "fieldtype": "Column Break",
+        },
+        {
+            "fieldname": "mode_of_payment",
+            "fieldtype": "Link",
+            "label": "Mode of Payment",
+            "options": "Mode of Payment",
+            "reqd": 1,
+        }
+    ],
+
+        (data) => {
+            frappe.call({
+                method: "hms_tz.nhif.api.inpatient_record.make_deposit",
+                args: {
+                    inpatient_record: frm.doc.name,
+                    deposit_amount: data.deposit_amount,
+                    mode_of_payment: data.mode_of_payment,
+                },
+                freeze: true,
+                freeze_message: __("Making Deposit..."),
+            }).then((r) => {
+                if (r.message) {
+                    frm.reload_doc();
+                }
+            });
+        },
+        "Make Deposit",
+        "Submit"
+    );
+}

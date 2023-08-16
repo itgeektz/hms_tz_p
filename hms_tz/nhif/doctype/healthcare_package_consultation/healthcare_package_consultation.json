@@ -1,0 +1,54 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2023-07-18 15:01:33.106680",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "consultation_item",
+  "price_list",
+  "actual_item_price",
+  "service_price"
+ ],
+ "fields": [
+  {
+   "fieldname": "price_list",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Price List",
+   "options": "Price List"
+  },
+  {
+   "fieldname": "actual_item_price",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Actual Item Price",
+   "read_only": 1
+  },
+  {
+   "fieldname": "service_price",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Service Price"
+  },
+  {
+   "fieldname": "consultation_item",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Consultation Item",
+   "options": "\nGeneral Practitioner (GP)\nSpecialist\nSuper Specialist"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2023-07-18 16:20:58.641476",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "Healthcare Package Consultation",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

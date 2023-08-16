@@ -51,12 +51,14 @@ doctype_js = {
     "Clinical Procedure": "nhif/api/clinical_procedure.js",
     "Medical Department": "nhif/api/medical_department.js",
     "Delivery Note": "nhif/api/delivery_note.js",
+    "Radiology Examination": "nhif/api/radiology_examination.js",
+    "Company": "nhif/api/company.js",
 }
 # csf_tz.nhif.api.patient_appointment
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 
 doctype_list_js = {
-    "Therapy Plan" : ["nhif/api/therapy_plan_list.js"],
+    "Therapy Plan": ["nhif/api/therapy_plan_list.js"],
 }
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -140,6 +142,7 @@ doc_events = {
         "validate": "hms_tz.nhif.api.patient_encounter.on_submit_validation",
         "on_trash": "hms_tz.nhif.api.patient_encounter.on_trash",
         "on_submit": "hms_tz.nhif.api.patient_encounter.on_submit",
+        "before_insert": "hms_tz.nhif.api.patient_encounter.before_insert",
     },
     "Healthcare Service Order": {
         "before_insert": "hms_tz.nhif.api.service_order.set_missing_values",
@@ -160,6 +163,7 @@ doc_events = {
         "on_trash": "hms_tz.nhif.api.practitioner_availability.on_trash",
     },
     "Lab Test": {
+        "before_submit": "hms_tz.nhif.api.lab_test.before_submit",
         "on_submit": "hms_tz.nhif.api.lab_test.on_submit",
         "after_insert": "hms_tz.nhif.api.lab_test.after_insert",
         "on_trash": "hms_tz.nhif.api.lab_test.on_trash",
@@ -167,11 +171,13 @@ doc_events = {
         "validate": "hms_tz.nhif.api.lab_test.validate",
     },
     "Radiology Examination": {
+        "before_submit": "hms_tz.nhif.api.radiology_examination.before_submit",
         "on_submit": "hms_tz.nhif.api.radiology_examination.on_submit",
         "validate": "hms_tz.nhif.api.radiology_examination.validate",
         "on_cancel": "hms_tz.nhif.api.radiology_examination.on_cancel",
     },
     "Clinical Procedure": {
+        "before_submit": "hms_tz.nhif.api.clinical_procedure.before_submit",
         "on_submit": "hms_tz.nhif.api.clinical_procedure.on_submit",
         "validate": "hms_tz.nhif.api.clinical_procedure.validate",
     },
@@ -181,6 +187,8 @@ doc_events = {
         "after_insert": "hms_tz.nhif.api.delivery_note.after_insert",
         "before_submit": "hms_tz.nhif.api.delivery_note.before_submit",
         "on_submit": "hms_tz.nhif.api.delivery_note.on_submit",
+        "on_cancel": "hms_tz.nhif.api.delivery_note.on_cancel",
+        "on_update_after_submit": "hms_tz.nhif.api.delivery_note.on_update_after_submit",
     },
     "Inpatient Record": {
         "validate": "hms_tz.nhif.api.inpatient_record.validate",

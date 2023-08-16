@@ -27,10 +27,11 @@ frappe.ui.form.on('Patient Encounter', {
 					frm.add_custom_button(__('Schedule Discharge'), function() {
 						schedule_discharge(frm);
 					});
-				} else if (frm.doc.inpatient_status != 'Discharge Scheduled') {
+				} else if (frm.doc.inpatient_status != 'Discharge Scheduled' && !frm.doc.healthcare_package_order) {
 					frm.add_custom_button(__('Schedule Admission'), function() {
 						frappe.call("hms_tz.nhif.api.patient_encounter.validate_admission_encounter", {
-							encounter: frm.doc.name
+							encounter: frm.doc.name,
+							healthcare_package_order: frm.doc.healthcare_package_order
 						}).then(r => {
 							if (r.message) {
 								return 
@@ -50,12 +51,11 @@ frappe.ui.form.on('Patient Encounter', {
 			frm.add_custom_button(__('Patient History'), function() {
 				if (frm.doc.patient) {
 					frappe.route_options = {'patient': frm.doc.patient};
-					console.log("Encounter route_options ==> " + frappe.route_options.patient)
 					frappe.set_route('tz-patient-history');
 				} else {
 					frappe.msgprint(__('Please select Patient'));
 				}
-			},'View');
+			});
 
 			frm.add_custom_button(__('Vital Signs'), function() {
 				create_vital_signs(frm);
@@ -555,7 +555,8 @@ var refer_practitioner = function(frm) {
 	var dialog = new frappe.ui.Dialog ({
 		title: 'Refer Practitioner',
 		fields: [
-			{fieldtype: 'Link', label: 'Referred To', reqd: 1, fieldname: 'referred_to', options: 'Healthcare Practitioner'},
+			{ fieldtype: 'Link', label: "Referred to Department", reqd: 1, fieldname: "department", options: "Medical Department" },
+			{fieldtype: 'Link', label: 'Referred to Practitioner', fieldname: 'referred_to', options: 'Healthcare Practitioner'},
 			{fieldtype: 'Select', label: 'Priority', reqd: 1, fieldname: 'priority', options: '\nRoutine\nUrgent\nASAP\nCritical'},
 			{fieldtype: 'Column Break'},
 			{fieldtype: 'Link', label: 'Referring Reason', reqd: 1, fieldname: 'referring_reason', options: 'Referring Reason'},
@@ -574,6 +575,7 @@ var refer_practitioner = function(frm) {
 				date: frappe.datetime.get_today(),
 				time: frappe.datetime.now_time(),
 				priority: dialog.get_value('priority'),
+				department: dialog.get_value("department"),
 				referred_to_practitioner: dialog.get_value('referred_to'),
 				referral_note: dialog.get_value('referral_note'),
 				discharge_note: dialog.get_value('discharge_note'),
@@ -594,6 +596,25 @@ var refer_practitioner = function(frm) {
 			dialog.hide();
 		}
 	});
+
+	let selected_department = dialog.get_value("department");
+	dialog.fields_dict["department"].df.onchange = () => {
+		if (selected_department != dialog.get_value("department")) {
+			dialog.set_values({
+				"referred_to": ""
+			});
+			selected_department = dialog.get_value("department");
+		}
+		if (dialog.get_value("department")) {
+			dialog.fields_dict.referred_to.get_query = () => {
+				return {
+					filters: {
+						"department": selected_department
+					}
+				};
+			};
+		}
+	};
 
 	dialog.show();
 	dialog.$wrapper.find('.modal-dialog').css('width', '800px');
