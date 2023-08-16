@@ -656,11 +656,8 @@ class NHIFPatientClaim(Document):
                 "Patient Appointment", appointment_no
             )
 
-            if patient_appointment_doc.get("appointment_type") in [
-                "Investigation Only",
-                "Medicine Only",
-                "Other Visit",
-            ]:
+            # SHM Rock: 202
+            if patient_appointment_doc.has_no_consultation_charges == 1:
                 continue
 
             if not inpatient_record and not patient_appointment_doc.follow_up:

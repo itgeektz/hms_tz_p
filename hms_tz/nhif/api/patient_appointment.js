@@ -172,6 +172,7 @@ frappe.ui.form.on('Patient Appointment', {
                 'billing_item': frm.doc.billing_item,
                 'company': frm.doc.company,
                 'insurance_company': frm.doc.insurance_company,
+                "has_no_consultation_charges": frm.doc.has_no_consultation_charges
             },
             callback: function (data) {
                 if (data.message) {
