@@ -143,7 +143,7 @@ class PatientDiscountRequest(Document):
 
             if self.apply_discount_on in ["Grand Total", "Net Total"]:
                 si_doc.apply_discount_on = self.apply_discount_on
-                si_doc.additional_discount_percent = (
+                si_doc.additional_discount_percentage = (
                     self.discount_percent if self.discount_percent else 0
                 )
                 si_doc.discount_amount = (
