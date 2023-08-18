@@ -868,6 +868,8 @@ class NHIFPatientClaim(Document):
 
             # Regency rock: 110
             if item.status == "Draft":
+                item.unit_price = 0
+                item.amount_claimed = 0
                 continue
 
             self.total_amount += item.amount_claimed
