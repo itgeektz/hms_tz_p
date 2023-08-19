@@ -15,7 +15,7 @@ import re
 import json
 from frappe.model.workflow import apply_workflow
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
-from hms_tz.nhif.api.token import get_formservice_token
+from hms_tz.nhif.api.token import get_nhifservice_token
 
 
 @frappe.whitelist()
@@ -1160,65 +1160,59 @@ def enqueue_auto_sending_of_patient_claims(setting_obj):
 
 @frappe.whitelist()
 def varify_service_approval_number_for_LRPM(
-    patient, company, approval_number, template, item
+    company, approval_number, template_doctype, template_name, encounter
 ):
-    """Verify if the service approval number is valid for the given patient and item ref code
+    """Verify if the service approval number is valid for the given approval number and item ref code
 
     Arguments:
-        patient {str} -- Patient number
         company {str} -- Company name
         approval_number {str} -- Service approval number
-        template {str} -- Template name
-        item {str} -- Item code
+        template_doctype {str} -- Template doctype
+        template_name {str} -- template docname
+        encounter {str} -- Patient Encounter name
     """
 
-    def validate_item_ref_code(templete_doctype, template_name, result):
-        item_code = None
-        if templete_doctype == "Lab Test Template":
-            item_code = frappe.get_cached_value(templete_doctype, template_name, "item")
-        elif templete_doctype == "Radiology Examination Template":
-            item_code = frappe.get_cached_value(templete_doctype, template_name, "item")
-        elif templete_doctype == "Clinical Procedure Template":
-            item_code = frappe.get_cached_value(templete_doctype, template_name, "item")
-        elif templete_doctype == "Medication":
-            item_code = template_name
+    def get_item_ref_code(temp_doctype, temp_docname):
+        temp_doc = frappe.get_cached_doc(temp_doctype, temp_docname)
+        if not temp_doc.item:
+            frappe.throw(
+                f"<b>{temp_doctype}</b>: <b>{temp_docname}</b> does not have item linked it, please set item first"
+            )
 
         item_ref_code = frappe.get_value(
             "Item Customer Detail",
-            {"customer_name": "NHIF", "parent": item_code, "parenttype": "Item"},
+            {"customer_name": "NHIF", "parent": temp_doc.item, "parenttype": "Item"},
             "ref_code",
         )
-
-        if result.get("ItemCode") != item_ref_code:
-            frappe.msgprint(
-                f"<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
-                This Approval Number: <b>{approval_number}</b> is not for this item: <b>{item}</b></h4>"
+        if not item_ref_code:
+            frappe.throw(
+                f"Item: <b>{temp_doc.item}</b> does not have ref code linked it, please set ref code first"
             )
-            return False
-        return True
+        return item_ref_code
 
-    def validate_card_no(patient, result):
-        card_no = frappe.get_value("Patient", patient, "card_no")
-        if result.get("CardNo") != card_no:
-            frappe.msgprint(
-                f"<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
-                This Approval Number: <b>{approval_number}</b> is not for this patient: <b>{patient}</b></h4>"
-            )
-            return False
-        return True
+    def get_card_no(encounter):
+        appointment = frappe.get_value("Patient Encounter", encounter, "appointment")
+        cardno = frappe.get_value(
+            "Patient Appointment", appointment, "coverage_plan_card_number"
+        )
+        return cardno
 
-    enable_nhif_api, nhifform_url = frappe.get_cached_value(
-        "Company NHIF Settings", company, ["enable", "nhifform_url"]
+    enable_nhif_api, nhifservice_url = frappe.get_cached_value(
+        "Company NHIF Settings", company, ["enable", "nhifservice_url"]
     )
     if not enable_nhif_api:
         frappe.msgprint(_(f"Company <b>{company}</b> not enabled for NHIF Integration"))
         return
 
+    cardno = get_card_no(encounter)
+    item_code = get_item_ref_code(template_doctype, template_name)
+
     url = (
-        str(nhifform_url)
-        + f"/formposting/api/v1/approval/GetAuthorizedService?ApprovalReferenceNo={approval_number}"
+        str(nhifservice_url)
+        + f"/nhifservice/breeze/verification/GetReferenceNoStatus?CardNo={cardno}&ReferenceNo={approval_number}&ItemCode={item_code}"
     )
-    token = get_formservice_token(company)
+
+    token = get_nhifservice_token(company)
 
     headers = {"Content-Type": "application/json", "Authorization": "Bearer " + token}
 
@@ -1226,7 +1220,7 @@ def varify_service_approval_number_for_LRPM(
 
     if r.status_code == 200:
         add_log(
-            request_type="GetAuthorizedService",
+            request_type="GetReferenceNoStatus",
             request_url=url,
             request_header=headers,
             request_body="",
@@ -1234,23 +1228,18 @@ def varify_service_approval_number_for_LRPM(
             status_code=r.status_code,
         )
         data = json.loads(r.text)
-        if len(data) == 0:
+        if data["Status"] == "VALID":
+            return True
+        else:
             frappe.msgprint(
                 f"<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
-                This Approval Number: <b>{approval_number}</b> is not Valid, <br>Please check again</h4>"
+                This ApprovalNumber: <strong>{approval_number}</strong> for CardNo: <strong>{cardno}</strong> and ItemCode: <strong>{item_code}</strong> is not Valid</h4>"
             )
             return False
 
-        if not validate_card_no(patient, data[0]):
-            return False
-        elif not validate_item_ref_code(template, item, data[0]):
-            return False
-        else:
-            return data[0]
-
     else:
         add_log(
-            request_type="GetAuthorizedService",
+            request_type="GetReferenceNoStatus",
             request_url=url,
             request_header=headers,
             request_body="",
