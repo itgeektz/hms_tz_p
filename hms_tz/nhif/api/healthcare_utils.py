@@ -594,18 +594,20 @@ def create_individual_lab_test(source_doc, child):
         doc.insurance_company = source_doc.insurance_company
     doc.ref_doctype = source_doc.doctype
     doc.ref_docname = source_doc.name
+    doc.hms_tz_ref_childname = child.name
     doc.invoiced = 1
     doc.service_comment = (
         (child.medical_code or "No ICD Code")
         + " : "
         + (child.lab_test_comment or "No Comment")
     )
-    doc.hms_tz_ref_childname = child.name
 
     doc.save(ignore_permissions=True)
     if doc.get("name"):
         frappe.msgprint(
-            _("Lab Test {0} created successfully.").format(frappe.bold(doc.name))
+            _(
+                f"Lab Test: <b>{doc.name}</b> for <b>{child.lab_test_code}</b> created successfully."
+            )
         )
 
         child.lab_test_created = 1
@@ -641,19 +643,19 @@ def create_individual_radiology_examination(source_doc, child):
     )
     doc.ref_doctype = source_doc.doctype
     doc.ref_docname = source_doc.name
+    doc.hms_tz_ref_childname = child.name
     doc.invoiced = 1
     doc.service_comment = (
         (child.medical_code or "No ICD Code")
         + " : "
         + (child.radiology_test_comment or "No Comment")
     )
-    doc.hms_tz_ref_childname = child.name
 
     doc.save(ignore_permissions=True)
     if doc.get("name"):
         frappe.msgprint(
-            _("Radiology Examination {0} created successfully.").format(
-                frappe.bold(doc.name)
+            _(
+                f"Radiology Examination: <b>{doc.name}</b> for <b>{child.radiology_examination_template}</b> created successfully."
             )
         )
 
@@ -698,7 +700,7 @@ def create_individual_procedure_prescription(source_doc, child):
     if doc.get("name"):
         url = get_url_to_form(doc.doctype, doc.name)
         frappe.msgprint(
-            f"Clinical Procedure: <a href='{url}'><strong>{doc.name}</strong></a> is created successfully"
+            f"Clinical Procedure: <a href='{url}'><strong>{doc.name}</strong></a> for <b>{child.procedure}</b> created successfully"
         )
 
         child.procedure_created = 1
