@@ -123,7 +123,7 @@ frappe.ui.form.on('Patient Encounter', {
     },
 
     default_healthcare_service_unit: function (frm) {
-        if (frm.doc.default_healthcare_service_unit) {
+        if (frm.doc.default_healthcare_service_unit && frm.doc.drug_prescription) {
             frm.doc.drug_prescription.forEach(row => {
                 if (!row.healthcare_service_unit) {
                     frappe.model.set_value(
@@ -172,7 +172,7 @@ frappe.ui.form.on('Patient Encounter', {
                             }, 5);
                         }
                     });
-                    refresh_field('patient_encounter_preliminary_diagnosis');
+                    frm.refresh_field('patient_encounter_preliminary_diagnosis');
                     set_medical_code(frm, true);
                     frm.trigger("copy_from_preliminary_diagnosis");
                 }
@@ -246,7 +246,7 @@ frappe.ui.form.on('Patient Encounter', {
                             }, 5);
                         }
                     });
-                    refresh_field('drug_prescription');
+                    frm.refresh_field('drug_prescription');
                 }
             }
         });
@@ -286,7 +286,7 @@ frappe.ui.form.on('Patient Encounter', {
                     }, 5);
                 }
             });
-            refresh_field('patient_encounter_final_diagnosis');
+            frm.refresh_field('patient_encounter_final_diagnosis');
             set_medical_code(frm);
         }
         if (frm.doc.patient_encounter_preliminary_diagnosis.length > 0) {
@@ -304,7 +304,7 @@ frappe.ui.form.on('Patient Encounter', {
         }
     },
     encounter_category: function (frm) {
-        if (frm.doc.patient_encounter_preliminary_diagnosis && frm.doc.patient_encounter_preliminary_diagnosis.length > 0) {
+        if (frm.doc.patient_encounter_preliminary_diagnosis && frm.doc.patient_encounter_preliminary_diagnosis.length > 1) {
             return;
         } else if (frm.doc.practitioner.includes("Direct")) {
             let preliminary_row = frappe.model.add_child(frm.doc, "Codification Table", "patient_encounter_preliminary_diagnosis");
@@ -312,13 +312,13 @@ frappe.ui.form.on('Patient Encounter', {
             preliminary_row.code = "R69";
             preliminary_row.description = "Illness, unspecified";
             preliminary_row.mtuha = "Other";
-            refresh_field('patient_encounter_preliminary_diagnosis');
+            frm.refresh_field('patient_encounter_preliminary_diagnosis');
             let final_row = frappe.model.add_child(frm.doc, "Codification Table", "patient_encounter_final_diagnosis");
             final_row.medical_code = "ICD-10 R69";
             final_row.code = "R69";
             final_row.description = "Illness, unspecified";
             final_row.mtuha = "Other";
-            refresh_field('patient_encounter_final_diagnosis');
+            frm.refresh_field('patient_encounter_final_diagnosis');
         }
         set_medical_code(frm, true);
 
@@ -388,7 +388,7 @@ frappe.ui.form.on('Patient Encounter', {
                         for (var row in r.message.lab_bundle_item) {
                             var child = frm.add_child("lab_test_prescription");
                             frappe.model.set_value(child.doctype, child.name, "lab_test_code", r.message.lab_bundle_item[row].lab_test_template);
-                            refresh_field("lab_test_prescription");
+                            frm.refresh_field("lab_test_prescription");
                         }
                     }
                 }
@@ -869,7 +869,7 @@ frappe.ui.form.on('Drug Prescription', {
     drug_prescription_add: function (frm, cdt, cdn) {
         var row = frappe.get_doc(cdt, cdn);
         if (!row.healthcare_service_unit) row.healthcare_service_unit = frm.doc.default_healthcare_service_unit;
-        refresh_field("drug_prescription");
+        frm.refresh_field("drug_prescription");
     }
 });
 
