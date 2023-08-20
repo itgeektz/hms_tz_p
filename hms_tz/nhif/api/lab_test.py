@@ -207,6 +207,8 @@ def create_sample_collection(doc):
             },
         )
         sample_doc.save(ignore_permissions=True)
+        doc.sample = sample_doc.name
+        doc.save(ignore_permissions=True)
         frappe.msgprint(_(f"Sample Collection: {sample_doc.name} updated"), alert=True)
         return
 
@@ -233,6 +235,9 @@ def create_sample_collection(doc):
 
     sample_doc.flags.ignore_permissions = True
     sample_doc.insert()
+    sample_doc.reload()
+    doc.sample = sample_doc.name
+    doc.save(ignore_permissions=True)
     frappe.msgprint(
         _("Sample Collection created {0}").format(sample_doc.name), alert=True
     )
