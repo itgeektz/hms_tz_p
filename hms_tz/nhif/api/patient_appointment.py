@@ -295,7 +295,20 @@ def make_encounter(doc, method):
             or doc.status == "Cancelled"
         ):
             return
+
+        if doc.insurance_subscription and doc.billing_item and doc.paid_amount <= 0:
+            doc.paid_amount, discount_percent = get_insurance_amount(
+                doc.insurance_subscription,
+                doc.billing_item,
+                doc.company,
+                doc.insurance_company,
+                doc.has_no_consultation_charges,
+            )
+            if discount_percent > 0:
+                doc.hms_tz_is_discount_applied = 1
+
         source_name = doc.name
+
     target_doc = None
     encounter_doc = get_mapped_doc(
         "Patient Appointment",
