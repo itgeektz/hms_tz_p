@@ -20,8 +20,8 @@ from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from hms_tz.nhif.api.healthcare_utils import get_item_rate
 from frappe.utils import date_diff, getdate, nowdate
-
-# from csf_tz import console
+from hms_tz.hms_tz.doctype.patient.patient import create_customer
+from csf_tz import console
 
 
 def before_insert(doc, method):
@@ -31,6 +31,10 @@ def before_insert(doc, method):
                 "You cannot create an appointment for a patient already admitted.<br>First <b>discharge the patient</b> and then create the appointment."
             )
         )
+
+    patient_doc = frappe.get_cached_doc("Patient", doc.patient)
+    if not patient_doc.customer:
+        create_customer(doc)
 
 
 @frappe.whitelist()
