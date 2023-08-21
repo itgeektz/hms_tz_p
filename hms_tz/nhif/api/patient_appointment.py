@@ -34,7 +34,7 @@ def before_insert(doc, method):
 
     patient_doc = frappe.get_cached_doc("Patient", doc.patient)
     if not patient_doc.customer:
-        create_customer(doc)
+        create_customer(patient_doc)
 
 
 @frappe.whitelist()
