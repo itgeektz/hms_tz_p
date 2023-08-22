@@ -350,8 +350,10 @@ class NHIFPatientClaim(Document):
             new_row.codification_table = row.name
             new_row.medical_code = row.medical_code
             # Convert the ICD code of CDC to NHIF
-            if row.code and len(row.code) > 3:
+            if row.code and len(row.code) > 3 and "." not in row.code:
                 new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
+            elif row.code and len(row.code) <= 5 and "." in row.code:
+                new_row.disease_code = row.code
             else:
                 new_row.disease_code = row.code[:3]
             new_row.description = row.description[0:139]
@@ -382,8 +384,10 @@ class NHIFPatientClaim(Document):
             new_row.codification_table = row.name
             new_row.medical_code = row.medical_code
             # Convert the ICD code of CDC to NHIF
-            if row.code and len(row.code) > 3:
+            if row.code and len(row.code) > 3 and "." not in row.code:
                 new_row.disease_code = row.code[:3] + "." + (row.code[3:4] or "0")
+            elif row.code and len(row.code) <= 5 and "." in row.code:
+                new_row.disease_code = row.code
             else:
                 new_row.disease_code = row.code[:3]
             new_row.description = row.description[0:139]
