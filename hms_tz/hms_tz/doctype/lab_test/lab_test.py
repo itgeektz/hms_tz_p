@@ -246,6 +246,7 @@ def create_lab_test_doc(invoiced, practitioner, patient, template, company):
 
 
 def create_normals(template, lab_test):
+<<<<<<< HEAD
     lab_test.normal_toggle = 1
     normal = lab_test.append("normal_test_items")
     normal.lab_test_name = template.lab_test_name
@@ -257,6 +258,18 @@ def create_normals(template, lab_test):
     normal.allow_blank = 0
     normal.template = template.name
 
+=======
+	lab_test.normal_toggle = 1
+	normal = lab_test.append('normal_test_items')
+	normal.lab_test_name = template.lab_test_code
+	normal.lab_test_uom = template.lab_test_uom
+	normal.secondary_uom = template.secondary_uom
+	normal.conversion_factor = template.conversion_factor
+	normal.normal_range = template.lab_test_normal_range
+	normal.require_result_value = 0
+	normal.allow_blank = 0
+	normal.template = template.name
+>>>>>>> 32ac9716 (chore: use lab test code instead of lab test name on creating normals for lab test)
 
 def create_compounds(template, lab_test, is_group):
     lab_test.normal_toggle = 1
