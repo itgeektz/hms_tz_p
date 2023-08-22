@@ -402,7 +402,8 @@ def make_contact(doc):
             "is_primary_contact": True,
         }
     )
-    contact.append("links", dict(link_doctype="Customer", link_name=doc.customer))
+    if doc.customer:
+        contact.append("links", dict(link_doctype="Customer", link_name=doc.customer))
     contact.append("links", dict(link_doctype="Patient", link_name=doc.name))
     if doc.get("email_id"):
         contact.add_email(doc.get("email_id"), is_primary=True)
