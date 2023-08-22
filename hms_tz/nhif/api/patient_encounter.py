@@ -1981,12 +1981,15 @@ def get_encounter_cost_estimate(encounter_doc):
         cost_dict.setdefault(child_table_dict["lable"], [])
 
         for row in encounter_doc.get(child_table):
-            cost_dict[child_table_dict["lable"]].append(
-                {
-                    "item": row.get(child_table_dict.get("item")),
-                    "amount": row.get("amount"),
-                }
-            )
+            cost_row = {}
+            quantity = 1
+            if hasattr(row, "quantity"):
+                quantity = row.quantity
+            
+            cost_row["item"] = row.get(child_table_dict.get("item"))
+            cost_row["amount"] = row.amount * quantity
+
+            cost_dict[child_table_dict["lable"]].append(cost_row)
 
     total_cost = 0
     # calculate total cost
