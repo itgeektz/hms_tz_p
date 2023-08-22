@@ -15,11 +15,7 @@ from frappe.contacts.address_and_contact import (
 from frappe.model.naming import set_name_by_naming_series
 from frappe.utils.nestedset import get_root_of
 from erpnext import get_default_currency
-<<<<<<< HEAD
 from healthcare.healthcare.doctype.healthcare_settings.healthcare_settings import (
-=======
-from erpnext.healthcare.doctype.healthcare_settings.healthcare_settings import (
->>>>>>> 32ac9716 (chore: use lab test code instead of lab test name on creating normals for lab test)
     get_receivable_account,
     get_income_account,
     send_registration_sms,
@@ -406,13 +402,9 @@ def make_contact(doc):
             "is_primary_contact": True,
         }
     )
-<<<<<<< HEAD
-    contact.append("links", dict(link_doctype="Customer", link_name=doc.customer))
-    contact.append("links", dict(link_doctype="Patient", link_name=doc.name))
-=======
     if doc.customer:
         contact.append("links", dict(link_doctype="Customer", link_name=doc.customer))
->>>>>>> 32ac9716 (chore: use lab test code instead of lab test name on creating normals for lab test)
+    contact.append("links", dict(link_doctype="Patient", link_name=doc.name))
     if doc.get("email_id"):
         contact.add_email(doc.get("email_id"), is_primary=True)
     if doc.get("mobile"):
