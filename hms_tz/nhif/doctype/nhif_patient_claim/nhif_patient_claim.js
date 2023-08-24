@@ -19,14 +19,13 @@ frappe.ui.form.on('NHIF Patient Claim', {
 		if (frm.doc.docstatus === 0 && frm.doc.authorization_no) {
 			frm.add_custom_button(__("Merge Claims"), function () {
 				frm.dirty()
-				frm.call({
-					method: 'get_appointments',
-					args: { self: frm.doc },
+				frm.call('get_appointments', {
+					self: frm.doc,
 					freeze: true,
 					freeze_message: __("Please Wait..."),
 				}).then(r => {
-					frm.save()
-					frm.refresh()
+					frm.save();
+					frm.refresh();
 				});
 			});
 		}

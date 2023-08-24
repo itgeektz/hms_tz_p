@@ -386,9 +386,7 @@ def on_submit_validation(doc, method):
                     row_item.prescribe = 1
 
                 msg = _(
-                    f"{template} not covered in Healthcare Insurance Coverage Plan "
-                    + str(hicp_name)
-                    + "<br> Patient should pay cash for this service"
+                    f"{template} <h4 style='background-color:LightCoral'>NOT COVERED</h4> in Healthcare Insurance Coverage Plan {str(hicp_name)} plan.<br>Patient should pay cash for this service"
                 )
                 msgThrow(
                     msg,
@@ -401,9 +399,7 @@ def on_submit_validation(doc, method):
                     row_item.prescribe = 1
 
                 msg = _(
-                    f"{template} not covered in Healthcare Insurance Coverage Plan "
-                    + str(hicp_name)
-                    + "<br> Patient should pay cash for this service"
+                    f"{template} <h4 style='background-color:LightCoral'>NOT COVERED</h4> in Healthcare Insurance Coverage Plan {str(hicp_name)} plan.<br>Patient should pay cash for this service"
                 )
                 msgThrow(
                     msg,
