@@ -174,8 +174,8 @@ def get_item_rate(item_code, company, insurance_subscription, insurance_company=
     if not price_list:
         frappe.throw(
             _(
-                "Could not get price for item {0} for price list in {1}. Please set Price List in Healthcare Insurance Coverage Plan {1} or Insurance Company {2}"
-            ).format(item_code, hic_plan, insurance_company)
+                f"Default price list for {hic_plan} NOT FOUND!<br>Please set Price List in {hic_plan} plan or {insurance_company} insurance company"
+            )
         )
     else:
         price_list_rate = get_item_price(item_code, price_list, company)
