@@ -502,8 +502,9 @@ def delete_lab_test_from_medical_record(self):
     )
 
     if medical_record_id and medical_record_id[0][0]:
-        frappe.delete_doc("Patient Medical Record", medical_record_id[0][0])
-
+        frappe.delete_doc(
+            "Patient Medical Record", medical_record_id[0][0], ignore_permissions=True
+        )
 
 @frappe.whitelist()
 def get_lab_test_prescribed(patient):
