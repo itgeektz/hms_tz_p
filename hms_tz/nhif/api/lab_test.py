@@ -102,7 +102,7 @@ def get_normals(lab_test_name, patient_age, patient_sex):
 
 def get_lab_test_template(lab_test_name):
     template_id = frappe.db.exists(
-        "Lab Test Template", {"lab_test_name": lab_test_name}
+        "Lab Test Template", {"lab_test_code": lab_test_name}
     )
     if template_id:
         return frappe.get_cached_doc("Lab Test Template", template_id)
