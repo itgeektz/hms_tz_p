@@ -25,14 +25,14 @@ def set_normals(doc):
     dob = frappe.get_cached_value("Patient", doc.patient, "dob")
     age = dateutil.relativedelta.relativedelta(getdate(), dob).years
     for row in doc.normal_test_items:
-        if not row.result_value:
-            continue
         normals = get_normals(row.lab_test_name, age, doc.patient_sex)
         if normals:
             row.min_normal = normals.get("min")
             row.max_normal = normals.get("max")
             row.text_normal = normals.get("text")
 
+            if not row.result_value:
+                continue
             data_normals = calc_data_normals(normals, row.result_value)
             row.detailed_normal_range = data_normals["detailed_normal_range"]
             row.result_status = data_normals["result_status"]
