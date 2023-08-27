@@ -1455,8 +1455,8 @@ def set_amounts(doc):
                 )
                 if not item_rate or item_rate == 0:
                     frappe.throw(
-                        _("Cannot get mode of payment rate for item {0}").format(
-                            item_code
+                        _(
+                            f"Cannot get rate for item {item_code} in {mode_of_payment}"
                         )
                     )
 
