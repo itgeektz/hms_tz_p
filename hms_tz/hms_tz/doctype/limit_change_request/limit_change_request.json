@@ -16,13 +16,18 @@
   "posting_time",
   "section_break_eivze",
   "is_cash_inpatient",
-  "is_non_nhif_patient",
   "previous_cash_limit",
   "current_total_deposit",
   "column_break_ow3sm",
   "inpatient_record",
-  "insurance_company",
   "cash_limit",
+  "non_nhif_details_section",
+  "is_non_nhif_patient",
+  "previous_daily_limit",
+  "current_total_cost",
+  "column_break_gh6l0",
+  "insurance_company",
+  "daily_limit",
   "section_break_fbdtz",
   "requested_by",
   "naming_series",
@@ -50,23 +55,24 @@
   {
    "allow_on_submit": 1,
    "bold": 1,
-   "depends_on": "eval:doc.appointment_no != \"\"",
    "fieldname": "appointment_no",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "label": "AppointmentNo",
-   "read_only": 1
+   "options": "Patient Appointment",
+   "reqd": 1
   },
   {
    "fieldname": "column_break_4",
    "fieldtype": "Column Break"
   },
   {
+   "fetch_from": "appointment_no.company",
    "fieldname": "company",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Company",
    "options": "Company",
-   "reqd": 1
+   "read_only": 1
   },
   {
    "allow_on_submit": 1,
@@ -89,7 +95,7 @@
   {
    "fieldname": "cash_limit",
    "fieldtype": "Float",
-   "label": "Cash/Daily Limit"
+   "label": "New Cash Limit"
   },
   {
    "fieldname": "naming_series",
@@ -112,20 +118,24 @@
    "read_only": 1
   },
   {
+   "depends_on": "eval: doc.is_cash_inpatient == 1",
    "fieldname": "section_break_eivze",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Cash In-Patient Details"
   },
   {
    "default": "0",
    "fieldname": "is_cash_inpatient",
    "fieldtype": "Check",
-   "label": "Is Cash In-Patient"
+   "label": "Is Cash In-Patient",
+   "read_only": 1
   },
   {
    "default": "0",
    "fieldname": "is_non_nhif_patient",
    "fieldtype": "Check",
-   "label": "Is Non-NHIF Patient"
+   "label": "Is Non-NHIF Patient",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_ow3sm",
@@ -160,7 +170,7 @@
   {
    "fieldname": "previous_cash_limit",
    "fieldtype": "Float",
-   "label": "Previous Cash/Daily Limit",
+   "label": "Previous Cash Limit",
    "read_only": 1
   },
   {
@@ -168,15 +178,43 @@
    "fieldtype": "Float",
    "label": "Current Total Deposited Amount",
    "read_only": 1
+  },
+  {
+   "depends_on": "eval: doc.is_non_nhif_patient == 1",
+   "fieldname": "non_nhif_details_section",
+   "fieldtype": "Section Break",
+   "label": "Non NHIF Details"
+  },
+  {
+   "fieldname": "previous_daily_limit",
+   "fieldtype": "Float",
+   "label": "Previous Daily Limit",
+   "read_only": 1
+  },
+  {
+   "fieldname": "current_total_cost",
+   "fieldtype": "Float",
+   "label": "Current Total Cost",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_gh6l0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "daily_limit",
+   "fieldtype": "Float",
+   "label": "New Daily Limit"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-05-29 19:37:17.421675",
+ "modified": "2023-08-28 23:32:42.733575",
  "modified_by": "Administrator",
  "module": "Hms Tz",
  "name": "Limit Change Request",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
@@ -194,5 +232,6 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "track_changes": 1
 }
