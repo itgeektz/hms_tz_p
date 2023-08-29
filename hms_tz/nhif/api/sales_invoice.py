@@ -146,10 +146,7 @@ def update_drug_prescription(doc):
                         "invoiced": 1,
                     },
                 )
-<<<<<<< HEAD
-=======
 
->>>>>>> af24c130 (feat: pull inpatient consultancies and inpatient occupances on sales invoice dialog for billing)
 
 @frappe.whitelist()
 def get_discount_items(invoice_no):
