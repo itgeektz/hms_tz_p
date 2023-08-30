@@ -12,6 +12,10 @@ from hms_tz.nhif.api.patient_encounter import create_healthcare_docs_from_name
 from hms_tz.nhif.api.patient_appointment import get_discount_percent
 from erpnext.accounts.party import get_party_account
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
+from hms_tz.nhif.api.healthcare_utils import (
+    get_healthcare_service_order_to_invoice,
+    get_warehouse_from_service_unit,
+)
 import json
 
 
@@ -131,7 +135,7 @@ def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practi
     insurance_company = encounter.insurance_company
     if not insurance_subscription:
         return
-    
+
     # apply discount if it is available on Heathcare Insurance Company
     discount_percent = 0
     if insurance_company and "NHIF" not in insurance_company:
@@ -143,7 +147,7 @@ def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practi
     # item.item_name = item_name
     item.warehouse = warehouse
     item.qty = 1
-    item.rate = item_rate - (item_rate * (discount_percent/100)) 
+    item.rate = item_rate - (item_rate * (discount_percent / 100))
     item.reference_doctype = row.doctype
     item.reference_name = row.name
     item.description = "For Inpatient Record {0}".format(row.parent)
@@ -159,7 +163,9 @@ def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practi
             customer=frappe.get_cached_value(
                 "Healthcare Insurance Company", insurance_company, "customer"
             ),
-            currency=frappe.get_cached_value("Company", encounter.company, "default_currency"),
+            currency=frappe.get_cached_value(
+                "Company", encounter.company, "default_currency"
+            ),
             items=items,
             reference_doctype=row.parenttype,
             reference_name=row.parent,
@@ -183,7 +189,7 @@ def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practi
 def set_beds_price(self):
     if not self.inpatient_occupancies:
         return
-    
+
     # apply discount if it is available on Heathcare Insurance Company
     discount_percent = 0
     if self.insurance_company and "NHIF" not in self.insurance_company:
@@ -201,7 +207,7 @@ def set_beds_price(self):
                 item_price = get_item_rate(
                     item_code, self.company, self.insurance_subscription
                 )
-                bed.amount = item_price - (item_price * (discount_percent/100))
+                bed.amount = item_price - (item_price * (discount_percent / 100))
                 if discount_percent > 0:
                     bed.hms_tz_is_discount_applied = 1
                 payment_type = "Insurance"
@@ -229,6 +235,7 @@ def set_beds_price(self):
 def after_insert(doc, method):
     create_healthcare_docs_from_name(doc.admission_encounter)
 
+
 @frappe.whitelist()
 def make_deposit(inpatient_record, deposit_amount, mode_of_payment):
     if float(deposit_amount) <= 0:
@@ -236,12 +243,14 @@ def make_deposit(inpatient_record, deposit_amount, mode_of_payment):
 
     if not mode_of_payment:
         frappe.throw(_("The mode of payment is required"))
-    
+
     inpatient_record_doc = frappe.get_doc("Inpatient Record", inpatient_record)
     if inpatient_record_doc.insurance_subscription:
         frappe.throw(_("You cannot make deposit for insurance patient"))
-    
-    customer = frappe.get_cached_value("Patient", inpatient_record_doc.patient, "customer")
+
+    customer = frappe.get_cached_value(
+        "Patient", inpatient_record_doc.patient, "customer"
+    )
 
     try:
         payment = frappe.new_doc("Payment Entry")
@@ -251,8 +260,12 @@ def make_deposit(inpatient_record, deposit_amount, mode_of_payment):
         payment.party = customer
         payment.company = inpatient_record_doc.company
         payment.mode_of_payment = str(mode_of_payment)
-        payment.paid_from = get_party_account("Customer", customer, inpatient_record_doc.company)
-        payment.paid_to = get_bank_cash_account(mode_of_payment, inpatient_record_doc.company)["account"]
+        payment.paid_from = get_party_account(
+            "Customer", customer, inpatient_record_doc.company
+        )
+        payment.paid_to = get_bank_cash_account(
+            mode_of_payment, inpatient_record_doc.company
+        )["account"]
         payment.paid_amount = float(deposit_amount)
         payment.received_amount = float(deposit_amount)
         payment.source_exchange_rate = 1
@@ -263,11 +276,86 @@ def make_deposit(inpatient_record, deposit_amount, mode_of_payment):
         payment.reload()
         payment.submit()
         url = get_url_to_form(payment.doctype, payment.name)
-        frappe.msgprint("Payment Entry: <a href='{0}'>{1}</a> for Deposit is created successful".format(
-            url, frappe.bold(payment.name)
-        ))
+        frappe.msgprint(
+            "Payment Entry: <a href='{0}'>{1}</a> for Deposit is created successful".format(
+                url, frappe.bold(payment.name)
+            )
+        )
         return payment.name
     except Exception as e:
         frappe.msgprint(_(f"Error: <b>{e}</b>"))
         return False
+<<<<<<< HEAD
  
+=======
+
+
+@frappe.whitelist()
+def create_sales_invoice(args):
+    args = frappe._dict(json.loads(args))
+    patient_encounter_list = frappe.get_all(
+        "Patient Encounter",
+        filters={
+            "docstatus": 1,
+            "patient": args.patient,
+            "appointment": args.appointment_no,
+            "inpatient_record": args.inpatient_record,
+        },
+        fields=["name", "inpatient_record"],
+    )
+    if len(patient_encounter_list) == 0:
+        frappe.msgprint(
+            _(
+                "No Patient Encounters found for this Inpatient Record: <b>{inpatient_record}</b> and Patient Appointment: <b>{appointment_no}</b>"
+            )
+        )
+        return False
+
+    services = get_healthcare_service_order_to_invoice(
+        patient=args.patient,
+        company=args.company,
+        patient_encounter_list=patient_encounter_list,
+    )
+    if len(services) == 0:
+        frappe.msgprint(
+            _(
+                "No Healthcare Services found for this Inpatient Record: <b>{inpatient_record}</b> and Patient Appointment: <b>{appointment_no}</b>"
+            )
+        )
+        return False
+
+    invoice_doc = frappe.new_doc("Sales Invoice")
+    invoice_doc.patient = args.patient
+    invoice_doc.customer = frappe.get_cached_value("Patient", args.patient, "customer")
+    invoice_doc.company = args.company
+    payment = invoice_doc.append("payments", {})
+    payment.mode_of_payment = args.mode_of_payment
+
+    price_list = frappe.get_cached_value(
+        "Mode of Payment", args.mode_of_payment, "price_list"
+    )
+
+    for service in services:
+        item = invoice_doc.append("items", {})
+        item.item_code = service.get("service")
+        item.qty = service.get("qty")
+        item.rate = get_item_price(service.get("service"), price_list, args.company)
+        item.amount = item.rate * item.qty
+        item.reference_dt = service.get("reference_dt")
+        item.reference_dn = service.get("reference_dn")
+        if item.reference_dt == "Drug Prescription":
+            item.healthcare_service_unit = frappe.get_value(
+                service.get("reference_dt"),
+                service.get("reference_dn"),
+                "healthcare_service_unit",
+            )
+            item.warehouse = get_warehouse_from_service_unit(
+                item.healthcare_service_unit
+            )
+    invoice_doc.allocate_advances_automatically = 1
+    invoice_doc.set_missing_values()
+    invoice_doc.set_taxes()
+    invoice_doc.save()
+
+    return invoice_doc.name
+>>>>>>> 932df03b (feat: create sales invoice from  cash inpatient record)

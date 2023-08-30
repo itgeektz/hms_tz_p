@@ -71,8 +71,14 @@ def get_childs_map():
 
 
 def get_healthcare_service_order_to_invoice(
-    patient, company, encounter, service_order_category=None, prescribed=None
+    patient,
+    company,
+    encounter=None,
+    patient_encounter_list=None,
+    service_order_category=None,
+    prescribed=None,
 ):
+<<<<<<< HEAD
     reference_encounter = frappe.get_value(
         "Patient Encounter", encounter, "reference_encounter"
     )
@@ -84,6 +90,28 @@ def get_healthcare_service_order_to_invoice(
             "is_not_billable": 0,
         },
     )
+=======
+    encounter_dict = None
+    if patient_encounter_list and len(patient_encounter_list) > 0:
+        encounter_dict = patient_encounter_list
+    else:
+        if not encounter:
+            return []
+        reference_encounter = frappe.get_value(
+            "Patient Encounter", encounter, "reference_encounter"
+        )
+        encounter_dict = frappe.get_all(
+            "Patient Encounter",
+            filters={
+                "reference_encounter": reference_encounter,
+                "docstatus": 1,
+                "is_not_billable": 0,
+            },
+            fields=["name", "inpatient_record"],
+        )
+
+    inpatient_record = None
+>>>>>>> 932df03b (feat: create sales invoice from  cash inpatient record)
     encounter_list = []
     for i in encounter_dict:
         encounter_doc = frappe.get_doc("Patient Encounter", i.name)
@@ -117,6 +145,43 @@ def get_healthcare_service_order_to_invoice(
                         }
                     )
 
+<<<<<<< HEAD
+=======
+    frappe.msgprint(str(inpatient_record))
+    if inpatient_record:
+        inpatient_doc = frappe.get_doc("Inpatient Record", inpatient_record)
+        for row in inpatient_doc.inpatient_occupancies:
+            if row.is_confirmed == 0 or row.invoiced == 1:
+                continue
+
+            service_unit_type = frappe.get_cached_value(
+                "Healthcare Service Unit", row.service_unit, "service_unit_type"
+            )
+            item_code = frappe.get_cached_value(
+                "Healthcare Service Unit Type", service_unit_type, "item_code"
+            )
+            services_to_invoice.append(
+                {
+                    "reference_type": row.doctype,
+                    "reference_name": row.name,
+                    "service": item_code,
+                    "qty": 1,
+                }
+            )
+
+        for row in inpatient_doc.inpatient_consultancy:
+            if row.is_confirmed == 0 or row.hms_tz_invoiced == 1:
+                continue
+
+            services_to_invoice.append(
+                {
+                    "reference_type": row.doctype,
+                    "reference_name": row.name,
+                    "service": row.consultation_item,
+                    "qty": 1,
+                }
+            )
+>>>>>>> 932df03b (feat: create sales invoice from  cash inpatient record)
     return services_to_invoice
 
 
