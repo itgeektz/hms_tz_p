@@ -285,9 +285,6 @@ def make_deposit(inpatient_record, deposit_amount, mode_of_payment):
     except Exception as e:
         frappe.msgprint(_(f"Error: <b>{e}</b>"))
         return False
-<<<<<<< HEAD
- 
-=======
 
 
 @frappe.whitelist()
@@ -358,4 +355,3 @@ def create_sales_invoice(args):
     invoice_doc.save()
 
     return invoice_doc.name
->>>>>>> 932df03b (feat: create sales invoice from  cash inpatient record)
