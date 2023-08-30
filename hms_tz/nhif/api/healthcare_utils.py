@@ -78,19 +78,6 @@ def get_healthcare_service_order_to_invoice(
     service_order_category=None,
     prescribed=None,
 ):
-<<<<<<< HEAD
-    reference_encounter = frappe.get_value(
-        "Patient Encounter", encounter, "reference_encounter"
-    )
-    encounter_dict = frappe.get_all(
-        "Patient Encounter",
-        filters={
-            "reference_encounter": reference_encounter,
-            "docstatus": 1,
-            "is_not_billable": 0,
-        },
-    )
-=======
     encounter_dict = None
     if patient_encounter_list and len(patient_encounter_list) > 0:
         encounter_dict = patient_encounter_list
@@ -111,7 +98,6 @@ def get_healthcare_service_order_to_invoice(
         )
 
     inpatient_record = None
->>>>>>> 932df03b (feat: create sales invoice from  cash inpatient record)
     encounter_list = []
     for i in encounter_dict:
         encounter_doc = frappe.get_doc("Patient Encounter", i.name)
@@ -145,12 +131,6 @@ def get_healthcare_service_order_to_invoice(
                         }
                     )
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    frappe.msgprint(str(inpatient_record))
-=======
->>>>>>> ad7da74b (chore: remove unused msgprint)
     if inpatient_record:
         inpatient_doc = frappe.get_doc("Inpatient Record", inpatient_record)
         for row in inpatient_doc.inpatient_occupancies:
@@ -184,7 +164,6 @@ def get_healthcare_service_order_to_invoice(
                     "qty": 1,
                 }
             )
->>>>>>> 932df03b (feat: create sales invoice from  cash inpatient record)
     return services_to_invoice
 
 
