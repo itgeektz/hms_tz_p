@@ -146,8 +146,11 @@ def get_healthcare_service_order_to_invoice(
                     )
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     frappe.msgprint(str(inpatient_record))
+=======
+>>>>>>> ad7da74b (chore: remove unused msgprint)
     if inpatient_record:
         inpatient_doc = frappe.get_doc("Inpatient Record", inpatient_record)
         for row in inpatient_doc.inpatient_occupancies:
