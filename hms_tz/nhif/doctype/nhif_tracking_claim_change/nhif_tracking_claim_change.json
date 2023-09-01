@@ -1,0 +1,242 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2023-04-26 10:17:18.571733",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "item_name",
+  "quantity",
+  "claim_month",
+  "claim_year",
+  "column_break_cp",
+  "company",
+  "posting_date",
+  "posting_time",
+  "status",
+  "amount_details_section",
+  "previous_amount",
+  "column_break_new",
+  "current_amount",
+  "column_break_amount",
+  "amount_changed",
+  "references_section",
+  "nhif_patient_claim",
+  "column_break_appointment",
+  "patient_appointment",
+  "column_break_encounter",
+  "patient_encounter",
+  "column_break_ref",
+  "ref_docname",
+  "claim_editor_details_section",
+  "user_email",
+  "edited_by",
+  "column_break_comment",
+  "comment",
+  "naming_series"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item Code",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Int",
+   "label": "Quantity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "posting_time",
+   "fieldtype": "Time",
+   "label": "Posting Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Amount Changed\nItem Removed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amount_details_section",
+   "fieldtype": "Section Break",
+   "label": "Amount Details"
+  },
+  {
+   "fieldname": "amount_changed",
+   "fieldtype": "Currency",
+   "label": "Amount Changed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "references_section",
+   "fieldtype": "Section Break",
+   "label": "References"
+  },
+  {
+   "fieldname": "nhif_patient_claim",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "NHIF Patient Claim",
+   "read_only": 1
+  },
+  {
+   "fieldname": "patient_appointment",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Patient Appointment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "patient_encounter",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Patient Encounter",
+   "read_only": 1
+  },
+  {
+   "fieldname": "comment",
+   "fieldtype": "Small Text",
+   "label": "Comment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_cp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_new",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_amount",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_appointment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_encounter",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_comment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "previous_amount",
+   "fieldtype": "Currency",
+   "label": "Previous Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "NTCC-.YYYY.-.MM.-",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ref",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ref_docname",
+   "fieldtype": "Data",
+   "label": "Ref Docname",
+   "read_only": 1
+  },
+  {
+   "fieldname": "edited_by",
+   "fieldtype": "Data",
+   "label": "Edited By",
+   "read_only": 1
+  },
+  {
+   "fieldname": "claim_editor_details_section",
+   "fieldtype": "Section Break",
+   "label": "Claim Editor Details"
+  },
+  {
+   "fieldname": "claim_month",
+   "fieldtype": "Int",
+   "label": "Claim Month",
+   "read_only": 1
+  },
+  {
+   "fieldname": "claim_year",
+   "fieldtype": "Int",
+   "label": "Claim Year",
+   "read_only": 1
+  },
+  {
+   "fieldname": "current_amount",
+   "fieldtype": "Currency",
+   "label": "Current Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "user_email",
+   "fieldtype": "Data",
+   "label": "user_email"
+  }
+ ],
+ "in_create": 1,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2023-04-27 17:37:47.723592",
+ "modified_by": "Administrator",
+ "module": "NHIF",
+ "name": "NHIF Tracking Claim Change",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

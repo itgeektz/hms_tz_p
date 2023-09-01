@@ -14,6 +14,9 @@ frappe.ui.form.on('Inpatient Record', {
         $('*[data-fieldname="inpatient_consultancy"]').find('.grid-remove-all-rows').hide();
 
         if (!frm.doc.insurance_subscription) {
+            frm.add_custom_button(__("Create Invoice"), () => {
+                create_sales_invoice(frm);
+            });
             frm.add_custom_button(__("Make Deposit"), () => {
                 make_deposit(frm);
             }).removeClass("btn-default").addClass("btn-warning font-weight-bold");
@@ -115,7 +118,7 @@ var make_deposit = (frm) => {
                     mode_of_payment: data.mode_of_payment,
                 },
                 freeze: true,
-                freeze_message: __("Making Deposit..."),
+                freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
             }).then((r) => {
                 if (r.message) {
                     frm.reload_doc();
@@ -125,4 +128,41 @@ var make_deposit = (frm) => {
         "Make Deposit",
         "Submit"
     );
+}
+
+var create_sales_invoice = (frm) => {
+    frappe.prompt([
+        {
+            'fieldname': 'mode_of_payment',
+            'fieldtype': 'Link',
+            'label': 'Mode of Payment',
+            'options': 'Mode of Payment',
+            'reqd': 1
+        }
+    ],
+        (values) => {
+            let filters = {
+                "patient": frm.doc.patient,
+                "appointment_no": frm.doc.patient_appointment,
+                "inpatient_record": frm.doc.name,
+                "company": frm.doc.company,
+                "mode_of_payment": values.mode_of_payment,
+            }
+            frappe.call({
+                method: "hms_tz.nhif.api.inpatient_record.create_sales_invoice",
+                args: {
+                    args: filters
+                },
+                freeze: true,
+                freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
+            }).then((r) => {
+                console.log(r.message)
+                if (r.message) {
+                    frappe.set_route("Form", "Sales Invoice", r.message);
+                }
+            });
+        },
+        "Create Sales Invoice",
+        "Create"
+    )
 }

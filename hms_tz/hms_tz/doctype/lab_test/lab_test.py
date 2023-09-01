@@ -248,7 +248,7 @@ def create_lab_test_doc(invoiced, practitioner, patient, template, company):
 def create_normals(template, lab_test):
     lab_test.normal_toggle = 1
     normal = lab_test.append("normal_test_items")
-    normal.lab_test_name = template.lab_test_name
+    normal.lab_test_name = template.lab_test_code
     normal.lab_test_uom = template.lab_test_uom
     normal.secondary_uom = template.secondary_uom
     normal.conversion_factor = template.conversion_factor
@@ -502,8 +502,9 @@ def delete_lab_test_from_medical_record(self):
     )
 
     if medical_record_id and medical_record_id[0][0]:
-        frappe.delete_doc("Patient Medical Record", medical_record_id[0][0])
-
+        frappe.delete_doc(
+            "Patient Medical Record", medical_record_id[0][0], ignore_permissions=True
+        )
 
 @frappe.whitelist()
 def get_lab_test_prescribed(patient):

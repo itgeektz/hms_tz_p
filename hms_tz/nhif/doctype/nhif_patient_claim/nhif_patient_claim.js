@@ -16,17 +16,32 @@ frappe.ui.form.on('NHIF Patient Claim', {
 
 	refresh(frm) {
 		$("[data-action='delete_all_rows']").hide();
+		
 		if (frm.doc.docstatus === 0 && frm.doc.authorization_no) {
+			frm.add_custom_button(__("Re-concile Repeated Items"), () => {
+				frappe.call({
+					method: "hms_tz.nhif.doctype.nhif_patient_claim.nhif_patient_claim.reconcile_repeated_items",
+					args: {
+						"claim_no": frm.doc.name
+					},
+					freeze: true,
+					freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
+				}).then(r => {
+					if (r.message) {
+						frm.refresh();
+					}
+				})
+			});
+
 			frm.add_custom_button(__("Merge Claims"), function () {
 				frm.dirty()
-				frm.call({
-					method: 'get_appointments',
-					args: { self: frm.doc },
+				frm.call('get_appointments', {
+					self: frm.doc,
 					freeze: true,
-					freeze_message: __("Please Wait..."),
+                	freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
 				}).then(r => {
-					frm.save()
-					frm.refresh()
+					frm.save();
+					frm.refresh();
 				});
 			});
 		}

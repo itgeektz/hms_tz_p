@@ -13,9 +13,11 @@ class LabTestTemplate(Document):
     def after_insert(self):
         if not self.item:
             try:
-                self.create_item_from_template()
+                create_item_from_template(self)
             except Exception as e:
-                frappe.log_error(frappe.get_traceback(), "Lab Test Template Item Creation Error")
+                frappe.log_error(
+                    frappe.get_traceback(), "Lab Test Template Item Creation Error"
+                )
 
     def validate(self):
         if self.is_billable and (not self.lab_test_rate or self.lab_test_rate <= 0.0):

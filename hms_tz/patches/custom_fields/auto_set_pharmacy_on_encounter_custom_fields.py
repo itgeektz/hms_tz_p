@@ -1,6 +1,7 @@
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
+
 def execute():
     fields = {
         "Company": [
@@ -21,32 +22,14 @@ def execute():
                 "mandatory_depends_on": "eval:doc.auto_set_pharmacy_on_patient_encounter == 1",
             },
             {
-                "fieldname": "opd_insurance_pharmacy",
-                "label": "OPD Insurance Pharmacy",
-                "fieldtype": "Link",
-                "options": "Healthcare Service Unit",
-                "insert_after": "opd_cash_pharmacy",
-                "depends_on": "eval:doc.auto_set_pharmacy_on_patient_encounter == 1",
-                "mandatory_depends_on": "eval:doc.auto_set_pharmacy_on_patient_encounter == 1",
-            },
-            {
                 "fieldname": "ipd_cash_pharmacy",
                 "label": "IPD Cash Pharmacy",
                 "fieldtype": "Link",
                 "options": "Healthcare Service Unit",
-                "insert_after": "opd_insurance_pharmacy",
+                "insert_after": "opd_cash_pharmacy",
                 "depends_on": "eval: doc.auto_set_pharmacy_on_patient_encounter == 1",
                 "mandatory_depends_on": "eval: doc.auto_set_pharmacy_on_patient_encounter == 1",
             },
-            {
-                "fieldname": "ipd_insurance_pharmacy",
-                "label": "IPD Insurance Pharmacy",
-                "fieldtype": "Link",
-                "options": "Healthcare Service Unit",
-                "insert_after": "ipd_cash_pharmacy",
-                "depends_on": "eval: doc.auto_set_pharmacy_on_patient_encounter == 1",
-                "mandatory_depends_on": "eval: doc.auto_set_pharmacy_on_patient_encounter == 1",
-            }
         ],
     }
 
