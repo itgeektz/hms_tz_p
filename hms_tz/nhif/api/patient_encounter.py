@@ -1136,6 +1136,13 @@ def validate_totals(doc, method):
                     row.hms_tz_is_limit_exceeded = 1
                     row.is_cancelled = 1
 
+    def unmark_limit_exceeded(doc):
+        for child in get_field_map():
+            for row in doc.get(child.get("table")):
+                if row.hms_tz_is_limit_exceeded == 1:
+                    row.hms_tz_is_limit_exceeded = 0
+                    row.is_cancelled = 0
+
     if (
         not doc.insurance_company
         or not doc.insurance_subscription
@@ -1181,6 +1188,8 @@ def validate_totals(doc, method):
                 ),
                 method=method,
             )
+    else:
+        unmark_limit_exceeded(doc)
 
 
 @frappe.whitelist()
@@ -1455,9 +1464,7 @@ def set_amounts(doc):
                 )
                 if not item_rate or item_rate == 0:
                     frappe.throw(
-                        _(
-                            f"Cannot get rate for item {item_code} in {mode_of_payment}"
-                        )
+                        _(f"Cannot get rate for item {item_code} in {mode_of_payment}")
                     )
 
             elif row.prescribe and doc.insurance_subscription:
