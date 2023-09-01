@@ -1012,18 +1012,23 @@ def return_quatity_or_cancel_delivery_note_via_lrpmt_returns(source_doc, method)
 def create_invoiced_items_if_not_created():
     """create pending LRP item(s) after submission of sales invoice"""
 
-    today_date = nowdate()
-    si_invoices = frappe.db.sql(
-        """ SELECT Distinct(si.name) FROM `tabSales Invoice` si
-        INNER JOIN `tabSales Invoice Item` sii ON si.name = sii.parent
-        WHERE si.patient is not null
-        AND si.docstatus = 1 
-        AND si.posting_date = %s
-        AND sii.hms_tz_is_lrp_item_created = 0
-    """,
-        today_date,
-        as_dict=1,
-    )
+    from frappe.query_builder import DocType as dt
+
+    si = dt("Sales Invoice")
+    sii = dt("Sales Invoice Item")
+
+    si_invoices = (
+        frappe.qb.from_(si)
+        .inner_join(sii)
+        .on(si.name == sii.parent)
+        .select(si.name.as_("name"))
+        .where(
+            si.patient.isnotnull()
+            & (si.docstatus == 1)
+            & (si.posting_date == nowdate())
+            & (sii.hms_tz_is_lrp_item_created == 0)
+        )
+    ).run(as_dict=1)
 
     for invoice in si_invoices:
         si_doc = frappe.get_doc("Sales Invoice", invoice.name)
@@ -1063,7 +1068,9 @@ def create_invoiced_items_if_not_created():
                                 else "",
                                 "ref_doctype": patient_encounter_doc.doctype,
                                 "ref_docname": patient_encounter_doc.name,
+                                "hms_tz_ref_childname": child.name,
                                 "invoiced": 1,
+                                "prescribe": 1,
                                 "service_comment": child.medical_code
                                 or "No ICD Code" + " : " + child.lab_test_comment
                                 or "No Comment",
@@ -1096,7 +1103,9 @@ def create_invoiced_items_if_not_created():
                                 ),
                                 "ref_doctype": patient_encounter_doc.doctype,
                                 "ref_docname": patient_encounter_doc.name,
+                                "hms_tz_ref_childname": child.name,
                                 "invoiced": 1,
+                                "prescribe": 1,
                                 "service_comment": child.medical_code
                                 or "No ICD Code" + " : " + child.radiology_test_comment
                                 or "No Comment",
@@ -1130,7 +1139,9 @@ def create_invoiced_items_if_not_created():
                                 ),
                                 "ref_doctype": patient_encounter_doc.doctype,
                                 "ref_docname": patient_encounter_doc.name,
+                                "hms_tz_ref_childname": child.name,
                                 "invoiced": 1,
+                                "prescribe": 1,
                                 "service_comment": child.medical_code
                                 or "No ICD Code" + " : " + child.comments
                                 or "No Comment",
