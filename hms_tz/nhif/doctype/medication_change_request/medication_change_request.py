@@ -59,7 +59,7 @@ class MedicationChangeRequest(Document):
                 
                 self.validate_item_insurance_coverage(drug, "validate")
 
-
+    @frappe.whitelist()
     def get_warehouse_per_delivery_note(self):
         return frappe.get_value("Delivery Note", self.delivery_note, "set_warehouse")
 
