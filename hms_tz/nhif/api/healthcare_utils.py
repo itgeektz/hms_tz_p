@@ -413,6 +413,7 @@ def get_healthcare_practitioner(item):
         {"reference_doc": "Lab Prescription"},
         {"reference_doc": "Radiology Procedure Prescription"},
         {"reference_doc": "Procedure Prescription"},
+        {"reference_doc": "Drug Prescription"},
         {"reference_doc": "Therapy Plan Detail"},
     ]
 
@@ -428,12 +429,10 @@ def get_healthcare_practitioner(item):
         return frappe.get_value("Patient Encounter", refn, "practitioner")
     elif refd == "Patient Appointment":
         return frappe.get_value("Patient Appointment", refn, "practitioner")
-    elif refd == "Drug Prescription":
-        parent, parenttype = frappe.get_value(
-            "Drug Prescription", refn, ["parent", "parenttype"]
+    elif refd == "Inpatient Consultancy":
+        return frappe.get_value(
+            "Inpatient Consultancy", refn, "healthcare_practitioner"
         )
-        if parenttype == "Patient Encounter":
-            return frappe.get_value("Patient Encounter", parent, "practitioner")
     elif refd == "Healthcare Service Order":
         encounter = frappe.get_value("Healthcare Service Order", refn, "order_group")
         if encounter:
@@ -464,6 +463,24 @@ def get_healthcare_service_unit(item):
         return frappe.get_value("Patient Appointment", refn, "service_unit")
     elif refd == "Drug Prescription":
         return frappe.get_value("Drug Prescription", refn, "healthcare_service_unit")
+    elif refd == "Inpatient Consultancy":
+        healthcare_service_unit = frappe.get_value(
+            "Practitioner Service Unit Schedule",
+            {"parent": item.healthcare_practitioner},
+            "service_unit",
+        )
+        if not healthcare_service_unit:
+            service_unit_details = frappe.get_all(
+                "Practitioner Availability",
+                filters={"practitioner": item.healthcare_practitioner},
+                fields=["service_unit"],
+                order_by="from_date desc",
+            )
+            if len(service_unit_details) > 0:
+                healthcare_service_unit = service_unit_details[0].service_unit
+        return healthcare_service_unit
+    elif refd == "Inpatient Occupancy":
+        return frappe.get_value("Inpatient Occupancy", refn, "service_unit")
     elif refd == "Healthcare Service Order":
         order_doctype, order, order_group, billing_item, company = frappe.get_value(
             refd,
