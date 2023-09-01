@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 import json
-from frappe.utils import date_diff, nowdate
+from frappe.utils import date_diff, nowdate, get_fullname
 from hms_tz.nhif.api.healthcare_utils import update_dimensions
 from hms_tz.nhif.api.medical_record import (
     create_medical_record,
@@ -61,22 +61,23 @@ def update_dosage_details(item):
             return
 
         drug_doc = frappe.get_doc("Drug Prescription", reference_dn)
-
-        description = ", \n".join(
-            [
-                "frequency: " + str(drug_doc.get("dosage") or "No Prescription Dosage"),
-                "period: " + str(drug_doc.get("period") or "No Prescription Period"),
-                "dosage_form: " + str(drug_doc.get("dosage_form") or ""),
-                "interval: " + str(drug_doc.get("interval") or ""),
-                "interval_uom: " + str(drug_doc.get("interval_uom") or ""),
-                "Doctor's comment: "
-                + (drug_doc.get("comment") or "Take medication as per dosage."),
-            ]
+        
+        description = (
+            drug_doc.drug_name
+            + " for "
+            + (drug_doc.dosage or "No Prescription Dosage")
+            + " for "
+            + (drug_doc.period or "No Prescription Period")
+            + " with "
+            + drug_doc.medical_code
+            + " and doctor notes: "
+            + (drug_doc.comment or "Take medication as per dosage.")
         )
 
         item.description = description
         item.reference_doctype = drug_doc.doctype
         item.reference_name = drug_doc.name
+
 
 
 def onload(doc, method):
@@ -170,7 +171,7 @@ def validate_medication_class(doc, row):
 
     if len(medication_class_list) == 0:
         return
-    
+
     prescribed_date = medication_class_list[0].posting_date
     item_code = medication_class_list[0].item_code
     valid_days = medication_class_list[0].valid_days
@@ -248,10 +249,15 @@ def before_submit(doc, method):
                 )
             )
 
+    doc.hms_tz_submitted_by = get_fullname(frappe.session.user)
+    doc.hms_tz_user_id = frappe.session.user
+    doc.hms_tz_submitted_date = nowdate()
+
 
 def on_submit(doc, method):
     update_drug_prescription(doc)
     create_medical_record(doc)
+
 
 
 def update_drug_prescription(doc):

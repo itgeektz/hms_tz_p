@@ -9,7 +9,7 @@ from hms_tz.nhif.api.healthcare_utils import (
     create_delivery_note_from_LRPT,
     get_restricted_LRPT,
 )
-from frappe.utils import getdate
+from frappe.utils import getdate, get_fullname
 import dateutil
 from frappe.query_builder import DocType
 
@@ -116,6 +116,9 @@ def before_submit(doc, method):
                 f"Approval number is required for <b>{doc.radiology_examination_template}</b>. Please set the Approval Number."
             )
         )
+
+    doc.hms_tz_submitted_by = get_fullname(frappe.session.user)
+    doc.hms_tz_user_id = frappe.session.user
 
     # 2023-07-13
     # stop this validation for now
