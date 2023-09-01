@@ -71,20 +71,31 @@ def get_childs_map():
 
 
 def get_healthcare_service_order_to_invoice(
-    patient, company, encounter, service_order_category=None, prescribed=None
+    patient,
+    company,
+    encounter=None,
+    patient_encounter_list=None,
+    service_order_category=None,
+    prescribed=None,
 ):
-    reference_encounter = frappe.get_value(
-        "Patient Encounter", encounter, "reference_encounter"
-    )
-    encounter_dict = frappe.get_all(
-        "Patient Encounter",
-        filters={
-            "reference_encounter": reference_encounter,
-            "docstatus": 1,
-            "is_not_billable": 0,
-        },
-        fields=["name", "inpatient_record"],
-    )
+    encounter_dict = None
+    if patient_encounter_list and len(patient_encounter_list) > 0:
+        encounter_dict = patient_encounter_list
+    else:
+        if not encounter:
+            return []
+        reference_encounter = frappe.get_value(
+            "Patient Encounter", encounter, "reference_encounter"
+        )
+        encounter_dict = frappe.get_all(
+            "Patient Encounter",
+            filters={
+                "reference_encounter": reference_encounter,
+                "docstatus": 1,
+                "is_not_billable": 0,
+            },
+            fields=["name", "inpatient_record"],
+        )
 
     inpatient_record = None
     encounter_list = []
@@ -126,7 +137,7 @@ def get_healthcare_service_order_to_invoice(
     if inpatient_record:
         inpatient_doc = frappe.get_doc("Inpatient Record", inpatient_record)
         for row in inpatient_doc.inpatient_occupancies:
-            if row.is_confirmed == 0:
+            if row.is_confirmed == 0 or row.invoiced == 1:
                 continue
 
             service_unit_type = frappe.get_cached_value(
@@ -145,7 +156,7 @@ def get_healthcare_service_order_to_invoice(
             )
 
         for row in inpatient_doc.inpatient_consultancy:
-            if row.is_confirmed == 0:
+            if row.is_confirmed == 0 or row.hms_tz_invoiced == 1:
                 continue
 
             services_to_invoice.append(
@@ -156,7 +167,6 @@ def get_healthcare_service_order_to_invoice(
                     "qty": 1,
                 }
             )
-
     return services_to_invoice
 
 
