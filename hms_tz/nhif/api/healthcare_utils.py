@@ -83,9 +83,15 @@ def get_healthcare_service_order_to_invoice(
             "docstatus": 1,
             "is_not_billable": 0,
         },
+        fields=["name", "inpatient_record"],
     )
+
+    inpatient_record = None
     encounter_list = []
     for i in encounter_dict:
+        if not inpatient_record and i.inpatient_record:
+            inpatient_record = i.inpatient_record
+
         encounter_doc = frappe.get_doc("Patient Encounter", i.name)
         encounter_list.append(encounter_doc)
     childs_map = get_childs_map()
@@ -116,6 +122,40 @@ def get_healthcare_service_order_to_invoice(
                             "qty": row.get("quantity") or 1,
                         }
                     )
+
+    if inpatient_record:
+        inpatient_doc = frappe.get_doc("Inpatient Record", inpatient_record)
+        for row in inpatient_doc.inpatient_occupancies:
+            if row.is_confirmed == 0:
+                continue
+
+            service_unit_type = frappe.get_cached_value(
+                "Healthcare Service Unit", row.service_unit, "service_unit_type"
+            )
+            item_code = frappe.get_cached_value(
+                "Healthcare Service Unit Type", service_unit_type, "item_code"
+            )
+            services_to_invoice.append(
+                {
+                    "reference_type": row.doctype,
+                    "reference_name": row.name,
+                    "service": item_code,
+                    "qty": 1,
+                }
+            )
+
+        for row in inpatient_doc.inpatient_consultancy:
+            if row.is_confirmed == 0:
+                continue
+
+            services_to_invoice.append(
+                {
+                    "reference_type": row.doctype,
+                    "reference_name": row.name,
+                    "service": row.consultation_item,
+                    "qty": 1,
+                }
+            )
 
     return services_to_invoice
 
@@ -507,7 +547,6 @@ def set_healthcare_services(doc, checked_values):
     doc = frappe.get_doc(json.loads(doc))
     checked_values = json.loads(checked_values)
     doc.items = []
-    from erpnext.stock.get_item_details import get_item_details
 
     for checked_item in checked_values:
         item_line = doc.append("items", {})
@@ -533,38 +572,40 @@ def set_healthcare_services(doc, checked_values):
         if checked_item["description"]:
             item_line.description = checked_item["description"]
 
-        childs_map = get_childs_map()
-        parent_encounter = frappe.get_value(
-            checked_item["dt"],
-            checked_item["dn"],
-            "parent",
-        )
-        item_line.healthcare_practitioner, company = frappe.get_value(
-            "Patient Encounter",
-            parent_encounter,
-            ["practitioner", "company"],
-        )
-
-        if checked_item["dt"] == "Drug Prescription":
-            item_line.healthcare_service_unit = frappe.get_value(
+        if checked_item["dt"] not in ["Inpatient Occupancy", "Inpatient Consultancy"]:
+            parent_encounter = frappe.get_value(
                 checked_item["dt"],
                 checked_item["dn"],
-                "healthcare_service_unit",
+                "parent",
+            )
+            item_line.healthcare_practitioner, company = frappe.get_value(
+                "Patient Encounter",
+                parent_encounter,
+                ["practitioner", "company"],
             )
 
-        else:
-            map_obj = childs_map.get(checked_item["dt"])
-            service_item = frappe.get_value(
-                checked_item["dt"],
-                checked_item["dn"],
-                map_obj.get("item"),
-            )
-            comapny_option = get_template_company_option(service_item, company)
-            item_line.healthcare_service_unit = comapny_option.service_unit
+            if checked_item["dt"] == "Drug Prescription":
+                item_line.healthcare_service_unit = frappe.get_value(
+                    checked_item["dt"],
+                    checked_item["dn"],
+                    "healthcare_service_unit",
+                )
 
-        item_line.warehouse = get_warehouse_from_service_unit(
-            item_line.healthcare_service_unit
-        )
+            else:
+                childs_map = get_childs_map()
+                map_obj = childs_map.get(checked_item["dt"])
+                service_item = frappe.get_value(
+                    checked_item["dt"],
+                    checked_item["dn"],
+                    map_obj.get("item"),
+                )
+                comapny_option = get_template_company_option(service_item, company)
+                item_line.healthcare_service_unit = comapny_option.service_unit
+
+        if item_line.healthcare_service_unit:
+            item_line.warehouse = get_warehouse_from_service_unit(
+                item_line.healthcare_service_unit
+            )
     doc.set_missing_values(for_validate=True)
     doc.save()
     return doc.name
