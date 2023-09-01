@@ -478,12 +478,16 @@ class NHIFPatientClaim(Document):
                             child["ref_doctype"], row.get(child["ref_docname"])
                         )
 
+<<<<<<< HEAD
                         if child["doctype"] == "Therapy Type" or row.get(
                             child["ref_docname"]
                         ):
                             new_row.status = "Submitted"
                         else:
                             new_row.status = "Draft"
+=======
+                        new_row.status = get_LRPMT_status(encounter.name, row, child)
+>>>>>>> 6cefd15a (feat: add a button to reconcile or remove repeated items from NHIF Patient Claim Item table)
 
                         new_row.patient_encounter = encounter.name
                         new_row.ref_doctype = row.doctype
@@ -867,12 +871,6 @@ class NHIFPatientClaim(Document):
             item.date_created = item.date_created or nowdate()
             item.folio_id = item.folio_id or self.folio_id
 
-            # Regency rock: 110
-            if item.status == "Draft":
-                item.unit_price = 0
-                item.amount_claimed = 0
-                continue
-
             self.total_amount += item.amount_claimed
         for item in self.nhif_patient_claim_disease:
             item.folio_id = item.folio_id or self.folio_id
@@ -1239,3 +1237,116 @@ def get_claim_pdf_file(doc):
         return base64_data
     else:
         frappe.throw(_("Failed to generate pdf"))
+<<<<<<< HEAD
+=======
+
+
+def get_child_map():
+    childs_map = [
+        {
+            "table": "lab_test_prescription",
+            "doctype": "Lab Test Template",
+            "item": "lab_test_code",
+            "item_name": "lab_test_name",
+            "comment": "lab_test_comment",
+            "ref_doctype": "Lab Test",
+            "ref_docname": "lab_test",
+        },
+        {
+            "table": "radiology_procedure_prescription",
+            "doctype": "Radiology Examination Template",
+            "item": "radiology_examination_template",
+            "item_name": "radiology_procedure_name",
+            "comment": "radiology_test_comment",
+            "ref_doctype": "Radiology Examination",
+            "ref_docname": "radiology_examination",
+        },
+        {
+            "table": "procedure_prescription",
+            "doctype": "Clinical Procedure Template",
+            "item": "procedure",
+            "item_name": "procedure_name",
+            "comment": "comments",
+            "ref_doctype": "Clinical Procedure",
+            "ref_docname": "clinical_procedure",
+        },
+        {
+            "table": "drug_prescription",
+            "doctype": "Medication",
+            "item": "drug_code",
+            "item_name": "drug_name",
+            "comment": "comment",
+            "ref_doctype": "Delivery Note Item",
+            "ref_docname": "dn_detail",
+        },
+        {
+            "table": "therapies",
+            "doctype": "Therapy Type",
+            "item": "therapy_type",
+            "item_name": "therapy_type",
+            "comment": "comment",
+            "ref_doctype": "",
+            "ref_docname": "",
+        },
+    ]
+    return childs_map
+
+
+def get_LRPMT_status(encounter_no, row, child):
+    status = None
+    if child["doctype"] == "Therapy Type" or row.get(child["ref_docname"]):
+        status = "Submitted"
+
+    elif child["doctype"] == "Lab Test Template" and not row.get(child["ref_docname"]):
+        lab_workflow_state = frappe.get_value(
+            "Lab Test",
+            {
+                "ref_docname": encounter_no,
+                "ref_doctype": "Patient Encounter",
+                "hms_tz_ref_childname": row.name,
+            },
+            "workflow_state",
+        )
+        if lab_workflow_state and lab_workflow_state != "Lab Test Requested":
+            status = "Submitted"
+        else:
+            status = "Draft"
+    else:
+        status = "Draft"
+
+    return status
+
+
+@frappe.whitelist()
+def reconcile_repeated_items(claim_no):
+    claim_doc = frappe.get_doc("NHIF Patient Claim", claim_no)
+
+    unique_items = []
+    repeated_items = []
+    unique_refcodes = []
+
+    claim_doc.allow_changes = 1
+    for row in claim_doc.nhif_patient_claim_item:
+        if row.item_code not in unique_refcodes:
+            unique_refcodes.append(row.item_code)
+            unique_items.append(row)
+        else:
+            repeated_items.append(row)
+
+    if len(repeated_items) > 0:
+        for item in unique_items:
+            for d in repeated_items:
+                if item.item_code == d.item_code:
+                    item.item_quantity += d.item_quantity
+                    item.unit_price += d.unit_price
+                    item.amount_claimed += d.amount_claimed
+
+                    if item.status != "Submitted" and d.status == "Submitted":
+                        item.status = "Submitted"
+
+        for record in repeated_items:
+            record.delete()
+
+    claim_doc.save(ignore_permissions=True)
+    return True
+>>>>>>> 6cefd15a (feat: add a button to reconcile or remove repeated items from NHIF Patient Claim Item table)
