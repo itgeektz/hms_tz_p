@@ -435,7 +435,6 @@ class NHIFPatientClaim(Document):
                         new_row.status = get_LRPMT_status(
                             encounter.name, row, child
                         )
-
                         new_row.patient_encounter = encounter.name
                         new_row.ref_doctype = row.doctype
                         new_row.ref_docname = row.name
@@ -821,12 +820,6 @@ class NHIFPatientClaim(Document):
             item.folio_item_id = item.folio_item_id or str(uuid.uuid1())
             item.date_created = item.date_created or nowdate()
             item.folio_id = item.folio_id or self.folio_id
-
-            # Regency rock: 110
-            if item.status == "Draft":
-                item.unit_price = 0
-                item.amount_claimed = 0
-                continue
 
             self.total_amount += item.amount_claimed
         for item in self.nhif_patient_claim_disease:
@@ -1288,3 +1281,37 @@ def get_LRPMT_status(encounter_no, row, child):
         status = "Draft"
 
     return status
+
+
+@frappe.whitelist()
+def reconcile_repeated_items(claim_no):
+    claim_doc = frappe.get_doc("NHIF Patient Claim", claim_no)
+
+    unique_items = []
+    repeated_items = []
+    unique_refcodes = []
+
+    claim_doc.allow_changes = 1
+    for row in claim_doc.nhif_patient_claim_item:
+        if row.item_code not in unique_refcodes:
+            unique_refcodes.append(row.item_code)
+            unique_items.append(row)
+        else:
+            repeated_items.append(row)
+
+    if len(repeated_items) > 0:
+        for item in unique_items:
+            for d in repeated_items:
+                if item.item_code == d.item_code:
+                    item.item_quantity += d.item_quantity
+                    item.unit_price += d.unit_price
+                    item.amount_claimed += d.amount_claimed
+
+                    if item.status != "Submitted" and d.status == "Submitted":
+                        item.status = "Submitted"
+
+        for record in repeated_items:
+            record.delete()
+
+    claim_doc.save(ignore_permissions=True)
+    return True
