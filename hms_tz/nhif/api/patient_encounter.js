@@ -503,12 +503,16 @@ function show_cost_estimate_model(frm, cost_estimate) {
         for (let item of cost_estimate.details[item_type]) {
             cost_estimate_html += '<tr>';
             cost_estimate_html += '<td>' + item.item + '</td>';
-            cost_estimate_html += '<td>' + item.amount + '</td>';
+            cost_estimate_html += '<td>' +
+                item.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                + '</td>';
             cost_estimate_html += '</tr>';
         }
     }
     cost_estimate_html += '<tr>';
-    cost_estimate_html += '<td colspan="2" class="text-center"><strong>Total Cost: ' + cost_estimate.total_cost + '</strong></td>';
+    cost_estimate_html += '<td colspan="2" class="text-center"><strong>Total Cost: ' +
+        cost_estimate.total_cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        + '</strong></td>';
     cost_estimate_html += '</tr>';
     cost_estimate_html += '</tbody>';
     cost_estimate_html += '</table>';
