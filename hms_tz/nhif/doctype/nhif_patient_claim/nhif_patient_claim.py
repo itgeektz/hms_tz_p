@@ -478,17 +478,7 @@ class NHIFPatientClaim(Document):
                             child["ref_doctype"], row.get(child["ref_docname"])
                         )
 
-<<<<<<< HEAD
-                        if child["doctype"] == "Therapy Type" or row.get(
-                            child["ref_docname"]
-                        ):
-                            new_row.status = "Submitted"
-                        else:
-                            new_row.status = "Draft"
-=======
                         new_row.status = get_LRPMT_status(encounter.name, row, child)
->>>>>>> 6cefd15a (feat: add a button to reconcile or remove repeated items from NHIF Patient Claim Item table)
-
                         new_row.patient_encounter = encounter.name
                         new_row.ref_doctype = row.doctype
                         new_row.ref_docname = row.name
@@ -1237,8 +1227,6 @@ def get_claim_pdf_file(doc):
         return base64_data
     else:
         frappe.throw(_("Failed to generate pdf"))
-<<<<<<< HEAD
-=======
 
 
 def get_child_map():
@@ -1349,4 +1337,3 @@ def reconcile_repeated_items(claim_no):
 
     claim_doc.save(ignore_permissions=True)
     return True
->>>>>>> 6cefd15a (feat: add a button to reconcile or remove repeated items from NHIF Patient Claim Item table)
