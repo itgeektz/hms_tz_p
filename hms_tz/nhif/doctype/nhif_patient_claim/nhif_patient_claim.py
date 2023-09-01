@@ -1307,6 +1307,16 @@ def reconcile_repeated_items(claim_no):
                     item.unit_price += d.unit_price
                     item.amount_claimed += d.amount_claimed
 
+                    if d.approval_ref_no:
+                        approval_ref_no = None
+                        if item.approval_ref_no:
+                            approval_ref_no = str(item.approval_ref_no) + "," + str(d.approval_ref_no)
+                        else:
+                            approval_ref_no = d.approval_ref_no
+                        
+                        item.approval_ref_no = approval_ref_no
+                            
+
                     if item.status != "Submitted" and d.status == "Submitted":
                         item.status = "Submitted"
 
