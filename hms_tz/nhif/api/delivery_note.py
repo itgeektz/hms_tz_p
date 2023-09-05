@@ -91,8 +91,11 @@ def onload(doc, method):
                     item.stock_uom,
                 ),
             )
-        check_for_medication_category(item)
-        validate_medication_class(doc, item)
+        if doc.patient and doc.coverage_plan_name:
+            check_for_medication_category(item)
+            validate_medication_class(doc, item)
+
+    check_cash_drugs_from_encounter(doc)
 
 
 def set_prescribed(doc):
@@ -117,7 +120,7 @@ def set_prescribed(doc):
             item.last_date_prescribed = items_list[0].get("posting_date")
 
         # Check for medication category
-        if doc.coverage_plan_name:
+        if doc.patient and doc.coverage_plan_name:
             check_for_medication_category(item)
 
 
@@ -256,8 +259,12 @@ def before_submit(doc, method):
 
 def on_submit(doc, method):
     update_drug_prescription(doc)
+<<<<<<< HEAD
     create_medical_record(doc)
 
+=======
+    check_cash_drugs_from_encounter(doc)
+>>>>>>> 453cfd9e (feat: show alert to inform pharmacists on the presence of drugs prescribed for cash when dispensing drugs covered with insurance)
 
 
 def update_drug_prescription(doc):
@@ -463,9 +470,40 @@ def get_fields_to_clear():
     return ["name", "owner", "creation", "modified", "modified_by", "docstatus"]
 
 
+<<<<<<< HEAD
 def on_cancel(doc, method=None):
     delete_medical_record(doc)
 
 
 def delete_medical_record(doc, method=None):
     update_medical_record(doc)
+=======
+# SHM Rock: 205
+def check_cash_drugs_from_encounter(doc):
+    if (
+        not doc.form_sales_invoice
+        and doc.reference_name
+        and doc.reference_doctype == "Patient Encounter"
+    ):
+        encounter_doc = frappe.get_doc(doc.reference_doctype, doc.reference_name)
+        if encounter_doc.insurance_subscription:
+            cash_drugs = [
+                row.drug_code
+                for row in encounter_doc.drug_prescription
+                if (
+                    row.prescribe == 1
+                    and row.invoiced == 0
+                    and row.is_cancelled == 0
+                    and row.is_not_available_inhouse == 0
+                )
+            ]
+            if len(cash_drugs) > 0:
+                drug_list = ", ".join(cash_drugs)
+                msg = f"""<div style="border: 1px solid #ccc; background-color: #f9f9f9; padding: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); margin: 10px;">
+                    <p style="font-weight: normal; font-size: 15px;">This patient: <span style="font-weight: bold;">{doc.patient}</span> has <span style="font-weight: bold;">{len(cash_drugs)}</span> more drugs to be paid in cash:</p>
+                    <p style="font-style: italic; font-weight: bold; font-size: 15px;">{drug_list}</p>
+                    <p style="font-size: 15px;">Please inform the patient to pay in cash for these drugs.</p>
+                </div>"""
+
+                frappe.msgprint(msg)
+>>>>>>> 453cfd9e (feat: show alert to inform pharmacists on the presence of drugs prescribed for cash when dispensing drugs covered with insurance)
