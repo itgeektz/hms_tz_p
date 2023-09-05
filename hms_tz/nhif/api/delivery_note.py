@@ -259,12 +259,8 @@ def before_submit(doc, method):
 
 def on_submit(doc, method):
     update_drug_prescription(doc)
-<<<<<<< HEAD
-    create_medical_record(doc)
-
-=======
     check_cash_drugs_from_encounter(doc)
->>>>>>> 453cfd9e (feat: show alert to inform pharmacists on the presence of drugs prescribed for cash when dispensing drugs covered with insurance)
+    create_medical_record(doc)
 
 
 def update_drug_prescription(doc):
@@ -470,14 +466,14 @@ def get_fields_to_clear():
     return ["name", "owner", "creation", "modified", "modified_by", "docstatus"]
 
 
-<<<<<<< HEAD
 def on_cancel(doc, method=None):
     delete_medical_record(doc)
 
 
 def delete_medical_record(doc, method=None):
     update_medical_record(doc)
-=======
+
+
 # SHM Rock: 205
 def check_cash_drugs_from_encounter(doc):
     if (
@@ -506,4 +502,3 @@ def check_cash_drugs_from_encounter(doc):
                 </div>"""
 
                 frappe.msgprint(msg)
->>>>>>> 453cfd9e (feat: show alert to inform pharmacists on the presence of drugs prescribed for cash when dispensing drugs covered with insurance)
