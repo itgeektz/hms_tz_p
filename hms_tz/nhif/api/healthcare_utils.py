@@ -347,9 +347,7 @@ def get_warehouse_from_service_unit(healthcare_service_unit):
     )
     if not warehouse:
         frappe.throw(
-            _("Warehouse is missing in Healthcare Service Unit {0}").format(
-                healthcare_service_unit
-            )
+            _(f"Warehouse is missing in Healthcare Service Unit {healthcare_service_unit}")
         )
     return warehouse
 
