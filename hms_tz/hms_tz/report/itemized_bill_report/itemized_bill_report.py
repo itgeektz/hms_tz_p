@@ -52,11 +52,7 @@ def execute(filters=None):
             if ipd_cons:
                 data += ipd_cons
 
-<<<<<<< HEAD
-            data = sorted(data, key=lambda d: d["date"])
-=======
             data = sorted(data, key=lambda d: (d["category"], d["date"]))
->>>>>>> 40e9070a (chore: sort items by category and date on itemized bill report)
 
             if not data:
                 frappe.throw(
@@ -114,11 +110,7 @@ def execute(filters=None):
             if insurance_lrpmt_data:
                 data += insurance_lrpmt_data
 
-<<<<<<< HEAD
-            data = sorted(data, key=lambda d: d["date"])
-=======
             data = sorted(data, key=lambda d: (d["category"], d["date"]))
->>>>>>> 40e9070a (chore: sort items by category and date on itemized bill report)
 
             if not data:
                 frappe.throw(
@@ -180,11 +172,7 @@ def execute(filters=None):
             if ipd_cons:
                 data += ipd_cons
 
-<<<<<<< HEAD
-            data = sorted(data, key=lambda d: d["date"])
-=======
             data = sorted(data, key=lambda d: (d["category"], d["date"]))
->>>>>>> 40e9070a (chore: sort items by category and date on itemized bill report)
             if not data:
                 frappe.throw(
                     "No Record found for the filters Patient: {0}, Appointment: {1},\
