@@ -810,6 +810,13 @@ def create_delivery_note_per_encounter(patient_encounter_doc, method):
             if element != warehouse:
                 continue
             item_code = frappe.get_cached_value("Medication", row.drug_code, "item")
+            if not item_code:
+                frappe.throw(
+                    _(
+                        f"The Item Code for {row.drug_code} is not found!<br>Please request administrator to set item code in {row.drug_code}."
+                    )
+                )
+
             is_stock, item_name = frappe.get_cached_value(
                 "Item", item_code, ["is_stock_item", "item_name"]
             )
@@ -1453,6 +1460,8 @@ def set_amounts(doc):
             item_code = frappe.get_cached_value(
                 child.get("doctype"), row.get(child.get("item")), "item"
             )
+            if not item_code:
+                frappe.throw(_(f"Item code for {row.get(child.get('item'))} set in row {row.idx} was not found.<br>Please set the item code in {child.get('doctype')}."))
 
             if row.prescribe and not doc.insurance_subscription:
                 if doc.get("mode_of_payment"):
