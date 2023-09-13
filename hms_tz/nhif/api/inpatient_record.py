@@ -325,11 +325,11 @@ def create_sales_invoice(args):
     invoice_doc.patient = args.patient
     invoice_doc.customer = frappe.get_cached_value("Patient", args.patient, "customer")
     invoice_doc.company = args.company
-    payment = invoice_doc.append("payments", {})
-    payment.mode_of_payment = args.mode_of_payment
-
+    mode_of_payment = frappe.get_value(
+        "Patient Encounter", patient_encounter_list[0].name, "mode_of_payment"
+    )
     price_list = frappe.get_cached_value(
-        "Mode of Payment", args.mode_of_payment, "price_list"
+        "Mode of Payment", mode_of_payment, "price_list"
     )
 
     for service in services:
@@ -338,17 +338,19 @@ def create_sales_invoice(args):
         item.qty = service.get("qty")
         item.rate = get_item_price(service.get("service"), price_list, args.company)
         item.amount = item.rate * item.qty
-        item.reference_dt = service.get("reference_dt")
-        item.reference_dn = service.get("reference_dn")
+        item.reference_dt = service.get("reference_type")
+        item.reference_dn = service.get("reference_name")
         if item.reference_dt == "Drug Prescription":
             item.healthcare_service_unit = frappe.get_value(
-                service.get("reference_dt"),
-                service.get("reference_dn"),
+                service.get("reference_type"),
+                service.get("reference_name"),
                 "healthcare_service_unit",
             )
             item.warehouse = get_warehouse_from_service_unit(
                 item.healthcare_service_unit
             )
+
+    invoice_doc.is_pos = 0
     invoice_doc.allocate_advances_automatically = 1
     invoice_doc.set_missing_values()
     invoice_doc.set_taxes()
