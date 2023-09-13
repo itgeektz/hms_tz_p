@@ -131,38 +131,22 @@ var make_deposit = (frm) => {
 }
 
 var create_sales_invoice = (frm) => {
-    frappe.prompt([
-        {
-            'fieldname': 'mode_of_payment',
-            'fieldtype': 'Link',
-            'label': 'Mode of Payment',
-            'options': 'Mode of Payment',
-            'reqd': 1
-        }
-    ],
-        (values) => {
-            let filters = {
-                "patient": frm.doc.patient,
-                "appointment_no": frm.doc.patient_appointment,
-                "inpatient_record": frm.doc.name,
-                "company": frm.doc.company,
-                "mode_of_payment": values.mode_of_payment,
-            }
-            frappe.call({
-                method: "hms_tz.nhif.api.inpatient_record.create_sales_invoice",
-                args: {
-                    args: filters
-                },
-                freeze: true,
-                freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
-            }).then((r) => {
-                console.log(r.message)
-                if (r.message) {
-                    frappe.set_route("Form", "Sales Invoice", r.message);
-                }
-            });
+    let filters = {
+        "patient": frm.doc.patient,
+        "appointment_no": frm.doc.patient_appointment,
+        "inpatient_record": frm.doc.name,
+        "company": frm.doc.company,
+    }
+    frappe.call({
+        method: "hms_tz.nhif.api.inpatient_record.create_sales_invoice",
+        args: {
+            args: filters
         },
-        "Create Sales Invoice",
-        "Create"
-    )
+        freeze: true,
+        freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
+    }).then((r) => {
+        if (r.message) {
+            frappe.set_route("Form", "Sales Invoice", r.message);
+        }
+    });
 }
