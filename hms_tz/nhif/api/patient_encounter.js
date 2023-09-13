@@ -84,15 +84,10 @@ frappe.ui.form.on('Patient Encounter', {
                 }
             };
         });
-        frm.set_query('drug_code', 'drug_prescription', function () {
-            return {
-              query: "hms_tz.nhif.api.patient_encounter.get_filterd_drug",
-              filters: {
-                price_list: frm.doc.price_list,
-                disabled: 0,
-              },
-            };
-        });
+        
+        // filter medication based on company
+        filter_drug_prescriptions(frm);
+
         frm.set_query('therapy_type', 'therapies', function () {
             return {
                 filters: {
@@ -1322,4 +1317,29 @@ var validate_healthcare_package_order_items = (frm) => {
             frm.set_df_property(field, "read_only", 1);
         }
     }
+}
+
+var filter_drug_prescriptions = (frm) => {
+    frappe.db.get_value("Company", frm.doc.company, "allow_filtered_medication_on_patient_encounter")
+        .then(r => {
+            if (r.message.allow_filtered_medication_on_patient_encounter == 1) {
+                frm.set_query('drug_code', 'drug_prescription', function () {
+                    return {
+                        query: "hms_tz.nhif.api.patient_encounter.get_filterd_drug",
+                        filters: {
+                            price_list: frm.doc.price_list,
+                            disabled: 0,
+                        },
+                    };
+                });
+            } else {
+                frm.set_query('drug_code', 'drug_prescription', function () {
+                    return {
+                        filters: {
+                            disabled: 0
+                        }
+                    };
+                });
+            }
+        });
 }
