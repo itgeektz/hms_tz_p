@@ -806,36 +806,44 @@ frappe.ui.form.on('Drug Prescription', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.prescribe == 1) {
             frappe.db.get_value("Company", frm.doc.company,
-                ["auto_set_pharmacy_on_patient_encounter", "opd_cash_pharmacy","ipd_cash_pharmacy"]
+                ["auto_set_pharmacy_on_patient_encounter", "opd_cash_pharmacy", "ipd_cash_pharmacy"]
             )
                 .then(r => {
                     let values = r.message;
                     if (values.auto_set_pharmacy_on_patient_encounter == 1) {
-                            if (frm.doc.inpatient_record) {
-                                frappe.model.set_value(cdt, cdn, "healthcare_service_unit", values.ipd_cash_pharmacy);
-                            } else {
-                                frappe.model.set_value(cdt, cdn, "healthcare_service_unit", values.opd_cash_pharmacy);
-                            }
+                        if (frm.doc.inpatient_record) {
+                            frappe.model.set_value(cdt, cdn, "healthcare_service_unit", values.ipd_cash_pharmacy);
+                        } else {
+                            frappe.model.set_value(cdt, cdn, "healthcare_service_unit", values.opd_cash_pharmacy);
                         }
+                    }
 
                     frm.refresh_field("drug_prescription");
                 });
-        } else if (row.prescribe == 0) {
-            frappe.db.get_value("Healthcare Insurance Coverage Plan", frm.doc.insurance_coverage_plan,
-                ["opd_insurance_pharmacy", "ipd_insurance_pharmacy"]
-            )
-                .then(r => {
-                    let values = r.message;
-                    if (frm.doc.inpatient_record) {
-                        frappe.model.set_value(cdt, cdn, "healthcare_service_unit", values.ipd_insurance_pharmacy);
-                    } else {
-                        frappe.model.set_value(cdt, cdn, "healthcare_service_unit", values.opd_insurance_pharmacy);
-                    }
-                    frm.refresh_field("drug_prescription");
-                });
-        }
-        if (row.prescribe || !row.drug_code) {
-            frappe.model.set_value(cdt, cdn, "override_subscription", 0);
+        } else {
+            if (row.prescribe == 0 && frm.doc.insurance_coverage_plan) {
+                frappe.db.get_value("Healthcare Insurance Coverage Plan", frm.doc.insurance_coverage_plan,
+                    ["opd_insurance_pharmacy", "ipd_insurance_pharmacy"]
+                )
+                    .then(r => {
+                        let values = r.message;
+                        if (values) {
+                            if (frm.doc.inpatient_record) {
+                                if (row.healthcare_service_unit != values.ipd_insurance_pharmacy) {
+                                    frappe.model.set_value(cdt, cdn, "healthcare_service_unit", values.ipd_insurance_pharmacy);
+                                }
+                            } else {
+                                if (row.healthcare_service_unit != values.opd_insurance_pharmacy) {
+                                    frappe.model.set_value(cdt, cdn, "healthcare_service_unit", values.opd_insurance_pharmacy);
+                                }
+                            }
+                            frm.refresh_field("drug_prescription");
+                        }
+                    });
+            }
+            if (row.prescribe || !row.drug_code) {
+                frappe.model.set_value(cdt, cdn, "override_subscription", 0);
+            }
         }
     },
     quantity: function (frm, cdt, cdn) {
