@@ -248,6 +248,8 @@ def discharge_patient(inpatient_record):
 
 
 def validate_invoiced_inpatient(inpatient_record):
+    if inpatient_record.insurance_subscription:
+        return
     pending_invoices = []
     if inpatient_record.inpatient_occupancies:
         service_unit_names = False
