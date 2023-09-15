@@ -285,6 +285,7 @@ def send_sms_for_lab_results(doc):
             filters={
                 "ref_doctype": "Patient Encounter",
                 "ref_docname": doc.ref_docname,
+                "sms_sent": 0,
             },
             fields=["name", "docstatus"],
         )
