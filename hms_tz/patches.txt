@@ -38,4 +38,9 @@ hms_tz.patches.custom_fields.visit_types_for_zero_consultation_custom_fields
 hms_tz.patches.custom_fields.set_pharmacy_from_hicp
 hms_tz.patches.property_setter.set_ready_only_for_invoiced_field
 hms_tz.patches.custom_fields.add_sales_invoice_number_on_inpatient_cons_and_beds
+<<<<<<< HEAD
 hms_tz.patches.custom_fields.add_submitter_name_on_lrpm_docs_for_vc_purposes
+=======
+hms_tz.patches.custom_fields.send_sms_for_all_lab_results_per_encounter
+hms_tz.patches.custom_fields.allow_discharge_patient_with_pending_invoices
+>>>>>>> 918dd9fb (feat: config allow or disallow discharge of patient if there is pending unbilled invoiceds)
