@@ -69,24 +69,23 @@ frappe.ui.form.on('Codification Table', {
 
 frappe.ui.form.on('Drug Prescription', {
 	drug_prescription_add: (frm, cdt, cdn) => {
-		frm.call("get_warehouse_per_delivery_note", {
-			self: frm.doc
-		}).then(r => {
-			if (r.message) {
-				frappe.db.get_list("Healthcare Service Unit", {
-					fields: ["name"],
-					filters: {
-						warehouse: r.message,
-						company: frm.doc.company,
-						service_unit_type: "Pharmacy"
-					}
-				}).then(records => {
-					if (records.length > 0) {
-						frappe.model.set_value(cdt, cdn, "healthcare_service_unit", records[0].name);
-					}
-				})
-			}
-		});
+		frappe.db.get_value("Delivery Note", frm.doc.delivery_note, "set_warehouse")
+			.then(r => {
+				if (r.message.set_warehouse) {
+					frappe.db.get_list("Healthcare Service Unit", {
+						fields: ["name"],
+						filters: {
+							warehouse: r.message.set_warehouse,
+							company: frm.doc.company,
+							service_unit_type: "Pharmacy"
+						}
+					}).then(records => {
+						if (records.length > 0) {
+							frappe.model.set_value(cdt, cdn, "healthcare_service_unit", records[0].name);
+						}
+					})
+				}
+			})
 	},
 	dosage: (frm, cdt, cdn) => {
 		frappe.model.set_value(cdt, cdn, "quantity", 0);
