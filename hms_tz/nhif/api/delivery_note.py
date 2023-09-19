@@ -69,7 +69,7 @@ def update_dosage_details(item):
             + " for "
             + (drug_doc.period or "No Prescription Period")
             + " with "
-            + drug_doc.medical_code
+            + (drug_doc.medical_code or "No medical code")
             + " and doctor notes: "
             + (drug_doc.comment or "Take medication as per dosage.")
         )
