@@ -10,6 +10,7 @@ from hms_tz.nhif.api.healthcare_utils import (
     get_restricted_LRPT,
 )
 from frappe.utils import getdate, get_fullname
+from frappe.core.doctype.sms_settings.sms_settings import send_sms
 import dateutil
 from frappe.query_builder import DocType
 
@@ -135,6 +136,7 @@ def before_submit(doc, method):
 def on_submit(doc, method):
     update_lab_prescription(doc)
     create_delivery_note(doc)
+    send_sms_for_lab_results(doc)
 
 
 def create_delivery_note(doc):
@@ -259,3 +261,45 @@ def update_lab_prescription(doc):
                     row.name,
                     {"lab_test": doc.name, "delivered_quantity": 1},
                 )
+
+
+def send_sms_for_lab_results(doc):
+    if doc.ref_doctype == "Patient Encounter":
+        (
+            allow_send_sms_for_multiple_labs,
+            lab_result_sms_template,
+        ) = frappe.get_cached_value(
+            "Company",
+            doc.company,
+            ["allow_send_sms_for_multiple_labs", "lab_result_sms_template"],
+        )
+
+        if allow_send_sms_for_multiple_labs == 0:
+            return
+
+        if not lab_result_sms_template:
+            return
+
+        all_labs_per_encounter = frappe.get_all(
+            "Lab Test",
+            filters={
+                "ref_doctype": "Patient Encounter",
+                "ref_docname": doc.ref_docname,
+                "sms_sent": 0,
+            },
+            fields=["name", "docstatus"],
+        )
+        sms_sent = False
+        if len(all_labs_per_encounter) > 0:
+            draft_labs = [lab for lab in all_labs_per_encounter if lab.docstatus == 0]
+            if len(draft_labs) == 0:
+                phone_number = [doc.mobile]
+                if lab_result_sms_template and phone_number:
+                    msg = frappe.render_template(lab_result_sms_template, {"doc": doc})
+                    send_sms(phone_number, msg, success_msg=False)
+                    sms_sent = True
+                    frappe.msgprint(_(f"SMS sent to Patient: {doc.patient_name}, PhoneNo: {doc.mobile}"), alert=True)
+
+        if sms_sent:
+            for row in all_labs_per_encounter:
+                frappe.db.set_value("Lab Test", row.name, "sms_sent", 1)
