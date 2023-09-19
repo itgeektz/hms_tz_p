@@ -1304,7 +1304,6 @@ def reconcile_repeated_items(claim_no):
             for d in repeated_items:
                 if item.item_code == d.item_code:
                     item.item_quantity += d.item_quantity
-                    item.unit_price += d.unit_price
                     item.amount_claimed += d.amount_claimed
 
                     if d.approval_ref_no:
