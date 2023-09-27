@@ -185,13 +185,8 @@ frappe.ui.form.on('Patient Encounter', {
                 freeze: true,
                 freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
             }).then(r => {
-<<<<<<< HEAD
                 // console.log(r.message);
             });
-=======
-                // console.log(r.message)
-            })
->>>>>>> df2c43f7 (fix: KeyError: 'creation' during add chronic medication)
         }
     },
 
