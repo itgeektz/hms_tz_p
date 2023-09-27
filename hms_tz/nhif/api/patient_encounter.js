@@ -1101,14 +1101,6 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
                 });
                 set_medical_code(frm, true);
             } else {
-<<<<<<< HEAD
-                items.forEach((item) => {
-                    let new_row = {};
-                    new_row[value_dict.item_field] = item.item;
-                    new_row[value_dict.item_name_field] = item.item_name;
-                    let row = frm.add_child(field, new_row);
-                });
-=======
                 if (doctype == "Drug Prescription") {
                     items.forEach((item) => {
                         let new_row = {}
@@ -1126,7 +1118,6 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
                         let row = frm.add_child(field, new_row);
                     })
                 }
->>>>>>> e5a70159 (fix: warehouse missing for healthcare service unit: None on drug prescription, when using reuse of previous drug items)
             }
             frm.refresh_field(field);
             d.hide();
