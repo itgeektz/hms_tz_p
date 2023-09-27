@@ -1101,12 +1101,32 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
                 });
                 set_medical_code(frm, true);
             } else {
+<<<<<<< HEAD
                 items.forEach((item) => {
                     let new_row = {};
                     new_row[value_dict.item_field] = item.item;
                     new_row[value_dict.item_name_field] = item.item_name;
                     let row = frm.add_child(field, new_row);
                 });
+=======
+                if (doctype == "Drug Prescription") {
+                    items.forEach((item) => {
+                        let new_row = {}
+                        new_row[value_dict.item_field] = item.item;
+                        new_row[value_dict.item_name_field] = item.item_name;
+                        let row = frm.add_child(field, new_row);
+                    })
+                    frm.trigger("default_healthcare_service_unit");
+                }
+                else {
+                    items.forEach((item) => {
+                        let new_row = {}
+                        new_row[value_dict.item_field] = item.item;
+                        new_row[value_dict.item_name_field] = item.item_name;
+                        let row = frm.add_child(field, new_row);
+                    })
+                }
+>>>>>>> e5a70159 (fix: warehouse missing for healthcare service unit: None on drug prescription, when using reuse of previous drug items)
             }
             frm.refresh_field(field);
             d.hide();
@@ -1124,6 +1144,11 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
     });
 
     d.$body.find("button[data-fieldtype='Button']").removeClass("btn-default").addClass("btn-info");
+    d.$body.on('change', '#th', function() {
+        var isChecked = $(this).prop('checked');
+        wrapper.find('input[type="checkbox"]').prop('checked', isChecked);
+    });
+
     d.$wrapper.find('.modal-content').css({
         "width": "650px",
         "max-height": "1000px",
@@ -1172,13 +1197,13 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
                 <col width="22%">
                 <col width="20%">
             </colgroup>
-            <tr style="background-color: #D3D3D3;">
-                <th></th>
-                <th>Medical Code</th>
-                <th>Code Name</th>
-                <th>Description</th>
-                <th>Mtuha</th>
-                <th>Date of Service</th>
+            <tr>
+                <th><input type="checkbox" id="th" class="check-all" style="border: 2px solid black;"/></th>
+                <th style="background-color: #D3D3D3;">Medical Code</th>
+                <th style="background-color: #D3D3D3;">Code Name</th>
+                <th style="background-color: #D3D3D3;">Description</th>
+                <th style="background-color: #D3D3D3;">Mtuha</th>
+                <th style="background-color: #D3D3D3;">Date of Service</th>
             </tr>`;
 
             data.forEach(row => {
@@ -1199,11 +1224,11 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
                 <col width="35%">
                 <col width="30%">
             </colgroup>
-            <tr style="background-color: #D3D3D3;">
-                <th></th>
-                <th>Item</th>
-                <th>Item Name</th>
-                <th>Date of Service</th>
+            <tr>
+                <th><input type="checkbox" id="th" class="check-all" style="border: 2px solid black;" /></th>
+                <th style="background-color: #D3D3D3;">Item</th>
+                <th style="background-color: #D3D3D3;">Item Name</th>
+                <th style="background-color: #D3D3D3;">Date of Service</th>
             </tr>`;
 
             data.forEach(row => {
