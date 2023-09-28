@@ -12,6 +12,7 @@
   "column_break_4",
   "facility_code",
   "enable",
+  "validate_service_approval_number_on_lrpm_documents",
   "enable_auto_submit_of_claims",
   "auto_submit_patient_claim",
   "section_break_5",
@@ -183,11 +184,18 @@
    "fieldname": "auto_submit_patient_claim",
    "fieldtype": "Button",
    "label": "Auto Submit Patient Claim"
+  },
+  {
+   "default": "1",
+   "depends_on": "eval: doc.enable",
+   "fieldname": "validate_service_approval_number_on_lrpm_documents",
+   "fieldtype": "Check",
+   "label": "Validate Service Approval number on LRPM Documents"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-12-13 11:45:31.292024",
+ "modified": "2023-09-28 23:11:07.972344",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "Company NHIF Settings",

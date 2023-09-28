@@ -11,6 +11,9 @@ frappe.ui.form.on("Radiology Examination", {
     approval_number: (frm) => {
         frm.fields_dict.approval_number.$input.focusout(() => {
             if (frm.doc.approval_number != "" && frm.doc.approval_number != undefined) {
+                // if (!frm.doc.insurance_company.includes("NHIF")) {
+                //     return;
+                // }
                 frappe.call({
                     method: "hms_tz.nhif.api.healthcare_utils.varify_service_approval_number_for_LRPM", 
                     args: {
@@ -21,9 +24,13 @@ frappe.ui.form.on("Radiology Examination", {
                         encounter: frm.doc.ref_docname
                     },
                     freeze: true,
-                    freeze_message: __("Verifying Approval Number..."),
+                    freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
+
                 }).then(r => {
-                    if (r.message) {
+                    if (r.message && r.message == "approval number validation is disabled") {
+                        return
+                    }
+                    else if (r.message) {
                         frappe.show_alert({
                             message: __("<h4 class='text-center' style='background-color: #D3D3D3; font-weight: bold;'>\
                                 Approval Number is Valid</h4>"),
