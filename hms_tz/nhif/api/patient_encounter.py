@@ -192,8 +192,8 @@ def on_submit_validation(doc, method):
             if healthcare_doc.disabled:
                 msgThrow(
                     _(
-                        "{0} {1} selected at {2} is disabled. Please select an enabled item."
-                    ).format(child.get("doctype"), row.get(child.get("item")), row.idx),
+                        f"{child.get('doctype')}: <b>{row.get(child.get('item'))}</b> selected at Row#: {row.idx} is <b>disabled</b>. Please select an enabled item."
+                    ),
                     method,
                 )
             company_option = None
@@ -1536,15 +1536,53 @@ def inpatient_billing(patient_encounter_doc, method):
         return
     if not patient_encounter_doc.inpatient_record:  # OPD cash or insurance
         return
+
+    # SHM Rock: 207
     child_tables_list = [
-        "lab_test_prescription",
-        "radiology_procedure_prescription",
-        "procedure_prescription",
+        {
+            "table_field": "lab_test_prescription",
+            "item_field": "lab_test_code",
+            "doctype": "Lab Test Template",
+        },
+        {
+            "table_field": "radiology_procedure_prescription",
+            "item_field": "radiology_examination_template",
+            "doctype": "Radiology Examination Template",
+        },
+        {
+            "table_field": "procedure_prescription",
+            "item_field": "procedure",
+            "doctype": "Clinical Procedure Template",
+        },
+        {
+            "table_field": "drug_prescription",
+            "item_field": "drug_code",
+            "doctype": "Medication",
+        },
+        {
+            "table_field": "therapies",
+            "item_field": "therapy_type",
+            "doctype": "Therapy Type",
+        },
     ]
     for child_table_field in child_tables_list:
-        if patient_encounter_doc.get(child_table_field):
-            child_table = patient_encounter_doc.get(child_table_field)
+        if patient_encounter_doc.get(child_table_field.get("table_field")):
+            child_table = patient_encounter_doc.get(
+                child_table_field.get("table_field")
+            )
             for child in child_table:
+                is_disabled = frappe.get_cached_value(
+                    child_table_field.get("doctype"),
+                    child.get(child_table_field.get("item_field")),
+                    "disabled",
+                )
+                if is_disabled == 1:
+                    frappe.throw(
+                        _(
+                            f"{child_table_field.get('doctype')}: <b>{child.get(child_table_field.get('item_field'))}</b> selected at Row#: {child.idx} is <b>disabled</b>. Please select an enabled item."
+                        )
+                    )
+
                 if (
                     child.is_cancelled
                     or child.is_not_available_inhouse
