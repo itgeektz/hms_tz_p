@@ -120,7 +120,8 @@ frappe.ui.form.on('Patient Appointment', {
 			return {
 				filters: {
 					'patient': frm.doc.patient,
-					'docstatus': 1
+					'docstatus': 1,
+					'is_active': 1
 				}
 			};
 		});
