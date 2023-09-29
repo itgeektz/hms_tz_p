@@ -283,10 +283,13 @@ frappe.ui.form.on('Patient Appointment', {
                 'remarks': frm.doc.remarks
             },
             async: true,
+            freeze: true,
+            freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
             callback: function (data) {
                 if (data.message) {
                     const card = data.message;
                     if (card.AuthorizationStatus == 'ACCEPTED') {
+                        frm.set_value("coverage_plan_name", card.CoveragePlanName);
                         frm.set_value("authorization_number", card.AuthorizationNo);
                         frm.set_value("nhif_employer_name", card.EmployerName);
                         frm.save();
