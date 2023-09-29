@@ -176,23 +176,22 @@ def create_subscription(doc):
             )
         )
         return
-    plan = frappe.db.get_list(
-        "NHIF Product",
-        {"nhif_product_code": doc.product_code},
-        "healthcare_insurance_coverage_plan",
-    )
+
+    plan = frappe.get_list(
+            "Healthcare Insurance Coverage Plan",
+            {"nhif_scheme_id": doc.scheme_id},
+            "name", 
+        )
     if len(plan) == 0:
         frappe.msgprint(
             _(
-                "Failed to find matching plan for product code {0} and employer name {1}".format(
-                    doc.product_code, doc.nhif_employername
-                )
+                f"Failed to find matching plan for SchemeId:  {doc.scheme_id} and employer name {doc.nhif_employername}"
             ),
             alert=True,
         )
         return
 
-    plan_doc = frappe.get_cached_doc("Healthcare Insurance Coverage Plan", plan[0].healthcare_insurance_coverage_plan)
+    plan_doc = frappe.get_cached_doc("Healthcare Insurance Coverage Plan", plan[0].name)
     sub_doc = frappe.new_doc("Healthcare Insurance Subscription")
     sub_doc.patient = doc.name
     sub_doc.insurance_company = plan_doc.insurance_company
@@ -202,8 +201,8 @@ def create_subscription(doc):
     sub_doc.submit()
     frappe.msgprint(
         _(
-            "<h3>AUTO</h3> Healthcare Insurance Subscription {0} is created for {1}"
-        ).format(sub_doc.name, plan[0].healthcare_insurance_coverage_plan)
+            f"<h3>AUTO</h3> Healthcare Insurance Subscription: {sub_doc.name} is created for {plan_doc.name}"
+        )
     )
 
 
