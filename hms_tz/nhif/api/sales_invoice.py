@@ -28,6 +28,9 @@ def validate(doc, method):
 def validate_create_delivery_note(doc):
     if not doc.patient:
         return
+    if doc.enabled_auto_create_delivery_notes == 0:
+        return
+
     inpatient_record = frappe.get_cached_value(
         "Patient", doc.patient, "inpatient_record"
     )

@@ -350,6 +350,7 @@ def create_sales_invoice(args):
                 item.healthcare_service_unit
             )
 
+    invoice_doc.enabled_auto_create_delivery_notes = 0
     invoice_doc.is_pos = 0
     invoice_doc.allocate_advances_automatically = 1
     invoice_doc.set_missing_values()
