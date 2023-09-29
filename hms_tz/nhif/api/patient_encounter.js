@@ -140,6 +140,8 @@ frappe.ui.form.on('Patient Encounter', {
             args: {
                 'patient': frm.doc.patient,
             },
+            freeze: true,
+            freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
             callback: function (data) {
                 if (data.message) {
                     if (data.message.length == 0) {
@@ -179,7 +181,9 @@ frappe.ui.form.on('Patient Encounter', {
         if (frm.doc.docstatus == 0) {
             frappe.call('hms_tz.nhif.api.patient_encounter.add_chronic_diagnosis', {
                 patient: frm.doc.patient,
-                encounter: frm.doc.name
+                encounter: frm.doc.name,
+                freeze: true,
+                freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
             }).then(r => {
                 // console.log(r.message);
             });
@@ -195,6 +199,8 @@ frappe.ui.form.on('Patient Encounter', {
             args: {
                 'patient': frm.doc.patient,
             },
+            freeze: true,
+            freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
             callback: function (data) {
                 if (data.message) {
                     if (data.message.length == 0) {
@@ -248,10 +254,13 @@ frappe.ui.form.on('Patient Encounter', {
     },
     add_chronic_medications: (frm) => {
         if (frm.doc.docstatus == 0) {
+            let items =  frm.get_field('drug_prescription').grid.get_selected_children();
             frappe.call('hms_tz.nhif.api.patient_encounter.add_chronic_medications', {
                 patient: frm.doc.patient,
                 encounter: frm.doc.name,
-                items: frm.get_field('drug_prescription').grid.get_selected_children()
+                items: items,
+                freeze: true,
+                freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
             }).then(r => {
                 // console.log(r.message);
             })

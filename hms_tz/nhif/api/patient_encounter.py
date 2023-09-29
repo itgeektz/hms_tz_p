@@ -772,6 +772,12 @@ def create_delivery_note_per_encounter(patient_encounter_doc, method):
         ):
             continue
         item_code = frappe.get_cached_value("Medication", line.drug_code, "item")
+        if not item_code:
+            frappe.throw(
+                _(
+                    f"The Item Code for {line.drug_code} is not found!<br>Please request administrator to set item code in {line.drug_code}."
+                )
+            )
         is_stock = frappe.get_cached_value("Item", item_code, "is_stock_item")
         if not is_stock:
             continue
@@ -975,7 +981,12 @@ def add_chronic_diagnosis(patient, encounter):
     if len(patient_doc.codification_table) > prev_diagnos:
         frappe.msgprint("Chronic diagnosis added successfully")
     else:
-        frappe.msgprint("Chronic diagnosis already exist")
+        if prev_diagnos == 0:
+            frappe.msgprint(
+                "No chronic diagnosis added, <i>please save encounter and try again</i>"
+            )
+        else:
+            frappe.msgprint("Chronic diagnosis already exist")
 
 
 @frappe.whitelist()
@@ -1010,11 +1021,13 @@ def add_chronic_medications(patient, encounter, items):
         ]:
             if isinstance(drug_row, dict):
                 row = frappe.parse_json(drug_row)
-                del row[field]
+                if hasattr(row, field):
+                    del row[field]
                 drug_row = frappe._dict(row)
             elif isinstance(drug_row, object):
                 row = drug_row.as_dict()
-                del row[field]
+                if hasattr(row, field):
+                    del row[field]
                 drug_row = frappe._dict(row)
             else:
                 raise ValueError("Unknown type for drug_row")
@@ -1461,7 +1474,11 @@ def set_amounts(doc):
                 child.get("doctype"), row.get(child.get("item")), "item"
             )
             if not item_code:
-                frappe.throw(_(f"Item code for {row.get(child.get('item'))} set in row {row.idx} was not found.<br>Please set the item code in {child.get('doctype')}."))
+                frappe.throw(
+                    _(
+                        f"Item code for {row.get(child.get('item'))} set in row {row.idx} was not found.<br>Please set the item code in {child.get('doctype')}."
+                    )
+                )
 
             if row.prescribe and not doc.insurance_subscription:
                 if doc.get("mode_of_payment"):
