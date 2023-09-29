@@ -2151,16 +2151,16 @@ def get_drug_quantity(drug_item):
             else:
                 quantity = strength_count * period.get_days()
 
-        elif drug_row.interval and drug_row.interval_uom:
-            if drug_row.interval_uom == "Day" and drug_row.interval:
-                quantity = period.get_days() / drug_row.interval
-            elif drug_row.interval_uom == "Hour" and drug_row.interval:
-                quantity = period.get_hours() / drug_row.interval
+        # elif drug_row.interval and drug_row.interval_uom:
+        #     if drug_row.interval_uom == "Day" and drug_row.interval:
+        #         quantity = period.get_days() / drug_row.interval
+        #     elif drug_row.interval_uom == "Hour" and drug_row.interval:
+        #         quantity = period.get_hours() / drug_row.interval
 
     if quantity > 0:
         return quantity
     else:
-        return 0
+        return 1
 
 
 @frappe.whitelist()
