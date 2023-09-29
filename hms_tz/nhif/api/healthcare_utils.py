@@ -1276,12 +1276,15 @@ def varify_service_approval_number_for_LRPM(
         )
         return cardno
 
-    enable_nhif_api, nhifservice_url = frappe.get_cached_value(
-        "Company NHIF Settings", company, ["enable", "nhifservice_url"]
+    enable_nhif_api, nhifservice_url, validate_service_approval_no  = frappe.get_cached_value(
+        "Company NHIF Settings", company, ["enable", "nhifservice_url", "validate_service_approval_number_on_lrpm_documents"]
     )
     if not enable_nhif_api:
         frappe.msgprint(_(f"Company <b>{company}</b> not enabled for NHIF Integration"))
         return
+    
+    if validate_service_approval_no == 0:
+        return "approval number validation is disabled"
 
     cardno = get_card_no(encounter)
     item_code = get_item_ref_code(template_doctype, template_name)
