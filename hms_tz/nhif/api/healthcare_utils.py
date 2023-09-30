@@ -210,7 +210,19 @@ def get_item_rate(item_code, company, insurance_subscription, insurance_company=
                 return price_list_rate
             else:
                 price_list_rate = None
+        elif not price_list:
+            frappe.throw(
+                _(
+                    f"Default price list for {hic_plan} NOT FOUND!<br>Please set Price List in {hic_plan} plan"
+                )
+            )
         if not price_list_rate:
+            if price_list and not secondary_price_list:
+                frappe.throw(
+                    _(
+                        f"Item Price for {item_code} not found in Default Price List and Secondary price list for {hic_plan} not set!<br>Please set Item rate in {price_list} or set a Secondary Price List in {hic_plan} plan"
+                    )
+                )
             price_list_rate = get_item_price(item_code, secondary_price_list, company)
             if price_list_rate and price_list_rate != 0:
                 return price_list_rate
@@ -224,7 +236,7 @@ def get_item_rate(item_code, company, insurance_subscription, insurance_company=
     if not price_list:
         frappe.throw(
             _(
-                f"Default price list for {hic_plan} NOT FOUND!<br>Please set Price List in {hic_plan} plan or {insurance_company} insurance company"
+                f"Default price list for {hic_plan} NOT FOUND!<br>Please set Price List in {insurance_company} insurance company"
             )
         )
     else:
@@ -233,8 +245,8 @@ def get_item_rate(item_code, company, insurance_subscription, insurance_company=
         return price_list_rate
     else:
         frappe.throw(
-            _("Please set Price List for item: {0} in price list {1}").format(
-                item_code, price_list
+            _(
+                f"Please set Price List for item: {item_code} in price list {price_list}"
             )
         )
 
