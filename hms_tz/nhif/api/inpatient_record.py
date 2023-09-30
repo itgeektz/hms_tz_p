@@ -303,7 +303,7 @@ def create_sales_invoice(args):
     if len(patient_encounter_list) == 0:
         frappe.msgprint(
             _(
-                "No Patient Encounters found for this Inpatient Record: <b>{inpatient_record}</b> and Patient Appointment: <b>{appointment_no}</b>"
+                f"No Patient Encounters found for this Inpatient Record: <b>{args.inpatient_record}</b> and Patient Appointment: <b>{args.appointment_no}</b>"
             )
         )
         return False
@@ -316,7 +316,7 @@ def create_sales_invoice(args):
     if len(services) == 0:
         frappe.msgprint(
             _(
-                "No Healthcare Services found for this Inpatient Record: <b>{inpatient_record}</b> and Patient Appointment: <b>{appointment_no}</b>"
+                f"No Healthcare Services found for this Inpatient Record: <b>{args.inpatient_record}</b> and Patient Appointment: <b>{args.appointment_no}</b>"
             )
         )
         return False
