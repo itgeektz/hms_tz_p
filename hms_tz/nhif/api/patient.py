@@ -24,7 +24,7 @@ def validate(doc, method):
     # validate date of birth
     if date.today() < getdate(doc.dob):
         frappe.throw(_("The date of birth cannot be later than today's date"))
-    
+
     check_card_number(doc.card_no, doc.is_new(), doc.name, "validate")
 
     # replace initial 0 with 255 and remove all the unnecessray characters
@@ -152,7 +152,9 @@ def check_card_number(card_no, is_new=None, patient=None, caller=None):
     patients = frappe.get_all("Patient", filters=filters)
     if len(patients):
         if caller:
-            frappe.throw(f"Cardno: <b>{card_no}</b> used with patient: <b>{patient}</b>, Please change Cardno to Proceed")
+            frappe.throw(
+                f"Cardno: <b>{card_no}</b> used with patient: <b>{patient}</b>, Please change Cardno to Proceed"
+            )
         return patients[0].name
     else:
         return "false"
@@ -177,26 +179,20 @@ def create_subscription(doc):
         )
         return
 
-    plan = frappe.get_list(
-            "Healthcare Insurance Coverage Plan",
-            {"nhif_scheme_id": doc.scheme_id},
-            "name", 
-        )
-    if len(plan) == 0:
-        frappe.msgprint(
-            _(
-                f"Failed to find matching plan for SchemeId:  {doc.scheme_id} and employer name {doc.nhif_employername}"
-            ),
-            alert=True,
-        )
+    coverage_plan = get_coverage_plan(doc)
+    if not coverage_plan:
         return
 
-    plan_doc = frappe.get_cached_doc("Healthcare Insurance Coverage Plan", plan[0].name)
+    plan_doc = frappe.get_cached_doc(
+        "Healthcare Insurance Coverage Plan", coverage_plan
+    )
     sub_doc = frappe.new_doc("Healthcare Insurance Subscription")
     sub_doc.patient = doc.name
     sub_doc.insurance_company = plan_doc.insurance_company
     sub_doc.healthcare_insurance_coverage_plan = plan_doc.name
     sub_doc.coverage_plan_card_number = doc.card_no
+    sub_doc.hms_tz_product_code = doc.product_code
+    sub_doc.hms_tz_scheme_id = doc.scheme_id
     sub_doc.save(ignore_permissions=True)
     sub_doc.submit()
     frappe.msgprint(
@@ -204,6 +200,77 @@ def create_subscription(doc):
             f"<h3>AUTO</h3> Healthcare Insurance Subscription: {sub_doc.name} is created for {plan_doc.name}"
         )
     )
+
+
+def get_coverage_plan(doc=None, card=None, company=None):
+    data = None
+    if not doc and card:
+        data = card
+    if doc:
+        data = doc
+
+    product_code = data.get("product_code") or data["ProductCode"]
+    scheme_id = data.get("scheme_id") or data["SchemeID"]
+    nhif_employername = data.get("nhif_employername") or data["EmployerName"]
+
+    nhif_product_filters = {
+        "nhif_product_code": product_code,
+    }
+    if company:
+        nhif_product_filters["company"] = company
+
+    # Assumed that company is filtered based on user permissions
+    plan = frappe.db.get_list(
+        "NHIF Product",
+        filters=nhif_product_filters,
+        fields="healthcare_insurance_coverage_plan",
+    )
+    if len(plan) == 0:
+        frappe.msgprint(
+            _(
+                f"Failed to find matching plan for product code {product_code} and employer name {nhif_employername}"
+            ),
+            alert=True,
+        )
+        return
+
+    coverage_plan_scheme_id = frappe.get_cached_value(
+        "Healthcare Insurance Coverage Plan",
+        plan[0].healthcare_insurance_coverage_plan,
+        "scheme_id",
+    )
+    if scheme_id != coverage_plan_scheme_id:
+        coverage_filters = {
+            "nhif_scheme_id": scheme_id,
+            "is_active": 1,
+        }
+        if company:
+            coverage_filters["company"] = company
+
+        # Assumed that company is filtered based on user permissions
+        plan = frappe.db.get_list(
+            "Healthcare Insurance Coverage Plan",
+            filters=coverage_filters,
+            fields=["name"],
+        )
+        if len(plan) == 0:
+            frappe.msgprint(
+                _(
+                    f"""Failed to find matching plan for SchemeId: {scheme_id} and employer name {nhif_employername}"""
+                ),
+                alert=True,
+            )
+            return
+        elif len(plan) > 1:
+            frappe.msgprint(
+                _(
+                    f"""Multiple plans found for SchemeId: {scheme_id}, please select the plan manually"""
+                ),
+                alert=True,
+            )
+            return
+
+    return plan[0].name
 
 
 def after_insert(doc, method):
@@ -239,8 +306,8 @@ def update_cash_limit(kwargs):
     for name in patient_list:
         try:
             doc = frappe.get_cached_doc("Patient", name)
-            if flt(doc.cash_limit) != flt(data.get('new_value')):
-                doc.cash_limit = flt(data.get('new_value'))
+            if flt(doc.cash_limit) != flt(data.get("new_value")):
+                doc.cash_limit = flt(data.get("new_value"))
                 doc.db_update()
         except Exception:
             frappe.log_error(frappe.get_traceback())

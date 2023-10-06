@@ -432,16 +432,17 @@ def update_insurance_subscription(insurance_subscription, card, company):
         "Healthcare Insurance Subscription", insurance_subscription
     )
 
-    if subscription_doc.hms_tz_scheme_id != card["SchemeID"]:
-        plan = frappe.get_value(
-            "Healthcare Insurance Coverage Plan",
-            {"nhif_scheme_id": card["SchemeID"], "company": company},
-            "name",
-        )
+    if (
+        subscription_doc.hms_tz_product_code != card["ProductCode"]
+        or subscription_doc.hms_tz_scheme_id != card["SchemeID"]
+    ):
+        from hms_tz.nhif.api.patient import get_coverage_plan
 
-        if plan:
-            card["CoveragePlanName"] = plan
-            plan_doc = frappe.get_cached_doc("Healthcare Insurance Coverage Plan", plan)
+        coverage_plan = get_coverage_plan(card, company)
+
+        if coverage_plan:
+            card["CoveragePlanName"] = coverage_plan
+            plan_doc = frappe.get_cached_doc("Healthcare Insurance Coverage Plan", coverage_plan)
 
             if plan_doc:
                 subscription_doc.insurance_company = plan_doc.insurance_company
@@ -450,6 +451,7 @@ def update_insurance_subscription(insurance_subscription, card, company):
 
         subscription_doc.hms_tz_product_code = card["ProductCode"]
         subscription_doc.hms_tz_product_name = card["ProductName"]
+    
         subscription_doc.hms_tz_scheme_id = card["SchemeID"]
         subscription_doc.hms_tz_scheme_name = card["SchemeName"]
 
