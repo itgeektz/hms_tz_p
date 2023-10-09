@@ -356,45 +356,11 @@ def update_contacts(doc):
     if existing_contacts:
         for contact_name in existing_contacts:
             contact = frappe.get_doc("Contact", contact_name.get("name"))
-            contact.is_primary_contact = True
-            if doc.get("email_id"):
-                contact.add_email(doc.get("email_id"), is_primary=True)
-            if doc.get("phone"):
-                if len(contact.phone_nos) > 0:
-                    primary_phone = [
-                        phone.phone
-                        for phone in contact.phone_nos
-                        if phone.get("is_primary_phone")
-                    ]
-                    if primary_phone and primary_phone[0] != doc.get("phone"):
-                        update_primary_phone(contact, "is_primary_phone")
-                        contact.add_phone(doc.get("phone"), is_primary_phone=True)
-                    else:
-                        contact.add_phone(doc.get("phone"), is_primary_phone=True)
-                else:
-                    contact.add_phone(doc.get("phone"), is_primary_phone=True)
-            if doc.get("mobile"):
-                if len(contact.phone_nos) > 0:
-                    primary_phone = [
-                        phone.phone
-                        for phone in contact.phone_nos
-                        if phone.get("is_primary_mobile_no")
-                    ]
-                    if primary_phone and primary_phone[0] != doc.get("mobile"):
-                        update_primary_phone(contact, "is_primary_mobile_no")
-                        contact.add_phone(doc.get("mobile"), is_primary_mobile_no=True)
-                    else:
-                        contact.add_phone(doc.get("mobile"), is_primary_mobile_no=True)
-                else:
-                    contact.add_phone(doc.get("mobile"), is_primary_mobile_no=True)
-            if not contact.has_link("Customer", doc.customer):
-                contact.append(
-                    "links", dict(link_doctype="Customer", link_name=doc.customer)
-                )
-            contact.save()
+            _update_contacts(doc, contact)
 
 
 def make_contact(doc):
+<<<<<<< HEAD
     contact = frappe.get_doc(
         {
             "doctype": "Contact",
@@ -405,11 +371,79 @@ def make_contact(doc):
     if doc.customer:
         contact.append("links", dict(link_doctype="Customer", link_name=doc.customer))
     contact.append("links", dict(link_doctype="Patient", link_name=doc.name))
+=======
+    try:
+        contact = frappe.get_doc(
+            {
+                "doctype": "Contact",
+                "first_name": doc.get("name"),
+                "is_primary_contact": True,
+            }
+        )
+        if doc.customer:
+            contact.append(
+                "links", dict(link_doctype="Customer", link_name=doc.customer)
+            )
+        if doc.get("email_id"):
+            contact.add_email(doc.get("email_id"), is_primary=True)
+        if doc.get("mobile"):
+            contact.add_phone(doc.get("mobile"), is_primary_mobile_no=True)
+        
+        if doc.doctype == "Patient":
+            contact.append("links", {"link_doctype": "Patient", "link_name": doc.name})
+        
+        contact.insert()
+
+    except frappe.exceptions.DuplicateEntryError:
+        if doc.doctype == "Patient":
+            contact_name = frappe.db.get_value("Contact", {"first_name": doc.name})
+            if not contact_name:
+                return
+
+            contact = frappe.get_doc("Contact", contact_name)
+            _update_contacts(doc, contact)
+        else:
+            frappe.log_error(frappe.get_traceback(), _("Contact Creation Failed"))
+
+
+def _update_contacts(doc, contact):
+    contact.is_primary_contact = True
+>>>>>>> 09fa79d8 (fix: 'frappe.exceptions.DuplicateEntryError' during updating contact)
     if doc.get("email_id"):
         contact.add_email(doc.get("email_id"), is_primary=True)
+    if doc.get("phone"):
+        if len(contact.phone_nos) > 0:
+            primary_phone = [
+                phone.phone
+                for phone in contact.phone_nos
+                if phone.get("is_primary_phone")
+            ]
+            if primary_phone and primary_phone[0] != doc.get("phone"):
+                update_primary_phone(contact, "is_primary_phone")
+                contact.add_phone(doc.get("phone"), is_primary_phone=True)
+            else:
+                contact.add_phone(doc.get("phone"), is_primary_phone=True)
+        else:
+            contact.add_phone(doc.get("phone"), is_primary_phone=True)
     if doc.get("mobile"):
-        contact.add_phone(doc.get("mobile"), is_primary_mobile_no=True)
-    contact.insert()
+        if len(contact.phone_nos) > 0:
+            primary_phone = [
+                phone.phone
+                for phone in contact.phone_nos
+                if phone.get("is_primary_mobile_no")
+            ]
+            if primary_phone and primary_phone[0] != doc.get("mobile"):
+                update_primary_phone(contact, "is_primary_mobile_no")
+                contact.add_phone(doc.get("mobile"), is_primary_mobile_no=True)
+            else:
+                contact.add_phone(doc.get("mobile"), is_primary_mobile_no=True)
+        else:
+            contact.add_phone(doc.get("mobile"), is_primary_mobile_no=True)
+    if not contact.has_link("Customer", doc.customer):
+        contact.append("links", dict(link_doctype="Customer", link_name=doc.customer))
+    if not contact.has_link("Patient", doc.name):
+        contact.append("links", dict(link_doctype="Patient", link_name=doc.name))
+    contact.save()
 
 
 def update_primary_phone(doc, field_name):
