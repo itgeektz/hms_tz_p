@@ -360,18 +360,6 @@ def update_contacts(doc):
 
 
 def make_contact(doc):
-<<<<<<< HEAD
-    contact = frappe.get_doc(
-        {
-            "doctype": "Contact",
-            "first_name": doc.get("name"),
-            "is_primary_contact": True,
-        }
-    )
-    if doc.customer:
-        contact.append("links", dict(link_doctype="Customer", link_name=doc.customer))
-    contact.append("links", dict(link_doctype="Patient", link_name=doc.name))
-=======
     try:
         contact = frappe.get_doc(
             {
@@ -408,7 +396,6 @@ def make_contact(doc):
 
 def _update_contacts(doc, contact):
     contact.is_primary_contact = True
->>>>>>> 09fa79d8 (fix: 'frappe.exceptions.DuplicateEntryError' during updating contact)
     if doc.get("email_id"):
         contact.add_email(doc.get("email_id"), is_primary=True)
     if doc.get("phone"):
