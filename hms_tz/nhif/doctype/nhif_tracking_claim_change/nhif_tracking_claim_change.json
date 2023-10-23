@@ -25,11 +25,14 @@
   "amount_changed",
   "references_section",
   "nhif_patient_claim",
+  "lrpmt_return",
   "column_break_appointment",
   "patient_appointment",
+  "medication_change_request",
   "column_break_encounter",
   "patient_encounter",
   "column_break_ref",
+  "ref_doctype",
   "ref_docname",
   "claim_editor_details_section",
   "user_email",
@@ -86,7 +89,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "Amount Changed\nItem Removed",
+   "options": "\nItem Replaced\nItem Removed\nItem Cancelled\nAmount Changed\nItem Unconfirmed",
    "read_only": 1
   },
   {
@@ -182,7 +185,7 @@
   {
    "fieldname": "edited_by",
    "fieldtype": "Data",
-   "label": "Edited By",
+   "label": "Claim Edited By",
    "read_only": 1
   },
   {
@@ -193,12 +196,14 @@
   {
    "fieldname": "claim_month",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Claim Month",
    "read_only": 1
   },
   {
    "fieldname": "claim_year",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Claim Year",
    "read_only": 1
   },
@@ -212,12 +217,29 @@
    "fieldname": "user_email",
    "fieldtype": "Data",
    "label": "user_email"
+  },
+  {
+   "fieldname": "lrpmt_return",
+   "fieldtype": "Data",
+   "label": "LRPMT Return",
+   "read_only": 1
+  },
+  {
+   "fieldname": "medication_change_request",
+   "fieldtype": "Data",
+   "label": "Medication Change Request",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ref_doctype",
+   "fieldtype": "Data",
+   "label": "Ref Doctype"
   }
  ],
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-04-27 17:37:47.723592",
+ "modified": "2023-10-23 16:50:55.086511",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Tracking Claim Change",

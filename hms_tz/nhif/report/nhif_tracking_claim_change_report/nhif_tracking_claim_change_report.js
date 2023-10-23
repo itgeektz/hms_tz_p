@@ -27,7 +27,7 @@ frappe.query_reports["NHIF Tracking Claim Change Report"] = {
 			"fieldname": "status",
 			"label": __("Status"),
 			"fieldtype": "Select",
-			"options": ["", "Amount Changed", "Item Removed"],
+			"options": ["", "Item Replaced", "Item Removed", "Item Cancelled", "Amount Changed", "Item Unconfirmed"],
 		},
 		{
 			"fieldname": "nhif_patient_claim",
@@ -45,14 +45,23 @@ frappe.query_reports["NHIF Tracking Claim Change Report"] = {
 	],
 	"formatter": (value, row, column, data, default_formatter) => {
 		value = default_formatter(value, row, column, data);
-		if (column.fieldname == 'status' && data[column.fieldname] == "Amount Changed") {
-			value = `<span class='font-weight-bold text-info'>${value}</span>`;
+		if (column.fieldname == 'status') {
+			if (data[column.fieldname] == "Item Replaced") {
+				value = `<span class='font-weight-bold text-success'>${value}</span>`;
+			}
+			else if (data[column.fieldname] == "Item Removed") {
+				value = `<span class='font-weight-bold text-danger'>${value}</span>`;
+			}
+			else if (data[column.fieldname] == "Item Cancelled") {
+				value = `<span class='font-weight-bold text-primary'>${value}</span>`;
+			}
+			else if (data[column.fieldname] == "Amount Changed") {
+				value = `<span class='font-weight-bold text-info'>${value}</span>`;
+			}
+			else if (data[column.fieldname] == "Item Unconfirmed") {
+				value = `<span class='font-weight-bold text-secondary'>${value}</span>`;
+			}
 		}
-		if (column.fieldname == 'status' && data[column.fieldname] == "Item Removed") {
-			value = `<span class='font-weight-bold text-danger'>${value}</span>`;
-		}
-
-		return value
-
+		return value;
 	}
 };
