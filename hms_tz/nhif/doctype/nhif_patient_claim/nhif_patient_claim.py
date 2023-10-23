@@ -72,8 +72,6 @@ class NHIFPatientClaim(Document):
         frappe.set_value(
             "Patient Appointment", self.patient_appointment, "nhif_patient_claim", ""
         )
-<<<<<<< HEAD
-=======
         if nhif_patient_claim == self.name:
             frappe.db.set_value(
                 "Patient Appointment",
@@ -81,7 +79,6 @@ class NHIFPatientClaim(Document):
                 "nhif_patient_claim",
                 "",
             )
->>>>>>> 8d2e7ffd (feat: track and record changes done for  NHIF Patient Claim and show the report for every change)
 
     def before_submit(self):
         try:
