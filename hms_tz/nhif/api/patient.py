@@ -203,6 +203,8 @@ def create_subscription(doc):
 
 
 def get_coverage_plan(doc=None, card=None, company=None):
+    from frappe.utils import cstr
+
     data = None
     if not doc and card:
         data = card
@@ -223,7 +225,7 @@ def get_coverage_plan(doc=None, card=None, company=None):
     plan = frappe.db.get_list(
         "NHIF Product",
         filters=nhif_product_filters,
-        fields="healthcare_insurance_coverage_plan",
+        fields="healthcare_insurance_coverage_plan as name",
     )
     if len(plan) == 0:
         frappe.msgprint(
@@ -236,10 +238,14 @@ def get_coverage_plan(doc=None, card=None, company=None):
 
     coverage_plan_scheme_id = frappe.get_cached_value(
         "Healthcare Insurance Coverage Plan",
-        plan[0].healthcare_insurance_coverage_plan,
-        "scheme_id",
+        plan[0].name,
+        "nhif_scheme_id",
     )
-    if scheme_id != coverage_plan_scheme_id:
+    if (
+        scheme_id
+        and coverage_plan_scheme_id
+        and cstr(scheme_id) != cstr(coverage_plan_scheme_id)
+    ):
         coverage_filters = {
             "nhif_scheme_id": scheme_id,
             "is_active": 1,
