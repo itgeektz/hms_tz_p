@@ -32,7 +32,7 @@ frappe.ui.form.on('Patient Encounter', {
 					frappe.msgprint(__('Please select Patient'));
 				}
 			}
-		}).$input.addClass("btn-sm font-weight-bold text-right");
+		}).$input.addClass("btn-sm font-weight-bold");
 	},
 
 	refresh: function(frm) {
