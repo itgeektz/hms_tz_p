@@ -10,6 +10,29 @@ frappe.ui.form.on('Patient Encounter', {
 		if(frm.doc.source){
 			set_source_referring_practitioner(frm)
 		}
+		if (frm.doc.docstatus == 1 && frm.doc.encounter_type != 'Final' && frm.doc.duplicated == 0) {
+			frm.page.add_field({
+				label: __("Refer Practitioner"),
+				fieldname: "referring_practitioner",
+				fieldtype: "Button",
+				click: function() {
+					refer_practitioner(frm);
+				}
+			}).$input.addClass("btn-sm font-weight-bold");
+		}
+		frm.page.add_field({
+			label: __("Patient History"),
+			fieldname: "patient_history",
+			fieldtype: "Button",
+			click: function () {
+				if (frm.doc.patient) {
+					frappe.route_options = { 'patient': frm.doc.patient };
+					frappe.set_route('tz-patient-history');
+				} else {
+					frappe.msgprint(__('Please select Patient'));
+				}
+			}
+		}).$input.addClass("btn-sm font-weight-bold text-right");
 	},
 
 	refresh: function(frm) {
@@ -43,11 +66,9 @@ frappe.ui.form.on('Patient Encounter', {
 						'font-size': '14px', 'font-weight': 'bolder'
 					});
 				}
-				frm.add_custom_button(__('Refer Practitioner'), function() {
-					refer_practitioner(frm);
-				});
 			}
 
+<<<<<<< HEAD
 			frm.add_custom_button(__('Patient History'), function() {
 				if (frm.doc.patient) {
 					frappe.route_options = {'patient': frm.doc.patient};
@@ -57,6 +78,8 @@ frappe.ui.form.on('Patient Encounter', {
 				}
 			});
 
+=======
+>>>>>>> cbb325ad (feat: show button of 'Refer Practitioner, Set as Final and Patient History' as inner button and remove them from title toolbar)
 			frm.add_custom_button(__('Vital Signs'), function() {
 				create_vital_signs(frm);
 			},'Create');

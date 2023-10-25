@@ -2009,6 +2009,8 @@ def convert_opd_encounter_to_ipd_encounter(encounter):
     doc.save(ignore_permissions=True)
 
     if doc.get("inpatient_record"):
+        create_healthcare_docs_from_name(doc.name)
+
         frappe.msgprint(
             "<p class='text-center font-weight-bold h6' style='background-color: #DCDCDC; font-size: 11pt;'>\
             This encounter is now having inpatient record: {0}".format(
