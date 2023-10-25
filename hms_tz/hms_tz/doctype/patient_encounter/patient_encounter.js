@@ -68,18 +68,6 @@ frappe.ui.form.on('Patient Encounter', {
 				}
 			}
 
-<<<<<<< HEAD
-			frm.add_custom_button(__('Patient History'), function() {
-				if (frm.doc.patient) {
-					frappe.route_options = {'patient': frm.doc.patient};
-					frappe.set_route('tz-patient-history');
-				} else {
-					frappe.msgprint(__('Please select Patient'));
-				}
-			});
-
-=======
->>>>>>> cbb325ad (feat: show button of 'Refer Practitioner, Set as Final and Patient History' as inner button and remove them from title toolbar)
 			frm.add_custom_button(__('Vital Signs'), function() {
 				create_vital_signs(frm);
 			},'Create');
