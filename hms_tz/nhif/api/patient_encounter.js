@@ -16,24 +16,7 @@ frappe.ui.form.on('Patient Encounter', {
         add_btn_final(frm);
         // duplicate(frm);
         set_btn_properties(frm);
-<<<<<<< HEAD
-        if (frm.doc.docstatus == 1) {
-            frm.add_custom_button(__('Create Pending Healthcare Services'), function () {
-                frappe.call({
-                    method: 'hms_tz.nhif.api.patient_encounter.create_healthcare_docs_from_name',
-                    args: {
-                        'patient_encounter_doc_name': frm.doc.name
-                    },
-                    callback: (function (data) {
-                        //
-                    })
-                });
-            });
-        };
         set_empty_row_on_all_child_tables(frm);
-
-=======
->>>>>>> cbb325ad (feat: show button of 'Refer Practitioner, Set as Final and Patient History' as inner button and remove them from title toolbar)
         validate_healthcare_package_order_items(frm);
     },
     refresh: function (frm) {
