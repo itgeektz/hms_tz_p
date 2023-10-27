@@ -2056,7 +2056,7 @@ def get_previous_diagnosis_and_lrpmt_items_to_reuse(kwargs, caller):
         "Patient Appointment",
         filters={
             "patient": kwargs.get("patient"),
-            "name": ["!=", kwargs.get("appoitnemnt")],
+            "name": ["!=", kwargs.get("appointment")],
             "status": "Closed",
         },
         fields=["name"],

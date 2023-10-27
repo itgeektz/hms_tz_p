@@ -387,7 +387,6 @@ frappe.ui.form.on('Patient Encounter', {
                     doctype: "Lab Bundle"
                 },
                 callback(r) {
-                    console.log(r);
                     if (r.message) {
                         for (var row in r.message.lab_bundle_item) {
                             var child = frm.add_child("lab_test_prescription");
@@ -430,9 +429,15 @@ frappe.ui.form.on('Patient Encounter', {
         reuse_lrpmt_items(frm, "Procedure Prescription", fields, value_dict, "Procedure Items");
     },
     hms_tz_reuse_drug_items: (frm) => {
+<<<<<<< HEAD
         let fields = ["drug_code as item", "drug_name as item_name", "creation as date"];
         let value_dict = { "table_field": "drug_prescription", "item_field": "drug_code", "item_name_field": "drug_name" };
         reuse_lrpmt_items(frm, "Drug Prescription", fields, value_dict, "Drug Items");
+=======
+        let fields = ["drug_code as item", "drug_name as item_name", "medical_code", "dosage", "period", "quantity", "quantity_returned", "creation as date"]
+        let value_dict = { "table_field": "drug_prescription", "item_field": "drug_code", "item_name_field": "drug_name" }
+        reuse_lrpmt_items(frm, "Drug Prescription", fields, value_dict, "Drug Items", "Medication")
+>>>>>>> 3f38359d (feat: show dosage, period, quantity and medical code on reuse of medication)
     },
     hms_tz_reuse_therapy_items: (frm) => {
         let fields = ["therapy_type as item", "therapy_type as item_name", "creation as date"];
@@ -1008,7 +1013,7 @@ var set_btn_properties = (frm) => {
 };
 
 var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller = "") => {
-    let filters = { "patient": frm.doc.patient, "appoitnemnt": frm.doc.appointment, "doctype": doctype, "fields": fields };
+    let filters = { "patient": frm.doc.patient, "appointment": frm.doc.appointment, "doctype": doctype, "fields": fields };
     let d = new frappe.ui.Dialog({
         title: "Select Item",
         fields: [
@@ -1089,6 +1094,15 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
                     description: $(this).find("#description").attr("data-description"),
                     mtuha: $(this).find("#mtuha").attr("data-mtuha"),
                 });
+            } else  if (caller == "Medication") {
+                items.push({
+                    item: $(this).find("#item").attr("data-item"),
+                    item_name: $(this).find("#item_name").attr("data-item_name"),
+                    medical_code: $(this).find("#medical_code").attr("data-medical_code"),
+                    dosage: $(this).find("#dosage").attr("data-dosage"),
+                    period: $(this).find("#period").attr("data-period"),
+                    quantity: $(this).find("#quantity").attr("data-quantity"),
+                });
             } else {
                 items.push({
                     item: $(this).find("#item").attr("data-item"),
@@ -1112,10 +1126,29 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
             } else {
                 if (doctype == "Drug Prescription") {
                     items.forEach((item) => {
-                        let new_row = {}
-                        new_row[value_dict.item_field] = item.item;
-                        new_row[value_dict.item_name_field] = item.item_name;
-                        let row = frm.add_child(field, new_row);
+                        if (item.medical_code) { 
+                            let diagnosis_codes = frm.doc.patient_encounter_final_diagnosis.map(d => d.medical_code);
+                            let medical_code = item.medical_code.split("\n");
+                            if (!diagnosis_codes.includes(medical_code[0])) {
+                                let new_row = {}
+                                new_row.medical_code = medical_code[0];
+                                new_row.code = medical_code[0].split(" ")[1];
+                                new_row.description = medical_code[1];
+                                let row = frm.add_child("patient_encounter_final_diagnosis", new_row);
+                            }
+                            set_medical_code(frm, true);
+                            frm.refresh_field("patient_encounter_final_diagnosis");
+                        }
+                        if (item.item) {
+                            let new_row = {}
+                            new_row[value_dict.item_field] = item.item;
+                            new_row[value_dict.item_name_field] = item.item_name;
+                            new_row.medical_code = item.medical_code;
+                            new_row.dosage = item.dosage;
+                            new_row.period = item.period;
+                            new_row.quantity = item.quantity;
+                            let row = frm.add_child(field, new_row);
+                        }
                     })
                     frm.trigger("default_healthcare_service_unit");
                 }
@@ -1165,7 +1198,7 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
                 caller: caller
             },
             freeze: true,
-            freeze_message: __("Please wait...")
+			freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
         }).then(r => {
             let records = r.message;
             if (records.length > 0) {
@@ -1213,6 +1246,42 @@ var reuse_lrpmt_items = (frm, doctype, fields, value_dict, item_category, caller
                         <td id="item_name" data-item_name="${row.item_name}">${row.item_name}</td>
                         <td id="description" data-description="${row.description}">${row.description}</td>
                         <td id="mtuha" data-mtuha="${row.mtuha}">${row.mtuha}</td>
+                        <td id="date" data-date="${frappe.datetime.get_datetime_as_string(row.date)}">${frappe.datetime.get_datetime_as_string(row.date)}</td>
+                    </tr>`;
+            });
+        } else if (caller == "Medication") {
+            html += `
+            <colgroup>
+                <col width="5%">
+                <col width=20%">
+                <col width="1%">
+                <col width="30%">
+                <col width="10%">
+                <col width=10%">
+                <col width="5%">
+                <col width="19%">
+            </colgroup>
+            <tr>
+                <th><input type="checkbox" id="th" class="check-all" style="border: 2px solid black;" /></th>
+                <th style="background-color: #D3D3D3;">Item</th>
+                <th style="background-color: #D3D3D3;"></th>
+                <th style="background-color: #D3D3D3;">Medical Code</th>
+                <th style="background-color: #D3D3D3;">Dosage</th>
+                <th style="background-color: #D3D3D3;">Period</th>
+                <th style="background-color: #D3D3D3;">Qty</th>
+                <th style="background-color: #D3D3D3;">ServiceDate</th>
+            </tr>`;
+
+            data.forEach(row => {
+                let quantity = row.quantity - row.quantity_returned;
+                html += `<tr>
+                        <td><input type="checkbox"/></td>
+                        <td id="item" data-item="${row.item}">${row.item}</td>
+                        <td id="item_name" data-item_name="${row.item_name}"></td>
+                        <td id="medical_code" data-medical_code="${row.medical_code}">${row.medical_code}</td>
+                        <td id="dosage" data-dosage="${row.dosage}">${row.dosage}</td>
+                        <td id="period" data-period="${row.period}">${row.period}</td>
+                        <td id="quantity" data-quantity="${quantity}">${quantity}</td>
                         <td id="date" data-date="${frappe.datetime.get_datetime_as_string(row.date)}">${frappe.datetime.get_datetime_as_string(row.date)}</td>
                     </tr>`;
             });
