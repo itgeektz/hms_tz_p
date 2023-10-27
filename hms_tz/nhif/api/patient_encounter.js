@@ -429,15 +429,9 @@ frappe.ui.form.on('Patient Encounter', {
         reuse_lrpmt_items(frm, "Procedure Prescription", fields, value_dict, "Procedure Items");
     },
     hms_tz_reuse_drug_items: (frm) => {
-<<<<<<< HEAD
-        let fields = ["drug_code as item", "drug_name as item_name", "creation as date"];
-        let value_dict = { "table_field": "drug_prescription", "item_field": "drug_code", "item_name_field": "drug_name" };
-        reuse_lrpmt_items(frm, "Drug Prescription", fields, value_dict, "Drug Items");
-=======
         let fields = ["drug_code as item", "drug_name as item_name", "medical_code", "dosage", "period", "quantity", "quantity_returned", "creation as date"]
         let value_dict = { "table_field": "drug_prescription", "item_field": "drug_code", "item_name_field": "drug_name" }
         reuse_lrpmt_items(frm, "Drug Prescription", fields, value_dict, "Drug Items", "Medication")
->>>>>>> 3f38359d (feat: show dosage, period, quantity and medical code on reuse of medication)
     },
     hms_tz_reuse_therapy_items: (frm) => {
         let fields = ["therapy_type as item", "therapy_type as item_name", "creation as date"];
