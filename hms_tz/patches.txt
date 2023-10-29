@@ -42,8 +42,5 @@ hms_tz.patches.custom_fields.add_submitter_name_on_lrpm_docs_for_vc_purposes
 hms_tz.patches.custom_fields.send_sms_for_all_lab_results_per_encounter
 hms_tz.patches.custom_fields.allow_discharge_patient_with_pending_invoices
 hms_tz.patches.custom_fields.add_schemeid_on_patient
-<<<<<<< HEAD
-=======
 hms_tz.patches.property_setter.read_only_and_hidden_property_for_patient_field_on_lrp_docs
 hms_tz.patches.custom_fields.auto_finalize_patient_encounter
->>>>>>> 0d8080a0 (feat: auto finalize patient encounters depending on the days specified on company HMS Settings)
