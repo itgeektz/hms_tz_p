@@ -8,7 +8,14 @@ from frappe import _
 import datetime
 import requests
 from hms_tz.hms_tz.utils import validate_customer_created
-from frappe.utils import nowdate, nowtime, now_datetime, add_to_date, get_url_to_form
+from frappe.utils import (
+    nowdate,
+    nowtime,
+    now_datetime,
+    add_to_date,
+    get_url_to_form,
+    add_days,
+)
 from datetime import timedelta
 import base64
 import re
@@ -125,12 +132,26 @@ def get_healthcare_service_order_to_invoice(
                         row.get(value.get("item")),
                         "item",
                     )
+<<<<<<< HEAD
+=======
+
+                    qty = 1
+                    if value.get("doctype") == "Drug Prescription":
+                        qty = (row.get("quantity") or 0) - (
+                            row.get("quantity_returned") or 0
+                        )
+
+>>>>>>> 0d8080a0 (feat: auto finalize patient encounters depending on the days specified on company HMS Settings)
                     services_to_invoice.append(
                         {
                             "reference_type": row.doctype,
                             "reference_name": row.name,
                             "service": item_code,
+<<<<<<< HEAD
                             "qty": row.get("quantity") or 1,
+=======
+                            "qty": qty,
+>>>>>>> 0d8080a0 (feat: auto finalize patient encounters depending on the days specified on company HMS Settings)
                         }
                     )
 
@@ -245,9 +266,7 @@ def get_item_rate(item_code, company, insurance_subscription, insurance_company=
         return price_list_rate
     else:
         frappe.throw(
-            _(
-                f"Please set Price List for item: {item_code} in price list {price_list}"
-            )
+            _(f"Please set Price List for item: {item_code} in price list {price_list}")
         )
 
 
@@ -359,7 +378,9 @@ def get_warehouse_from_service_unit(healthcare_service_unit):
     )
     if not warehouse:
         frappe.throw(
-            _(f"Warehouse is missing in Healthcare Service Unit {healthcare_service_unit}")
+            _(
+                f"Warehouse is missing in Healthcare Service Unit {healthcare_service_unit}"
+            )
         )
     return warehouse
 
@@ -1288,13 +1309,23 @@ def varify_service_approval_number_for_LRPM(
         )
         return cardno
 
-    enable_nhif_api, nhifservice_url, validate_service_approval_no  = frappe.get_cached_value(
-        "Company NHIF Settings", company, ["enable", "nhifservice_url", "validate_service_approval_number_on_lrpm_documents"]
+    (
+        enable_nhif_api,
+        nhifservice_url,
+        validate_service_approval_no,
+    ) = frappe.get_cached_value(
+        "Company NHIF Settings",
+        company,
+        [
+            "enable",
+            "nhifservice_url",
+            "validate_service_approval_number_on_lrpm_documents",
+        ],
     )
     if not enable_nhif_api:
         frappe.msgprint(_(f"Company <b>{company}</b> not enabled for NHIF Integration"))
         return
-    
+
     if validate_service_approval_no == 0:
         return "approval number validation is disabled"
 
@@ -1342,3 +1373,87 @@ def varify_service_approval_number_for_LRPM(
         )
         frappe.msgprint(f"Error: <b>{r.text}</b>")
         return False
+
+
+def auto_finalize_patient_encounters():
+    """Auto finalize patient encounters after a number of days set in company settings
+
+    IPD encounters will only be finalized if the inpatient record is discharged
+
+    This routine runs every day at 3:00am at night
+    """
+
+    def finalize_encounter(encounter_list):
+        for encounter in encounter_list:
+            try:
+                if (
+                    encounter.inpatient_record
+                    and frappe.db.get_value(
+                        "Inpatient Record", encounter.inpatient_record, "status"
+                    )
+                    != "Discharged"
+                ):
+                    continue
+
+                else:
+                    frappe.set_value(
+                        "Patient Encounter",
+                        encounter.name,
+                        {
+                            "finalized": 1,
+                            "encounter_type": "Final",
+                        },
+                    )
+
+                    reference_encounters = frappe.get_all(
+                        "Patient Encounter",
+                        {
+                            "docstatus": 1,
+                            "reference_encounter": encounter.reference_encounter,
+                        },
+                        ["name", "finalized"],
+                    )
+                    if len(reference_encounters) > 0:
+                        for ref_encounter in reference_encounters:
+                            if ref_encounter.finalized == 1:
+                                continue
+
+                            frappe.set_value(
+                                "Patient Encounter",
+                                ref_encounter,
+                                {
+                                    "finalized": 1,
+                                },
+                            )
+            
+            except Exception as e:
+                frappe.log_error(
+                    frappe.get_traceback(),
+                    f"Error in finalizing encounter: {encounter.name}",
+                )
+                continue
+
+    companies = frappe.get_all(
+        "Company",
+        {"auto_finalize_patient_encounter": 1},
+        ["name", "valid_days_to_auto_finalize_encounter"],
+    )
+
+    for row in companies:
+        if row.valid_days_to_auto_finalize_encounter == 0:
+            continue
+
+        date = add_days(nowdate(), -row.valid_days_to_auto_finalize_encounter)
+        encounters = frappe.get_all(
+            "Patient Encounter",
+            {
+                "docstatus": 1,
+                "duplicated": 0,
+                "finalized": 0,
+                "encounter_date": ["<=", date],
+                "company": row.name,
+            },
+            ["name", "reference_encounter", "inpatient_record"],
+        )
+        if len(encounters) > 0:
+            finalize_encounter(encounters)
