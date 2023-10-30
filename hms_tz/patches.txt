@@ -1,3 +1,6 @@
+[pre_model_sync]
+
+[post_model_sync]
 hms_tz.patches.custom_fields.hms_tz_custom_fields
 hms_tz.patches.v2_0.migrate_hsu_into_the_child_table
 hms_tz.patches.update_department_hsu_to_child_docs_of_encounter
@@ -43,3 +46,4 @@ hms_tz.patches.custom_fields.send_sms_for_all_lab_results_per_encounter
 hms_tz.patches.custom_fields.allow_discharge_patient_with_pending_invoices
 hms_tz.patches.custom_fields.add_schemeid_on_patient
 hms_tz.patches.property_setter.read_only_and_hidden_property_for_patient_field_on_lrp_docs
+hms_tz.patches.custom_fields.add_inpatient_record_to_pythiotherapy_doctypes
