@@ -161,7 +161,8 @@ frappe.ui.form.on('Radiology Examination', {
 		}
 	},
 	refresh: function (frm) {
-		if(frm.doc.__islocal){
+		if (frm.doc.__islocal) {
+			return
 			frm.add_custom_button(__('Get from Patient Encounter'), function () {
 				get_radiology_procedure_prescribed(frm);
 			});

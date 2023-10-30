@@ -63,8 +63,15 @@ def before_submit(doc, method):
             )
         )
 
+    if doc.is_return == 1:
+        reset_invoiced_status(doc)
+
 
 def on_submit(doc, method):
+    if doc.is_return == 1:
+        reset_invoiced_status(doc)
+        return
+
     create_healthcare_docs(doc, method)
     update_drug_prescription(doc)
 
@@ -160,3 +167,43 @@ def get_discount_items(invoice_no):
         order_by="reference_dt desc",
     )
     return items
+
+
+def reset_invoiced_status(doc):
+    """Remove invoiced status on items because a return invoice is created"""
+
+    for row in doc.items:
+        if row.reference_dt and row.reference_dt:
+            if row.reference_dt == "Patient Appointment":
+                appointment = frappe.qb.DocType("Patient Appointment")
+                (
+                    frappe.qb.update(appointment)
+                    .set(appointment.invoiced, 0)
+                    .set(appointment.ref_sales_invoice, "")
+                    .where(appointment.name == row.reference_dn)
+                ).run()
+            elif row.reference_dt in [
+                "Lab Prescription",
+                "Radiology Procedure Prescription",
+                "Procedure Prescription",
+                "Drug Prescription",
+                "Therapy Plan Detail",
+                "Inpatient Occupancy",
+            ]:
+                frappe.db.set_value(
+                    row.reference_dt,
+                    row.reference_dn,
+                    {
+                        "invoiced": 0,
+                        "sales_invoice_number": "",
+                    },
+                )
+            elif row.reference_dt == "Inpatient Consultancy":
+                frappe.db.set_value(
+                    row.reference_dt,
+                    row.reference_dn,
+                    {
+                        "hms_tz_invoiced": 0,
+                        "sales_invoice_number": "",
+                    },
+                )
