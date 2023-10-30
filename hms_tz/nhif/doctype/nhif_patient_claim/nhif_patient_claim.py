@@ -69,9 +69,14 @@ class NHIFPatientClaim(Document):
         #     track_changes_of_claim_items(self)
 
     def on_trash(self):
-        frappe.set_value(
-            "Patient Appointment", self.patient_appointment, "nhif_patient_claim", ""
+        # check if claim number exist in appointment record
+        nhif_patient_claim = frappe.get_value(
+            "Patient Appointment", self.patient_appointment, "nhif_patient_claim"
         )
+        if nhif_patient_claim == self.name:
+            frappe.db.set_value(
+                "Patient Appointment", self.patient_appointment, "nhif_patient_claim", ""
+            )
 
     def before_submit(self):
         try:
@@ -279,18 +284,13 @@ class NHIFPatientClaim(Document):
                 app_numbers = json.loads(app_name["hms_tz_claim_appointment_list"])
                 app_list += app_numbers
 
-                frappe.db.set_value(
-                    "Patient Appointment",
-                    app_numbers[0],
-                    "nhif_patient_claim",
-                    self.name,
-                )
-                frappe.db.set_value(
-                    "Patient Appointment",
-                    app_numbers[1],
-                    "nhif_patient_claim",
-                    self.name,
-                )
+                for d in app_numbers:
+                    frappe.db.set_value(
+                        "Patient Appointment",
+                        d,
+                        "nhif_patient_claim",
+                        self.name,
+                    )
             else:
                 app_list.append(app_name["patient_appointment"])
                 frappe.db.set_value(
