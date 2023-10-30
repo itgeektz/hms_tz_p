@@ -808,7 +808,7 @@ frappe.ui.form.on('Drug Prescription', {
             )
                 .then(r => {
                     let values = r.message;
-                    if (values.auto_set_pharmacy_on_patient_encounter == 1) {
+                    if (values && values.auto_set_pharmacy_on_patient_encounter == 1) {
                         if (frm.doc.inpatient_record) {
                             frappe.model.set_value(cdt, cdn, "healthcare_service_unit", values.ipd_cash_pharmacy);
                         } else {
@@ -821,11 +821,11 @@ frappe.ui.form.on('Drug Prescription', {
         } else {
             if (row.prescribe == 0 && frm.doc.insurance_coverage_plan) {
                 frappe.db.get_value("Healthcare Insurance Coverage Plan", frm.doc.insurance_coverage_plan,
-                    ["opd_insurance_pharmacy", "ipd_insurance_pharmacy"]
+                    ["auto_set_pharmacy_on_patient_encounter", "opd_insurance_pharmacy", "ipd_insurance_pharmacy"]
                 )
                     .then(r => {
                         let values = r.message;
-                        if (values) {
+                        if (values && values.auto_set_pharmacy_on_patient_encounter == 1) {
                             if (frm.doc.inpatient_record) {
                                 if (row.healthcare_service_unit != values.ipd_insurance_pharmacy) {
                                     frappe.model.set_value(cdt, cdn, "healthcare_service_unit", values.ipd_insurance_pharmacy);
