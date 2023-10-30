@@ -11,28 +11,32 @@ frappe.ui.form.on('Patient Encounter', {
 			set_source_referring_practitioner(frm)
 		}
 		if (frm.doc.docstatus == 1 && frm.doc.encounter_type != 'Final' && frm.doc.duplicated == 0) {
+			if (!frm.page.fields_dict.referring_practitioner) {
+				frm.page.add_field({
+					label: __("Refer Practitioner"),
+					fieldname: "referring_practitioner",
+					fieldtype: "Button",
+					click: function () {
+						refer_practitioner(frm);
+					}
+				}).$input.addClass("btn-sm font-weight-bold");
+			}
+		}
+		if (!frm.page.fields_dict.patient_history) {
 			frm.page.add_field({
-				label: __("Refer Practitioner"),
-				fieldname: "referring_practitioner",
+				label: __("Patient History"),
+				fieldname: "patient_history",
 				fieldtype: "Button",
-				click: function() {
-					refer_practitioner(frm);
+				click: function () {
+					if (frm.doc.patient) {
+						frappe.route_options = { 'patient': frm.doc.patient };
+						frappe.set_route('tz-patient-history');
+					} else {
+						frappe.msgprint(__('Please select Patient'));
+					}
 				}
 			}).$input.addClass("btn-sm font-weight-bold");
 		}
-		frm.page.add_field({
-			label: __("Patient History"),
-			fieldname: "patient_history",
-			fieldtype: "Button",
-			click: function () {
-				if (frm.doc.patient) {
-					frappe.route_options = { 'patient': frm.doc.patient };
-					frappe.set_route('tz-patient-history');
-				} else {
-					frappe.msgprint(__('Please select Patient'));
-				}
-			}
-		}).$input.addClass("btn-sm font-weight-bold");
 	},
 
 	refresh: function(frm) {
