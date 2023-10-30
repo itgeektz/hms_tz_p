@@ -16,21 +16,7 @@ frappe.ui.form.on('Patient Encounter', {
         add_btn_final(frm);
         // duplicate(frm);
         set_btn_properties(frm);
-        if (frm.doc.docstatus == 1) {
-            frm.add_custom_button(__('Create Pending Healthcare Services'), function () {
-                frappe.call({
-                    method: 'hms_tz.nhif.api.patient_encounter.create_healthcare_docs_from_name',
-                    args: {
-                        'patient_encounter_doc_name': frm.doc.name
-                    },
-                    callback: (function (data) {
-                        //
-                    })
-                });
-            });
-        };
         set_empty_row_on_all_child_tables(frm);
-
         validate_healthcare_package_order_items(frm);
     },
     refresh: function (frm) {
@@ -57,7 +43,6 @@ frappe.ui.form.on('Patient Encounter', {
         if (frm.doc.duplicated == 1 && frm.doc.inpatient_record) {
             frm.remove_custom_button("Schedule Discharge");
         }
-        add_btn_final(frm);
         duplicate(frm);
         if (frm.doc.source == "External Referral") {
             frm.set_df_property('referring_practitioner', 'hidden', 1);
@@ -623,18 +608,23 @@ function validate_medical_code(frm) {
 
 var add_btn_final = function (frm) {
     if (frm.doc.docstatus == 1 && frm.doc.encounter_type != 'Final' && frm.doc.duplicated == 0) {
-        frm.add_custom_button(__('Set as Final'), function () {
-            frappe.call({
-                method: 'hms_tz.nhif.api.patient_encounter.finalized_encounter',
-                args: {
-                    'ref_encounter': frm.doc.reference_encounter,
-                    'cur_encounter': frm.doc.name
-                },
-                callback: (function (data) {
-                    frm.reload_doc();
-                })
-            });
-        });
+        frm.page.add_field({
+            fieldname: "set_as_final",
+            label: __("Set as Final"),
+            fieldtype: "Button",
+            click: function () {
+                frappe.call({
+                    method: 'hms_tz.nhif.api.patient_encounter.finalized_encounter',
+                    args: {
+                        'ref_encounter': frm.doc.reference_encounter,
+                        'cur_encounter': frm.doc.name
+                    },
+                    callback: (function (data) {
+                        frm.reload_doc();
+                    })
+                });
+            }
+        }).$input.addClass("btn-sm font-weight-bold");
     }
 };
 
