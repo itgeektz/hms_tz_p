@@ -2009,6 +2009,8 @@ def convert_opd_encounter_to_ipd_encounter(encounter):
     doc.save(ignore_permissions=True)
 
     if doc.get("inpatient_record"):
+        create_healthcare_docs_from_name(doc.name)
+
         frappe.msgprint(
             "<p class='text-center font-weight-bold h6' style='background-color: #DCDCDC; font-size: 11pt;'>\
             This encounter is now having inpatient record: {0}".format(
@@ -2056,7 +2058,7 @@ def get_previous_diagnosis_and_lrpmt_items_to_reuse(kwargs, caller):
         "Patient Appointment",
         filters={
             "patient": kwargs.get("patient"),
-            "name": ["!=", kwargs.get("appoitnemnt")],
+            "name": ["!=", kwargs.get("appointment")],
             "status": "Closed",
         },
         fields=["name"],

@@ -124,7 +124,16 @@ def get_summarized_data(args):
     date_list = []
     single_transaction_per_day = []
     mult_transaction_per_day = []
+    
     transactions = get_transaction_data(args)
+    if len(transactions) == 0:
+        frappe.msgprint(
+			f"No Record found for the Fitlters:  Patient: {frappe.bold(args.patient)}, Appointment: {frappe.bold(args.appointment_no)},\
+			Patient Type: {frappe.bold(args.patient_type)} From Date: {frappe.bold(args.from_date)} and To Date: {frappe.bold(args.to_date)}\
+			you specified..., Please change your filters and try again..!!"
+		)
+        return [], []
+    
     for record in transactions:
         total_amount = (
             flt(record["bed_charges"])
@@ -427,37 +436,20 @@ def get_report_summary(args, summary_data, is_summary=False):
 # itemized data report for only ipd items
 def get_data(args):
     data = []
-    details = frappe.get_all(
-        "Patient Appointment",
-        filters=[
-            ["patient", "=", args.patient],
-            ["name", "=", args.appointment_no],
-        ],
-        fields=[
-            "docstatus",
-            "status",
-        ],
-    )
-
-    if details[0]["docstatus"] == 0 and details[0]["status"] != "Closed":
-        frappe.throw(frappe.bold("This Appointment is not Closed..!!"))
-
-    else:
-        if args.get("patient_type") == "In-Patient":
-            cash_lrpmt_data = get_cash_lrpmt_transaction(args)
-            if len(cash_lrpmt_data) > 0:
-                data += cash_lrpmt_data
-
-            # 			insurance_lrpmt_data = get_insurance_lrpmt_transaction(args)
-            # 			if insurance_lrpmt_data: data += insurance_lrpmt_data
-
-            ipd_beds = get_ipd_occupancy_transactions(args)
-            if len(ipd_beds) > 0:
-                data += ipd_beds
-
-            ipd_cons = get_ipd_consultancy_transactions(args)
-            if len(ipd_cons) > 0:
-                data += ipd_cons
+    if args.get("patient_type") == "In-Patient":
+        cash_lrpmt_data = get_cash_lrpmt_transaction(args)
+        if len(cash_lrpmt_data) > 0:
+             data += cash_lrpmt_data
+             
+        # insurance_lrpmt_data = get_insurance_lrpmt_transaction(args)
+        # if insurance_lrpmt_data: data += insurance_lrpmt_data
+		
+        ipd_beds = get_ipd_occupancy_transactions(args)
+        if len(ipd_beds) > 0:
+            data += ipd_beds
+        ipd_cons = get_ipd_consultancy_transactions(args)
+        if len(ipd_cons) > 0:
+            data += ipd_cons
 
     if len(data) == 0:
         frappe.msgprint(
@@ -465,7 +457,7 @@ def get_data(args):
 			Patient Type: {frappe.bold(args.patient_type)} From Date: {frappe.bold(args.from_date)} and To Date: {frappe.bold(args.to_date)}\
             you specified..., Please change your filters and try again..!!"
         )
-        return []
+        return [], []
 
     return get_report_summary(args, data, is_summary=False)
 

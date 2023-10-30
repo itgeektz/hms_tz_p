@@ -135,16 +135,16 @@ def get_healthcare_service_order_to_invoice(
 
                     qty = 1
                     if value.get("doctype") == "Drug Prescription":
-                        qty = (row.get("quantity") or 0) - (
+                        qty = ((row.get("quantity") or 0) - (
                             row.get("quantity_returned") or 0
-                        )
+                        ))
 
                     services_to_invoice.append(
                         {
                             "reference_type": row.doctype,
                             "reference_name": row.name,
                             "service": item_code,
-                            "qty": qty,
+                            "qty":  qty,
                         }
                     )
 
