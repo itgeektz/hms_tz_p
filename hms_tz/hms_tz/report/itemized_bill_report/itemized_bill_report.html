@@ -90,7 +90,13 @@
                             <td style="text-align:left; border: 0px"><b>Patient Name:</b></td>
                             <td style="text-align:left; border: 0px">{%= data[0].patient_name %}</td>
                             <td style="text-align:left; border: 0px"><b>Appointment Date:</b></td>
-                            <td style="text-align:left; border: 0px">{%= data[0].date %}</td>
+                            <td style="text-align:left; border: 0px">
+                                {% for(var i=0, l=data.length; i<l; i++) { %}
+                                    {% if (data[i].appointment_date) { %}
+                                        {%=data[i].appointment_date %}
+                                    {% } %}
+                                {% } %}
+                            </td>
                         </tr>
                         {% if (data[0].insurance_company != "") { %}
                         <tr>
@@ -116,6 +122,17 @@
                             <td style="text-align:left; border: 0px">{%= data[0].discharge_date %}</td>
                         </tr>
                         {% } %}
+
+                        <tr>
+                            {% for(var i=0, l=data.length; i<l; i++) { %}
+                                {% if (data[i].date_admitted) { %}
+                                    <td style="text-align:left; border: 0px"><b>Admitted Date:</b></td>
+                                    <td style="text-align:left; border: 0px">{%= data[i].date_admitted %}</td>
+                                    <td style="text-align:left; border: 0px"><b>Discharge Date:</b></td>
+                                    <td style="text-align:left; border: 0px">{%= data[i].date_discharge %}</td>
+                                {% } %}
+                            {% } %}
+                        </tr>
                     </tbody>
                 </table>
             </td>
@@ -145,49 +162,52 @@
                     </thead>
                     <tbody>
                         {% var total_amount=0; %}
-                        {% for(var i=0, l=data.length - 1; i<l; i++) { %} <tr>
-                            {% var total_amount = total_amount + data[i].amount; %}
-                            <td style="text-align: center; ">{%= i+1 %}</td>
-                            <td style="text-align: left; ">{%= data[i].date %}</td>
-                            <td style="text-align: left; ">{%= data[i].category %}</td>
-                            <td style="text-align: left; ">{%= data[i].description %}</td>
-                            <td style="text-align: center; ">{%= data[i].quantity %}</td>
-                            <td style="text-align: right; ">{%= data[i][("rate")].toLocaleString(undefined,
-                                {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
-                            <td style="text-align: right; ">{%= data[i][("amount")].toLocaleString(undefined,
-                                {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                        {% for(var i=0, l=data.length - 1; i<l; i++) { %}
+                            <tr>
+                                {% var total_amount = total_amount + data[i].amount; %}
+                                <td style="text-align: center; ">{%= i+1 %}</td>
+                                <td style="text-align: left; ">{%= data[i].date %}</td>
+                                <td style="text-align: left; ">{%= data[i].category %}</td>
+                                <td style="text-align: left; ">{%= data[i].description %}</td>
+                                <td style="text-align: center; ">{%= data[i].quantity %}</td>
+                                <td style="text-align: right; ">{%= data[i][("rate")].toLocaleString(undefined,
+                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                                <td style="text-align: right; ">{%= data[i][("amount")].toLocaleString(undefined,
+                                    {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                            
+                            </tr>
+                        {% } %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th style="text-align: left; " colspan="6">Total</th>
+                            <th style="text-align: right; ">{%= total_amount.toLocaleString(undefined, {minimumFractionDigits: 2,
+                                maximumFractionDigits: 2}) %}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </td>
         </tr>
-        {% } %}
-    </tbody>
-    <tfoot>
         <tr>
-            <th style="text-align: left; " colspan="6">Total</th>
-            <th style="text-align: right; ">{%= total_amount.toLocaleString(undefined, {minimumFractionDigits: 2,
-                maximumFractionDigits: 2}) %}</th>
+            <td>
+                <div style="padding-bottom: 3px; margin-top: 0px; margin-bottom: 0px; border: 0;">
+                    <div class="col-xs-6 column-break">
+                        <div class="row">
+                            <div class="col-xs-4 text-left">
+                                <label>Printed By: </label>
+                            </div>
+                            <div class="col-xs-7  value">
+                                {% for(var i=0, l=data.length; i<l; i++) { %} {%=data[i][("printed_by")] %} {% } %} </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-4 text-left">
+                                <label>Signature:</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>
         </tr>
-    </tfoot>
-</table>
-</td>
-</tr>
-<tr>
-    <td>
-        <div style="padding-bottom: 3px; margin-top: 0px; margin-bottom: 0px; border: 0;">
-            <div class="col-xs-6 column-break">
-                <div class="row">
-                    <div class="col-xs-4 text-left">
-                        <label>Printed By: </label>
-                    </div>
-                    <div class="col-xs-7  value">
-                        {% for(var i=0, l=data.length; i<l; i++) { %} {%=data[i][("printed_by")] %} {% } %} </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-4 text-left">
-                        <label>Signature:</label>
-                    </div>
-                </div>
-            </div>
-    </td>
-</tr>
-</tbody>
+    </tbody>
 </table>
