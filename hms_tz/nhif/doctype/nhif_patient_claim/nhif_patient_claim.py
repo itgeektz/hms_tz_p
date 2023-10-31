@@ -133,7 +133,7 @@ class NHIFPatientClaim(Document):
         frappe.msgprint(
             "Total time to complete the process in seconds = " + str(time_in_seconds)
         )
-    
+
     def on_submit(self):
         track_changes_of_claim_items(self)
 
@@ -1327,26 +1327,24 @@ def reconcile_repeated_items(claim_no):
 
                             item.approval_ref_no = approval_ref_no
 
-                        if item.doctype == "Original NHIF Patient Claim Item":
-                            if d.patient_encounter:
-                                ref_encounters.append(d.patient_encounter)
-                            if d.ref_docname:
-                                ref_docnames.append(d.ref_docname)
+                        if d.patient_encounter:
+                            ref_encounters.append(d.patient_encounter)
+                        if d.ref_docname:
+                            ref_docnames.append(d.ref_docname)
 
                         if item.status != "Submitted" and d.status == "Submitted":
                             item.status = "Submitted"
 
-                if item.doctype == "Original NHIF Patient Claim Item":
-                    if item.patient_encounter:
-                        ref_encounters.append(item.patient_encounter)
-                    if item.ref_docname:
-                        ref_docnames.append(item.ref_docname)
+                if item.patient_encounter:
+                    ref_encounters.append(item.patient_encounter)
+                if item.ref_docname:
+                    ref_docnames.append(item.ref_docname)
 
-                    if len(ref_encounters) > 0:
-                        item.patient_encounter = ",".join(set(ref_encounters))
+                if len(ref_encounters) > 0:
+                    item.patient_encounter = ",".join(set(ref_encounters))
 
-                    if len(ref_docnames) > 0:
-                        item.ref_docname = ",".join(set(ref_docnames))
+                if len(ref_docnames) > 0:
+                    item.ref_docname = ",".join(set(ref_docnames))
 
                 items.append(item)
 
@@ -1386,7 +1384,7 @@ def update_original_patient_claim(doc):
         if item.ref_docname:
             d = item.ref_docname.split(",")
             ref_docnames.extend(d)
-    
+
     for row in doc.nhif_patient_claim_item:
         if row.ref_docname not in ref_docnames:
             new_row = row.as_dict()

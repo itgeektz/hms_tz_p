@@ -185,7 +185,7 @@
   {
    "fieldname": "edited_by",
    "fieldtype": "Data",
-   "label": "Claim Edited By",
+   "label": "Claim Submitted By",
    "read_only": 1
   },
   {
@@ -216,7 +216,8 @@
   {
    "fieldname": "user_email",
    "fieldtype": "Data",
-   "label": "user_email"
+   "label": "User id",
+   "read_only": 1
   },
   {
    "fieldname": "lrpmt_return",
@@ -233,13 +234,14 @@
   {
    "fieldname": "ref_doctype",
    "fieldtype": "Data",
-   "label": "Ref Doctype"
+   "label": "Ref Doctype",
+   "read_only": 1
   }
  ],
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2023-10-23 16:50:55.086511",
+ "modified": "2023-10-31 23:27:06.751661",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Tracking Claim Change",

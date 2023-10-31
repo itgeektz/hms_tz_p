@@ -190,8 +190,8 @@ def get_conditions(filters):
         parameters["status"] = filters.get("status")
     if filters.get("nhif_patient_claim"):
         parameters["nhif_patient_claim"] = filters.get("nhif_patient_claim")
-    if filters.get("edited_by"):
-        parameters["edited_by"] = filters.get("edited_by")
+    if filters.get("claim_submitted_by"):
+        parameters["edited_by"] = filters.get("claim_submitted_by")
 
     return parameters
 
@@ -273,7 +273,7 @@ def get_columns(filters):
         },
         {
             "fieldname": "edited_by",
-            "label": "Claim Edited By",
+            "label": "Claim Submitted By",
             "fieldtype": "Data",
             "width": 150,
         },

@@ -36,8 +36,8 @@ frappe.query_reports["NHIF Tracking Claim Change Report"] = {
 			"options": "NHIF Patient Claim",
 		},
 		{
-			"fieldname": "edited_by",
-			"label": __("Edited By"),
+			"fieldname": "claim_submitted_by",
+			"label": __("Claim Submitted By"),
 			"fieldtype": "Link",
 			"options": "User",
 			
