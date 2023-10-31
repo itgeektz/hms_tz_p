@@ -395,7 +395,15 @@ def on_submit_validation(doc, method):
         if not is_exclusions:
             if template not in hsic_map:
                 for row_item in healthcare_service_templates[template]:
-                    row_item.prescribe = 1
+                    if (
+                        doc.company and
+                        frappe.get_cached_value(
+                            "Company",
+                            doc.company,
+                            "auto_prescribe_items_on_patient_encounter",
+                        ) == 1
+                    ):
+                        row_item.prescribe = 1
 
                 msg = _(
                     f"{template} <h4 style='background-color:LightCoral'>NOT COVERED</h4> in Healthcare Insurance Coverage Plan {str(hicp_name)} plan.<br>Patient should pay cash for this service"
@@ -408,7 +416,15 @@ def on_submit_validation(doc, method):
         else:
             if template in hsic_map:
                 for row_item in healthcare_service_templates[template]:
-                    row_item.prescribe = 1
+                    if (
+                        doc.company and
+                        frappe.get_cached_value(
+                            "Company",
+                            doc.company,
+                            "auto_prescribe_items_on_patient_encounter",
+                        ) == 1
+                    ):
+                        row_item.prescribe = 1
 
                 msg = _(
                     f"{template} <h4 style='background-color:LightCoral'>NOT COVERED</h4> in Healthcare Insurance Coverage Plan {str(hicp_name)} plan.<br>Patient should pay cash for this service"
