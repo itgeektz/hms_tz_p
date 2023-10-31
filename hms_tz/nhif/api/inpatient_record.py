@@ -237,12 +237,32 @@ def after_insert(doc, method):
 
 
 @frappe.whitelist()
-def make_deposit(inpatient_record, deposit_amount, mode_of_payment):
+def make_deposit(
+    inpatient_record,
+    deposit_amount,
+    mode_of_payment,
+    reference_number=None,
+    reference_date=None,
+):
     if float(deposit_amount) <= 0:
         frappe.throw(_("<b>Deposit amount cannot be less than or equal to zero</b>"))
 
     if not mode_of_payment:
         frappe.throw(_("The mode of payment is required"))
+
+    if frappe.get_value("Mode of Payment", mode_of_payment, "type") != "Cash":
+        if not reference_number:
+            frappe.throw(
+                _(
+                    "The reference number is required, since the mode of payment is not cash"
+                )
+            )
+        if not reference_date:
+            frappe.throw(
+                _(
+                    "The reference date is required, since the mode of payment is not cash"
+                )
+            )
 
     inpatient_record_doc = frappe.get_doc("Inpatient Record", inpatient_record)
     if inpatient_record_doc.insurance_subscription:
@@ -270,6 +290,8 @@ def make_deposit(inpatient_record, deposit_amount, mode_of_payment):
         payment.received_amount = float(deposit_amount)
         payment.source_exchange_rate = 1
         payment.target_exchange_rate = 1
+        payment.reference_no = reference_number
+        payment.reference_date = reference_date
         payment.setup_party_account_field()
         payment.set_missing_values()
         payment.save()

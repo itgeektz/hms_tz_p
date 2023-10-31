@@ -7,7 +7,7 @@ frappe.query_reports["IPD Billing Report"] = {
 		report.page.add_inner_button(__("Make Deposit"), () => {
 			let filters = report.get_values();
 			make_deposit(filters.inpatient_record);
-		}).removeClass("btn-default").addClass("btn-warning font-weight-bold");
+		}).addClass("font-weight-bold");
 	},
 
 	"filters": [
@@ -83,44 +83,87 @@ frappe.query_reports["IPD Billing Report"] = {
 };
 
 var make_deposit = (inpatient_record) => {
-	frappe.prompt([
-		{
-			"fieldname": "deposit_amount",
-			"fieldtype": "Currency",
-			"label": "Deposit Amount",
-			"description": "make sure you write the correct amount",
-			"reqd": 1,
-		},
-		{
-			"fieldname": "md_cb",
-			"fieldtype": "Column Break",
-		},
-		{
-			"fieldname": "mode_of_payment",
-			"fieldtype": "Link",
-			"label": "Mode of Payment",
-			"options": "Mode of Payment",
-			"reqd": 1,
-		}
-	],
+    let d = new frappe.ui.Dialog({
+        title: "Patient Deposit",
+        fields: [
+            {
+                label: "Deposit Amount",
+                fieldname: "deposit_amount",
+                fieldtype: "Currency",
+                description: "make sure you write the correct amount",
+                reqd: 1,
+            },
+            {
+                label: "Reference Number",
+                fieldname: "reference_number",
+                fieldtype: "Data",
+            },
+            {
+                fieldname: "md_cb",
+                fieldtype: "Column Break"
+            },
+            {
+                label: "Mode of Payment",
+                fieldname: "mode_of_payment",
+                fieldtype: "Link",
+                options: "Mode of Payment",
+                reqd: 1,
+                "description": "make sure you select the correct mode of payment",
+            },
+            {
+                fieldname: "reference_date",
+                fieldtype: "Date",
+                label: "Reference Date",
+            }
+        ],
+        size: "large", // small, large, extra-large 
+        primary_action_label: 'Submit',
+        primary_action(values) {
+            console.log(values);
+            frappe.call({
+                method: "frappe.client.get_value",
+                args: {
+                    doctype: "Mode of Payment",
+                    filters: { name: values.mode_of_payment },
+                    fieldname: ["type"]
+                },
+            }).then((r) => {
+                if (r.message) {
+                    if (r.message.type != "Cash" && !values.reference_number) {
+                        frappe.msgprint({
+                            title: __("Reference Number is required"),
+                            indicator: 'red',
+                            message: __("Reference Number is required for non cash payments,<br>please enter reference number or change mode of payment to cash")
+                        })
+                    } else if (r.message.type != "Cash" && !values.reference_date) {
+                        frappe.msgprint({
+                            title: __("Reference Date is required"),
+                            indicator: 'red',
+                            message: __("Reference Date is required for non cash payments,<br>please enter reference date or change mode of payment to cash")
+                        })
+                    } else {
+                        d.hide();
+                        frappe.call({
+                            method: "hms_tz.nhif.api.inpatient_record.make_deposit",
+                            args: {
+                                inpatient_record: inpatient_record,
+                                deposit_amount: values.deposit_amount,
+                                mode_of_payment: values.mode_of_payment,
+                                reference_number: values.reference_number,
+                                reference_date: values.reference_date,
+                            },
+                            freeze: true,
+                            freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
+                        }).then((r) => {
+                            if (r.message) {
+                                frm.reload_doc();
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    });
 
-		(data) => {
-			frappe.call({
-				method: "hms_tz.nhif.api.inpatient_record.make_deposit",
-				args: {
-					inpatient_record: inpatient_record,
-					deposit_amount: data.deposit_amount,
-					mode_of_payment: data.mode_of_payment,
-				},
-				freeze: true,
-				freeze_message: __("Making Deposit..."),
-			}).then((r) => {
-				if (r.message) {
-					frm.reload_doc();
-				}
-			});
-		},
-		"Make Deposit",
-		"Submit"
-	);
+    d.show();
 }
