@@ -122,17 +122,6 @@
                             <td style="text-align:left; border: 0px">{%= data[0].discharge_date %}</td>
                         </tr>
                         {% } %}
-
-                        <tr>
-                            {% for(var i=0, l=data.length; i<l; i++) { %}
-                                {% if (data[i].date_admitted) { %}
-                                    <td style="text-align:left; border: 0px"><b>Admitted Date:</b></td>
-                                    <td style="text-align:left; border: 0px">{%= data[i].date_admitted %}</td>
-                                    <td style="text-align:left; border: 0px"><b>Discharge Date:</b></td>
-                                    <td style="text-align:left; border: 0px">{%= data[i].date_discharge %}</td>
-                                {% } %}
-                            {% } %}
-                        </tr>
                     </tbody>
                 </table>
             </td>
