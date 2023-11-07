@@ -247,7 +247,11 @@ scheduler_events = {
     # 	]
 }
 
-jenv = {"methods": ["get_item_rate:hms_tz.nhif.api.healthcare_utils.get_item_rate"]}
+jinja = {
+    "methods": [
+        "hms_tz.nhif.api.healthcare_utils.get_item_rate",
+    ]
+}
 
 
 # Testing
