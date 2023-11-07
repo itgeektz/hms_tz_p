@@ -115,7 +115,6 @@ class MedicationChangeRequest(Document):
                 )
 
 
-
     def before_insert(self):
         if self.patient_encounter:
             encounter_doc = get_patient_encounter_doc(self.patient_encounter)
@@ -251,16 +250,17 @@ class MedicationChangeRequest(Document):
             item.is_restricted = row.is_restricted
             item.discount_percentage = row.hms_tz_is_discount_percent
             item.hms_tz_is_discount_applied = row.hms_tz_is_discount_applied
-            item.description = (
-                row.drug_name
-                + " for "
-                + (row.dosage or "No Prescription Dosage")
-                + " for "
-                + (row.period or "No Prescription Period")
-                + " with "
-                + row.medical_code
-                + " and doctor notes: "
-                + (row.comment or "Take medication as per dosage.")
+            item.description = ", <br>".join(
+                [
+                    "frequency: " + str(row.get("dosage") or "No Prescription Dosage"),
+                    "period: " + str(row.get("period") or "No Prescription Period"),
+                    "dosage_form: " + str(row.get("dosage_form") or ""),
+                    "interval: " + str(row.get("interval") or ""),
+                    "interval_uom: " + str(row.get("interval_uom") or ""),
+                    "medical_code: " + str(row.get("medical_code") or "No medical code"),
+                    "Doctor's comment: "
+                    + (row.get("comment") or "Take medication as per dosage."),
+                ]
             )
             doc.append("items", item)
 

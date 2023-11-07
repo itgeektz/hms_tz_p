@@ -894,13 +894,14 @@ def create_delivery_note_per_encounter(patient_encounter_doc, method):
 
             item.reference_doctype = row.doctype
             item.reference_name = row.name
-            item.description = ", \n".join(
+            item.description = ", <br>".join(
                 [
                     "frequency: " + str(row.get("dosage") or "No Prescription Dosage"),
                     "period: " + str(row.get("period") or "No Prescription Period"),
                     "dosage_form: " + str(row.get("dosage_form") or ""),
                     "interval: " + str(row.get("interval") or ""),
                     "interval_uom: " + str(row.get("interval_uom") or ""),
+                    "medical_code: " + str(row.get("medical_code") or "No medical code"),
                     "Doctor's comment: "
                     + (row.get("comment") or "Take medication as per dosage."),
                 ]
