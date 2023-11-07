@@ -1,6 +1,10 @@
 import frappe
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 
+#Mosaic Tasks:
+# https://worklog.aakvatech.com/Mosaic/Task/bc9f4be72c
+# https://worklog.aakvatech.com/Mosaic/Task/e3a9d255e2
+
 def execute():
     properties = [
         {
