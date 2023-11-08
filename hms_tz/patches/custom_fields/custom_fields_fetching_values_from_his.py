@@ -21,7 +21,6 @@ def execute():
                 "insert_after": "healthcare_insurance_coverage_plan",
                 "label": "Coverage Plan Name",
                 "fetch_from": "healthcare_insurance_coverage_plan.coverage_plan_name",
-                "fetch_if_empty": 1,
                 "allow_on_submit": 1,
                 "read_only": 1,
                 "translatable": 1,
@@ -72,18 +71,6 @@ def execute():
                 "read_only": 1,
                 "translatable":1,
             }
-        ],
-        "Clinical Procedure": [
-            {
-                "fieldname": "hms_tz_insurance_coverage_plan",
-                "fieldtype": "Data",
-                "insert_after": "insurance_subscription",
-                "label": "Insurance Coverage Plan",
-                "translatable": 1,
-                "fetch_if_empty": 1,
-                "fetch_from": "insurance_subscription.healthcare_insurance_coverage_plan",
-                "read_only": 1,
-            },
         ],
         "Radiology Examination": [
             {
