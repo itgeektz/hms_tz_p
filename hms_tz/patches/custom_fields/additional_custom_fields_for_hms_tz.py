@@ -39,7 +39,7 @@ def execute():
                 "fieldtype": "Table",
                 "insert_after": "custom_column_break_lygpq",
                 "options": "Codification Table",
-            }
+            },
         ],
         "Healthcare Settings": [
             {
@@ -47,7 +47,7 @@ def execute():
                 "label": "Automate Appointment Invoicing",
                 "fieldtype": "Check",
                 "insert_after": "show_payment_popup",
-                "description": "Manage Appointment Invoice submit and cancel automatically for Patient Encounter"
+                "description": "Manage Appointment Invoice submit and cancel automatically for Patient Encounter",
             }
         ],
         "Drug Prescription": [
@@ -56,7 +56,7 @@ def execute():
                 "label": "Delivery Note",
                 "fieldtype": "Data",
                 "read_only": 1,
-                "insert_after": "dn_detail"
+                "insert_after": "dn_detail",
             }
         ],
         "Lab Test": [
@@ -94,7 +94,7 @@ def execute():
                 "label": "Approval Type",
                 "fieldtype": "Select",
                 "insert_after": "approval_number",
-                "options": "Local\nNHIF\nOther Insurance"
+                "options": "Local\nNHIF\nOther Insurance",
             },
             {
                 "fieldname": "prescribe",
@@ -207,13 +207,14 @@ def execute():
                 "fieldtype": "Dynamic Link",
                 "insert_after": "ref_doctype",
                 "options": "ref_doctype",
-            },{
+            },
+            {
                 "fieldname": "hms_tz_ref_childname",
                 "label": "Ref Childname",
                 "fieldtype": "Data",
                 "insert_after": "ref_docname",
-                "read_only": 1
-            }
+                "read_only": 1,
+            },
         ],
         "Sales Invoice": [
             {
@@ -234,8 +235,9 @@ def execute():
             {
                 "fieldname": "service_unit",
                 "label": "Service Unit",
-                "fieldtype": "Data",
+                "fieldtype": "Link",
                 "insert_after": "delivery_status",
+                "options": "Healthcare Service Unit",
             },
         ],
         "Sales Invoice Item": [
@@ -258,8 +260,11 @@ def execute():
             {
                 "fieldname": "service_unit",
                 "label": "Service Unit",
-                "fieldtype": "Data",
+                "fieldtype": "Link",
                 "insert_after": "page_break",
+                "options": "Healthcare Service Unit",
             },
         ],
     }
+
+    create_custom_fields(fields, update=True)
