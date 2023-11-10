@@ -140,16 +140,70 @@ def execute():
             "property_type": "Data",
             "value": "Item Rate"
         },
+        {
+            "doctype": "Radiology Examination",
+            "fieldname": "appointment",
+            "property": "fetch_from",
+            "property_type": "Small Text",
+            "value": "ref_docname.appointment"
+        },
+        {
+            "doctype": "Radiology Examination",
+            "fieldname": "appointment",
+            "property": "fetch_if_empty",
+            "property_type": "Check",
+            "value": 1
+        },
+        {
+            "doctype": "Clinical Procedure",
+            "fieldname": "appointment",
+            "property": "fetch_from",
+            "property_type": "Small Text",
+            "value": "ref_docname.appointment"
+        },
+        {
+            "doctype": "Clinical Procedure",
+            "fieldname": "appointment",
+            "property": "fetch_if_empty",
+            "property_type": "Check",
+            "value": 1
+        },
+        {
+            "doctype": "NHIF Patient Claim",
+            "property": "make_attachments_public",
+            "property_type": "Check",
+            "value": 1
+        },
+        {
+            "doctype": "Patient",
+            "fieldname": "dob",
+            "property": "reqd",
+            "property_type": "Check",
+            "value": 1
+        },
+        {
+            "doctype": "Patient Appointment",
+            "fieldname": "appointment_type",
+            "property": "default",
+            "property_type": "Small Text",
+            "value": ""
+        },
     ]
     
     for property in properties:
+        if property.get("doctype") == "NHIF Patient Claim":
+            property["for_doctype"] = True
+        else:
+            property["for_doctype"] = False
+
+
         make_property_setter(
             property.get("doctype"),
             property.get("fieldname"),
             property.get("property"),
             property.get("value"),
             property.get("property_type"),
-            for_doctype=False,
+            for_doctype=property.get("for_doctype"),
             validate_fields_for_doctype=False
         )
     frappe.db.commit()

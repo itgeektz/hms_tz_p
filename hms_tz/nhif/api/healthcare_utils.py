@@ -671,6 +671,7 @@ def create_individual_lab_test(source_doc, child):
     doc = frappe.new_doc("Lab Test")
     doc.patient = source_doc.patient
     doc.patient_sex = patient_sex
+    doc.appointment = source_doc.appointment
     doc.company = source_doc.company
     doc.template = ltt_doc.name
     if source_doc.doctype == "Healthcare Service Order":
@@ -715,6 +716,7 @@ def create_individual_radiology_examination(source_doc, child):
     doc.patient = source_doc.patient
     doc.hms_tz_patient_sex = source_doc.patient_sex
     doc.hms_tz_patient_age = source_doc.patient_age
+    doc.appointment = source_doc.appointment
     doc.company = source_doc.company
     doc.radiology_examination_template = child.radiology_examination_template
     if source_doc.doctype == "Healthcare Service Order":
@@ -762,6 +764,7 @@ def create_individual_procedure_prescription(source_doc, child):
         return
     doc = frappe.new_doc("Clinical Procedure")
     doc.patient = source_doc.patient
+    doc.appointment = source_doc.appointment
     doc.company = source_doc.company
     doc.procedure_template = child.procedure
     if source_doc.doctype == "Healthcare Service Order":

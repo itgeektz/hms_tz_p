@@ -287,6 +287,7 @@ def update_drug_prescription(doc):
                                 item.reference_dn,
                                 {
                                     "dn_detail": dni.name,
+                                    "delivery_note": doc.name,
                                     "quantity": quantity,
                                     "delivered_quantity": quantity,
                                 },
@@ -327,6 +328,7 @@ def update_drug_prescription(doc):
                                 and dni.reference_doctype == item.doctype
                             ):
                                 item.dn_detail = dni.name
+                                item.delivery_note = doc.name
                                 if item.quantity != dni.stock_qty:
                                     item.quantity = dni.stock_qty
                                 item.delivered_quantity = (
