@@ -43,6 +43,12 @@ def get_columns(filters):
             "fieldtype": "Data",
             "width": 120,
         },
+        {
+            "fieldname": "appointment_no",
+            "label": "AppointmentNo",
+            "fieldtype": "Data",
+            "width": 120,
+        },
         {"fieldname": "bill_no", "label": "Bill No", "fieldtype": "Data", "width": 120},
         {
             "fieldname": "service_type",
@@ -126,6 +132,7 @@ def get_appointment_data(filters):
         .on(appointment.billing_item == item.name)
         .select(
             appointment.appointment_date.as_("date"),
+            appointment.name.as_("appointment_no"),
             appointment.name.as_("bill_no"),
             appointment.patient.as_("patient"),
             appointment.patient_name.as_("patient_name"),
@@ -136,7 +143,10 @@ def get_appointment_data(filters):
             item.item_group.as_("service_type"),
             appointment.billing_item.as_("service_name"),
             Case()
-            .when(appointment.mode_of_payment.isnull(), appointment.coverage_plan_name)
+            .when(
+                appointment.mode_of_payment.isin(("", None)),
+                appointment.coverage_plan_name,
+            )
             .else_("Cash")
             .as_("payment_method"),
             Count("*").as_("qty"),
@@ -178,6 +188,7 @@ def get_appointment_data(filters):
         .on(appointment.name == sii.reference_dn)
         .select(
             appointment.appointment_date.as_("date"),
+            appointment.name.as_("appointment_no"),
             appointment.name.as_("bill_no"),
             appointment.patient.as_("patient"),
             appointment.patient_name.as_("patient_name"),
@@ -188,7 +199,10 @@ def get_appointment_data(filters):
             item.item_group.as_("service_type"),
             appointment.billing_item.as_("service_name"),
             Case()
-            .when(appointment.mode_of_payment.isnull(), appointment.coverage_plan_name)
+            .when(
+                appointment.mode_of_payment.isin(("", None)),
+                appointment.coverage_plan_name,
+            )
             .else_("Cash")
             .as_("payment_method"),
             Count("*").as_("qty"),
@@ -237,6 +251,7 @@ def get_lab_data(filters):
     lab_prescription = DocType("Lab Prescription")
     template = DocType("Lab Test Template")
     sii = DocType("Sales Invoice Item")
+    encounter = DocType("Patient Encounter")
     service_type_map = None
     if filters.service_type:
         service_type_map = template.lab_test_group == filters.service_type
@@ -249,8 +264,11 @@ def get_lab_data(filters):
         .on(lab.hms_tz_ref_childname == lab_prescription.name)
         .inner_join(template)
         .on(lab.template == template.name)
+        .inner_join(encounter)
+        .on(lab.ref_docname == encounter.name)
         .select(
             lab.result_date.as_("date"),
+            encounter.appointment.as_("appointment_no"),
             lab.name.as_("bill_no"),
             lab.patient.as_("patient"),
             lab.patient_name.as_("patient_name"),
@@ -278,9 +296,7 @@ def get_lab_data(filters):
             & ~lab.workflow_state.isin(["Not Serviced", "Submitted but Not Serviced"])
             & (lab.docstatus != 2)
             & (lab.ref_doctype == "Patient Encounter")
-            & (lab.ref_docname.isnotnull())
             & (lab.ref_docname == lab_prescription.parent)
-            & (lab_prescription.invoiced == 0)
             & service_type_map
         )
         .groupby(
@@ -302,8 +318,11 @@ def get_lab_data(filters):
         .on(lab.template == template.name)
         .inner_join(sii)
         .on(lab.hms_tz_ref_childname == sii.reference_dn)
+        .inner_join(encounter)
+        .on(lab.ref_docname == encounter.name)
         .select(
             lab.result_date.as_("date"),
+            encounter.appointment.as_("appointment_no"),
             lab.name.as_("bill_no"),
             lab.patient.as_("patient"),
             lab.patient_name.as_("patient_name"),
@@ -338,9 +357,7 @@ def get_lab_data(filters):
             & ~lab.workflow_state.isin(["Not Serviced", "Submitted but Not Serviced"])
             & (lab.docstatus != 2)
             & (lab.ref_doctype == "Patient Encounter")
-            & (lab.ref_docname.isnotnull())
             & (lab.ref_docname == lab_prescription.parent)
-            & (lab_prescription.invoiced == 1)
             & service_type_map
         )
         .groupby(
@@ -362,6 +379,7 @@ def get_radiology_data(filters):
     rad_prescription = DocType("Radiology Procedure Prescription")
     template = DocType("Radiology Examination Template")
     sii = DocType("Sales Invoice Item")
+    encounter = DocType("Patient Encounter")
     service_type_map = None
     if filters.service_type:
         service_type_map = template.item_group == filters.service_type
@@ -374,8 +392,11 @@ def get_radiology_data(filters):
         .on(rad.hms_tz_ref_childname == rad_prescription.name)
         .inner_join(template)
         .on(rad.radiology_examination_template == template.name)
+        .inner_join(encounter)
+        .on(rad.ref_docname == encounter.name)
         .select(
             rad.start_date.as_("date"),
+            encounter.appointment.as_("appointment_no"),
             rad.name.as_("bill_no"),
             rad.patient.as_("patient"),
             rad.patient_name.as_("patient_name"),
@@ -427,8 +448,11 @@ def get_radiology_data(filters):
         .on(rad.radiology_examination_template == template.name)
         .inner_join(sii)
         .on(rad.hms_tz_ref_childname == sii.reference_dn)
+        .inner_join(encounter)
+        .on(rad.ref_docname == encounter.name)
         .select(
             rad.start_date.as_("date"),
+            encounter.appointment.as_("appointment_no"),
             rad.name.as_("bill_no"),
             rad.patient.as_("patient"),
             rad.patient_name.as_("patient_name"),
@@ -487,6 +511,7 @@ def get_procedure_data(filters):
     pp = DocType("Procedure Prescription")
     template = DocType("Clinical Procedure Template")
     sii = DocType("Sales Invoice Item")
+    encounter = DocType("Patient Encounter")
     service_type_map = None
     if filters.service_type:
         service_type_map = template.item_group == filters.service_type
@@ -499,8 +524,11 @@ def get_procedure_data(filters):
         .on(procedure.hms_tz_ref_childname == pp.name)
         .inner_join(template)
         .on(procedure.procedure_template == template.name)
+        .inner_join(encounter)
+        .on(procedure.ref_docname == encounter.name)
         .select(
             procedure.start_date.as_("date"),
+            encounter.appointment.as_("appointment_no"),
             procedure.name.as_("bill_no"),
             procedure.patient.as_("patient"),
             procedure.patient_name.as_("patient_name"),
@@ -557,8 +585,11 @@ def get_procedure_data(filters):
         .on(procedure.procedure_template == template.name)
         .inner_join(sii)
         .on(procedure.hms_tz_ref_childname == sii.reference_dn)
+        .inner_join(encounter)
+        .on(procedure.ref_docname == encounter.name)
         .select(
             procedure.start_date.as_("date"),
+            encounter.appointment.as_("appointment_no"),
             procedure.name.as_("bill_no"),
             procedure.patient.as_("patient"),
             procedure.patient_name.as_("patient_name"),
@@ -640,6 +671,7 @@ def get_drug_data(filters):
         .on(dn.reference_name == pe.name)
         .select(
             dn.posting_date.as_("date"),
+            dn.hms_tz_appointment_no.as_("appointment_no"),
             dn.name.as_("bill_no"),
             dn.patient.as_("patient"),
             dn.patient_name.as_("patient_name"),
@@ -649,10 +681,7 @@ def get_drug_data(filters):
             .as_("patient_type"),
             md.item_group.as_("service_type"),
             dni.item_code.as_("service_name"),
-            Case()
-            .when(dn.coverage_plan_name.isnull(), "Cash")
-            .else_(dn.coverage_plan_name)
-            .as_("payment_method"),
+            dn.coverage_plan_name.as_("payment_method"),
             Sum(dni.qty).as_("qty"),
             fn.Max(dni.rate).as_("rate"),
             Sum((dni.qty * dni.rate)).as_("amount"),
@@ -669,7 +698,9 @@ def get_drug_data(filters):
             & (dn.docstatus != 2)
             & (dn.is_return == 0)
             & (dn.form_sales_invoice.isnull())
-            & service_type_map
+            & (dn.coverage_plan_name.isnotnull())
+            & (md.disabled == 0)
+            & (service_type_map)
         )
         .groupby(
             dn.posting_date,
@@ -696,6 +727,7 @@ def get_drug_data(filters):
         .on(dn.reference_name == pe.name)
         .select(
             dn.posting_date.as_("date"),
+            dn.hms_tz_appointment_no.as_("appointment_no"),
             dn.name.as_("bill_no"),
             Case()
             .when(dn.patient.isnull(), "Outsider Customer")
@@ -713,7 +745,7 @@ def get_drug_data(filters):
             dni.item_code.as_("service_name"),
             Case()
             .when(dn.coverage_plan_name.isnull(), "Cash")
-            .else_(dn.coverage_plan_name)
+            .else_("Cash")
             .as_("payment_method"),
             Sum(dni.qty).as_("qty"),
             fn.Max(dni.rate).as_("rate"),
@@ -730,8 +762,8 @@ def get_drug_data(filters):
             & (~dn.workflow_state.isin(["Not Serviced", "Submitted but Not Serviced"]))
             & (dn.docstatus != 2)
             & (dn.is_return == 0)
-            & (dn.form_sales_invoice.isnotnull())
             & (~si.status.isin(["Credit Note Issued", "Return"]))
+            & (dn.coverage_plan_name.isnull())
             & service_type_map
         )
         .groupby(
@@ -770,6 +802,7 @@ def get_therapy_data(filters):
         .on(tpd.therapy_type == tt.name)
         .select(
             tp.start_date.as_("date"),
+            tp.hms_tz_appointment.as_("appointment_no"),
             tp.name.as_("bill_no"),
             tp.patient.as_("patient"),
             tp.patient_name.as_("patient_name"),
@@ -825,6 +858,7 @@ def get_therapy_data(filters):
         .on(tpd.name == sii.reference_dn)
         .select(
             tp.start_date.as_("date"),
+            tp.hms_tz_appointment.as_("appointment_no"),
             tp.name.as_("bill_no"),
             tp.patient.as_("patient"),
             tp.patient_name.as_("patient_name"),
@@ -900,6 +934,7 @@ def get_ipd_beds_data(filters):
         .on(hsu.service_unit_type == hsut.name)
         .select(
             fn.Date(io.check_in).as_("date"),
+            ip.patient_appointment.as_("appointment_no"),
             ip.name.as_("bill_no"),
             ip.patient.as_("patient"),
             ip.patient_name.as_("patient_name"),
@@ -909,10 +944,7 @@ def get_ipd_beds_data(filters):
             .as_("patient_type"),
             hsut.item_group.as_("service_type"),
             hsu.service_unit_type.as_("service_name"),
-            Case()
-            .when(ip.insurance_coverage_plan.isin(("", None)), "Cash")
-            .else_(ip.insurance_coverage_plan)
-            .as_("payment_method"),
+            ip.insurance_coverage_plan.as_("payment_method"),
             Count("*").as_("qty"),
             fn.Max(io.amount).as_("rate"),
             Sum(io.amount).as_("amount"),
@@ -923,6 +955,7 @@ def get_ipd_beds_data(filters):
             (ip.company == filters.company)
             & (io.check_in.between(filters.from_date, filters.to_date))
             & (io.is_confirmed == 1)
+            & (ip.insurance_coverage_plan.isnotnull())
             & service_type_map
         )
         .groupby(
@@ -946,6 +979,7 @@ def get_ipd_beds_data(filters):
         .on(io.name == sii.reference_dn)
         .select(
             fn.Date(io.check_in).as_("date"),
+            ip.patient_appointment.as_("appointment_no"),
             ip.name.as_("bill_no"),
             ip.patient.as_("patient"),
             ip.patient_name.as_("patient_name"),
@@ -956,8 +990,8 @@ def get_ipd_beds_data(filters):
             hsut.item_group.as_("service_type"),
             hsu.service_unit_type.as_("service_name"),
             Case()
-            .when(ip.insurance_coverage_plan.isin(("", None)), "Cash")
-            .else_(ip.insurance_coverage_plan)
+            .when(io.is_confirmed == 1, "Cash")
+            .else_("Cash")
             .as_("payment_method"),
             Count("*").as_("qty"),
             fn.Max(io.amount).as_("rate"),
@@ -977,6 +1011,7 @@ def get_ipd_beds_data(filters):
             & (io.check_in.between(filters.from_date, filters.to_date))
             & (io.is_confirmed == 1)
             & (io.invoiced == 1)
+            & (ip.insurance_coverage_plan.isnull())
             & service_type_map
         )
         .groupby(
@@ -1013,6 +1048,7 @@ def get_ipd_cons_data(filters):
         .on(ic.encounter == pe.name)
         .select(
             ic.date.as_("date"),
+            ip.patient_appointment.as_("appointment_no"),
             ip.name.as_("bill_no"),
             ip.patient.as_("patient"),
             ip.patient_name.as_("patient_name"),
@@ -1022,10 +1058,7 @@ def get_ipd_cons_data(filters):
             .as_("patient_type"),
             it.item_group.as_("service_type"),
             ic.consultation_item.as_("service_name"),
-            Case()
-            .when(ip.insurance_coverage_plan.isin(("", None)), "Cash")
-            .else_(ip.insurance_coverage_plan)
-            .as_("payment_method"),
+            ip.insurance_coverage_plan.as_("payment_method"),
             Count("*").as_("qty"),
             fn.Max(ic.rate).as_("rate"),
             Sum(ic.rate).as_("amount"),
@@ -1037,6 +1070,7 @@ def get_ipd_cons_data(filters):
             (ip.company == filters.company)
             & (ic.date.between(filters.from_date, filters.to_date))
             & (ic.is_confirmed == 1)
+            & (ip.insurance_coverage_plan.isnotnull())
             & service_type_map
         )
         .groupby(
@@ -1061,6 +1095,7 @@ def get_ipd_cons_data(filters):
         .on(ic.name == sii.reference_dn)
         .select(
             ic.date.as_("date"),
+            ip.patient_appointment.as_("appointment_no"),
             ip.name.as_("bill_no"),
             ip.patient.as_("patient"),
             ip.patient_name.as_("patient_name"),
@@ -1071,8 +1106,8 @@ def get_ipd_cons_data(filters):
             it.item_group.as_("service_type"),
             ic.consultation_item.as_("service_name"),
             Case()
-            .when(ip.insurance_coverage_plan.isin(("", None)), "Cash")
-            .else_(ip.insurance_coverage_plan)
+            .when(ic.is_confirmed == 1, "Cash")
+            .else_("Cash")
             .as_("payment_method"),
             Count("*").as_("qty"),
             fn.Max(ic.rate).as_("rate"),
@@ -1093,6 +1128,7 @@ def get_ipd_cons_data(filters):
             & (ic.date.between(filters.from_date, filters.to_date))
             & (ic.is_confirmed == 1)
             & (ic.hms_tz_invoiced == 1)
+            & (ip.insurance_coverage_plan.isnull())
             & service_type_map
         )
         .groupby(
