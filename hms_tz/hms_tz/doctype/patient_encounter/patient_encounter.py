@@ -54,20 +54,48 @@ class PatientEncounter(Document):
 
 def create_therapy_plan(encounter):
     if len(encounter.therapies):
-        doc = frappe.new_doc('Therapy Plan')
+        therapies = []
+        for row in encounter.therapies:
+            if (
+                row.is_cancelled
+                or row.hms_tz_is_limit_exceeded
+                or row.is_not_available_inhouse
+            ):
+                continue
+
+            therapies.append(row)
+        if len(therapies) == 0:
+            return
+
+        doc = frappe.new_doc("Therapy Plan")
         doc.patient = encounter.patient
         doc.company = encounter.company
         doc.start_date = encounter.encounter_date
-        for entry in encounter.therapies:
-            doc.append('therapy_plan_details', {
-				'therapy_type': entry.therapy_type,
-				'no_of_sessions': entry.no_of_sessions,
-				"prescribe": entry.prescribe or 0
-			})
+        doc.hms_tz_appointment = encounter.appointment
+        doc.hms_tz_patient_age = encounter.patient_age
+        doc.hms_tz_patient_sex = encounter.patient_sex
+        doc.hms_tz_insurance_coverage_plan = encounter.insurance_coverage_plan
+        doc.ref_doctype = "Patient Encounter"
+        doc.ref_docname = encounter.name
+        for entry in therapies:
+            doc.append(
+                "therapy_plan_details",
+                {
+                    "therapy_type": entry.therapy_type,
+                    "no_of_sessions": entry.no_of_sessions,
+                    "prescribe": entry.prescribe or 0,
+                },
+            )
         doc.save(ignore_permissions=True)
-        if doc.get('name'):
-            encounter.db_set('therapy_plan', doc.name)
-            frappe.msgprint(_('Therapy Plan {0} created successfully.').format(frappe.bold(doc.name)), alert=True)
+        if doc.get("name"):
+            encounter.db_set("therapy_plan", doc.name)
+            frappe.msgprint(
+                _("Therapy Plan {0} created successfully.").format(
+                    frappe.bold(doc.name)
+                ),
+                alert=True,
+            )
+
 
 def insert_encounter_to_medical_record(doc):
     subject = set_subject_field(doc)

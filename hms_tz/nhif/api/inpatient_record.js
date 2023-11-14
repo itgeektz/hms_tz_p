@@ -12,6 +12,15 @@ frappe.ui.form.on('Inpatient Record', {
         //hide button to delete rows of consultancy
         $('*[data-fieldname="inpatient_consultancy"]').find('.grid-remove-rows').hide();
         $('*[data-fieldname="inpatient_consultancy"]').find('.grid-remove-all-rows').hide();
+
+        if (!frm.doc.insurance_subscription) {
+            frm.add_custom_button(__("Create Invoice"), () => {
+                create_sales_invoice(frm);
+            });
+            frm.add_custom_button(__("Make Deposit"), () => {
+                make_deposit(frm);
+            }).addClass("font-weight-bold");
+        }
     },
 });
 
@@ -77,3 +86,110 @@ frappe.ui.form.on('Inpatient Consultancy', {
         frm.save();
     },
 });
+
+var make_deposit = (frm) => {
+    let d = new frappe.ui.Dialog({
+        title: "Patient Deposit",
+        fields: [
+            {
+                label: "Deposit Amount",
+                fieldname: "deposit_amount",
+                fieldtype: "Currency",
+                description: "make sure you write the correct amount",
+                reqd: 1,
+            },
+            {
+                label: "Reference Number",
+                fieldname: "reference_number",
+                fieldtype: "Data",
+            },
+            {
+                fieldname: "md_cb",
+                fieldtype: "Column Break"
+            },
+            {
+                label: "Mode of Payment",
+                fieldname: "mode_of_payment",
+                fieldtype: "Link",
+                options: "Mode of Payment",
+                reqd: 1,
+                "description": "make sure you select the correct mode of payment",
+            },
+            {
+                fieldname: "reference_date",
+                fieldtype: "Date",
+                label: "Reference Date",
+            }
+        ],
+        size: "large", // small, large, extra-large 
+        primary_action_label: 'Submit',
+        primary_action(values) {
+            console.log(values);
+            frappe.call({
+                method: "frappe.client.get_value",
+                args: {
+                    doctype: "Mode of Payment",
+                    filters: { name: values.mode_of_payment },
+                    fieldname: ["type"]
+                },
+            }).then((r) => {
+                if (r.message) {
+                    if (r.message.type != "Cash" && !values.reference_number) {
+                        frappe.msgprint({
+                            title: __("Reference Number is required"),
+                            indicator: 'red',
+                            message: __("Reference Number is required for non cash payments,<br>please enter reference number or change mode of payment to cash")
+                        })
+                    } else if (r.message.type != "Cash" && !values.reference_date) {
+                        frappe.msgprint({
+                            title: __("Reference Date is required"),
+                            indicator: 'red',
+                            message: __("Reference Date is required for non cash payments,<br>please enter reference date or change mode of payment to cash")
+                        })
+                    } else {
+                        d.hide();
+                        frappe.call({
+                            method: "hms_tz.nhif.api.inpatient_record.make_deposit",
+                            args: {
+                                inpatient_record: frm.doc.name,
+                                deposit_amount: values.deposit_amount,
+                                mode_of_payment: values.mode_of_payment,
+                                reference_number: values.reference_number,
+                                reference_date: values.reference_date,
+                            },
+                            freeze: true,
+                            freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
+                        }).then((r) => {
+                            if (r.message) {
+                                frm.reload_doc();
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    });
+
+    d.show();
+}
+
+var create_sales_invoice = (frm) => {
+    let filters = {
+        "patient": frm.doc.patient,
+        "appointment_no": frm.doc.patient_appointment,
+        "inpatient_record": frm.doc.name,
+        "company": frm.doc.company,
+    }
+    frappe.call({
+        method: "hms_tz.nhif.api.inpatient_record.create_sales_invoice",
+        args: {
+            args: filters
+        },
+        freeze: true,
+        freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
+    }).then((r) => {
+        if (r.message) {
+            frappe.set_route("Form", "Sales Invoice", r.message);
+        }
+    });
+}

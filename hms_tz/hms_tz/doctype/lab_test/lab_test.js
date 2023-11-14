@@ -50,6 +50,7 @@ frappe.ui.form.on('Lab Test', {
 		});
 
 		if (frm.doc.__islocal) {
+			return;
 			frm.add_custom_button(__('Get from Patient Encounter'), function () {
 				get_lab_test_prescribed(frm);
 			});

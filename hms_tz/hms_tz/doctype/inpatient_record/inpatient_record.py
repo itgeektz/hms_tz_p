@@ -35,11 +35,17 @@ class InpatientRecord(Document):
     def validate(self):
         self.validate_dates()
         if self.status == "Discharged":
-            if not frappe.db.exists("Inpatient Record", {
-                "patient": self.patient,
-                "status": ["in", ["Admitted", "Admission Scheduled", "Discharge Scheduled"]],
-                "name": ["!=", self.name]
-            }):
+            if not frappe.db.exists(
+                "Inpatient Record",
+                {
+                    "patient": self.patient,
+                    "status": [
+                        "in",
+                        ["Admitted", "Admission Scheduled", "Discharge Scheduled"],
+                    ],
+                    "name": ["!=", self.name],
+                },
+            ):
                 frappe.db.set_value("Patient", self.patient, "inpatient_status", None)
                 frappe.db.set_value("Patient", self.patient, "inpatient_record", None)
 
@@ -73,9 +79,7 @@ class InpatientRecord(Document):
 			and patient = %(patient)s
 			"""
 
-        ip_record = frappe.db.sql(
-            query, {"patient": self.patient}, as_dict=1
-        )
+        ip_record = frappe.db.sql(query, {"patient": self.patient}, as_dict=1)
 
         if len(ip_record) > 0:
             msg = _(
@@ -248,6 +252,18 @@ def discharge_patient(inpatient_record):
 
 
 def validate_invoiced_inpatient(inpatient_record):
+    if inpatient_record.insurance_subscription:
+        return
+    if (
+        frappe.db.get_value(
+            "Company",
+            inpatient_record.company,
+            "allow_discharge_patient_with_pending_unbilled_invoices",
+        )
+        == 1
+    ):
+        return
+
     pending_invoices = []
     if inpatient_record.inpatient_occupancies:
         service_unit_names = False
@@ -257,11 +273,30 @@ def validate_invoiced_inpatient(inpatient_record):
                 and inpatient_occupancy.is_confirmed == 1
             ):
                 if service_unit_names:
-                    service_unit_names += ", " + inpatient_occupancy.service_unit
+                    service_unit_names += f"<br>Bed: {inpatient_occupancy.service_unit}   RowNo: {inpatient_occupancy.idx}"
                 else:
-                    service_unit_names = inpatient_occupancy.service_unit
+                    service_unit_names = f"Bed: {inpatient_occupancy.service_unit}   RowNo: {inpatient_occupancy.idx}"
         if service_unit_names:
-            pending_invoices.append("Inpatient Occupancy (" + service_unit_names + ")")
+            pending_invoices.append(
+                f"<b>Inpatient Occupancy:</b><br> {service_unit_names}"
+            )
+
+    if inpatient_record.inpatient_consultancy:
+        consultancies = None
+        for cons in inpatient_record.inpatient_consultancy:
+            if cons.hms_tz_invoiced != 1 and cons.is_confirmed == 1:
+                if consultancies:
+                    consultancies += (
+                        f"<br>ConsItem: {cons.consultation_item}   RowNo: {cons.idx}"
+                    )
+                else:
+                    consultancies = (
+                        f"ConsItem: {cons.consultation_item}   RowNo: {cons.idx}"
+                    )
+        if consultancies:
+            pending_invoices.append(
+                f"<br><br><b>Inpatient Consultancy:</b>  <br>{consultancies}"
+            )
 
     # docs = ["Patient Appointment", "Patient Encounter", "Lab Test", "Clinical Procedure"]
     # Changed on 2021-03-30 07:20:09 by MPCTZ to include only Patient Appointment
@@ -275,7 +310,7 @@ def validate_invoiced_inpatient(inpatient_record):
     if pending_invoices:
         frappe.throw(
             _(
-                "Can not mark Inpatient Record Discharged, there are Unbilled Invoices {0}"
+                "<b>Can not mark Inpatient Record Discharged, there are Unbilled Invoices:</b><br> {0}"
             ).format(", ".join(pending_invoices)),
             title=_("Unbilled Invoices"),
         )

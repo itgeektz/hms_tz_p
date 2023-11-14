@@ -17,6 +17,7 @@ from hms_tz.nhif.api.patient_encounter import validate_stock_item
 from hms_tz.nhif.api.patient_appointment import get_mop_amount, get_discount_percent
 from frappe.model.workflow import apply_workflow
 from frappe.utils import get_url_to_form
+from hms_tz.nhif.api.patient_encounter import get_drug_quantity
 
 class MedicationChangeRequest(Document):
     def validate(self):
@@ -50,11 +51,15 @@ class MedicationChangeRequest(Document):
                             frappe.bold(drug.drug_code)
                     ))
                 
+                # auto calculating quantity
+                if not drug.quantity:
+                    drug.quantity = get_drug_quantity(drug)
+                
                 validate_stock_item(drug.drug_code, drug.quantity, self.company, drug.doctype, drug.healthcare_service_unit, caller="unknown", method="validate")
                 
                 self.validate_item_insurance_coverage(drug, "validate")
 
-
+    @frappe.whitelist()
     def get_warehouse_per_delivery_note(self):
         return frappe.get_value("Delivery Note", self.delivery_note, "set_warehouse")
 
@@ -108,7 +113,6 @@ class MedicationChangeRequest(Document):
                     ).format(frappe.bold(row.drug_code)),
                     method
                 )
-
 
 
     def before_insert(self):
@@ -246,16 +250,17 @@ class MedicationChangeRequest(Document):
             item.is_restricted = row.is_restricted
             item.discount_percentage = row.hms_tz_is_discount_percent
             item.hms_tz_is_discount_applied = row.hms_tz_is_discount_applied
-            item.description = (
-                row.drug_name
-                + " for "
-                + (row.dosage or "No Prescription Dosage")
-                + " for "
-                + (row.period or "No Prescription Period")
-                + " with "
-                + row.medical_code
-                + " and doctor notes: "
-                + (row.comment or "Take medication as per dosage.")
+            item.description = ", <br>".join(
+                [
+                    "frequency: " + str(row.get("dosage") or "No Prescription Dosage"),
+                    "period: " + str(row.get("period") or "No Prescription Period"),
+                    "dosage_form: " + str(row.get("dosage_form") or ""),
+                    "interval: " + str(row.get("interval") or ""),
+                    "interval_uom: " + str(row.get("interval_uom") or ""),
+                    "medical_code: " + str(row.get("medical_code") or "No medical code"),
+                    "Doctor's comment: "
+                    + (row.get("comment") or "Take medication as per dosage."),
+                ]
             )
             doc.append("items", item)
 

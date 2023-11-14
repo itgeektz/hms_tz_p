@@ -71,19 +71,28 @@ def check_patient_info(patient, card_no, patient_name):
 
 
 def before_insert(doc, method):
+    validate_card_info(doc)
+
+
+def validate(doc, method):
+    validate_card_info(doc)
+
+
+def validate_card_info(doc):
     his_list = frappe.get_all(
         "Healthcare Insurance Subscription",
         filters={
             "patient": doc.patient,
             "docstatus": 1,
+            "is_active": 1,
             "healthcare_insurance_coverage_plan": doc.healthcare_insurance_coverage_plan,
             "coverage_plan_card_number": doc.coverage_plan_card_number,
         },
         fields=["coverage_plan_card_number", "coverage_plan_name"],
     )
-    if his_list:
+    if len(his_list) > 0:
         frappe.throw(
-            _("The card {0} already exists for plan {1}").format(
-                doc.coverage_plan_card_number, doc.coverage_plan_name
+            _(
+                f"The card {doc.coverage_plan_card_number} already exists for plan {doc.coverage_plan_name}"
             )
         )

@@ -14,6 +14,9 @@ frappe.ui.form.on('Patient Appointment', {
         // this will stop getting authorization number for cancelled appointment and
         // vital sign will not be created
         frm.trigger("check_for_cancelled_appointment");
+        if (frm.doc.healthcare_package_order) {
+            frm.disable_form();
+        }
         set_filters(frm);
         frm.trigger("update_primary_action");
         frm.trigger("toggle_reqd_referral_no");
@@ -125,7 +128,7 @@ frappe.ui.form.on('Patient Appointment', {
             frm.toggle_reqd("referring_practitioner", false);
             frm.toggle_enable("referring_practitioner", false);
         }
-        
+
         if (frm.doc.appointment_type == "Emergency") {
             if (frm.doc.insurance_subscription) {
                 frm.toggle_display(['remarks'], true);
@@ -159,7 +162,7 @@ frappe.ui.form.on('Patient Appointment', {
         }
     },
     get_insurance_amount: function (frm) {
-        if (!frm.doc.insurance_subscription || !frm.doc.billing_item) {
+        if (!frm.doc.insurance_subscription || !frm.doc.billing_item || frm.doc.healthcare_package_order) {
             return;
         }
         frappe.call({
@@ -169,6 +172,7 @@ frappe.ui.form.on('Patient Appointment', {
                 'billing_item': frm.doc.billing_item,
                 'company': frm.doc.company,
                 'insurance_company': frm.doc.insurance_company,
+                "has_no_consultation_charges": frm.doc.has_no_consultation_charges
             },
             callback: function (data) {
                 if (data.message) {
@@ -178,7 +182,7 @@ frappe.ui.form.on('Patient Appointment', {
         });
     },
     get_mop_amount: function (frm) {
-        if (!frm.doc.mode_of_payment || !frm.doc.billing_item) {
+        if (!frm.doc.mode_of_payment || !frm.doc.billing_item || frm.doc.healthcare_package_order) {
             return;
         }
         if (frm.doc.billing_item && !frm.doc.insurance_subscription) {
@@ -199,7 +203,7 @@ frappe.ui.form.on('Patient Appointment', {
         }
     },
     get_consulting_charge_item: function (frm) {
-        if (!frm.doc.practitioner || !frm.doc.appointment_type) {
+        if (!frm.doc.practitioner || !frm.doc.appointment_type || frm.doc.healthcare_package_order) {
             return;
         }
         frappe.call({
@@ -227,10 +231,10 @@ frappe.ui.form.on('Patient Appointment', {
                     frappe.msgprint("<h4 style='background-color:LightCoral'>Please update date of birth for this patient</h4>");
                 }
             }),
-            setTimeout(() => {
-                frm.toggle_display('mode_of_payment', true);
-                frm.toggle_display('paid_amount', true);
-            }, 100);
+                setTimeout(() => {
+                    frm.toggle_display('mode_of_payment', true);
+                    frm.toggle_display('paid_amount', true);
+                }, 100);
             frm.set_value("insurance_subscription", "");
             if (!frm.doc.ref_vital_signs) {
                 frm.set_df_property("follow_up", "read_only", 0);
@@ -279,13 +283,16 @@ frappe.ui.form.on('Patient Appointment', {
                 'remarks': frm.doc.remarks
             },
             async: true,
+            freeze: true,
+            freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
             callback: function (data) {
                 if (data.message) {
                     const card = data.message;
                     if (card.AuthorizationStatus == 'ACCEPTED') {
+                        frm.set_value("coverage_plan_name", card.CoveragePlanName);
                         frm.set_value("authorization_number", card.AuthorizationNo);
                         frm.set_value("nhif_employer_name", card.EmployerName);
-                        frm.save(); 
+                        frm.save();
                         frappe.show_alert({
                             message: __("Authorization Number is updated"),
                             indicator: 'green'
@@ -312,6 +319,9 @@ frappe.ui.form.on('Patient Appointment', {
         frm.trigger("mandatory_fields");
     },
     update_primary_action: function (frm) {
+        if (frm.doc.healthcare_package_order) {
+            return;
+        }
         if (frm.is_new()) {
             if (!frm.doc.mode_of_payment && !frm.doc.insurance_subscription) {
                 frm.page.set_primary_action(__('Pending'), () => {
@@ -365,7 +375,7 @@ frappe.ui.form.on('Patient Appointment', {
         }
     },
     send_vfd: function (frm) {
-        if (!frm.doc.ref_sales_invoice) return;
+        if (!frm.doc.ref_sales_invoice || frm.doc.healthcare_package_order) return;
         frappe.call({
             method: 'hms_tz.nhif.api.patient_appointment.send_vfd',
             args: {
@@ -436,8 +446,8 @@ const check_and_set_availability = (frm) => {
                     fieldtype: "Date",
                     reqd: 1,
                 },
-                { fieldtype: "Section Break"},
-                { fieldtype: "HTML", fieldname: "available_slots"}
+                { fieldtype: "Section Break" },
+                { fieldtype: "HTML", fieldname: "available_slots" }
 
             ],
             primary_action_label: __("Book"),
@@ -782,14 +792,43 @@ const get_value = (doctype, name, field) => {
 };
 
 const add_btns = (frm) => {
-    if (!frm.doc.patient || frm.is_new() || frm.doc.invoiced || frm.doc.status == "Closed" || frm.doc.status == "Cancelled") return;
+    if (
+        !frm.doc.patient ||
+        frm.is_new() ||
+        frm.doc.invoiced ||
+        frm.doc.status == "Closed" ||
+        frm.doc.status == "Cancelled" ||
+        frm.doc.healthcare_package_order
+    ) {
+        return;
+    }
+
     var vitals_btn_required = false;
-    const valid_days = get_value("Healthcare Settings", "Healthcare Settings", "valid_days");
-    const appointment = get_previous_appointment(frm, { name: ["!=", frm.doc.name], insurance_subscription: frm.doc.insurance_subscription, department: frm.doc.department, status: "Closed" });
+    var valid_days = null
+    if (frm.doc.insurance_subscription) {
+        valid_days = get_value("Healthcare Insurance Coverage Plan", frm.doc.coverage_plan_name, "no_of_days_for_follow_up")
+
+        if (!valid_days || valid_days == 0) {
+            valid_days = get_value("Healthcare Insurance Company", frm.doc.insurance_company, "no_of_days_for_follow_up")
+        }
+    } else if (frm.doc.mode_of_payment) {
+        valid_days = get_value("Healthcare Settings", "Healthcare Settings", "valid_days");
+    }
+
+    let filters = {
+        name: ["!=", frm.doc.name],
+        department: frm.doc.department,
+        status: ["in", ["Open", "Closed"]]
+    }
+    if (frm.doc.insurance_subscription) {
+        filters.insurance_subscription = frm.doc.insurance_subscription;
+    }
+    const appointment = get_previous_appointment(frm, filters);
     if (typeof appointment != "undefined") {
         const last_appointment_date = appointment.appointment_date;
         const diff = frappe.datetime.get_day_diff(frm.doc.appointment_date, last_appointment_date);
-        if (diff > 0 && diff <= valid_days) {
+        console.log(diff)
+        if (diff >= 0 && diff <= valid_days) {
             vitals_btn_required = true;
             if (!frm.doc.invoiced) {
                 frm.set_value("invoiced", 1);
@@ -852,7 +891,8 @@ const set_auth_number_reqd = frm => {
 
 const validate_insurance_company = (frm) => {
     frappe.call('hms_tz.nhif.api.patient_appointment.validate_insurance_company', {
-        insurance_company: frm.doc.insurance_company })
+        insurance_company: frm.doc.insurance_company
+    })
         .then(r => {
             if (r.message) {
                 frm.set_value("insurance_subscription", "");

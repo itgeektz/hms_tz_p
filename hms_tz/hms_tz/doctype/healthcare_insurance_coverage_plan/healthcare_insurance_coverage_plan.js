@@ -3,7 +3,24 @@
 
 frappe.ui.form.on('Healthcare Insurance Coverage Plan', {
 	refresh: function(frm) {
-
+        frm.set_query("opd_insurance_pharmacy", () => {
+            return {
+                filters: {
+                    disabled: 0,
+                    company: frm.doc.company,
+                    service_unit_type: "Pharmacy",
+                }
+            }
+		});
+        frm.set_query("ipd_insurance_pharmacy", () => {
+            return {
+                filters: {
+                    disabled: 0,
+                    company: frm.doc.company,
+                    service_unit_type: "Pharmacy",
+                }
+            }
+        });
 	},
 	insurance_company: function(frm){
 		if(frm.doc.insurance_company){

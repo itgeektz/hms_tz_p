@@ -26,11 +26,21 @@ def execute(filters=None):
             "status",
         ],
     )
-
+    appointment_date = (
+        frappe.db.get_value(
+            "Patient Appointment", filters.patient_appointment, "appointment_date"
+        ),
+    )
     if details[0]["docstatus"] == 0 and details[0]["status"] != "Closed":
         frappe.throw(frappe.bold("This Appointment is not Closed..!!"))
 
     else:
+        admitted_discharge_date = frappe.db.get_value(
+            "Inpatient Record",
+            {"patient_appointment": filters.patient_appointment},
+            ["admitted_datetime as admitted_date", "discharge_date"],
+            as_dict=True,
+        )
         if not filters.get("patient_type"):
             appointments_data = get_appointment_consultancy(filters)
             if appointments_data:
@@ -52,7 +62,7 @@ def execute(filters=None):
             if ipd_cons:
                 data += ipd_cons
 
-            data = sorted(data, key=lambda d: d["date"])
+            data = sorted(data, key=lambda d: (d["category"], d["date"]))
 
             if not data:
                 frappe.throw(
@@ -85,8 +95,15 @@ def execute(filters=None):
                 "coverage_plan_name": "",
                 "authorization_number": "",
                 "coverage_plan_card_number": "",
-                "admitted_date": "",
-                "discharge_date": "",
+                "date_admitted": admitted_discharge_date.admitted_date.strftime(
+                    "%Y-%m-%d"
+                )
+                if admitted_discharge_date
+                else "",
+                "date_discharge": admitted_discharge_date.discharge_date
+                if admitted_discharge_date
+                else "",
+                "appointment_date": appointment_date,
             }
 
             print_person = frappe.get_value("User", frappe.session.user, "full_name")
@@ -110,7 +127,7 @@ def execute(filters=None):
             if insurance_lrpmt_data:
                 data += insurance_lrpmt_data
 
-            data = sorted(data, key=lambda d: d["date"])
+            data = sorted(data, key=lambda d: (d["category"], d["date"]))
 
             if not data:
                 frappe.throw(
@@ -143,8 +160,15 @@ def execute(filters=None):
                 "coverage_plan_name": "",
                 "authorization_number": "",
                 "coverage_plan_card_number": "",
-                "admitted_date": "",
-                "discharge_date": "",
+                "date_admitted": admitted_discharge_date.admitted_date.strftime(
+                    "%Y-%m-%d"
+                )
+                if admitted_discharge_date
+                else "",
+                "date_discharge": admitted_discharge_date.discharge_date
+                if admitted_discharge_date
+                else "",
+                "appointment_date": appointment_date,
             }
 
             print_person = frappe.get_value("User", frappe.session.user, "full_name")
@@ -172,7 +196,7 @@ def execute(filters=None):
             if ipd_cons:
                 data += ipd_cons
 
-            data = sorted(data, key=lambda d: d["date"])
+            data = sorted(data, key=lambda d: (d["category"], d["date"]))
             if not data:
                 frappe.throw(
                     "No Record found for the filters Patient: {0}, Appointment: {1},\
@@ -204,8 +228,15 @@ def execute(filters=None):
                 "coverage_plan_name": "",
                 "authorization_number": "",
                 "coverage_plan_card_number": "",
-                "admitted_date": "",
-                "discharge_date": "",
+                "date_admitted": admitted_discharge_date.admitted_date.strftime(
+                    "%Y-%m-%d"
+                )
+                if admitted_discharge_date
+                else "",
+                "date_discharge": admitted_discharge_date.discharge_date
+                if admitted_discharge_date
+                else "",
+                "appointment_date": appointment_date,
             }
 
             print_person = frappe.get_value("User", frappe.session.user, "full_name")

@@ -9,8 +9,10 @@ from hms_tz.nhif.api.healthcare_utils import (
     create_delivery_note_from_LRPT,
     get_restricted_LRPT,
 )
-from frappe.utils import getdate
+from frappe.utils import getdate, get_fullname
+from frappe.core.doctype.sms_settings.sms_settings import send_sms
 import dateutil
+from frappe.query_builder import DocType
 
 
 def validate(doc, method):
@@ -24,14 +26,14 @@ def set_normals(doc):
     dob = frappe.get_cached_value("Patient", doc.patient, "dob")
     age = dateutil.relativedelta.relativedelta(getdate(), dob).years
     for row in doc.normal_test_items:
-        if not row.result_value:
-            continue
         normals = get_normals(row.lab_test_name, age, doc.patient_sex)
         if normals:
             row.min_normal = normals.get("min")
             row.max_normal = normals.get("max")
             row.text_normal = normals.get("text")
 
+            if not row.result_value:
+                continue
             data_normals = calc_data_normals(normals, row.result_value)
             row.detailed_normal_range = data_normals["detailed_normal_range"]
             row.result_status = data_normals["result_status"]
@@ -101,30 +103,40 @@ def get_normals(lab_test_name, patient_age, patient_sex):
 
 def get_lab_test_template(lab_test_name):
     template_id = frappe.db.exists(
-        "Lab Test Template", {"lab_test_name": lab_test_name}
+        "Lab Test Template", {"lab_test_code": lab_test_name}
     )
     if template_id:
-        return frappe.get_cached_doc("Lab Test Template", template_id)
+        return frappe.get_cached_doc("Lab Test Template", lab_test_name)
     return False
 
 
 def before_submit(doc, method):
     if doc.is_restricted and not doc.approval_number:
-            frappe.throw(_(
-                    f"Approval number is required for <b>{doc.radiology_examination_template}</b>. Please set the Approval Number."
-                )
+        frappe.throw(
+            _(
+                f"Approval number is required for <b>{doc.radiology_examination_template}</b>. Please set the Approval Number."
             )
-        
+        )
+
+    doc.hms_tz_submitted_by = get_fullname(frappe.session.user)
+    doc.hms_tz_user_id = frappe.session.user
+
+    # 2023-07-13
+    # stop this validation for now
+    return
     if doc.approval_number and doc.approval_status != "Verified":
-        frappe.throw(_(
+        frappe.throw(
+            _(
                 f"Approval number: <b>{doc.approval_number}</b> for item: <b>{doc.radiology_examination_template}</b> is not verified.>br>\
                     Please verify the Approval Number."
             )
         )
 
+
 def on_submit(doc, method):
     update_lab_prescription(doc)
     create_delivery_note(doc)
+    send_sms_for_lab_results(doc)
 
 
 def create_delivery_note(doc):
@@ -148,11 +160,14 @@ def on_trash(doc, method):
     for item in sample_list:
         frappe.delete_doc("Sample Collection", item.name)
 
+
 def on_cancel(doc, method):
     doc.flags.ignore_links = True
 
     if doc.docstatus == 2:
-        frappe.db.set_value("Lab Prescription", doc.hms_tz_ref_childname, "lab_test", "")
+        frappe.db.set_value(
+            "Lab Prescription", doc.hms_tz_ref_childname, "lab_test", ""
+        )
 
         new_lab_doc = frappe.copy_doc(doc)
         new_lab_doc.status = "Draft"
@@ -161,15 +176,45 @@ def on_cancel(doc, method):
         new_lab_doc.save(ignore_permissions=True)
 
         url = frappe.utils.get_url_to_form(new_lab_doc.doctype, new_lab_doc.name)
-        frappe.msgprint(f"Lab Test: <strong>{doc.name}</strong> is cancelled:<br>\
-            New Lab Test: <a href='{url}'><strong>{new_lab_doc.name}</strong></a> is successful created")
-        
+        frappe.msgprint(
+            f"Lab Test: <strong>{doc.name}</strong> is cancelled:<br>\
+            New Lab Test: <a href='{url}'><strong>{new_lab_doc.name}</strong></a> is successful created"
+        )
+
 
 def create_sample_collection(doc):
     if not doc.template:
         return
     template = frappe.get_cached_doc("Lab Test Template", doc.template)
     if not template.sample_qty or not template.sample:
+        return
+
+    sample = DocType("Sample Collection")
+    sample_docname = (
+        frappe.qb.from_(sample)
+        .select(sample.name)
+        .where(
+            (sample.ref_doctype == doc.ref_doctype)
+            & (sample.ref_docname == doc.ref_docname)
+            & (sample.sample == template.sample)
+        )
+        .run(as_dict=True)
+    )
+
+    if len(sample_docname) > 0:
+        sample_doc = frappe.get_doc("Sample Collection", sample_docname[0].name)
+        sample_doc.append(
+            "lab_tests",
+            {
+                "lab_test": doc.name,
+                "lab_test_tempate": template.name,
+                "test_abbr": template.abbr,
+            },
+        )
+        sample_doc.save(ignore_permissions=True)
+        doc.sample = sample_doc.name
+        doc.save(ignore_permissions=True)
+        frappe.msgprint(_(f"Sample Collection: {sample_doc.name} updated"), alert=True)
         return
 
     sample_doc = frappe.new_doc("Sample Collection")
@@ -182,11 +227,22 @@ def create_sample_collection(doc):
     sample_doc.sample_uom = template.sample_uom
     sample_doc.sample_qty = template.sample_qty
     sample_doc.sample_details = template.sample_details
-    sample_doc.ref_doctype = doc.doctype
-    sample_doc.ref_docname = doc.name
+    sample_doc.ref_doctype = doc.ref_doctype
+    sample_doc.ref_docname = doc.ref_docname
+    sample_doc.append(
+        "lab_tests",
+        {
+            "lab_test": doc.name,
+            "lab_test_tempate": template.name,
+            "test_abbr": template.abbr,
+        },
+    )
 
     sample_doc.flags.ignore_permissions = True
     sample_doc.insert()
+    sample_doc.reload()
+    doc.sample = sample_doc.name
+    doc.save(ignore_permissions=True)
     frappe.msgprint(
         _("Sample Collection created {0}").format(sample_doc.name), alert=True
     )
@@ -196,8 +252,54 @@ def update_lab_prescription(doc):
     if doc.ref_doctype == "Patient Encounter":
         encounter_doc = frappe.get_doc("Patient Encounter", doc.ref_docname)
         for row in encounter_doc.lab_test_prescription:
-            if row.name == doc.hms_tz_ref_childname and row.lab_test_code == doc.template:
-                frappe.db.set_value(row.doctype, row.name, {
-                    "lab_test": doc.name,
-                    "delivered_quantity": 1
-                })
+            if (
+                row.name == doc.hms_tz_ref_childname
+                and row.lab_test_code == doc.template
+            ):
+                frappe.db.set_value(
+                    row.doctype,
+                    row.name,
+                    {"lab_test": doc.name, "delivered_quantity": 1},
+                )
+
+
+def send_sms_for_lab_results(doc):
+    if doc.ref_doctype == "Patient Encounter":
+        (
+            allow_send_sms_for_multiple_labs,
+            lab_result_sms_template,
+        ) = frappe.get_cached_value(
+            "Company",
+            doc.company,
+            ["allow_send_sms_for_multiple_labs", "lab_result_sms_template"],
+        )
+
+        if allow_send_sms_for_multiple_labs == 0:
+            return
+
+        if not lab_result_sms_template:
+            return
+
+        all_labs_per_encounter = frappe.get_all(
+            "Lab Test",
+            filters={
+                "ref_doctype": "Patient Encounter",
+                "ref_docname": doc.ref_docname,
+                "sms_sent": 0,
+            },
+            fields=["name", "docstatus"],
+        )
+        sms_sent = False
+        if len(all_labs_per_encounter) > 0:
+            draft_labs = [lab for lab in all_labs_per_encounter if lab.docstatus == 0]
+            if len(draft_labs) == 0:
+                phone_number = [doc.mobile]
+                if lab_result_sms_template and phone_number:
+                    msg = frappe.render_template(lab_result_sms_template, {"doc": doc})
+                    send_sms(phone_number, msg, success_msg=False)
+                    sms_sent = True
+                    frappe.msgprint(_(f"SMS sent to Patient: {doc.patient_name}, PhoneNo: {doc.mobile}"), alert=True)
+
+        if sms_sent:
+            for row in all_labs_per_encounter:
+                frappe.db.set_value("Lab Test", row.name, "sms_sent", 1)

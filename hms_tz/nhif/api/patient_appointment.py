@@ -20,8 +20,8 @@ from hms_tz.nhif.doctype.nhif_scheme.nhif_scheme import add_scheme
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from hms_tz.nhif.api.healthcare_utils import get_item_rate
 from frappe.utils import date_diff, getdate, nowdate
-
-# from csf_tz import console
+from hms_tz.hms_tz.doctype.patient.patient import create_customer
+from csf_tz import console
 
 
 def before_insert(doc, method):
@@ -32,11 +32,23 @@ def before_insert(doc, method):
             )
         )
 
+    patient_doc = frappe.get_cached_doc("Patient", doc.patient)
+    if not patient_doc.customer:
+        create_customer(patient_doc)
+
 
 @frappe.whitelist()
 def get_insurance_amount(
-    insurance_subscription, billing_item, company, insurance_company
+    insurance_subscription,
+    billing_item,
+    company,
+    insurance_company,
+    has_no_consultation_charges=False,
 ):
+    # SHM Rock: 202
+    if has_no_consultation_charges:
+        return 0, 0
+
     item_price = get_item_rate(
         billing_item, company, insurance_subscription, insurance_company
     )
@@ -118,6 +130,7 @@ def invoice_appointment(name):
                 appointment_doc.billing_item,
                 appointment_doc.company,
                 appointment_doc.insurance_company,
+                appointment_doc.has_no_consultation_charges,
             )
             if discount_percent > 0:
                 appointment_doc.hms_tz_is_discount_applied = 1
@@ -172,7 +185,7 @@ def invoice_appointment(name):
         appointment_doc.ref_sales_invoice = sales_invoice.name
         appointment_doc.invoiced = 1
         appointment_doc.db_update()
-        make_next_doc(appointment_doc, "validate")
+        make_next_doc(appointment_doc, "validate", from_hook=False)
         return "true"
 
 
@@ -215,6 +228,7 @@ def make_vital(appointment_doc, method):
             appointment_doc.billing_item,
             appointment_doc.company,
             appointment_doc.insurance_company,
+            appointment_doc.has_no_consultation_charges,
         )
         if discount_percent > 0:
             appointment_doc.hms_tz_is_discount_applied = 1
@@ -226,6 +240,24 @@ def make_vital(appointment_doc, method):
             )
 
     set_follow_up(appointment_doc, "invoice_appointment")
+    # SHM Rock: 202
+    if "NHIF" in appointment_doc.insurance_company and appointment_doc.appointment_type:
+        appointment_doc.has_no_consultation_charges = frappe.get_cached_value(
+            "Appointment Type",
+            appointment_doc.appointment_type,
+            "has_no_consultation_charges",
+        )
+        if appointment_doc.has_no_consultation_charges:
+            if appointment_doc.paid_amount > 0:
+                appointment_doc.paid_amount = 0
+
+            frappe.msgprint(
+                _(
+                    f"This appointment type: <b>{appointment_doc.appointment_type}</b> has no consultation charges."
+                ),
+                alert=True,
+            )
+
     if (not appointment_doc.ref_vital_signs) and (
         appointment_doc.invoiced
         or (
@@ -267,7 +299,20 @@ def make_encounter(doc, method):
             or doc.status == "Cancelled"
         ):
             return
+
+        if doc.insurance_subscription and doc.billing_item and doc.paid_amount <= 0:
+            doc.paid_amount, discount_percent = get_insurance_amount(
+                doc.insurance_subscription,
+                doc.billing_item,
+                doc.company,
+                doc.insurance_company,
+                doc.has_no_consultation_charges,
+            )
+            if discount_percent > 0:
+                doc.hms_tz_is_discount_applied = 1
+
         source_name = doc.name
+
     target_doc = None
     encounter_doc = get_mapped_doc(
         "Patient Appointment",
@@ -293,11 +338,14 @@ def make_encounter(doc, method):
     encounter_doc.encounter_category = "Appointment"
 
     encounter_doc.save(ignore_permissions=True)
+    frappe.msgprint(_("Patient Encounter {0} created".format(encounter_doc.name)))
+
     if doc.doctype == "Patient Appointment":
         doc.ref_patient_encounter = encounter_doc.name
         doc.db_update()
 
-    frappe.msgprint(_("Patient Encounter {0} created".format(encounter_doc.name)))
+        if doc.healthcare_package_order:
+            return encounter_doc.name
 
 
 @frappe.whitelist()
@@ -388,25 +436,28 @@ def update_insurance_subscription(insurance_subscription, card, company):
         subscription_doc.hms_tz_product_code != card["ProductCode"]
         or subscription_doc.hms_tz_scheme_id != card["SchemeID"]
     ):
-        plan = frappe.get_value(
-            "NHIF Product",
-            {"nhif_product_code": card["ProductCode"], "company": company},
-            "healthcare_insurance_coverage_plan",
-        )
+        from hms_tz.nhif.api.patient import get_coverage_plan
 
-        if plan:
-            plan_doc = frappe.get_cached_doc("Healthcare Insurance Coverage Plan", plan)
+        coverage_plan = get_coverage_plan(card, company)
+
+        if coverage_plan:
+            card["CoveragePlanName"] = coverage_plan
+            plan_doc = frappe.get_cached_doc("Healthcare Insurance Coverage Plan", coverage_plan)
 
             if plan_doc:
                 subscription_doc.insurance_company = plan_doc.insurance_company
                 subscription_doc.healthcare_insurance_coverage_plan = plan_doc.name
                 subscription_doc.coverage_plan_name = plan_doc.coverage_plan_name
+
         subscription_doc.hms_tz_product_code = card["ProductCode"]
         subscription_doc.hms_tz_product_name = card["ProductName"]
+    
         subscription_doc.hms_tz_scheme_id = card["SchemeID"]
         subscription_doc.hms_tz_scheme_name = card["SchemeName"]
 
         subscription_doc.save(ignore_permissions=True)
+
+    return card
 
 
 @frappe.whitelist()
@@ -448,10 +499,12 @@ def get_previous_appointment(patient, filters=None):
 def set_follow_up(appointment_doc, method):
     filters = {
         "name": ["!=", appointment_doc.name],
-        "insurance_subscription": appointment_doc.insurance_subscription,
         "department": appointment_doc.department,
-        #"status": "Closed",
+        "status": ["in", ["Open", "Closed"]],
     }
+    if appointment_doc.insurance_subscription:
+        filters["insurance_subscription"] = appointment_doc.insurance_subscription
+
     appointment = get_previous_appointment(appointment_doc.patient, filters)
     if appointment and appointment_doc.appointment_date:
         diff = date_diff(appointment_doc.appointment_date, appointment.appointment_date)
@@ -487,13 +540,18 @@ def set_follow_up(appointment_doc, method):
                 return
             appointment_doc.invoiced = 1
             appointment_doc.paid_amount = 0
-            frappe.msgprint(_("Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"), alert=True)
+            frappe.msgprint(
+                _(
+                    "Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"
+                ),
+                alert=True,
+            )
         else:
             appointment_doc.follow_up = 0
             # frappe.msgprint(_("This appointment requires to be paid for!"), alert=True)
 
 
-def make_next_doc(doc, method):
+def make_next_doc(doc, method, from_hook=True):
     validate_insurance_subscription(doc)
     check_multiple_appointments(doc)
     if doc.is_new():
@@ -542,8 +600,23 @@ def make_next_doc(doc, method):
                     )
                 )
             )
-    if doc.ref_sales_invoice:
-        doc.invoiced = 1
+    if from_hook:
+        set_follow_up(doc, method)
+        # SHM Rock: 202
+        if "NHIF" in doc.insurance_company and doc.appointment_type:
+            doc.has_no_consultation_charges = frappe.get_cached_value(
+                "Appointment Type", doc.appointment_type, "has_no_consultation_charges"
+            )
+            if doc.has_no_consultation_charges:
+                if doc.paid_amount > 0:
+                    doc.paid_amount = 0
+
+                frappe.msgprint(
+                    _(
+                        f"This appointment type: <b>{doc.appointment_type}</b> has no consultation charges."
+                    ),
+                    alert=True,
+                )
 
     if not doc.patient_age:
         doc.patient_age = calculate_patient_age(doc.patient)
@@ -635,6 +708,9 @@ def get_discount_percent(insurance_company):
 
 
 def check_multiple_appointments(doc):
+    if doc.healthcare_package_order:
+        return
+
     if (
         doc.coverage_plan_card_number
         and "NHIF" in doc.insurance_company

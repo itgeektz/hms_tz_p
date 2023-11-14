@@ -28,7 +28,12 @@ def validate(doc, method):
 def validate_create_delivery_note(doc):
     if not doc.patient:
         return
-    inpatient_record = frappe.get_cached_value  ("Patient", doc.patient, "inpatient_record")
+    if doc.enabled_auto_create_delivery_notes == 0:
+        return
+
+    inpatient_record = frappe.get_cached_value(
+        "Patient", doc.patient, "inpatient_record"
+    )
     if inpatient_record:
         insurance_subscription = frappe.get_value(
             "Inpatient Record", inpatient_record, "insurance_subscription"
@@ -51,8 +56,22 @@ def before_submit(doc, method):
             )
         )
 
+    if doc.hms_tz_discount_requested == 1 and doc.hms_tz_discount_status == "Pending":
+        frappe.throw(
+            _(
+                "Patient Discount Request is still pending. Please wait for approval before submitting this invoice."
+            )
+        )
+
+    if doc.is_return == 1:
+        reset_invoiced_status(doc)
+
 
 def on_submit(doc, method):
+    if doc.is_return == 1:
+        reset_invoiced_status(doc)
+        return
+
     create_healthcare_docs(doc, method)
     update_drug_prescription(doc)
 
@@ -94,6 +113,22 @@ def create_healthcare_docs(doc, method):
 
                 item.hms_tz_is_lrp_item_created = 1
                 item.db_update()
+            elif item.reference_dt and item.reference_dt in [
+                "Inpatient Occupancy",
+                "Inpatient Consultancy",
+            ]:
+                invoiced_field = "invoiced"
+                if frappe.get_meta(item.reference_dt).get_field("hms_tz_invoiced"):
+                    invoiced_field = "hms_tz_invoiced"
+
+                frappe.db.set_value(
+                    item.reference_dt,
+                    item.reference_dn,
+                    {
+                        invoiced_field: 1,
+                        "sales_invoice_number": doc.name,
+                    },
+                )
 
     if method == "From Front End":
         frappe.db.commit()
@@ -119,5 +154,56 @@ def update_drug_prescription(doc):
                         "sales_invoice_number": doc.name,
                         "drug_prescription_created": 1,
                         "invoiced": 1,
+                    },
+                )
+
+
+@frappe.whitelist()
+def get_discount_items(invoice_no):
+    items = frappe.get_all(
+        "Sales Invoice Item",
+        filters={"parent": invoice_no},
+        fields=["item_code", "item_name", "amount", "reference_dt", "name"],
+        order_by="reference_dt desc",
+    )
+    return items
+
+
+def reset_invoiced_status(doc):
+    """Remove invoiced status on items because a return invoice is created"""
+
+    for row in doc.items:
+        if row.reference_dt and row.reference_dt:
+            if row.reference_dt == "Patient Appointment":
+                appointment = frappe.qb.DocType("Patient Appointment")
+                (
+                    frappe.qb.update(appointment)
+                    .set(appointment.invoiced, 0)
+                    .set(appointment.ref_sales_invoice, "")
+                    .where(appointment.name == row.reference_dn)
+                ).run()
+            elif row.reference_dt in [
+                "Lab Prescription",
+                "Radiology Procedure Prescription",
+                "Procedure Prescription",
+                "Drug Prescription",
+                "Therapy Plan Detail",
+                "Inpatient Occupancy",
+            ]:
+                frappe.db.set_value(
+                    row.reference_dt,
+                    row.reference_dn,
+                    {
+                        "invoiced": 0,
+                        "sales_invoice_number": "",
+                    },
+                )
+            elif row.reference_dt == "Inpatient Consultancy":
+                frappe.db.set_value(
+                    row.reference_dt,
+                    row.reference_dn,
+                    {
+                        "hms_tz_invoiced": 0,
+                        "sales_invoice_number": "",
                     },
                 )

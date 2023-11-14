@@ -28,9 +28,12 @@ frappe.query_reports["Visiting Consultant Charges Report"] = {
 			"fieldtype": "Link",
 			"label": __("Healthcare Practitioner"),
 			"options": "Healthcare Practitioner"
+		},
+		{
+			"fieldname": "vc_technician",
+			"fieldtype": "Link",
+			"label": __("VC Technician"),
+			"options": "User"
 		}
 	]
 };
-
-// ,
-		

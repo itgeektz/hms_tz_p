@@ -359,7 +359,7 @@ class PatientHistory {
 		});
 
 		me.page.main.on('click', '.btn-get-records', function () {
-			this.setup_documents();
+			me.setup_documents();
 		});
 	}
 
