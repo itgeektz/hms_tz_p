@@ -6,15 +6,17 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 from frappe.utils import nowdate, nowtime, get_url_to_form
-from hms_tz.nhif.api.healthcare_utils import get_item_rate, get_item_price
 from hms_tz.nhif.api.patient_appointment import get_mop_amount
 from hms_tz.nhif.api.patient_encounter import create_healthcare_docs_from_name
 from hms_tz.nhif.api.patient_appointment import get_discount_percent
 from erpnext.accounts.party import get_party_account
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 from hms_tz.nhif.api.healthcare_utils import (
+    get_item_rate,
+    get_item_price,
     get_healthcare_service_order_to_invoice,
     get_warehouse_from_service_unit,
+    validate_nhif_patient_claim_status,
 )
 import json
 
@@ -77,58 +79,11 @@ def daily_update_inpatient_occupancies():
 
 
 @frappe.whitelist()
-def confirmed(row, doc):
-    row = frappe._dict(json.loads(row))
-    doc = frappe._dict(json.loads(doc))
-    if row.invoiced or not row.left:
-        return
-    encounter = frappe.get_doc("Patient Encounter", doc.admission_encounter)
-    service_unit_type, warehouse = frappe.get_cached_value(
-        "Healthcare Service Unit", row.service_unit, ["service_unit_type", "warehouse"]
-    )
-    item_code = frappe.get_cached_value(
-        "Healthcare Service Unit Type", service_unit_type, "item_code"
-    )
-    item_rate = 0
-    if encounter.insurance_subscription:
-        item_rate = get_item_rate(
-            item_code,
-            encounter.company,
-            encounter.insurance_subscription,
-            encounter.insurance_company,
-        )
-        if not item_rate:
-            frappe.throw(
-                _(
-                    "There is no price in Insurance Subscription {0} for item {1}"
-                ).format(encounter.insurance_subscription, item_code)
-            )
-    elif encounter.mode_of_payment:
-        price_list = frappe.get_cached_value(
-            "Mode of Payment", encounter.mode_of_payment, "price_list"
-        )
-        if not price_list:
-            frappe.throw(
-                _("There is no in mode of payment {0}").format(
-                    encounter.mode_of_payment
-                )
-            )
-        if price_list:
-            item_rate = get_item_price(item_code, price_list, encounter.company)
-            if not item_rate:
-                frappe.throw(
-                    _("There is no price in price list {0} for item {1}").format(
-                        price_list, item_code
-                    )
-                )
-
-    if item_rate:
-        delivery_note = create_delivery_note(
-            encounter, item_code, item_rate, warehouse, row, doc.primary_practitioner
-        )
-        frappe.set_value(row.doctype, row.name, "is_confirmed", 1)
-        return delivery_note
-
+def confirmed(company, appointment, insurance_company):
+    if insurance_company and "NHIF" in insurance_company:
+        validate_nhif_patient_claim_status("Inpatient Record", company, appointment, insurance_company, "inpatient_record")
+        return True
+    
 
 def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practitioner):
     insurance_subscription = encounter.insurance_subscription
