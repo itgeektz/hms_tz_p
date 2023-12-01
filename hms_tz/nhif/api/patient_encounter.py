@@ -23,6 +23,7 @@ from hms_tz.nhif.api.healthcare_utils import (
     create_individual_procedure_prescription,
     msgThrow,
     msgPrint,
+    validate_nhif_patient_claim_status,
 )
 from healthcare.healthcare.doctype.healthcare_settings.healthcare_settings import (
     get_receivable_account,
@@ -55,6 +56,11 @@ def on_trash(doc, method):
 def before_insert(doc, method):
     doc.encounter_date = nowdate()
     doc.encounter_time = nowtime()
+
+    if doc.insurance_company and "NHIF" in doc.insurance_company:
+        validate_nhif_patient_claim_status(
+            "Patient Encounter", doc.company, doc.appointment, doc.insurance_company
+        )
 
 
 # regency rock: 95
@@ -475,6 +481,10 @@ def duplicate_encounter(encounter):
             _(
                 "Cannot duplicate an encounter of healthcare package order, Please let the patient to create appointment again"
             )
+        )
+    if doc.insurance_company and "NHIF" in doc.insurance_company:
+        validate_nhif_patient_claim_status(
+            "Patient Encounter", doc.company, doc.appointment, doc.insurance_company
         )
 
     if not doc.docstatus == 1 or doc.encounter_type == "Final" or doc.duplicated == 1:
@@ -1415,6 +1425,11 @@ def enqueue_on_update_after_submit(doc_name):
 
 
 def before_submit(doc, method):
+    if doc.insurance_company and "NHIF" in doc.insurance_company:
+        validate_nhif_patient_claim_status(
+            "Patient Encounter", doc.company, doc.appointment, doc.insurance_company
+        )
+
     if not doc.healthcare_package_order:
         set_amounts(doc)
 

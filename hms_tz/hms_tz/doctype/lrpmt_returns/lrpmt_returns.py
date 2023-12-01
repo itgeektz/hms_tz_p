@@ -4,16 +4,29 @@
 import frappe
 import json
 from frappe import bold, _
-from frappe.model.workflow import apply_workflow
-from frappe.utils import nowdate, nowtime, flt, unique
 from frappe.model.document import Document
+from frappe.model.workflow import apply_workflow
+from frappe.utils import nowdate, nowtime, flt, unique, get_fullname, get_url_to_form
+from hms_tz.nhif.api.healthcare_utils import validate_nhif_patient_claim_status
 
 
 class LRPMTReturns(Document):
     def validate(self):
         set_missing_values(self)
 
+    def before_insert(self):
+        validate_nhif_patient_claim_status(
+            "LRPMT Return", self.company, self.appointment
+        )
+
     def before_submit(self):
+        if not self.approved_by:
+            self.approved_by = get_fullname()
+
+        validate_nhif_patient_claim_status(
+            "LRPMT Return", self.company, self.appointment
+        )
+
         validate_reason(self)
         validate_drug_row(self)
         cancel_lrpt_doc(self)
@@ -54,7 +67,7 @@ def cancel_lrpt_doc(self):
                         doc.status = "Not Serviced"
                     doc.save(ignore_permissions=True)
                     doc.reload()
-                    
+
                     if (
                         doc.workflow_state == "Not Serviced"
                         or doc.workflow_state == "Submitted but Not Serviced"
@@ -75,6 +88,8 @@ def cancel_lrpt_doc(self):
                             frappe.bold(item.reference_docname),
                         )
                     )
+
+
 def cancel_tharapy_plan_doc(patient, therapy_plan_id):
     therapy_sessions = frappe.get_all(
         "Therapy Session",
@@ -91,7 +106,7 @@ def cancel_tharapy_plan_doc(patient, therapy_plan_id):
                 therapy_session_doc.cancel()
 
     therapy_plan_doc = frappe.get_doc("Therapy Plan", therapy_plan_id)
-    
+
     for entry in therapy_plan_doc.therapy_plan_details:
         if entry.no_of_sessions:
             entry.no_of_sessions = 0
@@ -103,7 +118,8 @@ def cancel_tharapy_plan_doc(patient, therapy_plan_id):
     therapy_plan_doc.save(ignore_permissions=True)
     therapy_plan_doc.reload()
     return therapy_plan_doc.name
-    
+
+
 def return_or_cancel_drug_item(self):
     if len(self.drug_items) == 0:
         return
@@ -128,15 +144,11 @@ def return_or_cancel_drug_item(self):
             except Exception:
                 frappe.log_error(
                     frappe.get_traceback(),
-                    str(
-                        "Error in creating return delivery note for {0}".format(
-                            dn.delivery_note_no
-                        )
-                    ),
+                    str("Error in creating return delivery note for {0}".format(dn)),
                 )
                 frappe.throw(
                     "Error in creating return delivery note against delivery note: {0}".format(
-                        frappe.bold(dn.delivery_note_no)
+                        frappe.bold(dn)
                     )
                 )
 
@@ -157,7 +169,7 @@ def update_drug_description_for_draft_delivery_note(self, delivey_note):
 
         if dn_doc.workflow_state != "Not Serviced":
             apply_workflow(dn_doc, "Not Serviced")
-        
+
         if dn_doc.workflow_state == "Not Serviced":
             for item in self.drug_items:
                 if item.delivery_note_no == delivey_note and item.status == "Draft":
@@ -195,7 +207,7 @@ def update_drug_prescription_for_submitted_delivery_note(item):
         item_cancelled = 1
     else:
         item_cancelled = 0
-    
+
     frappe.db.set_value(
         "Drug Prescription",
         item.child_name,
@@ -205,6 +217,7 @@ def update_drug_prescription_for_submitted_delivery_note(item):
             "is_cancelled": item_cancelled,
         },
     )
+
 
 def return_drug_quantity_to_stock(self, source_doc):
     target_doc = frappe.new_doc("Delivery Note")
@@ -388,9 +401,11 @@ def validate_drug_row(self):
 
         if msg:
             frappe.throw(title="Notification", msg=msg, exc="Frappe.ValidationError")
-        
+
+
 def get_unique_delivery_notes(self, status):
     return unique([d.delivery_note_no for d in self.drug_items if d.status == status])
+
 
 @frappe.whitelist()
 def get_lrpt_item_list(patient, appointment, company):
@@ -398,7 +413,7 @@ def get_lrpt_item_list(patient, appointment, company):
     child_list = get_lrpt_map()
 
     encounter_list = get_patient_encounters(patient, appointment, company)
-    
+
     for child in child_list:
         items = frappe.get_all(
             child["doctype"],
@@ -549,7 +564,7 @@ def get_refdoc(doctype, childname, template, encounter):
             "field": "procedure_template",
         },
     ]
-    
+
     for refd in ref_docs:
         if refd.get("table") == doctype:
             docname = frappe.get_value(
@@ -566,6 +581,9 @@ def get_refdoc(doctype, childname, template, encounter):
 
 
 def set_missing_values(doc):
+    if not doc.requested_by:
+        doc.requested_by = get_fullname()
+
     appointment_list = frappe.get_all(
         "Patient Appointment",
         filters={"patient": doc.patient, "status": "Closed"},
@@ -806,7 +824,7 @@ def get_drugs(patient, appointment, company):
             "dn_detail",
         ],
     )
-    
+
     for drug in drugs:
         drug.update(
             {

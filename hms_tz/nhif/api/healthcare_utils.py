@@ -135,16 +135,16 @@ def get_healthcare_service_order_to_invoice(
 
                     qty = 1
                     if value.get("doctype") == "Drug Prescription":
-                        qty = ((row.get("quantity") or 0) - (
+                        qty = (row.get("quantity") or 0) - (
                             row.get("quantity_returned") or 0
-                        ))
+                        )
 
                     services_to_invoice.append(
                         {
                             "reference_type": row.doctype,
                             "reference_name": row.name,
                             "service": item_code,
-                            "qty":  qty,
+                            "qty": qty,
                         }
                     )
 
@@ -1421,7 +1421,7 @@ def auto_finalize_patient_encounters():
                                     "finalized": 1,
                                 },
                             )
-            
+
             except Exception as e:
                 frappe.log_error(
                     frappe.get_traceback(),
@@ -1453,3 +1453,54 @@ def auto_finalize_patient_encounters():
         )
         if len(encounters) > 0:
             finalize_encounter(encounters)
+
+
+def validate_nhif_patient_claim_status(
+    doctype_name, company, appointment, insurance_company=None, caller=None
+):
+    """Stop Change/Cancel/Return of LRPMT Items After Claim Submission
+
+    This is to ensure same LRPMT items on patient encounter and on NHIF patient claim,
+    if the claim is submitted, then the user should not be able to change/cancel/return LRPMT items
+    because items on Patient Encounter and items on NHIF patient claim will not match
+    """
+    if (
+        frappe.get_cached_value(
+            "Company",
+            company,
+            "stop_change_of_lrpmt_items_after_claim_submission",
+        )
+        == 0
+    ):
+        return
+
+    claim_no = None
+    if not insurance_company and appointment:
+        insurance_company, claim_no = frappe.get_value(
+            "Patient Appointment",
+            appointment,
+            ["insurance_company", "nhif_patient_claim"],
+        )
+    if insurance_company and "NHIF" in insurance_company:
+        if not claim_no:
+            claim_no = frappe.get_value(
+                "Patient Appointment", appointment, "nhif_patient_claim"
+            )
+
+        claim_status = frappe.get_value("NHIF Patient Claim", claim_no, "docstatus")
+        if claim_status == 1:
+            claim_url = get_url_to_form("NHIF Patient Claim", claim_no)
+            app_url = get_url_to_form("Patient Appointment", appointment)
+            msg = f"""<div style="  text-align: justify; border: 1px solid #ccc; background-color: #f9f9f9; padding: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); margin: 10px;">
+                    NHIF Patient Claim: <a href='{claim_url}'><b>{claim_no}</b></a> for this Appointment: <a href='{app_url}'><b>{appointment}</b></a> is already submitted.<br><br>
+                    Please stop Duplicating/Editing/Submitting this <b>{doctype_name}</b> to avoid making changes on items whose Claim is already submitted
+                </div>"""
+
+            if caller:
+                frappe.msgprint(msg)
+            else:
+                frappe.throw(
+                    msg,
+                    title="<b>NHIF Patient Claim Already Submitted",
+                    exc=frappe.ValidationError,
+                )

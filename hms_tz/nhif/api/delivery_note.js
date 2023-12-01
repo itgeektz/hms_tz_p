@@ -39,6 +39,7 @@ frappe.ui.form.on("Delivery Note", {
                 method: "From Front End"
             },
             freeze: true,
+            freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
             callback: (r) => {
                 if (r.message == true) {
                     frm.refresh()
@@ -60,6 +61,7 @@ frappe.ui.form.on("Delivery Note", {
                 name: frm.doc.name
             },
             freeze: true,
+            freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
             callback: (r) => {
             },
         });
