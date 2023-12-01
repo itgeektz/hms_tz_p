@@ -72,8 +72,8 @@ def after_insert(doc, method):
         )
 
         if (
-            pharmacy_details and
-            pharmacy_details.auto_set_pharmacy_on_patient_encounter == 1
+            pharmacy_details
+            and pharmacy_details.auto_set_pharmacy_on_patient_encounter == 1
         ):
             if doc.inpatient_record:
                 if not pharmacy_details.ipd_cash_pharmacy:
@@ -99,14 +99,14 @@ def after_insert(doc, method):
             [
                 "auto_set_pharmacy_on_patient_encounter",
                 "opd_insurance_pharmacy",
-                "ipd_insurance_pharmacy"
+                "ipd_insurance_pharmacy",
             ],
             as_dict=1,
         )
 
         if (
-            pharmacy_details and
-            pharmacy_details.auto_set_pharmacy_on_patient_encounter == 1
+            pharmacy_details
+            and pharmacy_details.auto_set_pharmacy_on_patient_encounter == 1
         ):
             if doc.inpatient_record:
                 if not pharmacy_details.ipd_insurance_pharmacy:
@@ -396,12 +396,13 @@ def on_submit_validation(doc, method):
             if template not in hsic_map:
                 for row_item in healthcare_service_templates[template]:
                     if (
-                        doc.company and
-                        frappe.get_cached_value(
+                        doc.company
+                        and frappe.get_cached_value(
                             "Company",
                             doc.company,
                             "auto_prescribe_items_on_patient_encounter",
-                        ) == 1
+                        )
+                        == 1
                     ):
                         row_item.prescribe = 1
 
@@ -417,12 +418,13 @@ def on_submit_validation(doc, method):
             if template in hsic_map:
                 for row_item in healthcare_service_templates[template]:
                     if (
-                        doc.company and
-                        frappe.get_cached_value(
+                        doc.company
+                        and frappe.get_cached_value(
                             "Company",
                             doc.company,
                             "auto_prescribe_items_on_patient_encounter",
-                        ) == 1
+                        )
+                        == 1
                     ):
                         row_item.prescribe = 1
 
@@ -901,7 +903,8 @@ def create_delivery_note_per_encounter(patient_encounter_doc, method):
                     "dosage_form: " + str(row.get("dosage_form") or ""),
                     "interval: " + str(row.get("interval") or ""),
                     "interval_uom: " + str(row.get("interval_uom") or ""),
-                    "medical_code: " + str(row.get("medical_code") or "No medical code"),
+                    "medical_code: "
+                    + str(row.get("medical_code") or "No medical code"),
                     "Doctor's comment: "
                     + (row.get("comment") or "Take medication as per dosage."),
                 ]
@@ -2465,3 +2468,32 @@ def get_filterd_drug(doctype, txt, searchfield, start, page_len, filters):
     )
 
     return data
+
+
+@frappe.whitelist()
+def get_filtered_dosage(doctype, txt, searchfield, start, page_len, filters):
+    doctype = "Prescription Dosage"
+    if filters.get("dosage_form"):
+        if (
+            frappe.get_cached_value(
+                "Dosage Form", filters.get("dosage_form"), "has_restricted_qty"
+            ) == 1
+        ):
+            return frappe.get_all(
+                doctype,
+                filters={"has_restricted_qty": 1},
+                fields=[searchfield],
+                as_list=1,
+            )
+        else:
+            return frappe.get_all(
+                "Prescription Dosage",
+                fields=[searchfield],
+                as_list=1,
+            )
+    else:
+        return frappe.get_all(
+            "Prescription Dosage",
+            fields=[searchfield],
+            as_list=1,
+        )
