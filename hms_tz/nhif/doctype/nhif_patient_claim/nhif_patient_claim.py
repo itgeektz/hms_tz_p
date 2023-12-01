@@ -15,11 +15,13 @@ from frappe.utils import (
     getdate,
     get_fullname,
     nowdate,
+    nowtime,
     get_datetime,
     time_diff_in_seconds,
     now_datetime,
     cint,
     get_url_to_form,
+    get_time,
 )
 from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 from hms_tz.nhif.api.healthcare_utils import (
@@ -229,17 +231,27 @@ class NHIFPatientClaim(Document):
         # Reset values for every validate
         self.patient_type_code = "OUT"
         self.date_admitted = None
+        self.admitted_time = None
         self.date_discharge = None
+        self.discharge_time = None
         if self.inpatient_record:
-            discharge_date, date_admitted, admitted_datetime = frappe.get_value(
+            (
+                discharge_date,
+                scheduled_date,
+                admitted_datetime,
+                time_created,
+            ) = frappe.get_value(
                 "Inpatient Record",
                 self.inpatient_record,
-                ["discharge_date", "scheduled_date", "admitted_datetime"],
+                ["discharge_date", "scheduled_date", "admitted_datetime", "creation"],
             )
-            if getdate(date_admitted) < getdate(admitted_datetime):
-                self.date_admitted = date_admitted
+
+            if getdate(scheduled_date) < getdate(admitted_datetime):
+                self.date_admitted = scheduled_date
+                self.admitted_time = get_time(get_datetime(time_created))
             else:
                 self.date_admitted = getdate(admitted_datetime)
+                self.admitted_time = get_time(get_datetime(admitted_datetime))
 
             # If the patient is same day discharged then consider it as Outpatient
             if self.date_admitted == getdate(discharge_date):
@@ -249,8 +261,14 @@ class NHIFPatientClaim(Document):
                 self.patient_type_code = "IN"
                 self.date_discharge = discharge_date
 
-        self.attendance_date = frappe.get_value(
-            "Patient Appointment", self.patient_appointment, "appointment_date"
+                # the time claim is created will treated as discharge time
+                # because there is no field of discharge time on Inpatient Record
+                self.discharge_time = nowtime()
+
+        self.attendance_date, self.attendance_time = frappe.get_value(
+            "Patient Appointment",
+            self.patient_appointment,
+            ["appointment_date", "appointment_time"],
         )
         if self.date_discharge:
             self.claim_year = int(self.date_discharge.strftime("%Y"))
@@ -438,9 +456,7 @@ class NHIFPatientClaim(Document):
                             child["ref_doctype"], row.get(child["ref_docname"])
                         )
 
-                        new_row.status = get_LRPMT_status(
-                            encounter.name, row, child
-                        )
+                        new_row.status = get_LRPMT_status(encounter.name, row, child)
                         new_row.patient_encounter = encounter.name
                         new_row.ref_doctype = row.doctype
                         new_row.ref_docname = row.name
@@ -700,8 +716,12 @@ class NHIFPatientClaim(Document):
         entities.AttendanceDate = str(self.attendance_date)
         entities.PatientTypeCode = self.patient_type_code
         if self.patient_type_code == "IN":
-            entities.DateAdmitted = str(self.date_admitted)
-            entities.DateDischarged = str(self.date_discharge)
+            entities.DateAdmitted = (
+                str(self.date_admitted) + " " + str(self.admitted_time)
+            )
+            entities.DateDischarged = (
+                str(self.date_discharge) + " " + str(self.discharge_time)
+            )
         entities.PractitionerName = self.practitioner_name
         entities.PractitionerNo = self.practitioner_no
         entities.CreatedBy = self.item_crt_by

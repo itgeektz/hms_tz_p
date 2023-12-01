@@ -65,7 +65,7 @@ def execute():
         },
         {
             "doctype": "Clinical Procedure",
-            "fieldname": "medical_code_standard",
+            "fieldname": "status",
             "property": "allow_on_submit",
             "property_type": "Check",
             "value": 1

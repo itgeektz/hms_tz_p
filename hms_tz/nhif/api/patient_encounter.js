@@ -73,6 +73,18 @@ frappe.ui.form.on('Patient Encounter', {
         // filter medication based on company
         filter_drug_prescriptions(frm);
 
+        // Mosaic: https://worklog.aakvatech.com/Mosaic/Task/96b2f5e26c
+        //filter dosage based on dosage form and has restricted qty ticked
+        frm.set_query("dosage", "drug_prescription", function (doc, cdt, cdn) {
+            const child = locals[cdt][cdn];
+            return {
+                query: "hms_tz.nhif.api.patient_encounter.get_filtered_dosage",
+                filters: {
+                    dosage_form: child.dosage_form
+                }
+            }
+        });
+
         frm.set_query('therapy_type', 'therapies', function () {
             return {
                 filters: {
@@ -855,10 +867,6 @@ frappe.ui.form.on('Drug Prescription', {
             frappe.model.set_value(cdt, cdn, "prescribe", 0);
             validate_stock_item(frm, row.drug_code, row.prescribe, row.quantity, row.healthcare_service_unit, "Drug Prescription");
         }
-    },
-    dosage: function (frm, cdt, cdn) {
-        frappe.model.set_value(cdt, cdn, "quantity", 0);
-        frm.refresh_field("drug_prescription");
     },
     dosage: (frm, cdt, cdn) => {
         let row = locals[cdt][cdn];

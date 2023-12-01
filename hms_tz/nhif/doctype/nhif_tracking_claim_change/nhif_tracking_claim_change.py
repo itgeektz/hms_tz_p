@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import nowdate, nowtime, get_fullname, cstr
+from frappe.utils import nowdate, nowtime, get_fullname, cstr, flt
 
 
 class NHIFTrackingClaimChange(Document):
@@ -13,21 +13,25 @@ class NHIFTrackingClaimChange(Document):
 ref_docnames_list = []
 
 
-def track_changes_of_claim_items(claim):
+def track_changes_of_claim_items(claim_doc):
+    claim_no = reconcile_original_nhif_patient_claim_items(claim_doc)
+    claim = frappe.get_doc("NHIF Patient Claim", claim_no)
+    claim.reload()
+
     for row in claim.original_nhif_patient_claim_item:
         for item in claim.nhif_patient_claim_item:
-            if item.item_code == row.item_code:
-                if item.amount_claimed == row.amount_claimed:
-                    ref_docnames_list.append(cstr(item.ref_docname))
+            if cstr(item.item_code) == cstr(row.item_code):
+                if flt(item.amount_claimed) == flt(row.amount_claimed):
+                    ref_docnames_list.append(cstr(row.ref_docname))
 
-                elif item.amount_claimed != row.amount_claimed:
-                    ref_docnames_list.append(cstr(item.ref_docname))
+                elif flt(item.amount_claimed) != flt(row.amount_claimed):
+                    ref_docnames_list.append(cstr(row.ref_docname))
                     create_nhif_track_record(
                         item, claim, row.amount_claimed, "Amount Changed"
                     )
 
     for row in claim.original_nhif_patient_claim_item:
-        if row.ref_docname not in ref_docnames_list:
+        if cstr(row.ref_docname) not in ref_docnames_list:
             if row.ref_doctype == "Patient Appointment":
                 create_nhif_track_record(row, claim, row.amount_claimed, "Item Removed")
 
@@ -282,3 +286,72 @@ def get_medication_change_request_reference(item, encounter):
     ).run(as_dict=1)
 
     return ref_name[0].name if ref_name else None
+
+
+def reconcile_original_nhif_patient_claim_items(claim_doc):
+    unique_items = []
+    repeated_items = []
+    unique_refcodes = []
+
+    for row in claim_doc.original_nhif_patient_claim_item:
+        if row.item_code not in unique_refcodes:
+            unique_refcodes.append(row.item_code)
+            unique_items.append(row)
+        else:
+            repeated_items.append(row)
+
+    if len(repeated_items) > 0:
+        claim_doc.original_nhif_patient_claim_item = []
+        for item in unique_items:
+            ref_docnames = []
+            ref_encounters = []
+
+            for d in repeated_items:
+                if str(item.item_code) == str(d.item_code):
+                    item.item_quantity += d.item_quantity
+                    item.amount_claimed += d.amount_claimed
+
+                    if d.approval_ref_no:
+                        approval_ref_no = None
+                        if item.approval_ref_no:
+                            approval_ref_no = (
+                                str(item.approval_ref_no) + "," + str(d.approval_ref_no)
+                            )
+                        else:
+                            approval_ref_no = d.approval_ref_no
+
+                        item.approval_ref_no = approval_ref_no
+
+                    if d.patient_encounter:
+                        ref_encounters.append(d.patient_encounter)
+                    if d.ref_docname:
+                        ref_docnames.append(d.ref_docname)
+
+                    if item.status != "Submitted" and d.status == "Submitted":
+                        item.status = "Submitted"
+
+            if item.patient_encounter:
+                ref_encounters.append(item.patient_encounter)
+            if item.ref_docname:
+                ref_docnames.append(item.ref_docname)
+
+            if len(ref_encounters) > 0:
+                item.patient_encounter = ",".join(set(ref_encounters))
+
+            if len(ref_docnames) > 0:
+                item.ref_docname = ",".join(set(ref_docnames))
+
+            item.name = None
+            claim_doc.append("original_nhif_patient_claim_item", item)
+
+        for record in repeated_items:
+            if record.docstatus == 1:
+                record.cancel()
+
+            record.delete(ignore_permissions=True, force=True, delete_permanently=True)
+
+        claim_doc.save(ignore_permissions=True)
+        claim_doc.reload()
+        return claim_doc.name
+
+    return claim_doc.name
