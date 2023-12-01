@@ -104,5 +104,24 @@ frappe.query_reports["Itemwise Hospital Revenue"] = {
 			"options": "\nLab Test\nRadiology Examination\nClinical Procedure\nDelivery Note",
 			"hidden": 1,
 		},
+		{
+			"fieldname": "show_only_ongoing_ipds",
+			"label": __("Show Ongoing IPDs"),
+			"fieldtype": "Check",
+			"description": "Show only items of ongoing admitted patient based on date range",
+		},
+		{
+			"fieldname": "show_only_prev_items_for_discharged_ipds",
+			"label": __("Show Previous Items For Discharged IPDs"),
+			"fieldtype": "Check",
+			"description": "Show previous items of discharged patient based before start date",
+			"on_change": function () {
+				let show_only_prev_items_for_discharged_ipds = frappe.query_report.get_filter_value('show_only_prev_items_for_discharged_ipds');
+				let show_only_ongoing_ipds = frappe.query_report.get_filter_value('show_only_ongoing_ipds');
+				if (show_only_prev_items_for_discharged_ipds == 1 && show_only_ongoing_ipds == 1) {
+					frappe.msgprint("Please select only one option either 'Show Ongoing IPDs' or 'Show Previous Items For Discharged IPDs'");
+				}
+			}
+		}
 	]
 };
