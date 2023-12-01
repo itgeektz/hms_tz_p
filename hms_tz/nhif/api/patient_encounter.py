@@ -2483,3 +2483,32 @@ def get_filterd_drug(doctype, txt, searchfield, start, page_len, filters):
     )
 
     return data
+
+
+@frappe.whitelist()
+def get_filtered_dosage(doctype, txt, searchfield, start, page_len, filters):
+    doctype = "Prescription Dosage"
+    if filters.get("dosage_form"):
+        if (
+            frappe.get_cached_value(
+                "Dosage Form", filters.get("dosage_form"), "has_restricted_qty"
+            ) == 1
+        ):
+            return frappe.get_all(
+                doctype,
+                filters={"has_restricted_qty": 1},
+                fields=[searchfield],
+                as_list=1,
+            )
+        else:
+            return frappe.get_all(
+                "Prescription Dosage",
+                fields=[searchfield],
+                as_list=1,
+            )
+    else:
+        return frappe.get_all(
+            "Prescription Dosage",
+            fields=[searchfield],
+            as_list=1,
+        )
