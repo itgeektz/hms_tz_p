@@ -61,24 +61,24 @@ def update_dosage_details(item):
             return
 
         drug_doc = frappe.get_doc("Drug Prescription", reference_dn)
-        
+
         description = ", <br>".join(
-                [
-                    "frequency: " + str(drug_doc.get("dosage") or "No Prescription Dosage"),
-                    "period: " + str(drug_doc.get("period") or "No Prescription Period"),
-                    "dosage_form: " + str(drug_doc.get("dosage_form") or ""),
-                    "interval: " + str(drug_doc.get("interval") or ""),
-                    "interval_uom: " + str(drug_doc.get("interval_uom") or ""),
-                    "medical_code: " + str(drug_doc.get("medical_code") or "No medical code"),
-                    "Doctor's comment: "
-                    + (drug_doc.get("comment") or "Take medication as per dosage."),
-                ]
-            )
+            [
+                "frequency: " + str(drug_doc.get("dosage") or "No Prescription Dosage"),
+                "period: " + str(drug_doc.get("period") or "No Prescription Period"),
+                "dosage_form: " + str(drug_doc.get("dosage_form") or ""),
+                "interval: " + str(drug_doc.get("interval") or ""),
+                "interval_uom: " + str(drug_doc.get("interval_uom") or ""),
+                "medical_code: "
+                + str(drug_doc.get("medical_code") or "No medical code"),
+                "Doctor's comment: "
+                + (drug_doc.get("comment") or "Take medication as per dosage."),
+            ]
+        )
 
         item.description = description
         item.reference_doctype = drug_doc.doctype
         item.reference_name = drug_doc.name
-
 
 
 def onload(doc, method):
@@ -305,7 +305,7 @@ def update_drug_prescription(doc):
                                 item.reference_dn,
                                 {
                                     "is_not_available_inhouse": 1,
-                                    "hms_tz_is_out_of_stcok": 1,
+                                    "hms_tz_is_out_of_stock": 1,
                                     "is_cancelled": 1,
                                 },
                             )
