@@ -12,6 +12,7 @@ from frappe.utils import (
     nowtime,
     cint,
     cstr,
+    flt,
     date_diff,
 )
 from hms_tz.nhif.api.healthcare_utils import (
@@ -1731,10 +1732,12 @@ def update_drug_prescription(patient_encounter_doc, name):
                     )
 
 
-def validate_patient_balance_vs_patient_costs(doc):
-    encounters = get_patient_encounters(doc)
+def validate_patient_balance_vs_patient_costs(doc, encounters=None):
     if not encounters or len(encounters) == 0:
-        return
+        encounters = get_patient_encounters(doc)
+
+        if not encounters or len(encounters) == 0:
+            return
 
     total_amount_billed = 0
 
@@ -1763,7 +1766,7 @@ def validate_patient_balance_vs_patient_costs(doc):
                         child.quantity - child.quantity_returned
                     ) * child.amount
                 else:
-                    total_amount_billed = child.amount
+                    total_amount_billed += child.amount
 
     inpatient_record_doc = frappe.get_doc("Inpatient Record", doc.inpatient_record)
 
@@ -1807,17 +1810,19 @@ def make_cash_limit_alert(doc, cash_limit_percent, cash_limit_details):
     if cash_limit_percent > 0 and cash_limit_percent <= cash_limit_details.get(
         "hms_tz_minimum_cash_limit_percent"
     ):
+        msg_per = f"""<div style="border: 1px solid #ccc; background-color: #f9f9f9; padding: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); margin: 10px;">
+                <p style="font-weight: normal; font-size: 14px; justify-content: left;">The patient: <span style="font-weight: bold;">{doc.patient}</span> - <span style="font-weight: bold;">{doc.patient_name}</span>\
+                    has reached <span style="font-weight: bold;">{100 - flt(cash_limit_percent, 2)}%</span> of his/her cash limit.</p>
+                <p style="font-style: italic; font-weight: bold; font-size: 14px; justify-content: left;">please request patient to deposit advances or request patient cash limit adjustment</p>
+            </div>"""
+
         if (
             cash_limit_details.get("hms_tz_limit_under_minimum_percent_action")
             == "Warn"
         ):
             frappe.msgprint(
-                frappe.bold(
-                    "The patient {0} - {1} has reached 90% of their cash limit.\
-                        Please request patient to deposit advances or request patient cash limit adjustment".format(
-                        doc.patient, doc.patient_name
-                    )
-                )
+                title="Cash Limit Exceeded",
+                msg=msg_per,
             )
 
         elif (
@@ -1825,35 +1830,27 @@ def make_cash_limit_alert(doc, cash_limit_percent, cash_limit_details):
             == "Stop"
         ):
             frappe.throw(
-                frappe.bold(
-                    "The patient {0} - {1} has reached 90% of their cash limit.\
-                        Please request patient to deposit advances or request patient cash limit adjustment".format(
-                        doc.patient, doc.patient_name
-                    )
-                )
+                title="Cash Limit Exceeded",
+                msg=msg_per,
             )
 
     elif cash_limit_percent <= 0:
+        msg = f"""<div style="border: 1px solid #ccc; background-color: #f9f9f9; padding: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); margin: 10px;">
+                <p style="font-weight: normal; font-size: 14px; justify-content: left;">The deposit balance of this patient: <span style="font-weight: bold;">{doc.patient}</span> - <span style="font-weight: bold;">{doc.patient_name}</span>\
+                    is not enough or Patient has reached the cash limit.</p>
+                <p style="font-style: italic; font-weight: bold; font-size: 14px; justify-content: left;">please request patient to deposit advances or request patient cash limit adjustment</p>
+            </div>"""
+
         if cash_limit_details.get("hms_tz_limit_exceed_action") == "Warn":
             frappe.msgprint(
-                frappe.bold(
-                    "The deposit balance of this patient {0} - {1} is not enough or\
-                        the patient has reached the cash limit. In order to submit this encounter,\
-                        please request patient to deposit advances or request patient cash limit adjustment".format(
-                        doc.patient, doc.patient_name
-                    )
-                )
+                title="Cash Limit Exceeded",
+                msg=msg,
             )
 
         if cash_limit_details.get("hms_tz_limit_exceed_action") == "Stop":
             frappe.throw(
-                frappe.bold(
-                    "The deposit balance of this patient {0} - {1} is not enough or\
-                    the patient has reached the cash limit. In order to submit this encounter,\
-                    please request patient to deposit advances or request patient cash limit adjustment".format(
-                        doc.patient, doc.patient_name
-                    )
-                )
+                title="Cash Limit Exceeded",
+                msg=msg,
             )
 
 
@@ -2492,7 +2489,8 @@ def get_filtered_dosage(doctype, txt, searchfield, start, page_len, filters):
         if (
             frappe.get_cached_value(
                 "Dosage Form", filters.get("dosage_form"), "has_restricted_qty"
-            ) == 1
+            )
+            == 1
         ):
             return frappe.get_all(
                 doctype,
