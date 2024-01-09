@@ -124,16 +124,16 @@ def get_summarized_data(args):
     date_list = []
     single_transaction_per_day = []
     mult_transaction_per_day = []
-    
+
     transactions = get_transaction_data(args)
     if len(transactions) == 0:
         frappe.msgprint(
-			f"No Record found for the Fitlters:  Patient: {frappe.bold(args.patient)}, Appointment: {frappe.bold(args.appointment_no)},\
+            f"No Record found for the Fitlters:  Patient: {frappe.bold(args.patient)}, Appointment: {frappe.bold(args.appointment_no)},\
 			Patient Type: {frappe.bold(args.patient_type)} From Date: {frappe.bold(args.from_date)} and To Date: {frappe.bold(args.to_date)}\
 			you specified..., Please change your filters and try again..!!"
-		)
+        )
         return [], []
-    
+
     for record in transactions:
         total_amount = (
             flt(record["bed_charges"])
@@ -331,6 +331,9 @@ def get_transaction_data(args):
 
 def get_report_summary(args, summary_data, is_summary=False):
     customer = frappe.get_value("Patient", {"name": args.patient}, ["customer"])
+    cash_limit = frappe.get_value(
+        "Inpatient Record", args.inpatient_record, "cash_limit"
+    )
 
     deposit_balance = get_balance_on(
         party_type="Customer", party=customer, company=args.company
@@ -413,22 +416,31 @@ def get_report_summary(args, summary_data, is_summary=False):
 
     return sorted_data, [
         {
+            "value": cash_limit,
+            "label": _("Current Cash Limit"),
+            "datatype": "Currency",
+            "currency": currency,
+        },
+        {
             "value": total_deposited_amount,
             "label": _("Total Deposited Amount"),
             "datatype": "Currency",
             "currency": currency,
+            "color": "blue",
         },
         {
             "value": total_amount_used,
             "label": _("Total Amount Used"),
             "datatype": "Currency",
             "currency": currency,
+            "color": "blue",
         },
         {
             "value": current_balance,
             "label": _("Current Balance"),
             "datatype": "Currency",
             "currency": currency,
+            "color": "blue",
         },
     ]
 
@@ -439,11 +451,11 @@ def get_data(args):
     if args.get("patient_type") == "In-Patient":
         cash_lrpmt_data = get_cash_lrpmt_transaction(args)
         if len(cash_lrpmt_data) > 0:
-             data += cash_lrpmt_data
-             
+            data += cash_lrpmt_data
+
         # insurance_lrpmt_data = get_insurance_lrpmt_transaction(args)
         # if insurance_lrpmt_data: data += insurance_lrpmt_data
-		
+
         ipd_beds = get_ipd_occupancy_transactions(args)
         if len(ipd_beds) > 0:
             data += ipd_beds

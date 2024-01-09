@@ -7,7 +7,10 @@ import frappe
 from frappe import _
 from frappe.utils import nowdate, nowtime, get_url_to_form
 from hms_tz.nhif.api.patient_appointment import get_mop_amount
-from hms_tz.nhif.api.patient_encounter import create_healthcare_docs_from_name
+from hms_tz.nhif.api.patient_encounter import (
+    create_healthcare_docs_from_name,
+    validate_patient_balance_vs_patient_costs,
+)
 from hms_tz.nhif.api.patient_appointment import get_discount_percent
 from erpnext.accounts.party import get_party_account
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
@@ -24,6 +27,7 @@ import json
 def validate(doc, method):
     set_beds_price(doc)
     validate_inpatient_occupancies(doc)
+    validate_inpatient_balance_vs_inpatient_cost(doc.patient, doc.patient_appointment, doc.name)
 
 
 def validate_inpatient_occupancies(doc):
@@ -79,11 +83,17 @@ def daily_update_inpatient_occupancies():
 
 
 @frappe.whitelist()
-def confirmed(company, appointment, insurance_company):
+def confirmed(company, appointment, insurance_company=None):
     if insurance_company and "NHIF" in insurance_company:
-        validate_nhif_patient_claim_status("Inpatient Record", company, appointment, insurance_company, "inpatient_record")
+        validate_nhif_patient_claim_status(
+            "Inpatient Record",
+            company,
+            appointment,
+            insurance_company,
+            "inpatient_record",
+        )
         return True
-    
+
 
 def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practitioner):
     insurance_subscription = encounter.insurance_subscription
@@ -335,3 +345,28 @@ def create_sales_invoice(args):
     invoice_doc.save()
 
     return invoice_doc.name
+
+
+@frappe.whitelist()
+def validate_inpatient_balance_vs_inpatient_cost(
+    patient, patient_appointment, inpatient_record
+):
+    patient_encounters = frappe.get_all(
+        "Patient Encounter",
+        filters={
+            "patient": patient,
+            "appointment": patient_appointment,
+            "inpatient_record": inpatient_record,
+        },
+        fields=["name"],
+        order_by="encounter_date desc",
+        pluck="name",
+    )
+    if not patient_encounters or len(patient_encounters) == 0:
+        return
+
+    encounter_doc = frappe.get_doc("Patient Encounter", patient_encounters[0])
+    validate_patient_balance_vs_patient_costs(
+        encounter_doc, encounters=patient_encounters
+    )
+    return True
