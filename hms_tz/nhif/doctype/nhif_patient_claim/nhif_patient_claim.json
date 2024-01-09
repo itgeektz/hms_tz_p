@@ -40,15 +40,18 @@
   "serial_no",
   "created_by",
   "item_crt_by",
+  "delayreason",
   "column_break_18",
   "practitioner_name",
   "practitioner_no",
   "date_discharge",
+  "discharge_time",
   "date_admitted",
+  "admitted_time",
   "patient_type_code",
   "attendance_date",
+  "attendance_time",
   "patient_file_no",
-  "delayreason",
   "patient_file_section",
   "patient_file",
   "claim_file_section",
@@ -429,6 +432,7 @@
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "original_nhif_patient_claim_item",
    "fieldtype": "Table",
    "options": "Original NHIF Patient Claim Item",
@@ -439,15 +443,35 @@
    "fieldname": "original_section_break",
    "fieldtype": "Section Break",
    "label": "Original NHIF Patient Claim Item"
+  },
+  {
+   "fieldname": "discharge_time",
+   "fieldtype": "Time",
+   "label": "Discharge Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "admitted_time",
+   "fieldtype": "Time",
+   "label": "Admitted Time",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "patient_appointment.appointment_time",
+   "fieldname": "attendance_time",
+   "fieldtype": "Time",
+   "label": "Attendance Time",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-06-08 15:15:23.999156",
+ "modified": "2023-11-13 15:41:59.324916",
  "modified_by": "Administrator",
  "module": "NHIF",
  "name": "NHIF Patient Claim",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
@@ -481,6 +505,7 @@
  "show_name_in_global_search": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "title_field": "patient_name",
  "track_changes": 1
 }
