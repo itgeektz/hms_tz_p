@@ -16,6 +16,10 @@
         vertical-align: top !important;
         padding: 1px !important;
     }
+    .print-format th {
+        font-weight: bold;
+        color: black;
+    }
 
     hr {
         margin-top: 10px;
@@ -41,6 +45,10 @@
         .print-format th {
             vertical-align: top !important;
             padding: 1px !important;
+        }
+        .print-format th {
+            font-weight: bold;
+            color: black;
         }
 
         hr {
@@ -177,6 +185,65 @@
                 </table>
             </td>
         </tr>
+        {% for(var d=0, h=data.length; d<h; d++) { %}
+            {% if (data[d].limit_exceeded_items) { %}
+                {% var exceeded_items = data[d].limit_exceeded_items %}
+                {% if (exceeded_items.length > 0) { %}
+                    <tr>
+                        <td>
+                            <br>
+                            <hr>
+                            <h5 style="justify-content: center;">{%= __("Daily Limit Exceeded Items:") %}</h5>
+                            <table class="table table-bordered">
+                                <colgroup>
+                                    <col style="width: 5%" />
+                                    <col style="width: 12%" />
+                                    <col style="width: 27%" />
+                                    <col style="width: 26%" />
+                                    <col style="width: 8%" />
+                                    <col style="width: 11%" />
+                                    <col style="width: 11%" />
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:center">{%= __("SrNo") %}</th>
+                                        <th style="text-align:center">{%= __("Date") %}</th>
+                                        <th style="text-align:left">{%= __("Category") %}</th>
+                                        <th style="text-align:left">{%= __("Description") %}</th>
+                                        <th style="text-align:center">{%= __("Quantity") %}</th>
+                                        <th style="text-align:center">{%= __("Rate") %}</th>
+                                        <th style="text-align:center">{%= __("Amount") %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for(var i=0, l=exceeded_items.length; i<l; i++) { %}
+                                        <tr>
+                                            <td style="text-align: center; ">{%= i+1 %}</td>
+                                            <td style="text-align: left; ">{%= exceeded_items[i].date %}</td>
+                                            <td style="text-align: left; ">{%= exceeded_items[i].category %}</td>
+                                            <td style="text-align: left; ">{%= exceeded_items[i].description %}</td>
+                                            <td style="text-align: center; ">{%= exceeded_items[i].quantity %}</td>
+                                            <td style="text-align: right; ">{%= exceeded_items[i][("rate")].toLocaleString(undefined,
+                                                {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                                            <td style="text-align: right; ">{%= exceeded_items[i][("amount")].toLocaleString(undefined,
+                                                {minimumFractionDigits: 2, maximumFractionDigits: 2}) %}</td>
+                                        
+                                        </tr>
+                                    {% } %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th style="text-align: left; " colspan="6">Total</th>
+                                        <th style="text-align: right; ">{%= data[d].total_limit_exceeded_amount.toLocaleString(undefined, {minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2}) %}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </td>
+                    </tr>
+                {% } %}
+            {% } %}
+        {% } %}
         <tr>
             <td>
                 <div style="padding-bottom: 3px; margin-top: 0px; margin-bottom: 0px; border: 0;">
