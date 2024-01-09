@@ -6,6 +6,8 @@ import frappe
 from frappe import _
 from frappe.utils import cint, flt
 from erpnext.accounts.utils import get_balance_on
+from frappe.query_builder import DocType, functions as fn
+from pypika.terms import ValueWrapper  # Case, Criterion, , Not
 
 
 def execute(filters=None):
@@ -110,6 +112,12 @@ def execute(filters=None):
 
             last_row["printed_by"] = print_person
 
+            exceeded_items = get_daily_limit_exceeded_items(filters)
+            if len(exceeded_items) > 0:
+                last_row["limit_exceeded_items"] = exceeded_items
+                last_row["total_limit_exceeded_amount"] = sum(
+                    [d.amount for d in exceeded_items]
+                )
             data.append(last_row)
 
             return columns, data
@@ -174,6 +182,13 @@ def execute(filters=None):
             print_person = frappe.get_value("User", frappe.session.user, "full_name")
 
             last_row["printed_by"] = print_person
+
+            exceeded_items = get_daily_limit_exceeded_items(filters)
+            if len(exceeded_items) > 0:
+                last_row["limit_exceeded_items"] = exceeded_items
+                last_row["total_limit_exceeded_amount"] = sum(
+                    [d.amount for d in exceeded_items]
+                )
 
             data.append(last_row)
 
@@ -247,6 +262,160 @@ def execute(filters=None):
             # summary_view = get_report_summary(filters, total_amount)
 
             return columns, data  # , None, None, summary_view
+
+
+def get_daily_limit_exceeded_items(filters):
+    if filters.get("patient_type") == "In-Patient":
+        return []
+
+    pe = DocType("Patient Encounter")
+
+    encounters_query = (
+        frappe.qb.from_(pe)
+        .select("name")
+        .where(
+            (pe.patient == filters.patient)
+            & (pe.appointment == filters.patient_appointment)
+            & (pe.inpatient_record.isnull() | pe.inpatient_record == "")
+        )
+    )
+
+    if filters.get("from_date"):
+        encounters_query.where((pe.encounter_date >= filters.from_date))
+
+    if filters.get("to_date"):
+        encounters_query.where((pe.encounter_date <= filters.to_date))
+    encounters = [d.name for d in encounters_query.run(as_dict=True)]
+
+    if not encounters or len(encounters) == 0:
+        return []
+
+    data = get_exceeded_lab_items(encounters)
+    data += get_exceeded_radiology_items(encounters)
+    data += get_exceeded_procedure_items(encounters)
+    data += get_exceeded_drug_items(encounters)
+    data += get_exceeded_therapy_items(encounters)
+    return data
+
+
+def get_exceeded_lab_items(encounters):
+    lab = DocType("Lab Prescription")
+    temp = DocType("Lab Test Template")
+    lab_items = (
+        frappe.qb.from_(lab)
+        .inner_join(temp)
+        .on(lab.lab_test_code == temp.name)
+        .select(
+            fn.Date(lab.creation).as_("date"),
+            temp.lab_test_group.as_("category"),
+            lab.lab_test_name.as_("description"),
+            ValueWrapper(1).as_("quantity"),
+            lab.amount.as_("rate"),
+            lab.amount.as_("amount"),
+        )
+        .where(
+            (lab.prescribe == 0)
+            & (lab.hms_tz_is_limit_exceeded == 1)
+            & (lab.parent.isin(encounters))
+        )
+    ).run(as_dict=True)
+    return lab_items
+
+
+def get_exceeded_radiology_items(encounters):
+    rad = DocType("Radiology Procedure Prescription")
+    temp = DocType("Radiology Examination Template")
+    rad_items = (
+        frappe.qb.from_(rad)
+        .inner_join(temp)
+        .on(rad.radiology_examination_template == temp.name)
+        .select(
+            fn.Date(rad.creation).as_("date"),
+            temp.item_group.as_("category"),
+            rad.radiology_procedure_name.as_("description"),
+            ValueWrapper(1).as_("quantity"),
+            rad.amount.as_("rate"),
+            rad.amount.as_("amount"),
+        )
+        .where(
+            (rad.prescribe == 0)
+            & (rad.hms_tz_is_limit_exceeded == 1)
+            & (rad.parent.isin(encounters))
+        )
+    ).run(as_dict=True)
+    return rad_items
+
+
+def get_exceeded_procedure_items(encounters):
+    proc = DocType("Procedure Prescription")
+    temp = DocType("Clinical Procedure Template")
+    proc_items = (
+        frappe.qb.from_(proc)
+        .inner_join(temp)
+        .on(proc.procedure == temp.name)
+        .select(
+            fn.Date(proc.creation).as_("date"),
+            temp.item_group.as_("category"),
+            proc.procedure_name.as_("description"),
+            ValueWrapper(1).as_("quantity"),
+            proc.amount.as_("rate"),
+            proc.amount.as_("amount"),
+        )
+        .where(
+            (proc.prescribe == 0)
+            & (proc.hms_tz_is_limit_exceeded == 1)
+            & (proc.parent.isin(encounters))
+        )
+    ).run(as_dict=True)
+    return proc_items
+
+
+def get_exceeded_drug_items(encounters):
+    drug = DocType("Drug Prescription")
+    temp = DocType("Medication")
+    drug_items = (
+        frappe.qb.from_(drug)
+        .inner_join(temp)
+        .on(drug.drug_code == temp.name)
+        .select(
+            fn.Date(drug.creation).as_("date"),
+            temp.item_group.as_("category"),
+            drug.drug_name.as_("description"),
+            (drug.quantity - drug.quantity_returned).as_("quantity"),
+            drug.amount.as_("rate"),
+            ((drug.quantity - drug.quantity_returned) * drug.amount).as_("amount"),
+        )
+        .where(
+            (drug.prescribe == 0)
+            & (drug.hms_tz_is_limit_exceeded == 1)
+            & (drug.parent.isin(encounters))
+        )
+    ).run(as_dict=True)
+    return drug_items
+
+
+def get_exceeded_therapy_items(encounters):
+    therapy = DocType("Therapy Plan Detail")
+    temp = DocType("Therapy Type")
+    therapy_items = (
+        frappe.qb.from_(therapy)
+        .inner_join(temp)
+        .on(therapy.therapy_type == temp.name)
+        .select(
+            fn.Date(therapy.creation).as_("date"),
+            temp.item_group.as_("category"),
+            therapy.therapy_type.as_("description"),
+            ValueWrapper(1).as_("quantity"),
+            therapy.amount.as_("rate"),
+            therapy.amount.as_("amount"),
+        )
+        .where(
+            (therapy.prescribe == 0)
+            & (therapy.hms_tz_is_limit_exceeded == 1)
+            & (therapy.parent.isin(encounters))
+        )
+    ).run(as_dict=True)
+    return therapy_items
 
 
 def get_columns(filters):
