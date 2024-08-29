@@ -70,6 +70,7 @@ class PatientAppointment(Document):
             self.status = "Scheduled"
 
     def validate_overlaps(self):
+        return
         end_time = datetime.datetime.combine(
             getdate(self.appointment_date), get_time(self.appointment_time)
         ) + datetime.timedelta(minutes=flt(self.duration))
@@ -172,15 +173,15 @@ class PatientAppointment(Document):
         )
 
     def validate_customer_created(self):
-        if frappe.db.get_single_value(
-            "Healthcare Settings", "automate_appointment_invoicing"
-        ):
-            if not frappe.db.get_value("Patient", self.patient, "customer"):
-                msg = _("Please set a Customer linked to the Patient")
-                msg += " <b><a href='#Form/Patient/{0}'>{0}</a></b>".format(
-                    self.patient
-                )
-                frappe.throw(msg, title=_("Customer Not Found"))
+        # if frappe.db.get_single_value(
+        #     "Healthcare Settings", "automate_appointment_invoicing"
+        # ):
+        if not frappe.db.get_value("Patient", self.patient, "customer"):
+            msg = _("Please set a Customer linked to the Patient")
+            msg += " <b><a href='#Form/Patient/{0}'>{0}</a></b>".format(
+                self.patient
+            )
+            frappe.throw(msg, title=_("Customer Not Found"))
 
     def update_prescription_details(self):
         if self.procedure_prescription:
@@ -218,9 +219,7 @@ class PatientAppointment(Document):
 
 @frappe.whitelist()
 def check_payment_fields_reqd(patient):
-    automate_invoicing = frappe.db.get_single_value(
-        "Healthcare Settings", "automate_appointment_invoicing"
-    )
+    automate_invoicing = 0
     free_follow_ups = frappe.db.get_single_value(
         "Healthcare Settings", "enable_free_follow_ups"
     )
@@ -238,9 +237,7 @@ def check_payment_fields_reqd(patient):
 
 
 def invoice_appointment(appointment_doc):
-    automate_invoicing = frappe.db.get_single_value(
-        "Healthcare Settings", "automate_appointment_invoicing"
-    )
+    automate_invoicing = 0
     appointment_invoiced = frappe.db.get_value(
         "Patient Appointment", appointment_doc.name, "invoiced"
     )
@@ -353,13 +350,14 @@ def cancel_appointment(appointment_id):
 
 
 def cancel_sales_invoice(sales_invoice):
-    if frappe.db.get_single_value(
-        "Healthcare Settings", "automate_appointment_invoicing"
-    ):
-        if len(sales_invoice.items) == 1:
-            sales_invoice.cancel()
-            return True
-    return False
+    # if frappe.db.get_single_value(
+    #     "Healthcare Settings", "automate_appointment_invoicing"
+    # ):
+    if len(sales_invoice.items) == 1:
+        sales_invoice.cancel()
+        return True
+    else:
+        return False
 
 
 def check_sales_invoice_exists(appointment):

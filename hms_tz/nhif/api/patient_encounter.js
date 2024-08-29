@@ -75,15 +75,15 @@ frappe.ui.form.on('Patient Encounter', {
 
         // Mosaic: https://worklog.aakvatech.com/Mosaic/Task/96b2f5e26c
         //filter dosage based on dosage form and has restricted qty ticked
-        frm.set_query("dosage", "drug_prescription", function (doc, cdt, cdn) {
-            const child = locals[cdt][cdn];
-            return {
-                query: "hms_tz.nhif.api.patient_encounter.get_filtered_dosage",
-                filters: {
-                    dosage_form: child.dosage_form
-                }
-            }
-        });
+        //frm.set_query("dosage", "drug_prescription", function (doc, cdt, cdn) {
+        //    const child = locals[cdt][cdn];
+        //    return {
+        //        query: "hms_tz.nhif.api.patient_encounter.get_filtered_dosage",
+        //        filters: {
+        //            dosage_form: child.dosage_form
+        //        }
+        //   }
+        //});
 
         frm.set_query('therapy_type', 'therapies', function () {
             return {

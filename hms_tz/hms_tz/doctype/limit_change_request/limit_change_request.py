@@ -66,7 +66,7 @@ class LimitChangeRequest(Document):
             if flt(self.previous_cash_limit) and flt(self.cash_limit) <= flt(
                 self.previous_cash_limit
             ):
-                frappe.throw(
+                frappe.msgprint(
                     "New Cash Limit must be greater than the previous cash limit"
                 )
         if self.is_non_nhif_patient:
@@ -76,7 +76,7 @@ class LimitChangeRequest(Document):
             if flt(self.current_total_cost) and flt(self.daily_limit) <= flt(
                 self.current_total_cost
             ):
-                frappe.throw(
+                frappe.msgprint(
                     "New Daily Limit must be greater than the current total cost"
                 )
 

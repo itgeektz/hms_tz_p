@@ -1289,7 +1289,7 @@ def get_LRPMT_status(encounter_no, row, child):
     if child["doctype"] == "Therapy Type" or row.get(child["ref_docname"]):
         status = "Submitted"
 
-    elif child["doctype"] == "Lab Test Template" and not row.get(child["ref_docname"]):
+    elif child["doctype"] == "Lab Test Template":
         lab_workflow_state = frappe.get_value(
             "Lab Test",
             {

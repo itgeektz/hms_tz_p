@@ -211,6 +211,9 @@ frappe.ui.form.on('Patient Appointment', {
             args: {
                 'appointment_type': frm.doc.appointment_type,
                 'practitioner': frm.doc.practitioner,
+                'coverage_plan_name': frm.doc.coverage_plan_name,
+                "insurance_company": frm.doc.insurance_company,
+                "inpatient_record": frm.doc.inpatient_record,
             },
             callback: function (data) {
                 if (data.message) {
@@ -818,16 +821,18 @@ const add_btns = (frm) => {
     let filters = {
         name: ["!=", frm.doc.name],
         department: frm.doc.department,
-        status: ["in", ["Open", "Closed"]]
+        status: ["in", ["Open", "Closed"]],
+        invoiced: 1
     }
     if (frm.doc.insurance_subscription) {
         filters.insurance_subscription = frm.doc.insurance_subscription;
+    } else {
+        filters.mode_of_payment = ["!=", ""]
     }
     const appointment = get_previous_appointment(frm, filters);
     if (typeof appointment != "undefined") {
         const last_appointment_date = appointment.appointment_date;
         const diff = frappe.datetime.get_day_diff(frm.doc.appointment_date, last_appointment_date);
-        console.log(diff)
         if (diff >= 0 && diff <= valid_days) {
             vitals_btn_required = true;
             if (!frm.doc.invoiced) {

@@ -1,0 +1,10 @@
+diff a/hms_tz/hms_tz/doctype/lrpmt_returns/lrpmt_returns.py b/hms_tz/hms_tz/doctype/lrpmt_returns/lrpmt_returns.py	(rejected hunks)
+@@ -130,7 +130,7 @@ def return_or_cancel_drug_item(self):
+                     frappe.get_traceback(),
+                     str(
+                         "Error in creating return delivery note for {0}".format(
+-                            dn.delivery_note_no
++                            dn
+                         )
+                     ),
+                 )

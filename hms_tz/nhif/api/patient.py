@@ -288,11 +288,6 @@ def after_insert(doc, method):
 
 @frappe.whitelist()
 def enqueue_update_cash_limit(old_cash_limit, new_cash_limit):
-    if getdate(nowdate()).strftime("%A") != "Saturday":
-        frappe.throw(
-            "<h4 class='font-weight-bold text-center'>\
-            Please run this routine only on Saturday</h4>"
-        )
 
     data = dict(old_value=old_cash_limit, new_value=new_cash_limit)
 

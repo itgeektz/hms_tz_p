@@ -1,0 +1,17 @@
+diff a/hms_tz/nhif/report/itemwise_hospital_revenue/itemwise_hospital_revenue.py b/hms_tz/nhif/report/itemwise_hospital_revenue/itemwise_hospital_revenue.py	(rejected hunks)
+@@ -297,6 +297,7 @@ def get_lab_data(filters):
+             & (lab.docstatus != 2)
+             & (lab.ref_doctype == "Patient Encounter")
+             & (lab.ref_docname == lab_prescription.parent)
++            & (lab_prescription.prescribe == 0)
+             & service_type_map
+         )
+         .groupby(
+@@ -358,6 +359,7 @@ def get_lab_data(filters):
+             & (lab.docstatus != 2)
+             & (lab.ref_doctype == "Patient Encounter")
+             & (lab.ref_docname == lab_prescription.parent)
++            & (lab_prescription.prescribe == 1)
+             & service_type_map
+         )
+         .groupby(

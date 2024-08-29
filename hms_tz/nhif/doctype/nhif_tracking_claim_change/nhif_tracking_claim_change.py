@@ -346,6 +346,7 @@ def reconcile_original_nhif_patient_claim_items(claim_doc):
 
         for record in repeated_items:
             if record.docstatus == 1:
+                record.flags.ignore_permissions = True
                 record.cancel()
 
             record.delete(ignore_permissions=True, force=True, delete_permanently=True)

@@ -327,7 +327,7 @@ def get_insurance_appointment_data(filters, appoints):
             (pa.company == filters.company)
             & (pa.status != "Cancelled")
             & (pa.follow_up == 0)
-            & (pa.has_no_consultation_charges == 0)
+            #& (pa.has_no_consultation_charges == 0)
             & (
                 (pa.insurance_subscription.isnotnull())
                 & (pa.insurance_subscription != "")
@@ -405,7 +405,6 @@ def get_cash_appointment_data(filters, appoints):
             (pa.company == filters.company)
             & (pa.status != "Cancelled")
             & (pa.follow_up == 0)
-            & (pa.has_no_consultation_charges == 0)
             & ((pa.ref_sales_invoice.isnotnull()) & (pa.ref_sales_invoice != ""))
             & (sii.docstatus == 1)
             & ((sii.sales_invoice_item.isnull()) | (sii.sales_invoice_item == ""))

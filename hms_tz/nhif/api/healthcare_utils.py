@@ -1498,6 +1498,7 @@ def validate_nhif_patient_claim_status(
 
             if caller:
                 frappe.msgprint(msg)
+                return True 
             else:
                 frappe.throw(
                     msg,

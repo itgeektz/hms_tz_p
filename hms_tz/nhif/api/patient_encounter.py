@@ -305,20 +305,20 @@ def on_submit_validation(doc, method):
                             ).format(row.get(value)),
                             alert=True,
                         )
-            if not row.is_not_available_inhouse:
-                old_method = method
-                if doc.insurance_subscription and not row.prescribe:
-                    method = "validate"
-                validate_stock_item(
-                    row.get(value),
-                    quantity,
-                    doc.company,
-                    row.get("prescribe"),
-                    healthcare_service_unit=row.get("healthcare_service_unit"),
-                    method=method,
-                )
-                if doc.insurance_subscription:
-                    method = old_method
+            # if not row.is_not_available_inhouse:
+	    #	old_method = method
+            #   if doc.insurance_subscription and not row.prescribe:
+            #          method = "validate"
+           #      validate_stock_item(
+            #         row.get(value),
+            #        quantity,
+             #        doc.company,
+              #       row.get("prescribe"),
+               #      healthcare_service_unit=row.get("healthcare_service_unit"),
+                #     method=method,
+                # )
+              #   if doc.insurance_subscription:
+             #        method = old_method
 
     if prescribed_list and not doc.healthcare_package_order:
         msgPrint(
@@ -330,18 +330,17 @@ def on_submit_validation(doc, method):
         )
 
     # Run on_submit
-    mtuha_missing = ""
-    for final_diagnosis in doc.patient_encounter_final_diagnosis:
-        if not final_diagnosis.mtuha:
-            mtuha_missing += "-  <b>" + final_diagnosis.medical_code + "</b><br>"
+    # mtuha_missing = ""
+    # for final_diagnosis in doc.patient_encounter_final_diagnosis:
+    #     if not final_diagnosis.mtuha:
+    #         mtuha_missing += "-  <b>" + final_diagnosis.medical_code + "</b><br>"
 
-    if mtuha_missing:
-        msgThrow(
-            _("{0}<br>MTUHA Code not defined for the above diagnosis").format(
-                mtuha_missing
-            ),
-            method,
-        )
+    # if mtuha_missing:
+    #     frappe.msgprint(
+    #         _("{0}<br>MTUHA Code not defined for the above diagnosis").format(
+    #             mtuha_missing
+    #         ), alert=True
+    #     )
 
     if not doc.patient_age:
         doc.patient_age = calculate_patient_age(doc.patient)
@@ -610,20 +609,20 @@ def validate_stock_item(
             == 1
         ):
             method = method
-        else:
-            frappe.throw(
-                "<b>Please set the stock validation method (either only alert or stop when less stock) in Healthcare Settings for Insurance Patients</b>"
-            )
+        # else:
+        #     frappe.throw(
+        #         "<b>Please set the stock validation method (either only alert or stop when less stock) in Healthcare Settings for Insurance Patients</b>"
+        #     )
 
     elif prescribe == 1:
         if setting_doc.only_alert_if_less_stock_of_drug_item_for_cash_in_pe == 1:
             method = "validate"
         elif setting_doc.stop_encounter_if_less_stock_of_drug_item_for_cash_in_pe == 1:
             method = method
-        else:
-            frappe.throw(
-                "<b>Please set the stock validation method (either only alert or stop when less stock) in Healthcare Settings for Cash Patients</b>"
-            )
+        # else:
+        #     frappe.throw(
+        #         "<b>Please set the stock validation method (either only alert or stop when less stock) in Healthcare Settings for Cash Patients</b>"
+        #     )
 
     if caller != "Drug Prescription" and not healthcare_service_unit:
         return
@@ -1270,15 +1269,16 @@ def finalized_encounter(cur_encounter, ref_encounter=None):
             )
         )
 
-    encounters_list = frappe.get_all(
-        "Patient Encounter",
-        filters={"docstatus": 1, "reference_encounter": ref_encounter},
-    )
-    for element in encounters_list:
-        frappe.set_value("Patient Encounter", element.name, "finalized", 1)
-
     frappe.set_value("Patient Encounter", cur_encounter, "encounter_type", "Final")
-    if not ref_encounter:
+
+    if ref_encounter:
+        encounters_list = frappe.get_all(
+            "Patient Encounter",
+            filters={"docstatus": 1, "reference_encounter": ref_encounter},
+        )
+        for element in encounters_list:
+            frappe.set_value("Patient Encounter", element.name, "finalized", 1)
+    else:
         frappe.set_value("Patient Encounter", cur_encounter, "finalized", 1)
         return
 

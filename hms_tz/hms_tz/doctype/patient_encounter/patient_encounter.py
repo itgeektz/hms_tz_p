@@ -35,7 +35,7 @@ class PatientEncounter(Document):
     def on_submit(self):
         update_encounter_medical_record(self)
         create_therapy_plan(self)
-        create_healthcare_service_order(self)
+        # create_healthcare_service_order(self)
         # make_insurance_claim(self)
 
     def on_cancel(self):

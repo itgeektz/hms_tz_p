@@ -188,7 +188,7 @@ def process_nhif_records(company):
     frappe.msgprint(_("Queued Processing NHIF Insurance Coverages"), alert=True)
 
 
-def process_prices_list(kwargs):
+def process_prices_list(kwargs, item=None):
     company = kwargs
     facility_code = frappe.get_cached_value("Company NHIF Settings", company, "facility_code")
     currency = frappe.get_cached_value("Company", company, "default_currency")
@@ -204,6 +204,7 @@ def process_prices_list(kwargs):
         as_dict=1,
     )
 
+    # Create Price Lists for missing prices
     for scheme in schemeid_list:
         price_list_name = "NHIF-" + scheme.packageid + "-" + facility_code
         if not frappe.db.exists("Price List", price_list_name):
@@ -214,11 +215,14 @@ def process_prices_list(kwargs):
             price_list_doc.selling = 1
             price_list_doc.save(ignore_permissions=True)
 
+    condition = ""
+    if item:
+        condition += f""" AND icd.parent = "{item}" """
     item_list = frappe.db.sql(
-        """
+        f"""
             SELECT icd.ref_code, icd.parent as item_code, npp.schemeid from `tabItem Customer Detail` icd
                 INNER JOIN `tabNHIF Price Package` npp ON icd.ref_code = npp.itemcode
-                WHERE icd.customer_name = 'NHIF'
+                WHERE icd.customer_name = 'NHIF' {condition}
                 GROUP by icd.ref_code, icd.parent, npp.schemeid
         """,
         as_dict=1,
@@ -231,16 +235,14 @@ def process_prices_list(kwargs):
                 continue
             price_list_name = "NHIF-" + scheme.packageid + "-" + facility_code
             package_list = frappe.db.sql(
-                """
+                f"""
                     SELECT schemeid, itemcode, unitprice, isactive
                     FROM `tabNHIF Price Package` 
-                    WHERE facilitycode = {0} and schemeid = {1} and itemcode = {2}
+                    WHERE facilitycode = {facility_code} and schemeid = {schemeid} and itemcode = {item.ref_code}
                     GROUP BY itemcode, schemeid, facilitylevelcode
                     ORDER BY facilitylevelcode
                     LIMIT 1
-                """.format(
-                    facility_code, schemeid, item.ref_code
-                ),
+                """,
                 as_dict=1,
             )
             if len(package_list) > 0:
@@ -270,7 +272,9 @@ def process_prices_list(kwargs):
                                     or float(package.unitprice) == 0
                                 ):
                                     frappe.delete_doc("Item Price", price.name)
+                                    print(f"Deleted the item {item}")
                                 else:
+                                    print(f"Updated the item {item}")
                                     frappe.set_value(
                                         "Item Price",
                                         price.name,
@@ -282,6 +286,7 @@ def process_prices_list(kwargs):
 
                     # elif package.isactive and int(package.isactive) == 1:
                     else:
+                        print(f"Created the item price {price.name} for {price_list_name}")
                         item_price_doc = frappe.new_doc("Item Price")
                         item_price_doc.update(
                             {
@@ -295,7 +300,7 @@ def process_prices_list(kwargs):
                         )
                         item_price_doc.insert(ignore_permissions=True)
                         item_price_doc.save(ignore_permissions=True)
-    frappe.db.commit()
+        frappe.db.commit()
 
 
 def get_insurance_coverage_items(company):
@@ -393,25 +398,31 @@ def get_price_package(itemcode, schemeid, company):
     return price_package
 
 
-def process_insurance_coverages(kwargs):
+def process_insurance_coverages(kwargs, coverage_plan=None):
     company = kwargs
+    print(f"Gettign Insurance Coverage Items")
     items_list = get_insurance_coverage_items(company)
 
+    filters={
+        "insurance_company": ["like", "NHIF%"],
+        "is_active": 1,
+        "company": company,
+    }
+    if coverage_plan:
+        filters["name"] = f"{coverage_plan}"
     coverage_plan_list = frappe.get_all(
         "Healthcare Insurance Coverage Plan",
         fields={"name", "nhif_scheme_id", "code_for_nhif_excluded_services"},
-        filters={
-            "insurance_company": ["like", "NHIF%"],
-            "is_active": 1,
-            "company": company,
-        },
+        filters=filters,
     )
 
     for plan in coverage_plan_list:
+        print(f"Processing Insurance Coverage {plan}")
         insert_data = []
         time_stamp = now()
         user = frappe.session.user
         for item in items_list:
+            print(f"Processing Item {item.healthcare_service_template} for {plan}")
             if plan.nhif_scheme_id != item.schemeid:
                 continue
             excluded_services = get_excluded_services(item.ref_code, company)
@@ -486,6 +497,7 @@ def process_insurance_coverages(kwargs):
 
         if insert_data:
             if plan.name:
+                print(f"Deleting data for {plan.name}")
                 frappe.db.sql(
                         "DELETE FROM `tabHealthcare Service Insurance Coverage` WHERE is_auto_generated = 1 AND healthcare_insurance_coverage_plan = '{0}'".format(
                             plan.name
@@ -496,6 +508,7 @@ def process_insurance_coverages(kwargs):
             # wait for 60 seconds before creating HSIC records again
             sleep(60)
 
+            print(f"Inserting {len(insert_data)} data for {plan.name}")
             frappe.db.sql(
                 """
                 INSERT INTO `tabHealthcare Service Insurance Coverage`
@@ -526,7 +539,7 @@ def process_insurance_coverages(kwargs):
                 ),
                 tuple(insert_data),
             )
-    frappe.db.commit()
+        frappe.db.commit()
 
 
 def set_nhif_diff_records(FacilityCode):

@@ -138,9 +138,7 @@ def invoice_appointment(name):
         appointment_doc.save()
         appointment_doc.reload()
     set_follow_up(appointment_doc, "invoice_appointment")
-    automate_invoicing = frappe.db.get_single_value(
-        "Healthcare Settings", "automate_appointment_invoicing"
-    )
+    automate_invoicing = 0
 
     if (
         not automate_invoicing
@@ -190,15 +188,38 @@ def invoice_appointment(name):
 
 
 @frappe.whitelist()
-def get_consulting_charge_item(appointment_type, practitioner):
+def get_consulting_charge_item(appointment_type, practitioner,coverage_plan_name=None,insurance_company=None,inpatient_record=None):
+    #set_follow_up
     charge_item = ""
-    is_inpatient = frappe.get_cached_value("Appointment Type", appointment_type, "ip")
     field_name = (
-        "inpatient_visit_charge_item" if is_inpatient else "op_consulting_charge_item"
+        "inpatient_visit_charge_item" if inpatient_record else "op_consulting_charge_item"
     )
-    charge_item = frappe.get_cached_value(
+    consultant_category= frappe.get_cached_value(
         "Healthcare Practitioner", practitioner, field_name
     )
+    if not inpatient_record and insurance_company == 'NHIF':
+        price_list = frappe.get_cached_doc("Healthcare Insurance Coverage Plan",coverage_plan_name,"price_list")
+        if appointment_type == 'Follow up Visit' and price_list in ('NHIF-105-01104','NHIF-402-01104','NHIF-502-01104','NHIF-602-01104','NHIF-803-01104'):
+            if consultant_category in ('Specialist Consultation','Specialist/Super specialist'):
+                charge_item = 'Specialist follow up consultation fee'
+                return charge_item
+            if consultant_category == 'Super Specialist Consultation':
+                charge_item = 'Super specialist follow up consultation fee'
+                return charge_item
+            if consultant_category in ('General Practitioner Consultation','General Practitioner Consultation(Dental)'):
+                charge_item = 'Medical Officer/Dental Surgeon follow up consultation fee'
+                return charge_item
+        if appointment_type in ('Normal Visit','Emergency','Referral from Other Hospital') and coverage_plan_name in ('NH015~SUPPL OPTION 1','NH016~SUPPL OPTION 2','NH017~SUPPL OPTION 3','NHIF NMB'):
+            if consultant_category in ('Specialist Consultation','Specialist/Super specialist'):
+                charge_item = 'Specialist Consultation Fee for Fasttrack'
+                return charge_item
+            if consultant_category == 'Super Specialist Consultation':
+                charge_item = 'Super Specialist Consultation Fee for Fasttrack'
+                return charge_item
+            if consultant_category in ('General Practitioner Consultation','General Practitioner Consultation(Dental)'):
+                charge_item = 'General Practitioner Consultation Fee for Fasttrack'
+                return charge_item
+    charge_item = consultant_category
     return charge_item
 
 
@@ -442,7 +463,9 @@ def update_insurance_subscription(insurance_subscription, card, company):
 
         if coverage_plan:
             card["CoveragePlanName"] = coverage_plan
-            plan_doc = frappe.get_cached_doc("Healthcare Insurance Coverage Plan", coverage_plan)
+            plan_doc = frappe.get_cached_doc(
+                "Healthcare Insurance Coverage Plan", coverage_plan
+            )
 
             if plan_doc:
                 subscription_doc.insurance_company = plan_doc.insurance_company
@@ -451,7 +474,7 @@ def update_insurance_subscription(insurance_subscription, card, company):
 
         subscription_doc.hms_tz_product_code = card["ProductCode"]
         subscription_doc.hms_tz_product_name = card["ProductName"]
-    
+
         subscription_doc.hms_tz_scheme_id = card["SchemeID"]
         subscription_doc.hms_tz_scheme_name = card["SchemeName"]
 
@@ -501,9 +524,12 @@ def set_follow_up(appointment_doc, method):
         "name": ["!=", appointment_doc.name],
         "department": appointment_doc.department,
         "status": ["in", ["Open", "Closed"]],
+        "invoiced": 1,
     }
     if appointment_doc.insurance_subscription:
         filters["insurance_subscription"] = appointment_doc.insurance_subscription
+    else:
+        filters["mode_of_payment"] = ["!=", ""]
 
     appointment = get_previous_appointment(appointment_doc.patient, filters)
     if appointment and appointment_doc.appointment_date:
@@ -582,7 +608,7 @@ def make_next_doc(doc, method, from_hook=True):
 
     if not doc.billing_item and doc.authorization_number:
         doc.billing_item = get_consulting_charge_item(
-            doc.appointment_type, doc.practitioner
+            doc.appointment_type, doc.practitioner,doc.coverage_plan_name,doc.insurance_company,doc.inpatient_record
         )
         if not doc.billing_item:
             frappe.throw(
@@ -626,6 +652,11 @@ def make_next_doc(doc, method, from_hook=True):
     # do not create vital sign or encounter if appointment is already cancelled
     if doc.status == "Cancelled":
         return
+
+    # do not create vital sign or encounter if appointment is already invoiced
+    if doc.mode_of_payment and not doc.invoiced:
+        return
+
     if frappe.get_cached_value(
         "Healthcare Practitioner", doc.practitioner, "bypass_vitals"
     ):

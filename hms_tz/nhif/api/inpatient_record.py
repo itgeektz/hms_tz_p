@@ -27,7 +27,8 @@ import json
 def validate(doc, method):
     set_beds_price(doc)
     validate_inpatient_occupancies(doc)
-    validate_inpatient_balance_vs_inpatient_cost(doc.patient, doc.patient_appointment, doc.name)
+    if not doc.insurance_subscription:
+        validate_inpatient_balance_vs_inpatient_cost(doc.patient, doc.patient_appointment, doc.name)
 
 
 def validate_inpatient_occupancies(doc):
@@ -85,14 +86,13 @@ def daily_update_inpatient_occupancies():
 @frappe.whitelist()
 def confirmed(company, appointment, insurance_company=None):
     if insurance_company and "NHIF" in insurance_company:
-        validate_nhif_patient_claim_status(
+        return validate_nhif_patient_claim_status(
             "Inpatient Record",
             company,
             appointment,
             insurance_company,
             "inpatient_record",
         )
-        return True
 
 
 def create_delivery_note(encounter, item_code, item_rate, warehouse, row, practitioner):
