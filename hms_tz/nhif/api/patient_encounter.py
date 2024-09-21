@@ -971,6 +971,7 @@ def create_delivery_note_per_encounter(patient_encounter_doc, method):
                 patient_name=patient_encounter_doc.patient_name,
                 healthcare_service_unit=patient_encounter_doc.healthcare_service_unit,
                 healthcare_practitioner=patient_encounter_doc.practitioner,
+                inpatient_record = patient_encounter_doc.inpatient_record,
             )
         )
         doc.flags.ignore_permissions = True

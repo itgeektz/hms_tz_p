@@ -65,8 +65,8 @@ class HealthcarePackageOrder(Document):
 				frappe.throw("Please make payment for this order")
 
 	def create_appointemnts(self):
-		appointment_type = frappe.get_cached_value("Appointment Type", {"visit_type_id": "1-Normal Visit"}, "name")
-
+		# appointment_type = frappe.get_cached_value("Appointment Type", {"visit_type_id": "1-Normal Visit"}, "name")
+		appointment_type = "Health Checkup"
 		# create appointment with no consultation fee
 		non_consultation_appointment = create_single_appointment(self, self.consultations[0], appointment_type)
 		self.non_consultation_appointment = non_consultation_appointment

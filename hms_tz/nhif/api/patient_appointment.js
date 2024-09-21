@@ -107,7 +107,7 @@ frappe.ui.form.on('Patient Appointment', {
         frm.toggle_display(['referral_no'], false);
         frm.toggle_display(['remarks'], false);
 
-        if (frm.doc.appointment_type == "NHIF External Referral") {
+        if (frm.doc.appointment_type == "NHIF External Referral Consultation") {
             if (frm.doc.insurance_subscription) {
                 frm.toggle_display(['referral_no'], true);
                 frm.toggle_reqd("referral_no", true);

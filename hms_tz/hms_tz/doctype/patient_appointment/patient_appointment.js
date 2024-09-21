@@ -104,6 +104,8 @@ frappe.ui.form.on('Patient Appointment', {
 					create_radiology_exam(frm);
 				}, 'Create');
 			} else {
+				if(frm.doc.has_no_consultation_charges || frm.doc.follow_up)
+					return;
 				frm.add_custom_button(__('Patient Encounter'), function () {
 					frappe.model.open_mapped_doc({
 						method: 'hms_tz.hms_tz.doctype.patient_appointment.patient_appointment.make_encounter',
@@ -408,7 +410,7 @@ let update_status = function (frm, status) {
 		}
 	);
 };
-
+/*
 frappe.ui.form.on('Patient Appointment', 'practitioner', function (frm) {
 	if (frm.doc.practitioner) {
 		frappe.call({
@@ -425,7 +427,7 @@ frappe.ui.form.on('Patient Appointment', 'practitioner', function (frm) {
 		});
 	}
 });
-
+*/
 frappe.ui.form.on('Patient Appointment', 'patient', function (frm) {
 	if (frm.doc.patient) {
 		frappe.call({
