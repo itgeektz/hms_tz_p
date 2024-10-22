@@ -69,7 +69,9 @@ class LabMachineMessage(Document):
                     test_result = line.split("|")[5]
                     lab_test_row = ""
                     for row in lab_test.normal_test_items:
-                        if row.lab_test_name == test_name:
+                        #if row.lab_test_name == test_name:
+                        row1 = frappe.db.get_value('Lab Test Template',row.lab_test_name,'machine_code')
+                        if test_name in row1.split(","):
                             lab_test_row = row
                             break
                     if lab_test_row:
@@ -104,7 +106,9 @@ class LabMachineMessage(Document):
                             test_result = fields[5]
                             lab_test_row = ""
                             for row in lab_test_doc.normal_test_items:
-                                if row.lab_test_name == test_name:
+                                #if row.lab_test_name == test_name:
+                                row1 = frappe.db.get_value('Lab Test Template',row.lab_test_name,'machine_code')
+                                if test_name in row1.split(","):
                                     lab_test_row = row
                                     break
                             if lab_test_row:

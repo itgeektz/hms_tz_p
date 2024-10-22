@@ -47,7 +47,7 @@ cur_frm.cscript.custom_refresh = function(doc) {
 		});
 	}
 };
-
+/*
 let change_template_code = function(doc) {
 	let d = new frappe.ui.Dialog({
 		title:__('Change Template Code'),
@@ -80,7 +80,7 @@ let change_template_code = function(doc) {
 		'lab_test_code': doc.lab_test_code
 	});
 };
-
+*/
 frappe.ui.form.on('Lab Test Template', 'lab_test_name', function(frm) {
 	frm.doc.change_in_item = 1;
 });
