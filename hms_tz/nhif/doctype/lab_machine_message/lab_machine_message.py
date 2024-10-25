@@ -26,6 +26,19 @@ class LabMachineMessage(Document):
 
     def get_sample_collection(self, msg_lines):
         sample_collection = ""
+        sample_collection = ""
+        profile_name = self.machine_model + "-" + self.machine_make
+        profile_exists = frappe.db.exists("Lab Machine Profile", profile_name)
+        if profile_exists:
+            profile = frappe.get_doc("Lab Machine Profile", profile_name)
+            msg_lines = self.message.splitlines()
+            self.sample_collection = msg_lines[profile.obr].split('|')[profile.sample_collection]
+            if sample_collection:
+                sample_collection_exists = frappe.db.exists(
+                    "Sample Collection", sample_collection
+                )
+                if sample_collection_exists:
+                    return sample_collection
         for line in msg_lines:
             if line.startswith("OBR"):
                 fields = line.split("|")
@@ -45,6 +58,7 @@ class LabMachineMessage(Document):
     def update_lab_test(self):
         if not self.message:
             return
+        """    
         if self.machine_model and self.machine_make and self.lab_test_name:
             profile_name = self.machine_model + "-" + self.machine_make
             profile_exists = frappe.db.exists("Lab Machine Profile", profile_name)
@@ -80,6 +94,33 @@ class LabMachineMessage(Document):
                 self.lab_test = lab_test_name
                 lab_test.save(ignore_permissions=True)
                 frappe.db.commit()
+        """
+        if self.machine_model and self.machine_make:
+                profile_name = self.machine_make + "-" + self.machine_model
+                profile_exists = frappe.db.exists("Lab Machine Profile", profile_name)
+                if profile_exists:
+                    profile = frappe.get_doc("Lab Machine Profile", profile_name)
+                    msg_lines = self.message.splitlines()
+                    # custom_field "sample_collection" is used as index after split
+                    self.sample_collection = msg_lines[profile.obr].split('|')[profile.sample_collection] 
+                    sample_collection_doc = frappe.get_cached_doc("Sample Collection", self.sample_collection)
+                    for lab_test in sample_collection_doc.lab_tests:
+                        lab_test_doc = frappe.get_doc("Lab Test", lab_test.lab_test)
+                        if lab_test_doc.docstatus != 0:
+                            continue
+                        #obx_nm_start used as line number and obx_num_end used as the index after split
+                        test_name = msg_lines[int(profile.obx_nm_start)] .split('|')[int(profile.obx_nm_end)]
+                        test_result = msg_lines[int(profile.obx_nm_start)] .split('|')[int(profile.obx_nm_end) + 1]
+                        lab_test_row = ""
+                        for row in lab_test_doc.normal_test_items:
+                            row1 = frappe.db.get_value('Lab Test Template',row.lab_test_name,'machine_code')
+                            if test_name in row1.split(","):
+                                lab_test_row = row
+                                break
+                        if lab_test_row:
+                            lab_test_row.result_value = test_result
+                    lab_test_doc.save(ignore_permissions=True)
+                    frappe.db.commit()
 
         if self.sample_collection:
             sample_collection_doc = frappe.get_cached_doc(
