@@ -14,6 +14,7 @@ from healthcare.healthcare.doctype.healthcare_settings.healthcare_settings impor
 )
 from healthcare.healthcare.doctype.fee_validity.fee_validity import create_fee_validity
 from hms_tz.hms_tz.doctype.lab_test.lab_test import create_multiple
+from frappe.core.doctype.communication.email import make
 
 
 @frappe.whitelist()
@@ -1619,3 +1620,33 @@ def render_doc_as_html(doctype, docname, exclude_fields=None, use_setttings=Fals
         )
 
     return {"html": doc_html}
+@frappe.whitelist()
+def send_email_with_attachment(doctype, docname,subject, patient,user,ref_docname):
+    attachments = [frappe.attach_print(doctype=doctype, name=docname, print_letterhead=True)]
+    recipients = frappe.db.get_value("Patient",patient,"email")
+    if recipients:
+        if attachments:
+            make(recipients = recipients,
+                subject = subject,
+                content = "Please find the lab test details attached. Please Visit the Doctor for correct clinical Diagnosis. \nThis has to be evaluated and correlated by a Qualified Medical Practitioner" ,
+                doctype = doctype,
+                attachments=attachments,
+                send_email = True,
+                sender = "results@regencymedicalcentre.co.tz",
+                sender_fullname = "Regency Medical Centre Ltd"
+            )
+            doc_list = frappe.get_list(doctype,filters={'ref_docname':ref_docname},pluck='name')
+            for doc in doc_list:
+                docs = frappe.get_doc(doctype,doc)
+                if docs.docstatus == 1:
+                    docs.add_comment(
+                        comment_type="Comment",
+                        text=f"Email has been sent by {user}."
+                    )
+                    docs.save(ignore_permissions=True)
+
+        else:
+            frappe.msgprint("Unable to generate attachments")
+            
+    else:
+        frappe.msgprint("Please configure the email in Patient document for: " + patient)
