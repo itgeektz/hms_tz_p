@@ -1427,6 +1427,8 @@ def enqueue_on_update_after_submit(doc_name):
 
 
 def before_submit(doc, method):
+    if len(doc.examination_detail) < 150 and doc.insurance_company in ["NHIF","NHIF Town", "NHIF Upanga - RSPDC"] :
+        frappe.throw("History of the Symptoms and Examination Details must have at least 150 characters minimum.")
     if doc.insurance_company and "NHIF" in doc.insurance_company:
         validate_nhif_patient_claim_status(
             "Patient Encounter", doc.company, doc.appointment, doc.insurance_company

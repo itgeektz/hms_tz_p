@@ -891,6 +891,46 @@ class NHIFPatientClaim(Document):
                 self.clinical_notes += f"Drug: {row.drug_code} {med_info}"
                 self.clinical_notes += "<br>"
         self.clinical_notes = self.clinical_notes.replace('"', " ")
+         #Lab Tests
+        if len(encounter_doc.get("lab_test_prescription")) > 0:
+            self.clinical_notes += "<br>Lab Tests(s): <br>"
+            for row in encounter_doc.get("lab_test_prescription"):
+                serv_info = ""
+                if row.medical_code:
+                    serv_info  += f", Medical Code: {row.medical_code}"
+                self.clinical_notes += f"Lab Test Name: {row.lab_test_name} {serv_info}"
+                self.clinical_notes += "<br>"
+        self.clinical_notes = self.clinical_notes.replace('"', " ")
+        #Radiology
+        if len(encounter_doc.get("radiology_procedure_prescription")) > 0:
+            self.clinical_notes += "<br>Radiology Test(s): <br>"
+            for row in encounter_doc.get("radiology_procedure_prescription"):
+                serv_info = ""
+                if row.medical_code:
+                    serv_info += f", Medical Code: {row.medical_code}"
+                self.clinical_notes += f"Service Name: {row.radiology_procedure_name} {serv_info}"
+                self.clinical_notes += "<br>"
+        self.clinical_notes = self.clinical_notes.replace('"', " ")
+        #Clinical Procedures
+        if len(encounter_doc.get("procedure_prescription")) > 0:
+            self.clinical_notes += "<br>Procedure(s): <br>"
+            for row in encounter_doc.get("procedure_prescription"):
+                serv_info = ""
+                if row.medical_code:
+                    serv_info += f", Medical Code: {row.medical_code}"
+                self.clinical_notes += f"Procedure: {row.procedure_name} {serv_info}"
+                self.clinical_notes += "<br>"
+        self.clinical_notes = self.clinical_notes.replace('"', " ")
+        #Therapies
+        if len(encounter_doc.get("therapies")) > 0:
+            self.clinical_notes += "<br>Therapie(s): <br>"
+            for row in encounter_doc.get("therapies"):
+                serv_info = ""
+                if row.medical_code:
+                    serv_info += f", Medical Code: {row.medical_code}"
+                self.clinical_notes += f"Therapy: {row.therapy_type} {serv_info}"
+                self.clinical_notes += "<br>"
+        self.clinical_notes = self.clinical_notes.replace('"', " ")
 
     def before_insert(self):
         if frappe.db.exists(

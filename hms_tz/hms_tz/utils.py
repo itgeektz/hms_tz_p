@@ -1621,32 +1621,112 @@ def render_doc_as_html(doctype, docname, exclude_fields=None, use_setttings=Fals
 
     return {"html": doc_html}
 @frappe.whitelist()
-def send_email_with_attachment(doctype, docname,subject, patient,user,ref_docname):
+def send_email_with_attachment(doctype, docname,subject, patient,patient_name,user,ref_docname):
     attachments = [frappe.attach_print(doctype=doctype, name=docname, print_letterhead=True)]
     recipients = frappe.db.get_value("Patient",patient,"email")
     if recipients:
         if attachments:
             make(recipients = recipients,
                 subject = subject,
-                content = "Please find the lab test details attached. Please Visit the Doctor for correct clinical Diagnosis. \nThis has to be evaluated and correlated by a Qualified Medical Practitioner" ,
+                content = f"""
+                            <!DOCTYPE html>
+                            <html lang="en">
+                            <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <title>Regency Test Results</title>
+                            <style>
+                                body {{
+                                font-family: Arial, sans-serif;
+                                color: #333;
+                                margin: 0;
+                                padding: 0;
+                                background-color: #f9f9f9;
+                                }}
+                                .email-container {{
+                                width: 100%;
+                                max-width: 600px;
+                                margin: 0 auto;
+                                background-color: #ffffff;
+                                padding: 20px;
+                                border-radius: 8px;
+                                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                                }}
+                                .email-header {{
+                                text-align: center;
+                                margin-bottom: 20px;
+                                }}
+                                .email-content {{
+                                font-size: 16px;
+                                line-height: 1.6;
+                                }}
+                                .email-footer {{
+                                margin-top: 30px;
+                                font-size: 14px;
+                                color: #777;
+                                text-align: center;
+                                }}
+                            </style>
+                            </head>
+                            <body>
+                            <div class="email-container">
+                                <div class="email-header">
+                                <h2>Test Results from Regency Medical Centre</h2>
+                                </div>
+                                <div class="email-content">
+                                <p>Dear {patient_name},</p>
+                                <p>Please find your test results attached to this email.</p>
+                                <p>Kindly consult your doctor for an accurate clinical diagnosis.</p>
+                                <p>It is important that these results are evaluated and interpreted by a qualified medical practitioner in conjunction with your medical history and symptoms.</p>
+                                <p>If you have any questions or need further assistance, please feel free to contact us.</p>
+                                </div>
+                                <div class="email-footer">
+                                <p>Best regards,</p>
+                                <p>Regency Medical Centre Ltd</p>
+                                </div>
+                            </div>
+                            <footer class="email-footer">
+                                <p>If you no longer wish to receive emails, please contact us.</p>
+                                <p>&copy; 2024 Regency Medical Centre Ltd. All rights reserved.</p>
+                            </footer>
+                            </body>
+                            </html>
+                            """ ,
                 doctype = doctype,
                 attachments=attachments,
                 send_email = True,
-                sender = "results@regencymedicalcentre.co.tz",
-                sender_fullname = "Regency Medical Centre Ltd"
+                sender = "lab@regencymedicalcentre.co.tz",
+                sender_fullname = "Regency Medical Centre Ltd.",
+                is_html=True,
+                extra_headers={},
+                no_auto_footer=False,
             )
+            if doctype == "Radiology Examination":
+                docs = frappe.get_doc("Radiology Examination",docname)
+                if docs.docstatus == 1:
+                    comment = frappe.new_doc("Comment")
+                    comment.reference_doctype = "Radiology Examination"
+                    comment.reference_name = docname
+                    comment.comment_type = "Comment"
+                    comment.content = f"Email has been sent by {user}."
+                    comment.owner = user
+                    comment.ip_address = getattr(frappe.local, "request_ip")
+                    comment.save(ignore_permissions=True)
+                    return
             doc_list = frappe.get_list(doctype,filters={'ref_docname':ref_docname},pluck='name')
             for doc in doc_list:
                 docs = frappe.get_doc(doctype,doc)
                 if docs.docstatus == 1:
-                    docs.add_comment(
-                        comment_type="Comment",
-                        text=f"Email has been sent by {user}."
-                    )
-                    docs.save(ignore_permissions=True)
-
+                    comment = frappe.new_doc("Comment")
+                    comment.reference_doctype = "Lab Test"
+                    comment.reference_name = docs.name
+                    comment.comment_type = "Comment"
+                    comment.content = f"Email has been sent by {user}."
+                    comment.owner = user
+                    comment.ip_address = getattr(frappe.local, "request_ip")
+                    comment.save(ignore_permissions=True)
+                    return
         else:
             frappe.msgprint("Unable to generate attachments")
-            
     else:
         frappe.msgprint("Please configure the email in Patient document for: " + patient)

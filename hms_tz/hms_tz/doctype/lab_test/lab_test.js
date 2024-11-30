@@ -65,7 +65,7 @@ frappe.ui.form.on('Lab Test', {
 				}, __('Actions'));
 			}
 		}
-		if (frm.doc.docstatus === 1 && frm.doc.sms_sent === 0 && frm.doc.status !== 'Rejected') {
+		if (frm.doc.docstatus === 1 && frm.doc.status !== 'Rejected') {
 			frm.add_custom_button(__('Send Email'), function () {
 				frappe.call({
 					method: 'hms_tz.hms_tz.utils.send_email_with_attachment',
@@ -74,6 +74,7 @@ frappe.ui.form.on('Lab Test', {
 						docname: frm.doc.name,
 						subject: `Hi, ${frm.doc.patient_name.toUpperCase()}, your Lab Test Results for ${frm.doc.result_date} `,
 						patient: frm.doc.patient,
+						patient_name: frm.doc.patient_name.toUpperCase(),
 						user: frappe.session.user_fullname,
 						ref_docname: frm.doc.ref_docname,
 					},

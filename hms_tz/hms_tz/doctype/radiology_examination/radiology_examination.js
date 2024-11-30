@@ -161,6 +161,30 @@ frappe.ui.form.on('Radiology Examination', {
 		}
 	},
 	refresh: function (frm) {
+		if (frm.doc.docstatus === 1 && frm.doc.status !== 'Rejected' && frm.doc.hms_tz_submitted_by) {
+			frm.add_custom_button(__('Send Email'), function () {
+				frappe.call({
+					method: 'hms_tz.hms_tz.utils.send_email_with_attachment',
+					args: {
+						doctype: frm.doc.doctype,
+						docname: frm.doc.name,
+						subject: `Hi, ${frm.doc.patient_name.toUpperCase()}, your ${frm.doc.medical_department} Test Results for ${frm.doc.radiology_examination_template} `,
+						patient: frm.doc.patient,
+						patient_name: frm.doc.patient_name.toUpperCase(),
+						user: frappe.session.user_fullname,
+						ref_docname: frm.doc.ref_docname,
+					},
+					callback: function (r) {
+						if (!r.exc) {
+							frappe.msgprint(__(`Email sent successfully.`));
+							frm.reload_doc();
+						} else {
+							frappe.msgprint(__('Error while sending email.'));
+						}
+					}
+				});
+			});
+		}
 		if (frm.doc.__islocal) {
 			return
 			frm.add_custom_button(__('Get from Patient Encounter'), function () {

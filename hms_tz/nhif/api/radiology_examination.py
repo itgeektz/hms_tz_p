@@ -15,6 +15,17 @@ def validate(doc, method):
         is_restricted = get_restricted_LRPT(doc)
         doc.is_restricted = is_restricted
 
+def update_custom_fields(doc, method):
+    if doc.is_restricted and not doc.approval_number:
+        frappe.throw(
+            _(
+                f"Approval number is required for <b>{doc.radiology_examination_template}</b>. Please set the Approval Number."
+            )
+        )
+    frappe.msgprint(f"Hook triggered for workflow state: {doc.workflow_state}")
+    if not doc.custom_examined_by and doc.workflow_state == 'Examined':
+        doc.custom_examined_by = get_fullname(frappe.session.user)
+        frappe.msgprint(f"custom_examined_by set to: {doc.custom_examined_by}")
 
 def before_submit(doc, method):
     if doc.is_restricted and not doc.approval_number:
@@ -24,9 +35,11 @@ def before_submit(doc, method):
             )
         )
 
-    doc.hms_tz_submitted_by = get_fullname(frappe.session.user)
-    doc.hms_tz_user_id = frappe.session.user
-    doc.hms_tz_submitted_date = nowdate()
+    if doc.custom_examined_by and not doc.hms_tz_submitted_by and doc.workflow_state == 'Submitted':
+        doc.hms_tz_submitted_by = get_fullname(frappe.session.user)
+        doc.hms_tz_user_id = frappe.session.user
+        doc.hms_tz_submitted_date = nowdate()
+        frappe.msgprint(f"custom_examined_by set to: {doc.hms_tz_submitted_by}")
 
     # 2023-07-13
     # stop this validation for now
