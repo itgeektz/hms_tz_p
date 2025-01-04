@@ -177,7 +177,7 @@ doc_events = {
         "on_submit": "hms_tz.nhif.api.radiology_examination.on_submit",
         "validate": "hms_tz.nhif.api.radiology_examination.validate",
         "on_cancel": "hms_tz.nhif.api.radiology_examination.on_cancel",
-        "before_save": "hms_tz.nhif.api.radiology_examination.update_custom_fields",
+        "before_save": "hms_tz.nhif.api.radiology_examination.before_save",
     },
     "Clinical Procedure": {
         "before_submit": "hms_tz.nhif.api.clinical_procedure.before_submit",

@@ -918,6 +918,8 @@ class NHIFPatientClaim(Document):
                 serv_info = ""
                 if row.medical_code:
                     serv_info += f", Medical Code: {row.medical_code}"
+                    procedure_notes = frappe.db.get_value("Clinical Procedure",row.clinical_procedure,"procedure_notes")
+                    serv_info += f", Procedure Notes: {procedure_notes}"
                 self.clinical_notes += f"Procedure: {row.procedure_name} {serv_info}"
                 self.clinical_notes += "<br>"
         self.clinical_notes = self.clinical_notes.replace('"', " ")
@@ -1339,7 +1341,7 @@ def get_LRPMT_status(encounter_no, row, child):
             },
             "workflow_state",
         )
-        if lab_workflow_state and lab_workflow_state != "Lab Test Requested":
+        if lab_workflow_state and lab_workflow_state != "Lab test Requested":
             status = "Submitted"
         else:
             status = "Draft"
@@ -1430,7 +1432,20 @@ def reconcile_repeated_items(claim_no):
     claim_doc.original_nhif_patient_claim_item = reconcile_items(
         claim_doc.original_nhif_patient_claim_item
     )
-
+    patient_encounters = frappe.get_list("Patient Encounter",filters = {'name':claim_doc.patient_appointment},pluck='name')
+    for encounter in patient_encounters:
+        encounter_doc = frappe.get_doc("Patient Encounter",encounter)
+        if len(encounter_doc.get("procedure_prescription")) > 0:
+            claim_doc.clinical_notes += "<br>Procedure(s): <br>"
+            for row in encounter_doc.get("procedure_prescription"):
+                serv_info = ""
+                if row.medical_code:
+                    serv_info += f", Medical Code: {row.medical_code}"
+                    procedure_notes = frappe.db.get_value("Clinical Procedure",row.clinical_procedure,"procedure_notes")
+                    serv_info += f", Procedure Notes: {procedure_notes}"
+                claim_doc.clinical_notes += f"Procedure: {row.procedure_name} {serv_info}"
+                claim_doc.clinical_notes += "<br>"
+        claim_doc.clinical_notes = claim_doc.clinical_notes.replace('"', " ")
     claim_doc.save(ignore_permissions=True)
     claim_doc.reload()
     return True

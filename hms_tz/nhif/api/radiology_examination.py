@@ -22,6 +22,7 @@ def update_custom_fields(doc, method):
                 f"Approval number is required for <b>{doc.radiology_examination_template}</b>. Please set the Approval Number."
             )
         )
+def before_save(doc, method):
     frappe.msgprint(f"Hook triggered for workflow state: {doc.workflow_state}")
     if not doc.custom_examined_by and doc.workflow_state == 'Examined':
         doc.custom_examined_by = get_fullname(frappe.session.user)
