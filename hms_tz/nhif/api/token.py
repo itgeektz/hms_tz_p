@@ -17,7 +17,7 @@ from hms_tz.nhif.doctype.nhif_response_log.nhif_response_log import add_log
 def make_token_request(doc, url, headers, payload, fields):
     for i in range(3):
         try:
-            r = requests.request("POST", url, headers=headers, data=payload, timeout=5)
+            r = requests.request("POST", url, headers=headers, data=payload, timeout=8)
             r.raise_for_status()
             frappe.logger().debug({"webhook_success": r.text})
             if json.loads(r.text):

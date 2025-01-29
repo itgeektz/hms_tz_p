@@ -150,6 +150,7 @@ class NHIFPatientClaim(Document):
                 "authorization_no": self.authorization_no,
                 "cardno": self.cardno,
                 "docstatus": 0,
+                "workflow_state": ["!=", "Unclaimable"]
             },
             fields=["name", "patient", "patient_name", "hms_tz_claim_appointment_list"],
         )
@@ -935,6 +936,11 @@ class NHIFPatientClaim(Document):
         self.clinical_notes = self.clinical_notes.replace('"', " ")
 
     def before_insert(self):
+        insurance_company = frappe.db.get_value("Patient Appointment",self.patient_appointment,"insurance_company")
+        if insurance_company not in ["NHIF","NHIF Town","NHIF Upanga - RSPDC"]:
+            frappe.throw(
+                f"This Patient is having insurance company #<b>{insurance_company}</b>.So please go to Regency Insurance Claim: and create claim for #<b>{self.patient}</b> with appointment: #<b>{self.patient_appointment}</b>"
+            )
         if frappe.db.exists(
             {
                 "doctype": "NHIF Patient Claim",

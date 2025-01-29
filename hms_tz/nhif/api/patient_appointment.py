@@ -418,7 +418,7 @@ def get_authorization_num(
         + remarks
     )
 
-    r = requests.get(url, headers=headers, timeout=5)
+    r = requests.get(url, headers=headers, timeout=30)
     r.raise_for_status()
     frappe.logger().debug({"webhook_success": r.text})
     if json.loads(r.text):
