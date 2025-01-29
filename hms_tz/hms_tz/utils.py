@@ -1730,3 +1730,13 @@ def send_email_with_attachment(doctype, docname,subject, patient,patient_name,us
             frappe.msgprint("Unable to generate attachments")
     else:
         frappe.msgprint("Please configure the email in Patient document for: " + patient)
+
+@frappe.whitelist()
+def get_closed_appointments(doctype, txt, searchfield, start, page_len, filters):
+    return frappe.db.sql("""
+        SELECT name,creation,department,practitioner,coverage_plan_name,inpatient_record
+        FROM `tabPatient Appointment`
+        WHERE patient = %s AND status = 'Closed'
+        ORDER BY creation DESC
+        LIMIT %s OFFSET %s
+    """, (filters.get("patient"), page_len, start))

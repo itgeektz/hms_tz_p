@@ -11,14 +11,15 @@ frappe.ui.form.on('LRPMT Returns', {
 		frm.reload_doc()
 	},
 
-	refresh: function(frm) {
-		frm.set_query('appointment', () => {
-			return {
-				filters: {
-					'patient': frm.doc.patient
-				}
-			}
-		});
+	refresh: function (frm) {
+        frm.fields_dict.appointment.get_query = function () {
+            return {
+                query: 'hms_tz.hms_tz.utils.get_closed_appointments',
+                filters: {
+                    "patient": frm.doc.patient
+                }
+            };
+        };
 		
 		if (frm.doc.patient && frm.doc.appointment) {
 			frm.add_custom_button(__("Get LRPT Items"), function(){
