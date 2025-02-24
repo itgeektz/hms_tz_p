@@ -328,11 +328,14 @@ var schedule_discharge = function(frm) {
 		title: 'Inpatient Discharge',
 		fields: [
 			{fieldtype: 'Date', label: 'Discharge Ordered Date', fieldname: 'discharge_ordered_date', default: 'Today', read_only: 1},
-			{fieldtype: 'Date', label: 'Followup Date', fieldname: 'followup_date'},
+			{fieldtype: 'Date', label: 'Followup Date', fieldname: 'followup_date', default: frappe.datetime.add_days(frappe.datetime.nowdate(), 14), reqd: 1},
 			{fieldtype: 'Column Break'},
-			{fieldtype: 'Small Text', label: 'Discharge Instructions', fieldname: 'discharge_instructions'},
 			{fieldtype: 'Section Break', label:'Discharge Summary'},
-			{fieldtype: 'Long Text', label: 'Discharge Note', fieldname: 'discharge_note'}
+			{fieldtype: 'Small Text', label: 'Discharge Instructions', fieldname: 'discharge_instructions',reqd: 1},
+			{fieldtype: 'Section Break', label:'Discharge Summary Medication and Diagnosis'},
+			{fieldtype: 'Long Text', label: 'Discharge Note', fieldname: 'discharge_note'},
+			{fieldtype: 'Small Text', label: 'Discharge Medications', fieldname: 'medication',reqd: 1},
+			{fieldtype: 'Small Text', label: 'Discharge Diagnosis to be Done', fieldname: 'on_examination'}
 		],
 		primary_action_label: __('Order Discharge'),
 		primary_action : function() {
@@ -343,7 +346,9 @@ var schedule_discharge = function(frm) {
 				discharge_ordered_date: dialog.get_value('discharge_ordered_date'),
 				followup_date: dialog.get_value('followup_date'),
 				discharge_instructions: dialog.get_value('discharge_instructions'),
-				discharge_note: dialog.get_value('discharge_note')
+				discharge_note: dialog.get_value('discharge_note'),
+				medication: dialog.get_value('medication'),
+				on_examination: dialog.get_value('on_examination'),
 			}
 			frappe.call ({
 				method: 'hms_tz.hms_tz.doctype.inpatient_record.inpatient_record.schedule_discharge',

@@ -286,7 +286,8 @@ def create_descriptives(template, lab_test):
         descriptive.require_result_value = 1
         descriptive.allow_blank = descriptive_test_template.allow_blank
         descriptive.template = template.name
-
+        descriptive.normal_ranges = descriptive_test_template.normal_ranges
+        descriptive.unit = descriptive_test_template.unit
 
 def create_sample_doc(template, patient, invoice, company=None):
     if template.sample:
