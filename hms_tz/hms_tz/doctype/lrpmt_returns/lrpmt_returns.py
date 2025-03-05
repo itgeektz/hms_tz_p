@@ -427,7 +427,17 @@ def get_lrpt_item_list(patient, appointment, company):
 
         for item in items:
             if item.lab_test_code:
-                lab_status = "Submitted"
+                lab_status = frappe.db.get_value(
+                    "Lab Test",
+                    {
+                        "ref_docname": item.parent,
+                        "ref_doctype": "Patient Encounter",
+                        "hms_tz_ref_childname": item.name,
+                        "template": item.lab_test_code,
+                    },
+                    "workflow_state",
+                    )
+                #lab_status = "Submitted"
                 if not item.lab_test:
                     name = get_refdoc(
                         "Lab Prescription", item.name, item.lab_test_code, item.parent
@@ -439,6 +449,7 @@ def get_lrpt_item_list(patient, appointment, company):
 
                 item_list.append(
                     {
+                        "date":item.creation,
                         "child_name": item.name,
                         "item_name": item.lab_test_code,
                         "quantity": 1,
@@ -465,6 +476,7 @@ def get_lrpt_item_list(patient, appointment, company):
 
                 item_list.append(
                     {
+                        "date":item.creation,
                         "child_name": item.name,
                         "item_name": item.radiology_examination_template,
                         "quantity": 1,
@@ -488,6 +500,7 @@ def get_lrpt_item_list(patient, appointment, company):
 
                 item_list.append(
                     {
+                        "date":item.creation,
                         "child_name": item.name,
                         "item_name": item.procedure,
                         "quantity": 1,
@@ -516,11 +529,12 @@ def get_lrpt_map():
     child_map = [
         {
             "doctype": "Lab Prescription",
-            "fields": ["name", "lab_test_code", "lab_test_name", "lab_test", "parent"],
+            "fields": ["creation","name", "lab_test_code", "lab_test_name", "lab_test", "parent"],
         },
         {
             "doctype": "Radiology Procedure Prescription",
             "fields": [
+                "creation",
                 "name",
                 "radiology_examination_template",
                 "radiology_procedure_name",
@@ -531,6 +545,7 @@ def get_lrpt_map():
         {
             "doctype": "Procedure Prescription",
             "fields": [
+                "creation",
                 "name",
                 "procedure",
                 "procedure_name",
@@ -656,6 +671,7 @@ def set_checked_lrpt_items(doc, checked_items):
     for checked_item in checked_items:
         item_row = doc.append("lrpt_items", {})
         item_row.item_name = checked_item["item"]
+        item_row.date = checked_item["date"]
         item_row.quantity = checked_item["quantity"]
         item_row.encounter_no = checked_item["encounter"]
         item_row.reference_doctype = checked_item["reference_doctype"] or ""
