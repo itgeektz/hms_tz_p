@@ -727,7 +727,8 @@ const set_filters = function (frm) {
             filters: {
                 'is_active': 1,
                 'docstatus': 1,
-                'patient': frm.doc.patient
+                'patient': frm.doc.patient,
+                'company': frm.doc.company,
             }
         };
     });

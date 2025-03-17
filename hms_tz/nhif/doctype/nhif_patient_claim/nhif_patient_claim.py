@@ -469,13 +469,29 @@ class NHIFPatientClaim(Document):
             dates = []
             occupancy_list = []
             record_doc = frappe.get_doc("Inpatient Record", inpatient_record)
-
+            appointment_doc = frappe.get_doc("Patient Appointment", self.patient_appointment)
+            item_code = appointment_doc.billing_item
+            new_row = self.append("nhif_patient_claim_item", {})
+            new_row.item_name = appointment_doc.billing_item
+            new_row.item_code = get_item_refcode(item_code)
+            new_row.item_quantity = 1
+            new_row.unit_price = appointment_doc.paid_amount
+            new_row.amount_claimed = appointment_doc.paid_amount
+            new_row.approval_ref_no = ""
+            new_row.patient_encounter = record_doc.admission_encounter
+            new_row.ref_doctype = "Patient Appointment"
+            new_row.ref_docname = self.patient_appointment
+            new_row.folio_item_id = str(uuid.uuid1())
+            new_row.folio_id = self.folio_id
+            new_row.date_created = appointment_doc.creation.strftime("%Y-%m-%d")
+            new_row.item_crt_by = appointment_doc.practitioner
+            
             admission_encounter_doc = frappe.get_doc(
                 "Patient Encounter", record_doc.admission_encounter
             )
             for occupancy in record_doc.inpatient_occupancies:
-                if not occupancy.is_confirmed:
-                    continue
+                #if not occupancy.is_confirmed:
+                #    continue
 
                 service_unit_type = frappe.get_cached_value(
                     "Healthcare Service Unit",
@@ -507,7 +523,8 @@ class NHIFPatientClaim(Document):
                 if checkin_date not in dates:
                     dates.append(checkin_date)
                     occupancy_list.append(occupancy)
-
+                if not occupancy.is_confirmed:
+                    continue
                 item_rate = get_item_rate(
                     item_code,
                     self.company,
@@ -533,34 +550,6 @@ class NHIFPatientClaim(Document):
                 if not occupancy.is_confirmed:
                     continue
                 checkin_date = occupancy.check_in.strftime("%Y-%m-%d")
-
-                if occupancy.is_consultancy_chargeable:
-                    for row_item in record_doc.inpatient_consultancy:
-                        if (
-                            row_item.is_confirmed
-                            and str(row_item.date) == checkin_date
-                            and row_item.rate
-                        ):
-                            item_code = row_item.consultation_item
-                            new_row = self.append("nhif_patient_claim_item", {})
-                            new_row.item_name = row_item.consultation_item
-                            new_row.item_code = get_item_refcode(item_code)
-                            new_row.item_quantity = 1
-                            new_row.unit_price = row_item.rate
-                            new_row.amount_claimed = row_item.rate
-                            new_row.approval_ref_no = ""
-                            new_row.patient_encounter = (
-                                row_item.encounter or record_doc.admission_encounter
-                            )
-                            new_row.ref_doctype = row_item.doctype
-                            new_row.ref_docname = row_item.name
-                            new_row.folio_item_id = str(uuid.uuid1())
-                            new_row.folio_id = self.folio_id
-                            new_row.date_created = row_item.modified.strftime(
-                                "%Y-%m-%d"
-                            )
-                            new_row.item_crt_by = get_fullname(row_item.modified_by)
-
                 for encounter in self.patient_encounters:
                     if str(encounter.encounter_date) != checkin_date:
                         continue
@@ -610,7 +599,86 @@ class NHIFPatientClaim(Document):
                             new_row.folio_id = self.folio_id
                             new_row.date_created = row.modified.strftime("%Y-%m-%d")
                             new_row.item_crt_by = encounter_doc.practitioner
+                if not occupancy.is_confirmed:
+                    continue
 
+                if occupancy.is_consultancy_chargeable:
+                    for row_item in record_doc.inpatient_consultancy:
+                        if (
+                            row_item.is_confirmed
+                            and str(row_item.date) == checkin_date
+                            and row_item.rate
+                        ):
+                            item_code = row_item.consultation_item
+                            new_row = self.append("nhif_patient_claim_item", {})
+                            new_row.item_name = row_item.consultation_item
+                            new_row.item_code = get_item_refcode(item_code)
+                            new_row.item_quantity = 1
+                            new_row.unit_price = row_item.rate
+                            new_row.amount_claimed = row_item.rate
+                            new_row.approval_ref_no = ""
+                            new_row.patient_encounter = (
+                                row_item.encounter or record_doc.admission_encounter
+                            )
+                            new_row.ref_doctype = row_item.doctype
+                            new_row.ref_docname = row_item.name
+                            new_row.folio_item_id = str(uuid.uuid1())
+                            new_row.folio_id = self.folio_id
+                            new_row.date_created = row_item.modified.strftime(
+                                "%Y-%m-%d"
+                            )
+                            new_row.item_crt_by = get_fullname(row_item.modified_by)
+                """
+                for encounter in self.patient_encounters:
+                    if str(encounter.encounter_date) != checkin_date:
+                        continue
+                    encounter_doc = frappe.get_doc("Patient Encounter", encounter.name)
+
+                    # allow clinical notes to be added to the claim even if the service is not chargeable and encounters will be ignored
+                    self.set_clinical_notes(encounter_doc)
+
+                    if not occupancy.is_service_chargeable:
+                        continue
+
+                    for child in childs_map:
+                        for row in encounter_doc.get(child.get("table")):
+                            if row.prescribe or row.is_cancelled:
+                                continue
+                            item_code = frappe.get_value(
+                                child.get("doctype"),
+                                row.get(child.get("item")),
+                                "item",
+                            )
+
+                            delivered_quantity = (row.get("quantity") or 0) - (
+                                row.get("quantity_returned") or 0
+                            )
+
+                            new_row = self.append("nhif_patient_claim_item", {})
+                            new_row.item_name = row.get(child.get("item"))
+                            new_row.item_code = get_item_refcode(item_code)
+                            new_row.item_quantity = delivered_quantity or 1
+                            new_row.unit_price = row.get("amount")
+                            new_row.amount_claimed = (
+                                new_row.unit_price * new_row.item_quantity
+                            )
+                            new_row.approval_ref_no = get_approval_number_from_LRPMT(
+                                child["ref_doctype"],
+                                row.get(child["ref_docname"]),
+                            )
+
+                            new_row.status = get_LRPMT_status(
+                                encounter.name, row, child
+                            )
+
+                            new_row.patient_encounter = encounter.name
+                            new_row.ref_doctype = row.doctype
+                            new_row.ref_docname = row.name
+                            new_row.folio_item_id = str(uuid.uuid1())
+                            new_row.folio_id = self.folio_id
+                            new_row.date_created = row.modified.strftime("%Y-%m-%d")
+                            new_row.item_crt_by = encounter_doc.practitioner
+                """
         patient_appointment_list = []
         if not self.hms_tz_claim_appointment_list:
             patient_appointment_list.append(self.patient_appointment)

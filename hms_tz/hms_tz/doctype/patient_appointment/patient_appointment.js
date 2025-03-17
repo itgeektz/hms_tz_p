@@ -81,9 +81,12 @@ frappe.ui.form.on('Patient Appointment', {
 		}
 
 		if (frm.doc.status == 'Open' || (frm.doc.status == 'Scheduled' && !frm.doc.__islocal)) {
-			frm.add_custom_button(__('Cancel'), function () {
-				update_status(frm, 'Cancelled');
-			});
+			// Corrected role check
+			if (frappe.user.has_role("System Manager") || frappe.user.has_role("Accounts User")) { 
+				frm.add_custom_button(__('Cancel'), function () {
+					update_status(frm, 'Cancelled');
+				}, __('Status'));
+			}
 
 			if (frm.doc.procedure_template) {
 				frm.add_custom_button(__('Clinical Procedure'), function () {

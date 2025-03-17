@@ -449,9 +449,9 @@ def get_lrpt_item_list(patient, appointment, company):
 
                 item_list.append(
                     {
-                        "date":item.creation,
+                        "date":item.creation.date(),
                         "child_name": item.name,
-                        "item_name": item.lab_test_code,
+                        "item_name": item.lab_test_name,
                         "quantity": 1,
                         "encounter_no": item.parent,
                         "reference_doctype": "Lab Test",
@@ -476,7 +476,7 @@ def get_lrpt_item_list(patient, appointment, company):
 
                 item_list.append(
                     {
-                        "date":item.creation,
+                        "date":item.creation.date(),
                         "child_name": item.name,
                         "item_name": item.radiology_examination_template,
                         "quantity": 1,
@@ -500,7 +500,7 @@ def get_lrpt_item_list(patient, appointment, company):
 
                 item_list.append(
                     {
-                        "date":item.creation,
+                        "date":item.creation.date(),
                         "child_name": item.name,
                         "item_name": item.procedure,
                         "quantity": 1,
@@ -670,8 +670,8 @@ def set_checked_lrpt_items(doc, checked_items):
 
     for checked_item in checked_items:
         item_row = doc.append("lrpt_items", {})
-        item_row.item_name = checked_item["item"]
         item_row.date = checked_item["date"]
+        item_row.item_name = checked_item["item"]
         item_row.quantity = checked_item["quantity"]
         item_row.encounter_no = checked_item["encounter"]
         item_row.reference_doctype = checked_item["reference_doctype"] or ""
@@ -698,6 +698,7 @@ def get_drug_item_list(patient, appointment, company):
             },
             fields=[
                 "name",
+                "creation",
                 "parent",
                 "item_code",
                 "docstatus",
@@ -724,6 +725,7 @@ def get_drug_item_list(patient, appointment, company):
                 },
                 fields=[
                     "name",
+                    "creation",
                     "parent",
                     "item_code",
                     "docstatus",
@@ -750,6 +752,7 @@ def get_drug_item_list(patient, appointment, company):
                     drug_list.append(
                         {
                             "child_name": item.name,
+                            "date": item.creation.date(),
                             "item_name": item.drug_code,
                             "quantity": item.quantity - item.quantity_returned,
                             "encounter_no": item.parent,
@@ -771,6 +774,7 @@ def get_drug_item_list(patient, appointment, company):
                     drug_list.append(
                         {
                             "child_name": item.name,
+                            "date": item.creation.date(),
                             "item_name": item.drug_code,
                             "quantity": item.quantity - item.quantity_returned,
                             "encounter_no": item.parent,
@@ -792,6 +796,7 @@ def get_drug_item_list(patient, appointment, company):
                         drug_list.append(
                             {
                                 "child_name": item.name,
+                                "date": item.creation.date(),
                                 "item_name": item.drug_code,
                                 "quantity": item.quantity - item.quantity_returned,
                                 "encounter_no": item.parent,
@@ -806,6 +811,7 @@ def get_drug_item_list(patient, appointment, company):
                 drug_list.append(
                     {
                         "child_name": item.name,
+                        "date": item.creation.date(),
                         "item_name": item.drug_code,
                         "quantity": item.quantity - item.quantity_returned,
                         "encounter_no": item.parent,
@@ -832,6 +838,7 @@ def get_drugs(patient, appointment, company):
         },
         fields=[
             "name",
+            "creation",
             "drug_code",
             "quantity",
             "quantity_returned",

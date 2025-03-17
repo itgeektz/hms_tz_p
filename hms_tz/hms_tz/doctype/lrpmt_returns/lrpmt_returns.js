@@ -122,7 +122,7 @@ frappe.ui.form.on('LRPMT Returns', {
 		var $results;
 		var $placeholder;
 		if (frm.doc.patient, frm.doc.appointment, frm.doc.company) {
-			var columns = (["item_name", "quantity", "encounter_no", "delivery_note", 'status'])
+			var columns = (["date", "item_name", "quantity", "encounter_no", "delivery_note", 'status'])
 			frappe.call({
 				method: "hms_tz.hms_tz.doctype.lrpmt_returns.lrpmt_returns.get_drug_item_list",
 				args: {
@@ -296,6 +296,7 @@ var list_row_drug_items = function (head, $row, result, item) {
 			: $row = $(`<div class="list-item-container"
 				data-child_name = "${result.child_name}"
 				data-item_name = "${result.item_name}"
+				data-date = "${result.date}"
 				data-quantity = "${result.quantity}"
 				data-encounter_no = "${result.encounter_no}"
 				data-delivery_note = "${result.delivery_note}"
@@ -323,6 +324,7 @@ var get_checked_drug_items = function ($results) {
 		if ($(this).find(".list-row-check:checkbox:checked").length > 0) {
 			checked_items["child_name"] = $(this).attr("data-child_name");
 			checked_items["item_name"] = $(this).attr("data-item_name");
+			checked_items["date"] = $(this).attr("data-date");
 			checked_items["quantity_prescribed"] = $(this).attr("data-quantity");
 			checked_items["encounter_no"] = $(this).attr("data-encounter_no");
 			checked_items["delivery_note"] = $(this).attr("data-delivery_note");
