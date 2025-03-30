@@ -254,7 +254,7 @@ frappe.ui.form.on('Patient Appointment', {
         }
     },
     get_authorization_number: function (frm) {
-        if (frm.doc.status == "Cancelled") {
+        if (frm.doc.status == "Cancelled" || frm.doc.status == "Sales Invoice Returned") {
             frappe.msgprint("Appointment is already cancelled")
             return
         }
@@ -802,12 +802,14 @@ const add_btns = (frm) => {
         frm.doc.invoiced ||
         frm.doc.status == "Closed" ||
         frm.doc.status == "Cancelled" ||
+        frm.doc.status == "Sales Invoice Returned" ||
         frm.doc.healthcare_package_order
     ) {
         return;
     }
 
     var vitals_btn_required = false;
+    /*
     var valid_days = null
     if (frm.doc.insurance_subscription) {
         valid_days = get_value("Healthcare Insurance Coverage Plan", frm.doc.coverage_plan_name, "no_of_days_for_follow_up")
@@ -841,9 +843,9 @@ const add_btns = (frm) => {
                 frappe.show_alert(__({ message: "Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!", indicator: "green" }));
             }
         }
-    }
+    } */
     if (!frm.doc.mode_of_payment || frm.doc.insurance_subscription) return;
-    if (vitals_btn_required || frm.doc.follow_up) {
+    if (vitals_btn_required || frm.doc.follow_up || frm.doc.has_no_consultation_charges) {
         add_vital_btn(frm);
     } else {
         add_invoice_btn(frm);

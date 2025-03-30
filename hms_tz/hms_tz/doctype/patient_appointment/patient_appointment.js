@@ -82,7 +82,11 @@ frappe.ui.form.on('Patient Appointment', {
 
 		if (frm.doc.status == 'Open' || (frm.doc.status == 'Scheduled' && !frm.doc.__islocal)) {
 			// Corrected role check
-			if (frappe.user.has_role("System Manager") || frappe.user.has_role("Accounts User")) { 
+			if (
+					frappe.user.has_role("System Manager") ||
+					frappe.user.has_role("Accounts User") ||
+					frappe.user.has_role("Appointment Cancellation")
+				){ 
 				frm.add_custom_button(__('Cancel'), function () {
 					update_status(frm, 'Cancelled');
 				}, __('Status'));

@@ -173,8 +173,9 @@ def reset_invoiced_status(doc):
     """Remove invoiced status on items because a return invoice is created"""
 
     for row in doc.items:
-        if row.reference_dt and row.reference_dt:
+        if row.reference_dt and row.reference_dn:
             if row.reference_dt == "Patient Appointment":
+                from hms_tz.hms_tz.doctype.patient_appointment.patient_appointment import update_status
                 appointment = frappe.qb.DocType("Patient Appointment")
                 (
                     frappe.qb.update(appointment)
@@ -182,6 +183,7 @@ def reset_invoiced_status(doc):
                     .set(appointment.ref_sales_invoice, "")
                     .where(appointment.name == row.reference_dn)
                 ).run()
+                update_status(row.reference_dn,"Sales Invoice Returned")
             elif row.reference_dt in [
                 "Lab Prescription",
                 "Radiology Procedure Prescription",

@@ -22,6 +22,8 @@ from hms_tz.nhif.api.healthcare_utils import get_item_rate
 from frappe.utils import date_diff, getdate, nowdate
 from hms_tz.hms_tz.doctype.patient.patient import create_customer
 from csf_tz import console
+from hms_tz.hms_tz.utils import check_fee_validity
+from healthcare.healthcare.doctype.fee_validity.fee_validity import create_fee_validity
 
 
 def before_insert(doc, method):
@@ -116,7 +118,10 @@ def get_item_price(item_code, price_list, company):
 def invoice_appointment(name):
     appointment_doc = frappe.get_doc("Patient Appointment", name)
     set_follow_up(appointment_doc, "invoice_appointment")
-    appointment_doc.has_no_consultation_charges = frappe.get_cached_value("Appointment Type",appointment_doc.appointment_type,"has_no_consultation_charges")
+    if appointment_doc.mode_of_payment:
+        appointment_doc.has_no_consultation_charges = 1 if appointment_doc.appointment_type in ["Health Checkup","Dialysis","Chemotherapy","Physiotherapy"] else 0
+    else:
+        appointment_doc.has_no_consultation_charges = frappe.get_cached_value("Appointment Type",appointment_doc.appointment_type,"has_no_consultation_charges")
     if appointment_doc.has_no_consultation_charges == 1 or appointment_doc.follow_up == 1:
         make_next_doc(appointment_doc, "validate", from_hook=False)
         return "true"
@@ -179,6 +184,7 @@ def invoice_appointment(name):
         sales_invoice.flags.ignore_mandatory = True
         sales_invoice.save(ignore_permissions=True)
         sales_invoice.calculate_taxes_and_totals()
+        sales_invoice.save(ignore_permissions=True)
         sales_invoice.submit()
         frappe.msgprint(_("Sales Invoice {0} created".format(sales_invoice.name)))
         appointment_doc = frappe.get_doc("Patient Appointment", appointment_doc.name)
@@ -309,7 +315,7 @@ def make_encounter(doc, method):
             return
         if (
             frappe.get_value("Patient Appointment", doc.appointment, "status")
-            == "Cancelled"
+           in ("Cancelled","Sales Invoice Returned")
         ):
             frappe.throw("<b>Appointment is already cancelled</b>")
         source_name = doc.appointment
@@ -317,8 +323,14 @@ def make_encounter(doc, method):
         if (
             (not doc.authorization_number and not doc.mode_of_payment)
             or doc.ref_patient_encounter
-            or doc.status == "Cancelled"
+            or doc.status in ("Cancelled","Sales Invoice Returned")
         ):
+            frappe.msgprint(
+            _(
+                "Authorization number / Payment / Already created Encounter not set to proceed to create Encounter for this appointment. Please get the authorization number first and then try again."
+            ),
+            alert=True,
+        )
             return
 
         if doc.insurance_subscription and doc.billing_item and doc.paid_amount <= 0 and not doc.has_no_consultation_charges and not doc.follow_up:
@@ -519,64 +531,36 @@ def get_previous_appointment(patient, filters=None):
         return appointments[0]
 
 def set_follow_up(appointment_doc, method):
-    filters = {
-        "name": ["!=", appointment_doc.name],
-        "department": appointment_doc.department,
-        "status": ["in", ["Open", "Closed"]],
-        "invoiced": 1,
-    }
-    if appointment_doc.insurance_subscription:
-        filters["insurance_subscription"] = appointment_doc.insurance_subscription
-    else:
-        filters["mode_of_payment"] = ["!=", ""]
-    appointment = get_previous_appointment(appointment_doc.patient, filters)
-    if appointment and appointment_doc.appointment_date:
-        if getdate(appointment.appointment_date) > getdate(appointment_doc.appointment_date):
-            frappe.msgprint(_("There is an appointment already scheduled for this patient Later on!"), alert=True)
-            return
-        diff = date_diff(appointment_doc.appointment_date, appointment.appointment_date)
-        if appointment_doc.mode_of_payment:
-            valid_days = int(
-                frappe.get_cached_value(
-                    "Healthcare Settings", "Healthcare Settings", "valid_days"
-                )
-            )
-        else:
-            valid_days = int(
-                frappe.get_cached_value(
-                    "Healthcare Insurance Coverage Plan",
-                    {"coverage_plan_name": appointment_doc.coverage_plan_name},
-                    "no_of_days_for_follow_up",
-                )
-            )
-            if valid_days == 0:
-                valid_days = int(
-                    frappe.get_cached_value(
-                        "Healthcare Insurance Company",
-                        appointment_doc.insurance_company,
-                        "no_of_days_for_follow_up",
-                    )
-                )
-        if diff <= valid_days:
-            appointment_doc.follow_up = 1
-            if (
-                appointment_doc.follow_up
-                and appointment_doc.insurance_subscription
-                and not appointment_doc.authorization_number
-            ):
-                return
-            appointment_doc.paid_amount = 0
-            frappe.msgprint(
-                _(
-                    "Previous appointment found valid for free follow-up.<br>Skipping invoice for this appointment!"
-                ),
-                alert=True,
-            )
-        else:
+    validity = check_fee_validity(appointment_doc)
+    if validity:
+        appointment_doc.fee_validity = validity.name
+        if len(validity.ref_appointments) == 1 and validity.ref_appointments[0].appointment == appointment_doc.name and validity.ref_appointments[0].status == 'Active':
             appointment_doc.follow_up = 0
+            frappe.msgprint(
+                "This appointment has no valid fee validity for free follow-up.<br>"
+                f"Appointment: <b>{appointment_doc.name}</b><br>"
+                f"Fee Validity: <b>{validity.name}</b>"
+            )
+            return
+        elif len(validity.ref_appointments) > 1:
+            filters = {
+            "appointment": ["!=", appointment_doc.name],  # This is now valid
+            "status": "Active",
+            "parent": validity.name
+        }
+            if frappe.db.exists("Fee Validity Reference", filters):
+                appointment_doc.follow_up = 1
+                appointment_doc.invoiced = 1
+                appointment_doc.paid_amount = 0
+                frappe.msgprint("This appointment has a valid fee validity for free follow-up.",validity.name)
+                return
     else:
         appointment_doc.follow_up = 0
-        #frappe.msgprint(_("This appointment requires to be paid for!"), alert=True)
+        #fee_validity = create_fee_validity(appointment_doc)
+        #appointment_doc.fee_validity = fee_validity.name
+        frappe.msgprint("This appointment has no valid fee validity for free follow-up.")
+        return
+    
 
 def make_next_doc(doc, method, from_hook=True):
     validate_insurance_subscription(doc)
@@ -634,7 +618,10 @@ def make_next_doc(doc, method, from_hook=True):
                         )
     if from_hook:
         set_follow_up(doc, method)
-        doc.has_no_consultation_charges = frappe.get_cached_value(
+        if doc.mode_of_payment:
+            doc.has_no_consultation_charges = 1  if doc.appointment_type in ["Health Checkup","Dialysis","Chemotherapy","Physiotherapy"] else 0
+        else:
+            doc.has_no_consultation_charges = frappe.get_cached_value(
             "Appointment Type",
             doc.appointment_type,
             "has_no_consultation_charges",
@@ -646,7 +633,8 @@ def make_next_doc(doc, method, from_hook=True):
     if doc.insurance_subscription and not doc.authorization_number:
         return
     # do not create vital sign or encounter if appointment is already cancelled
-    if doc.status == "Cancelled":
+    if doc.status in ("Cancelled","Sales Invoice Returned"):
+        frappe.msgprint('Message: Appointment already cancelled')
         return
     if doc.appointment_type:
         if doc.has_no_consultation_charges or doc.follow_up:
@@ -659,6 +647,7 @@ def make_next_doc(doc, method, from_hook=True):
                     alert=True,
                     )
                     make_encounter(doc, method)
+                    return
     # do not create vital sign or encounter if appointment is already invoiced
     if doc.mode_of_payment and not doc.ref_sales_invoice and not doc.follow_up:
         return
@@ -667,6 +656,8 @@ def make_next_doc(doc, method, from_hook=True):
     ):
         doc.invoiced = 1
         make_encounter(doc, method)
+        frappe.msgprint('Message: Vitals bypassed for this appointment')
+        return
     else:
         make_vital(doc, method)
 
@@ -744,33 +735,44 @@ def get_discount_percent(insurance_company):
     return discount_percent
 
 
+@frappe.whitelist()
 def check_multiple_appointments(doc):
     if doc.healthcare_package_order:
         return
+    #if not frappe.db.get_value("Appointment Type", doc.appointment_type,"has_no_consultation_charges"):
+    filters={
+            "patient": doc.patient,
+            "coverage_plan_card_number": doc.coverage_plan_card_number,
+            "appointment_date": frappe.utils.nowdate(),
+            "status": ["not in", ["Cancelled","Sales Invoice Returned"]],
+            "name": ["!=", doc.name],
+            }
+    if doc.insurance_company:
+        filters["nhif_patient_claim"] = ["is", "not set"]
+        if doc.insurance_company in ("NHIF","NHIF Town","NHIF Upanga - RSPDC") or doc.department == 'General':
+            filters["department"] = doc.department
+        else:
+            filters["practitioner"] = doc.practitioner
+    if doc.mode_of_payment:
+        if doc.department == 'General':
+            filters["department"] = doc.department
+            filters["status"] = "Open"
+        else:
+            filters["practitioner"] = doc.practitioner
 
-    if (
-        doc.coverage_plan_card_number
-        and "NHIF" in doc.insurance_company
-        and doc.appointment_type in ["Outpatient Visit", "Normal Visit"]
-        and doc.department not in ["Eye", "Optometrist", "Physiotherapy", "Dialysis"]
-    ):
-        appointments = frappe.get_list(
-            "Patient Appointment",
-            filters={
-                "patient": doc.patient,
-                "coverage_plan_card_number": doc.coverage_plan_card_number,
-                "appointment_date": frappe.utils.nowdate(),
-                "status": ["!=", "Cancelled"],
-                "name": ["!=", doc.name],
-            },
-            fields=["name", "department", "practitioner"],
+    
+    appointments = frappe.get_list(
+        "Patient Appointment",
+        filters=filters,
+        fields=["name", "department", "practitioner","appointment_date"],
+        order_by = 'appointment_date desc',
+    )
+
+    if len(appointments) > 0:
+        msg = f"Patient already has an appointment: <b>{appointments[0].name}</b> with Practitioner: <b>{appointments[0].practitioner}</b>. \
+            <br>It is advised to have only one appointment per day for : <b>{appointments[0].appointemnt_date}<b>."
+        frappe.throw(msg)
+        frappe.msgprint(
+            msg,
+            alert=True,
         )
-
-        if len(appointments) > 0:
-            msg = f"Patient already has an appointment: <b>{appointments[0].name}</b> for Practitioner: <b>{appointments[0].practitioner}</b>. \
-                <br>It is adviced to have only one appointment per day."
-            frappe.msgprint(msg)
-            frappe.msgprint(
-                f"Patient already has an appointment for <b>{appointments[0].practitioner}</b>",
-                alert=True,
-            )

@@ -50,7 +50,7 @@ class PatientAppointment(Document):
         self.update_prescription_details()
         invoice_appointment(self)
         self.update_fee_validity()
-        send_confirmation_msg(self)
+        #send_confirmation_msg(self)
         # make_insurance_claim(self)
 
     def set_title(self):
@@ -296,7 +296,7 @@ def invoice_appointment(appointment_doc):
 
 
 def check_is_new_patient(patient, name=None):
-    filters = {"patient": patient, "status": ("!=", "Cancelled")}
+    filters = {"patient": patient, "status": ["not in", ["Cancelled", "Sales Invoice Returned"]]}
     if name:
         filters["name"] = ("!=", name)
 
@@ -363,7 +363,7 @@ def cancel_sales_invoice(sales_invoice):
 def check_sales_invoice_exists(appointment):
     sales_invoice = frappe.db.get_value(
         "Sales Invoice Item",
-        {"reference_dt": "Patient Appointment", "reference_dn": appointment.name},
+        {"reference_dt": "Patient Appointment", "reference_dn": appointment.name,"docstatus": 1},
         "parent",
     )
 
@@ -535,7 +535,7 @@ def get_available_slots(practitioner_doc, date):
                     "practitioner": practitioner,
                     "service_unit": schedule_entry.service_unit,
                     "appointment_date": date,
-                    "status": ["not in", ["Cancelled"]],
+                    "status": ["not in", ["Cancelled","Sales Invoice Returned"]],
                 }
 
                 if schedule_entry.service_unit:
@@ -613,7 +613,7 @@ def get_present_event_slots(present_events, date, practitioner):
                     "practitioner": practitioner,
                     "service_unit": present_event.service_unit,
                     "appointment_date": date,
-                    "status": ["not in", ["Cancelled"]],
+                    "status": ["not in", ["Cancelled","Sales Invoice Returned"]],
                 }
 
                 if present_event.service_unit:
@@ -698,22 +698,46 @@ def remove_events_by_repeat_on(events_list, date):
 
 @frappe.whitelist()
 def update_status(appointment_id, status):
-    frappe.db.set_value("Patient Appointment", appointment_id, "status", status)
-    appointment_booked = True
-    if status == "Cancelled":
-        appointment_booked = False
-        cancel_appointment(appointment_id)
-
-    procedure_prescription = frappe.db.get_value(
-        "Patient Appointment", appointment_id, "procedure_prescription"
+    # Fetch encounter details in one query
+    encounters = frappe.db.get_list(
+        "Patient Encounter", 
+        filters={"appointment": appointment_id}, 
+        fields=["name", "docstatus", "price_list", "mode_of_payment"]
     )
-    if procedure_prescription:
-        frappe.db.set_value(
-            "Procedure Prescription",
-            procedure_prescription,
-            "appointment_booked",
-            appointment_booked,
-        )
+    # Handle different cases of encounter status
+    if encounters:
+        if len(encounters) > 1:
+            frappe.throw("This appointment has multiple submitted encounters. Cancellation is not allowed.")
+
+        encounter = encounters[0]
+
+        if encounter.docstatus in (0,2):
+            #frappe.msgprint("Cancelling the draft encounter...")
+            frappe.db.set_value("Patient Encounter", encounter.name, "docstatus", 2)
+            frappe.msgprint("Encounter cancelled successfully.")
+        elif encounter.docstatus == 1:
+            if encounter.mode_of_payment:
+                frappe.msgprint("Encounter is submitted but has a mode of payment. Skipping modification.")
+            else:
+                frappe.throw("This appointment has a submitted encounter. Cancel the encounter first.")
+    # Fetch the appointment document
+    appointment = frappe.get_doc("Patient Appointment", appointment_id)
+
+    if appointment.status == "Closed":
+        return  # No further action needed
+
+    # Check for existing sales invoice
+    if appointment.ref_sales_invoice:
+        frappe.throw("This appointment has an invoice already submitted. Please cancel the invoice first.")
+
+    # Update appointment status
+    frappe.db.set_value("Patient Appointment", appointment_id, "status", status)
+    frappe.msgprint("Appointment updated successfully.")
+
+    if status in ("Cancelled", "Sales Invoice Returned"):
+        appointment = frappe.get_doc("Patient Appointment", appointment_id)
+        fee_validity = manage_fee_validity(appointment)
+
 
 
 def send_confirmation_msg(doc):
@@ -778,7 +802,7 @@ def send_appointment_reminder():
                     (datetime.datetime.now(), reminder_dt),
                 ],
                 "reminded": 0,
-                "status": ["!=", "Cancelled"],
+                "status": ["not in", ["Cancelled", "Sales Invoice Returned"]],
             },
         )
 
@@ -832,7 +856,7 @@ def get_events(start, end, filters=None):
 		left join `tabAppointment Type` on `tabPatient Appointment`.appointment_type=`tabAppointment Type`.name
 		where
 		(`tabPatient Appointment`.appointment_date between %(start)s and %(end)s)
-		and `tabPatient Appointment`.status != 'Cancelled' and `tabPatient Appointment`.docstatus < 2 {conditions}""".format(
+		and `tabPatient Appointment`.status not in ('Cancelled','Sales Invoice Returned') and `tabPatient Appointment`.docstatus < 2 {conditions}""".format(
             conditions=conditions
         ),
         {"start": start, "end": end},
@@ -900,7 +924,7 @@ def update_appointment_status():
     # update the status of appointments daily
     appointments = frappe.get_all(
         "Patient Appointment",
-        {"status": ("not in", ["Closed", "Cancelled"])},
+       {"status": ("not in", ["Closed", "Cancelled","Sales Invoice Returned"])},
         as_dict=1,
     )
 
