@@ -14,6 +14,8 @@ from frappe.utils import (
     cstr,
     flt,
     date_diff,
+    now_datetime,
+    add_to_date
 )
 from hms_tz.nhif.api.healthcare_utils import (
     get_item_rate,
@@ -472,7 +474,6 @@ def checkـforـduplicate(doc, method):
                 method,
             )
 
-
 @frappe.whitelist()
 def duplicate_encounter(encounter):
     doc = frappe.get_doc("Patient Encounter", encounter)
@@ -486,7 +487,22 @@ def duplicate_encounter(encounter):
         validate_nhif_patient_claim_status(
             "Patient Encounter", doc.company, doc.appointment, doc.insurance_company
         )
-
+    if (doc.creation < add_to_date(now_datetime(), hours=-24)) and not doc.inpatient_record:
+        frappe.throw(
+            _(
+                "Cannot duplicate an encounter of more than 24 hrs, Please let the patient to create appointment again"
+            )
+        )
+    if doc.inpatient_record:
+        inpatient_status = frappe.get_value("Inpatient Record",doc.inpatient_record,'status')
+        if inpatient_status != 'Admitted':
+            frappe.throw(
+                _(
+                "Cannot duplicate an encounter for an Inpatient unless the patient is Admitted"
+                )
+            )
+        else:
+            doc.inpatient_status = inpatient_status
     if not doc.docstatus == 1 or doc.encounter_type == "Final" or doc.duplicated == 1:
         frappe.msgprint(
             _(
@@ -1261,7 +1277,7 @@ def finalized_encounter(cur_encounter, ref_encounter=None):
     inpatient_status, inpatient_record = frappe.get_cached_value(
         "Patient", cur_encounter_doc.patient, ["inpatient_status", "inpatient_record"]
     )
-    if inpatient_status and cur_encounter_doc.inpatient_record == inpatient_record:
+    if inpatient_status in ["Admission Schedule","Admitted"] and cur_encounter_doc.inpatient_record == inpatient_record:
         frappe.throw(
             _(
                 "The patient {0} has inpatient status <strong>{1}</strong>. Please process the discharge before proceeding to finalize the encounter.".format(

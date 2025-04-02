@@ -642,7 +642,7 @@ var add_btn_final = function (frm) {
 };
 
 var duplicate = function (frm) {
-    if (frm.doc.docstatus != 1 || frm.doc.encounter_type == 'Final' || frm.doc.duplicated == 1 || frm.doc.practitioner.includes("Direct")) {
+    if (frm.doc.inpatient_status == "Discharge Scheduled" || frm.doc.docstatus != 1 || frm.doc.encounter_type == 'Final' || frm.doc.duplicated == 1 || frm.doc.practitioner.includes("Direct")) {
         return;
     }
     let click_count = 0;

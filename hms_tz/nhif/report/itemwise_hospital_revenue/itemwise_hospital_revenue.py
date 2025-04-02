@@ -325,7 +325,7 @@ def get_insurance_appointment_data(filters, appoints):
         )
         .where(
             (pa.company == filters.company)
-            & (pa.status != "Cancelled")
+            & (pa.status.notin(["Cancelled", "Sales Invoice Returned"]))
             & (pa.follow_up == 0)
             #& (pa.has_no_consultation_charges == 0)
             & (
@@ -403,7 +403,7 @@ def get_cash_appointment_data(filters, appoints):
         )
         .where(
             (pa.company == filters.company)
-            & (pa.status != "Cancelled")
+            & (pa.status.notin(["Cancelled", "Sales Invoice Returned"]))
             & (pa.follow_up == 0)
             & ((pa.ref_sales_invoice.isnotnull()) & (pa.ref_sales_invoice != ""))
             & (sii.docstatus == 1)

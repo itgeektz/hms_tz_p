@@ -8,7 +8,7 @@ from frappe import _
 from frappe.utils import today, now_datetime, getdate, get_datetime
 from frappe.model.document import Document
 from frappe.desk.reportview import get_match_cond
-
+from hms_tz.nhif.api.patient_encounter import finalized_encounter
 
 class InpatientRecord(Document):
     def before_insert(self):
@@ -215,7 +215,7 @@ def schedule_discharge(args):
             "inpatient_status",
             inpatient_record.status,
         )
-
+        finalized_encounter(inpatient_record.discharge_encounter)
 
 def set_details_from_ip_order(inpatient_record, ip_order):
     for key in ip_order:

@@ -1,9 +1,9 @@
 frappe.ui.form.on('Inpatient Record', {
-    reset_admission_status_to_admission_scheduled: function (frm) {
+    /* reset_admission_status_to_admission_scheduled: function (frm) {
         frm.set_value("status", "Admission Scheduled")
         frm.refresh_fields("status")
         frm.save()
-    },
+    },*/
     refresh(frm) {
         // hide button to delete rows of occupancy
         $('*[data-fieldname="inpatient_occupancies"]').find('.grid-remove-rows').hide();
@@ -15,7 +15,33 @@ frappe.ui.form.on('Inpatient Record', {
 
         frm.get_field("inpatient_occupancies").grid.cannot_add_rows = true;
         frm.get_field("inpatient_consultancy").grid.cannot_add_rows = true;
-
+        if (frappe.user.has_role("System Manager") || frappe.user.has_role("Inpatient Cancellation")) {
+        if (frm.doc.status == "Admission Scheduled") {
+             frm.add_custom_button(__("Revoke Admission Scheduled"), () => {
+                let msg2 = "Admission Scheduled Revoked";
+                reset_admission_scheduled(frm,msg2);
+            }).addClass("btn-primary");
+        } else if (frm.doc.status == "Admitted" && frappe.user.has_role("System Manager")) {
+            frm.add_custom_button(__("Revoke Admitted"), () => {
+                let msg1 = "Admission Revoked";
+                reset_admission(frm,msg1);
+            }).addClass("btn-primary");
+        } else if (frm.doc.status == "Admission Revoked") {
+            frm.add_custom_button(__("Reinstate Admission"), () => {
+                frappe.alert("Admission Revoked cannot be reinstated, please reschedule admission from last encounter");
+            }).addClass("btn-primary");
+        } else if (frm.doc.status == "Discharged") {
+            frm.add_custom_button(__("Revoke Discharge"), () => {
+                frappe.alert("This is not available, Coming soon!");
+            }).addClass("btn-primary");
+        } else if (frm.doc.status == "Discharge Scheduled") {
+            frm.add_custom_button(__("Revoke Discharge Scheduled"), () => {
+                let msg = "Discharge Scheduled Revoked";
+                reset_discharge_scheduled(frm,msg);
+            }).addClass("btn-primary");
+        } 
+        
+    }
         if (!frm.doc.insurance_subscription) {
             frm.add_custom_button(__("Create Invoice"), () => {
                 create_sales_invoice(frm);
@@ -213,4 +239,95 @@ var validate_inpatient_balance_vs_inpatient_cost = (frm) => {
             }
         });
     }
+}
+
+var reset_admission_scheduled = (frm,msg2) => {
+    frappe.msgprint(__("Function started"));
+    let filters = {
+        "patient": frm.doc.patient,
+        "appointment": frm.doc.patient_appointment,
+        "inpatient_record": frm.doc.name,
+        "company": frm.doc.company,
+    }
+    frappe.call({
+        method: "hms_tz.nhif.api.inpatient_record.reset_admission_scheduled",
+        args: {
+            args: filters
+        },
+        freeze: true,
+        freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
+    }).then((r) => {
+        if (r.message) {
+            add_comment(frm,msg2);
+            frm.reload_doc();
+        }
+    });
+}
+
+var reset_admission = (frm,msg1) => {
+    let filters = {
+        "patient": frm.doc.patient,
+        "appointment": frm.doc.patient_appointment,
+        "inpatient_record": frm.doc.name,
+        "company": frm.doc.company,
+        "inpatient_occupancies": frm.doc.inpatient_occupancies,
+        "admission_encounter": frm.doc.admission_encounter,
+    }
+    frappe.call({
+        method: "hms_tz.nhif.api.inpatient_record.reset_admission",
+        args: {
+            args: filters
+        },
+        freeze: true,
+        freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
+    }).then((r) => {
+        if (r.message) {
+            add_comment(frm,msg1);
+            frm.reload_doc();
+        }
+    });
+}
+
+var reset_discharge_scheduled = (frm,msg) => {
+    let filters = {
+        "patient": frm.doc.patient,
+        "appointment": frm.doc.patient_appointment,
+        "inpatient_record": frm.doc.name,
+        "company": frm.doc.company,
+        "admission_encounter": frm.doc.discharge_encounter,
+    }
+    frappe.call({
+        method: "hms_tz.nhif.api.inpatient_record.reset_discharge_scheduled",
+        args: {
+            args: filters
+        },
+        freeze: true,
+        freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
+    }).then((r) => {
+        if (r.message) {
+            add_comment(frm,msg);
+            frm.reload_doc();
+        }
+    });
+}
+
+var add_comment = (frm,msg) => {
+    frappe.call({
+        method: "frappe.desk.form.utils.add_comment",
+        args: {
+            reference_doctype: frm.doctype,   // The current document type
+            reference_name: frm.doc.name,     // The current document name
+            content: "The document updated by " + frappe.session.user_fullname+ " " + msg,  // Your comment text
+            comment_email: frappe.session.user,  // User adding the comment
+            comment_by: frappe.session.user_fullname  // User's full name
+        },
+        callback: function(response) {
+            if (!response.exc) {
+                frappe.msgprint(__('Comment added successfully.'));
+                frm.reload_doc();  // Reload to show the new comment
+            }else {
+                frappe.msgprint(__('Failed to add comment.'));
+            }
+        }
+    });
 }

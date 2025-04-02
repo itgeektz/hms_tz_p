@@ -370,3 +370,215 @@ def validate_inpatient_balance_vs_inpatient_cost(
         encounter_doc, encounters=patient_encounters
     )
     return True
+
+@frappe.whitelist()
+def reset_admission_scheduled(args):
+    args = frappe._dict(json.loads(args))
+    inpatient_encounters = frappe.db.get_list(
+        "Patient Encounter", filters={"appointment": args.appointment,"company":args.company}, 
+        fields=["name","inpatient_record","inpatient_status"],
+    )
+    if not inpatient_encounters:
+        frappe.msgprint(
+            _("No Inpatient Encounter found for this Patient Appointment: <b>{0}</b>").format(args.appointment)
+        )
+    else:
+        for encounter in inpatient_encounters:
+            frappe.db.set_value(
+                "Patient Encounter", encounter.name, "inpatient_status", ""
+            )
+            frappe.db.set_value(
+                "Patient Encounter", encounter.name, "inpatient_record", ""
+            )
+            frappe.msgprint(_('Encounter is updated'))
+            frappe.db.commit()
+    
+    frappe.db.set_value("Inpatient Record", args.inpatient_record, "status", "Admission Cancelled")
+    frappe.db.set_value("Inpatient Record", args.inpatient_record, "docstatus", 2)
+    frappe.db.set_value("Patient Appointment", args.appointment, "inpatient_record", "")
+    frappe.msgprint(_("Patient Appointment reset done"))
+    frappe.db.set_value("Patient", args.patient, "inpatient_record", "")
+    frappe.db.set_value("Patient", args.patient, "inpatient_status", "")
+    frappe.msgprint(_("Patient's Inpatient status reset done"))
+    frappe.msgprint(_("Inpatient Record has been Cancelled"))
+    return "Admission Scheduled Revoked"
+
+@frappe.whitelist()    
+def reset_discharge_scheduled(args):
+    args = frappe._dict(json.loads(args))
+    inpatient_occupancy = frappe.get_all(
+        "Inpatient Occupancy",
+        filters={"parent": args.inpatient_record},
+        fields=["name", "check_out","idx","service_unit","left","check_in"],
+        order_by="idx DESC",
+        limit_page_length=1
+        )
+    reset_bed_status(inpatient_occupancy[0])
+    inpatient_encounters = frappe.db.get_list(
+        "Patient Encounter", 
+        filters={
+            "appointment": args.appointment,
+            "company":args.company,
+            "inpatient_record":args.inpatient_record,
+            "inpatient_status": "Discharge Scheduled",
+            }, 
+        fields=["name","inpatient_record","inpatient_status","encounter_type","finalized"],
+    )
+    if not inpatient_encounters:
+        frappe.msgprint(
+            _("No Inpatient Encounter found for this Patient Appointment: <b>{0}</b>").format(args.appointment)
+        )
+    else:
+        for encounter in inpatient_encounters:
+            if encounter.inpatient_status == 'Discharge Scheduled':
+                frappe.db.set_value(
+                    "Patient Encounter", encounter.name, "inpatient_status", "Admitted"
+                )
+                frappe.db.set_value(
+                    "Patient Encounter", encounter.name, "encounter_type", "Ongoing"
+                )
+                frappe.db.set_value(
+                    "Patient Encounter", encounter.name, "finalized", 0
+                )
+            frappe.db.commit()
+
+        frappe.msgprint('The Encounter status has been reverted successfully.')
+    frappe.db.set_value("Patient", args.patient, "inpatient_status", "Admitted")
+    fields = [
+        "discharge_ordered_date","followup_date","discharge_instructions",
+        "discharge_note","medication","on_examination","discharge_encounter",
+        "discharge_practitioner","discharge_type"
+            ]
+    reset_ip_fields(args.inpatient_record, fields)
+    frappe.db.set_value(
+        "Inpatient Record", args.inpatient_record, "status", "Admitted"
+    )
+    frappe.db.commit()
+    frappe.msgprint('The Discharge Schedule has been reverted successfully to <b>Admitted</b>')
+    return "Discharge Scheduled Revoked"
+    
+def reset_ip_fields(inpatient_record, fields):
+    inpatient_record = frappe.get_doc("Inpatient Record", inpatient_record)
+    for key in fields:
+        inpatient_record.set(key, None)
+    inpatient_record.save(ignore_permissions=True)
+    return
+
+def reset_bed_status(inpatient_occupancy):
+    hsu = frappe.get_doc(
+                    "Healthcare Service Unit", inpatient_occupancy.service_unit
+                )
+    if hsu.occupancy_status == 'Vacant':
+        if inpatient_occupancy.left == 1 or inpatient_occupancy.check_out:
+                frappe.db.set_value("Inpatient Occupancy",inpatient_occupancy.name,'left',0)
+                frappe.db.set_value("Inpatient Occupancy",inpatient_occupancy.name,'check_out',None)
+                hsu.occupancy_status = "Occupied"
+                hsu.save(ignore_permissions=True)
+        frappe.db.commit()        
+    else:
+        frappe.throw("This bed is already occupied and cannot revert the discharge schedule unless revert the bed to vacant")    
+    return frappe.msgprint(_('Bed Status Resetted'))
+
+@frappe.whitelist()
+def reset_admission(args):
+    args = frappe._dict(json.loads(args))
+    if frappe.get_value("Patient Appointment",args.appointment,'mode_of_payment'):
+        frappe.throw(_("The cash patient admission cannot be resetted.Please dischargge and continue"))
+    no_of_ips = len(args.inpatient_occupancies)
+    if no_of_ips > 1:
+        frappe.throw(
+            _("You cannot reset admission with multiple Occupancies.Inpatient Record: <b>{0}</b> and Patient Appointment: <b>{1}</b>").format(args.inpatient_record, args.appointment)
+        )
+        return False
+    elif no_of_ips == 1:
+        inpatient_occupancy = args.inpatient_occupancies[0]
+        frappe.db.set_value("Healthcare Service Unit", inpatient_occupancy.service_unit,'occupancy_status','Vacant')
+        inpatient_encounters = frappe.db.get_list(
+            "Patient Encounter", filters={"appointment": args.appointment,"inpatient_record":args.inpatient_record,"company":args.company}, 
+            fields=["name","inpatient_record","inpatient_status"],
+        )
+        inpatient_labs = frappe.db.get_list(
+            "Patient Encounter", filters={"inpatient_record": args.inpatient_record,"company":args.company}, 
+            fields=["name","inpatient_record","inpatient_service_unit","inpatient_service_unit_type"],
+        )
+        inpatient_procedures = frappe.db.get_list(
+            "Patient Encounter", filters={"inpatient_record": args.inpatient_record,"company":args.company}, 
+            fields=["name","inpatient_record"],
+        )
+        inpatient_radiologies = frappe.db.get_list(
+            "Patient Encounter", filters={"inpatient_record": args.inpatient_record,"company":args.company}, 
+            fields=["name","inpatient_record"],
+        )
+        inpatient_therapies = frappe.db.get_list(
+            "Patient Encounter", filters={"inpatient_record": args.inpatient_record,"company":args.company}, 
+            fields=["name","inpatient_record"],
+        )
+        delivery_notes = frappe.db.get_list(
+            "Delivery Note", filters={"inpatient_record": args.inpatient_record,"company":args.company}, 
+            fields=["name","inpatient_record"],
+        )
+        frappe.db.set_value("Inpatient Record", args.inpatient_record, "status", "Admission Cancelled")
+        frappe.db.set_value("Patient", args.patient, "inpatient_status", "")
+        frappe.db.set_value("Patient", args.patient, "inpatient_record", "")
+        frappe.db.set_value("Patient Appointment", args.appointment, "inpatient_record", "")
+        if not inpatient_encounters:
+            frappe.msgprint(
+                _("No Inpatient Encounter found for this Patient Appointment: <b>{0}</b>").format(args.appointment)
+            )
+        else:
+            for encounter in inpatient_encounters:
+                frappe.db.set_value(
+                    "Patient Encounter", encounter.name, "inpatient_status", ""
+                )
+                frappe.db.set_value(
+                    "Patient Encounter", encounter.name, "inpatient_record", ""
+                )
+        if inpatient_labs:
+            for lab in inpatient_labs:
+                if lab.inpatient_record:
+                    frappe.db.set_value(
+                        "Patient Encounter", lab.name, "inpatient_record", ""
+                    )
+                    frappe.db.set_value(
+                        "Patient Encounter", lab.name, "inpatient_service_unit", ""
+                    )
+                    
+                    frappe.db.set_value(
+                        "Patient Encounter", lab.name, "inpatient_service_unit_type", ""
+                    )
+        if delivery_notes:
+            for dv in delivery_notes:
+                if dv.inpatient_record:
+                    frappe.db.set_value(
+                        "Patient Encounter", dv.name, "inpatient_record", ""
+                    )
+                    frappe.db.set_value(
+                        "Patient Encounter", dv.name, "inpatient_service_unit", ""
+                    )
+                    frappe.db.set_value(
+                        "Patient Encounter", dv.name, "inpatient_service_unit_type", ""
+                    )
+        if inpatient_procedures:
+            for procedure in inpatient_procedures:
+                if procedure.inpatient_record:
+                    frappe.db.set_value(
+                        "Patient Encounter", procedure.name, "inpatient_record", ""
+                    )
+        if inpatient_radiologies:
+            for radiology in inpatient_radiologies:
+                if radiology.inpatient_record:
+                    frappe.db.set_value(
+                        "Patient Encounter", radiology.name, "inpatient_record", ""
+                    )
+        if inpatient_therapies:
+            for therapy in inpatient_therapies:
+                if therapy.inpatient_record:
+                    frappe.db.set_value(
+                        "Patient Encounter", therapy.name, "inpatient_record", ""
+                    )
+                if frappe.get_all("Therapy Sessions", filters={"parent": therapy.name,}):
+                    frappe.db.set_value(
+                        "Patient Encounter", therapy.name, "inpatient_record", ""
+                    )
+    frappe.db.commit()
+    return frappe.msgprint('Successfully resetted entire Admission to Admission Schedule. Please Reset admission schedule for further go.')

@@ -50,8 +50,14 @@ class PatientEncounter(Document):
             self.patient_name or self.patient,
             self.practitioner_name or self.practitioner,
         )[:100]
-
-
+"""
+@frappe.whitelist()
+def reset_inpatient_status(args):
+    args = frappe._dict(json.loads(args))
+    frappe.db.set_value("Patient Encounter", args.encounter, 'inpatient_status', 'Admitted')
+    frappe.db.commit()
+    return frappe.msgprint(_('inpatient status updated successfully{0}').format(args.encounter))
+"""
 def create_therapy_plan(encounter):
     if len(encounter.therapies):
         therapies = []

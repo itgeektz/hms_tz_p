@@ -50,7 +50,12 @@ frappe.ui.form.on('Patient Encounter', {
 		}
 		if (!frm.doc.__islocal) {
 			if (frm.doc.docstatus === 1) {
-				if (frm.doc.inpatient_status == 'Admission Scheduled' || frm.doc.inpatient_status == 'Admitted') {
+				if (frm.doc.inpatient_status == 'Discharge Scheduled' && frappe.user.has_role("System Manager")) {
+							// ✅ Correctly pass the function to `add_custom_button`
+							frm.add_custom_button(__('Reset Inpatient Status'), function() {
+								reset_inpatient_status(frm);
+							});
+				}else if (frm.doc.inpatient_status == 'Admission Scheduled' || frm.doc.inpatient_status == 'Admitted') {
 					frm.add_custom_button(__('Schedule Discharge'), function() {
 						schedule_discharge(frm);
 					});
@@ -330,12 +335,74 @@ var schedule_discharge = function(frm) {
 			{fieldtype: 'Date', label: 'Discharge Ordered Date', fieldname: 'discharge_ordered_date', default: 'Today', read_only: 1},
 			{fieldtype: 'Date', label: 'Followup Date', fieldname: 'followup_date', default: frappe.datetime.add_days(frappe.datetime.nowdate(), 14), reqd: 1},
 			{fieldtype: 'Column Break'},
+			{
+				fieldtype: 'Select',
+				label: 'Discharge Type',
+				fieldname: 'discharge_type',
+				options: 'Planned Discharge\nTransfer to Another Facility\nR.I.P\nDischarge on Request (DOR)\nLeave Against Medical Advice (LAMA)\nDischarge Against Medical Advice (DAMA)',
+				default: 'Planned Discharge',
+				reqd: 1
+			},
 			{fieldtype: 'Section Break', label:'Discharge Summary'},
-			{fieldtype: 'Small Text', label: 'Discharge Instructions', fieldname: 'discharge_instructions',reqd: 1},
+			{fieldtype: 'Small Text', label: 'Discharge Instructions', fieldname: 'discharge_instructions',reqd: 1,
+				default: frm.doc.examination_detail 
+						? $("<div>").html(frm.doc.examination_detail.replace(/<\/(p|div|li)>/g, "\n")).text()
+						: 'NA',
+			},
 			{fieldtype: 'Section Break', label:'Discharge Summary Medication and Diagnosis'},
-			{fieldtype: 'Long Text', label: 'Discharge Note', fieldname: 'discharge_note'},
-			{fieldtype: 'Small Text', label: 'Discharge Medications', fieldname: 'medication',reqd: 1},
-			{fieldtype: 'Small Text', label: 'Discharge Diagnosis to be Done', fieldname: 'on_examination'}
+			{fieldtype: 'Long Text', label: 'Discharge Note', fieldname: 'discharge_note',
+				default: (function() {
+					let diagnosisText = "";
+						if (frm.doc.patient_encounter_final_diagnosis && frm.doc.patient_encounter_final_diagnosis.length > 0) {
+							diagnosisText += "Diagnosis:\n";
+							i = 0;
+							frm.doc.patient_encounter_final_diagnosis.forEach(row => {
+								i++;
+								let diagnosisInfo = "";
+
+								if (row.medical_code) {
+									diagnosisInfo += `Medical Code: ${row.medical_code}, `;
+								}
+								if (row.description) {
+									diagnosisInfo += `Description: ${row.description}`;
+								}
+
+								diagnosisText += `${i}. ${diagnosisInfo.trim()}\n`; // Trim to remove trailing comma
+							});
+						}
+						return diagnosisText ? diagnosisText : "NA";
+					})()
+				
+			},
+			{fieldtype: 'Small Text', label: 'Discharge Medications', fieldname: 'medication',reqd: 1,
+				 default: (function() {
+					let medicationText = "";
+					let j = 0;
+						if (frm.doc.drug_prescription && frm.doc.drug_prescription.length > 0) {
+							medicationText += "Medication(s):\n";
+							frm.doc.drug_prescription.forEach(row => {
+								j++;
+								let medInfoParts = [];
+
+								if (row.dosage) {
+									medInfoParts.push(`Dosage: ${row.dosage}`);
+								}
+								if (row.period) {
+									medInfoParts.push(`Period: ${row.period}`);
+								}
+								if (row.dosage_form) {
+									medInfoParts.push(`Dosage Form: ${row.dosage_form}`);
+								}
+
+								let medInfo = medInfoParts.length ? `(${medInfoParts.join(", ")})` : "";
+								medicationText += `${j}.  ${row.drug_code} ${medInfo}\n`;
+							});
+						}
+						return medicationText ? medicationText : "NA";
+					})()
+		},
+
+		{fieldtype: 'Small Text', label: 'Discharge Diagnosis to be Done', fieldname: 'on_examination'}
 		],
 		primary_action_label: __('Order Discharge'),
 		primary_action : function() {
@@ -345,6 +412,7 @@ var schedule_discharge = function(frm) {
 				discharge_practitioner: frm.doc.practitioner,
 				discharge_ordered_date: dialog.get_value('discharge_ordered_date'),
 				followup_date: dialog.get_value('followup_date'),
+				discharge_type: dialog.get_value('discharge_type'),
 				discharge_instructions: dialog.get_value('discharge_instructions'),
 				discharge_note: dialog.get_value('discharge_note'),
 				medication: dialog.get_value('medication'),
@@ -639,3 +707,26 @@ var refer_practitioner = function(frm) {
 	dialog.show();
 	dialog.$wrapper.find('.modal-dialog').css('width', '800px');
 };
+
+var reset_inpatient_status = (frm) => {
+    let filters = {
+        patient: frm.doc.patient,
+		encounter_type: frm.doc.encounter_type,
+		inpatient_record: frm.doc.inpatient_record,
+		inpatient_status: frm.doc.inpatient_status,
+		encounter: frm.doc.name
+    }
+    frappe.call({
+        method: 'hms_tz.hms_tz.doctype.patient_encounter.patient_encounter.reset_inpatient_status',
+        args: {
+            args: filters
+        },
+        freeze: true,
+        freeze_message: __('<i class="fa fa-spinner fa-spin fa-4x"></i>'),
+    }).then((r) => {
+        if (r.message) {
+            //add_comment(frm,msg);
+            frm.reload_doc();
+        }
+    });
+}
