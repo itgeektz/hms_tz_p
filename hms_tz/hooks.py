@@ -123,6 +123,7 @@ doc_events = {
     "Patient Appointment": {
         "before_insert": "hms_tz.nhif.api.patient_appointment.before_insert",
         "validate": "hms_tz.nhif.api.patient_appointment.make_next_doc",
+        "after_insert":"hms_tz.nhif.api.patient_appointment.set_follow_up"
     },
     "Vital Signs": {
         "on_submit": "hms_tz.nhif.api.patient_appointment.make_encounter",

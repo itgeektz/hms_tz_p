@@ -22,7 +22,7 @@ from hms_tz.nhif.api.healthcare_utils import get_item_rate
 from frappe.utils import date_diff, getdate, nowdate
 from hms_tz.hms_tz.doctype.patient.patient import create_customer
 from csf_tz import console
-from hms_tz.hms_tz.utils import check_fee_validity
+from hms_tz.hms_tz.utils import check_fee_validity,manage_fee_validity
 from healthcare.healthcare.doctype.fee_validity.fee_validity import create_fee_validity
 
 
@@ -117,7 +117,7 @@ def get_item_price(item_code, price_list, company):
 @frappe.whitelist()
 def invoice_appointment(name):
     appointment_doc = frappe.get_doc("Patient Appointment", name)
-    set_follow_up(appointment_doc, "invoice_appointment")
+    #set_follow_up(appointment_doc, "invoice_appointment")
     if appointment_doc.mode_of_payment:
         appointment_doc.has_no_consultation_charges = 1 if appointment_doc.appointment_type in ["Health Checkup","Dialysis","Chemotherapy","Physiotherapy"] else 0
     else:
@@ -269,7 +269,7 @@ def make_vital(appointment_doc, method):
                 alert=True,
             )
 
-    set_follow_up(appointment_doc, "invoice_appointment")
+    #set_follow_up(appointment_doc, "invoice_appointment")
     appointment_doc.has_no_consultation_charges = frappe.get_cached_value(
             "Appointment Type",
             appointment_doc.appointment_type,
@@ -531,7 +531,7 @@ def get_previous_appointment(patient, filters=None):
         return appointments[0]
 
 def set_follow_up(appointment_doc, method):
-    validity = check_fee_validity(appointment_doc)
+    validity = manage_fee_validity(appointment_doc)
     if validity:
         appointment_doc.fee_validity = validity.name
         if len(validity.ref_appointments) == 1 and validity.ref_appointments[0].appointment == appointment_doc.name and validity.ref_appointments[0].status == 'Active':
@@ -541,7 +541,17 @@ def set_follow_up(appointment_doc, method):
                 f"Appointment: <b>{appointment_doc.name}</b><br>"
                 f"Fee Validity: <b>{validity.name}</b>"
             )
-            return
+            return "This have valid no fee validity"
+        elif len(validity.ref_appointments) == 1 and validity.ref_appointments[0].status == 'Active':
+            appointment_doc.follow_up = 1
+            appointment_doc.invoiced = 1
+            appointment_doc.paid_amount = 0
+            frappe.msgprint(_("This appointment has valid fee validity for free follow-up.<br>"
+                f"Appointment: <b>{appointment_doc.name}</b><br>"
+                f"Follow up set as : <b>{appointment_doc.follow_up}</b><br>"
+                f"Fee Validity: <b>{validity.name}</b>")
+            )
+            return "This have valid fee validity"
         elif len(validity.ref_appointments) > 1:
             filters = {
             "appointment": ["!=", appointment_doc.name],  # This is now valid
@@ -617,7 +627,7 @@ def make_next_doc(doc, method, from_hook=True):
                         )
                         )
     if from_hook:
-        set_follow_up(doc, method)
+        #set_follow_up(doc, method)
         if doc.mode_of_payment:
             doc.has_no_consultation_charges = 1  if doc.appointment_type in ["Health Checkup","Dialysis","Chemotherapy","Physiotherapy"] else 0
         else:

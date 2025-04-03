@@ -49,7 +49,7 @@ class PatientAppointment(Document):
     def after_insert(self):
         self.update_prescription_details()
         invoice_appointment(self)
-        self.update_fee_validity()
+        #self.update_fee_validity()
         #send_confirmation_msg(self)
         # make_insurance_claim(self)
 
@@ -208,13 +208,15 @@ class PatientAppointment(Document):
             )
 
     def update_fee_validity(self):
-        fee_validity = manage_fee_validity(self)
-        if fee_validity:
-            frappe.msgprint(
-                _("{0} has fee validity till {1}").format(
-                    self.patient, fee_validity.valid_till
+        if not self.fee_validity:
+            fee_validity = manage_fee_validity(self)
+            if fee_validity:
+                self.fee_validity = fee_validity.name
+                frappe.msgprint(
+                    _("{0} has fee validity till {1}").format(
+                        self.patient, fee_validity.valid_till
+                    )
                 )
-            )
 
 
 @frappe.whitelist()
@@ -325,7 +327,7 @@ def get_appointment_item(appointment_doc, item):
     item.reference_dn = appointment_doc.name
     return item
 
-
+"""
 def cancel_appointment(appointment_id):
     appointment = frappe.get_doc("Patient Appointment", appointment_id)
     if appointment.invoiced:
@@ -347,7 +349,7 @@ def cancel_appointment(appointment_id):
             msg += _("Fee Validity {0} updated.").format(fee_validity.name)
 
     frappe.msgprint(msg)
-
+"""
 
 def cancel_sales_invoice(sales_invoice):
     # if frappe.db.get_single_value(

@@ -779,36 +779,42 @@ def manage_fee_validity(appointment):
                 frappe.db.set_value(
                     "Fee Validity Reference", {"appointment": appointment.name},'status','Cancelled'
                 )
+                frappe.db.commit()
                 frappe.db.set_value(
                     "Fee Validity", fee_validity.name,'status','Cancelled'
                 )
-                #fee_validity.save(ignore_permissions=True)
+                fee_validity.save(ignore_permissions=True)
+                frappe.db.commit()
                 frappe.msgprint('Cancelled Fee Validity',_('Fee Validity Updated 1'))
-                return
+                return fee_validity
             else:
                 fee_validity.status = "Active"
                 frappe.msgprint('Fee Validity Active Status Updated',_('Fee Validity Updated 2'))
                 fee_validity.patient_appointment = ''
                 fee_validity.practitioner = ''
+                fee_validity.visited -= 1
                 if fee_validity.ref_appointments:
                     frappe.db.set_value(
                     "Fee Validity Reference", {"appointment": appointment.name},'status','Cancelled'
                 )
                     fee_validity.patient_appointment = fee_validity.ref_appointments[fee_validity.visited-1].appointment
                     fee_validity.practitioner = fee_validity.ref_appointments[fee_validity.visited-1].practitioner
-                fee_validity.visited -= 1
-                #fee_validity.save(ignore_permissions=True)
+                fee_validity.save(ignore_permissions=True)
+                frappe.db.commit()
                 return fee_validity
         else:
-            if fee_validity.status in ["Completed","Expired","Cancelled"] or fee_validity.visited == fee_validity.max_visits:
+            if fee_validity.status in ["Completed","Expired","Cancelled"]:
                 fee_validity.status == "Expired"
+                fee_validity.save(ignore_permissions=True)
+                frappe.db.commit()
                 inv = fee_validity.sales_invoice_ref if fee_validity.sales_invoice_ref else None
                 fee_validity = create_fee_validity(appointment)
                 if inv:
                     frappe.db.set_value(
                         "Fee Validity", fee_validity.name,'sales_invoice_ref',inv
                     )
-                #fee_validity.save(ignore_permissions=True)
+                fee_validity.save(ignore_permissions=True)
+                frappe.db.commit()
                 return fee_validity
             else:    
                 fee_validity.visited += 1
@@ -818,8 +824,9 @@ def manage_fee_validity(appointment):
                 fee_validity.append("ref_appointments", {"appointment": appointment.name,"practitioner": appointment.practitioner,"status":"Active"})
                 if fee_validity.visited == fee_validity.max_visits:
                     fee_validity.status = "Completed"
-                #fee_validity.save(ignore_permissions=True)
-                return
+                fee_validity.save(ignore_permissions=True)
+                frappe.db.commit()
+                return fee_validity
     elif appointment.status == 'Open':
             fee_validity = create_fee_validity(appointment)
     return fee_validity
