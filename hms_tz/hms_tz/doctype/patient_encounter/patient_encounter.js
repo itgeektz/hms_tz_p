@@ -355,7 +355,7 @@ var schedule_discharge = function(frm) {
 					let diagnosisText = "";
 						if (frm.doc.patient_encounter_final_diagnosis && frm.doc.patient_encounter_final_diagnosis.length > 0) {
 							diagnosisText += "Diagnosis:\n";
-							i = 0;
+							let i = 0;
 							frm.doc.patient_encounter_final_diagnosis.forEach(row => {
 								i++;
 								let diagnosisInfo = "";
