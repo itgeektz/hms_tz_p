@@ -779,11 +779,9 @@ def manage_fee_validity(appointment):
                 frappe.db.set_value(
                     "Fee Validity Reference", {"appointment": appointment.name},'status','Cancelled'
                 )
-                frappe.db.commit()
                 frappe.db.set_value(
                     "Fee Validity", fee_validity.name,'status','Cancelled'
                 )
-                fee_validity.save(ignore_permissions=True)
                 frappe.db.commit()
                 frappe.msgprint('Cancelled Fee Validity',_('Fee Validity Updated 1'))
                 return fee_validity
