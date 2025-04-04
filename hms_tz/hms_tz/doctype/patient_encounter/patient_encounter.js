@@ -49,32 +49,17 @@ frappe.ui.form.on('Patient Encounter', {
 			frm.fields_dict.patient_vitals.html("<div align='center'>Please select Patient.</div>");
 		}
 		if (!frm.doc.__islocal) {
-			if (frm.doc.docstatus === 1) {
-				if (frm.doc.inpatient_status == 'Discharge Scheduled' && frappe.user.has_role("System Manager")) {
-							// ✅ Correctly pass the function to `add_custom_button`
-							frm.add_custom_button(__('Reset Inpatient Status'), function() {
-								reset_inpatient_status(frm);
-							});
-				}else if (frm.doc.inpatient_status == 'Admission Scheduled' || frm.doc.inpatient_status == 'Admitted') {
+			if (frm.doc.docstatus === 1 && !frm.doc.duplicated && !frm.doc.healthcare_package_order) {
+				if (frm.doc.inpatient_status == 'Admission Scheduled' || frm.doc.inpatient_status == 'Admitted' || frm.doc.inpatient_record) {
 					frm.add_custom_button(__('Schedule Discharge'), function() {
 						schedule_discharge(frm);
 					});
-				} else if (frm.doc.inpatient_status != 'Discharge Scheduled' && !frm.doc.healthcare_package_order) {
+				} else if (!frm.doc.inpatient_status && !frm.doc.inpatient_record) {
 					frm.add_custom_button(__('Schedule Admission'), function() {
-						frappe.call("hms_tz.nhif.api.patient_encounter.validate_admission_encounter", {
-							encounter: frm.doc.name,
-							healthcare_package_order: frm.doc.healthcare_package_order
-						}).then(r => {
-							if (r.message) {
-								return 
-							} else {
-								schedule_inpatient(frm);
-							}
+							schedule_inpatient(frm);
 						});
-					}).removeClass('btn-default').addClass('btn-warning').css({
-						'font-size': '14px', 'font-weight': 'bolder'
-					});
-				}
+					}
+				
 			}
 
 			frm.add_custom_button(__('Vital Signs'), function() {
