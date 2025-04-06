@@ -650,8 +650,23 @@ var duplicate = function (frm) {
         if (click_count > 0) {
             return;
         }
+        frappe.call({
+            method: 'frappe.client.get_value',
+            args: {
+                doctype: 'Patient Encounter',
+                filters: { name: frm.doc.name },
+                fieldname: 'duplicated'
+            },
+            callback: function (r) {
+                if (r.message && r.message.duplicated == 1) {
+                    frappe.msgprint(__('This Encounter has already been duplicated.'));
+                    frm.reload_doc();
+                    return;
+                }
+        frm.remove_custom_button("Schedule Admission");
+        frm.remove_custom_button("Duplicate");
         click_count += 1;
-
+    
         if (frm.is_dirty()) {
             frm.save();
         }
@@ -669,6 +684,8 @@ var duplicate = function (frm) {
                     }, 2000);
                 }
             }
+        });
+        }
         });
     });
 };

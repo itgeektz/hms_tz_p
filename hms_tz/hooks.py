@@ -237,6 +237,11 @@ scheduler_events = {
         "0 3 * * *": [
             "hms_tz.nhif.api.healthcare_utils.auto_finalize_patient_encounters"
         ],
+        # Routine for day 04:00am at nigearly morning for auto cancel the open appointments
+        "0 4 * * *": [
+            "hms_tz.hms_tz.doctype.patient_appointment.patient_appointment.cancel_open_appointment"
+        ],
+
     },
     # 	"hourly": [
     # 		"hms_tz.tasks.hourly"

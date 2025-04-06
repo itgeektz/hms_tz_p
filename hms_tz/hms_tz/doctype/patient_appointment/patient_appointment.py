@@ -933,6 +933,60 @@ def update_appointment_status():
     for appointment in appointments:
         frappe.get_doc("Patient Appointment", appointment.name).set_status()
 
+def get_open_appointments():
+    query = """
+        SELECT 
+        tpe.appointment, 
+        tpe.name,
+        COALESCE(tpe.docstatus, 0) as `Encounter Status`,
+        COUNT(*) AS encounter_count,
+        tpa.status as `Appointment Status`,
+        tpe.insurance_coverage_plan
+        FROM 
+            `tabPatient Appointment` tpa
+        left outer join
+            `tabPatient Encounter` tpe 
+        ON
+            tpa.name = tpe.appointment
+        WHERE 
+            tpa.appointment_date  = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+            AND (tpe.inpatient_record IS NULL OR tpe.inpatient_record = '')
+            and tpa.ref_sales_invoice is NULL
+            AND COALESCE(tpe.docstatus, 0) = 0
+            AND tpa.status IN ('Open', 'Scheduled')
+            AND tpe.appointment is not NULL
+        GROUP BY tpe.appointment,tpe.name
+        HAVING encounter_count = 1
+        ORDER BY encounter_count DESC;"""
+    
+    #tpa.appointment_date  = DATE_SUB(CURDATE(), INTERVAL 1 DAY) 
+    data = frappe.db.sql(query, as_dict=True)
+    query2 = """
+        SELECT 
+        tpa.name
+        FROM 
+            `tabPatient Appointment` tpa
+        WHERE 
+            tpa.appointment_date  = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+            and tpa.ref_sales_invoice is NULL
+            AND tpa.status IN ('Open', 'Scheduled')
+            AND tpa.ref_patient_encounter is NULL
+        ORDER BY tpa.creation DESC;"""
+    
+    #tpa.appointment_date  = DATE_SUB(CURDATE(), INTERVAL 1 DAY) 
+    data2 = frappe.db.sql(query2, as_dict=True)
+    open_appointments = [appointment['appointment'] for appointment in data]
+    for appointment in data2:
+        if appointment['name'] not in open_appointments:
+            open_appointments.append(appointment['name'])
+    return open_appointments
+
+@frappe.whitelist()
+def cancel_open_appointment():
+    open_appointments = get_open_appointments()
+    for appointment in open_appointments:
+        update_status(appointment,"Cancelled")
+    return "Success"
 
 def make_insurance_claim(doc):
     return

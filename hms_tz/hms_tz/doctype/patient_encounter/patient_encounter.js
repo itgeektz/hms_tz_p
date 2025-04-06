@@ -50,7 +50,7 @@ frappe.ui.form.on('Patient Encounter', {
 		}
 		if (!frm.doc.__islocal) {
 			if (frm.doc.docstatus === 1 && !frm.doc.duplicated && !frm.doc.healthcare_package_order) {
-				if (frm.doc.inpatient_status == 'Admission Scheduled' || frm.doc.inpatient_status == 'Admitted' || frm.doc.inpatient_record) {
+				if (frm.doc.inpatient_status == 'Admission Scheduled' || frm.doc.inpatient_status == 'Admitted') {
 					frm.add_custom_button(__('Schedule Discharge'), function() {
 						schedule_discharge(frm);
 					});
@@ -245,6 +245,19 @@ frappe.ui.form.on('Patient Encounter', {
 });
 
 var schedule_inpatient = function(frm) {
+	frappe.call({
+            method: 'frappe.client.get_value',
+            args: {
+                doctype: 'Patient Encounter',
+                filters: { name: frm.doc.name },
+                fieldname: 'duplicated'
+            },
+            callback: function (r) {
+                if (r.message && r.message.duplicated == 1) {
+                    frappe.msgprint(__('This Encounter has already been duplicated.'));
+                    frm.reload_doc();
+                    return;
+                }
 	var count = 0
 	var dialog = new frappe.ui.Dialog({
 		title: 'Patient Admission',
@@ -257,7 +270,7 @@ var schedule_inpatient = function(frm) {
 			{fieldtype: 'Link', label: 'Service Unit Type', fieldname: 'service_unit_type', options: 'Healthcare Service Unit Type'},
 			{fieldtype: 'Int', label: 'Expected Length of Stay', fieldname: 'expected_length_of_stay'},
 			{fieldtype: 'Section Break'},
-			{fieldtype: 'Long Text', label: 'Admission Instructions', fieldname: 'admission_instruction'}
+			{fieldtype: 'Long Text', label: 'Admission Instructions', fieldname: 'admission_instruction', reqd: 1}
 		],
 		primary_action_label: __('Order Admission'),
 		primary_action : function() {
@@ -311,6 +324,8 @@ var schedule_inpatient = function(frm) {
 
 	dialog.show();
 	dialog.$wrapper.find('.modal-dialog').css('width', '800px');
+	}
+		});
 };
 
 var schedule_discharge = function(frm) {
