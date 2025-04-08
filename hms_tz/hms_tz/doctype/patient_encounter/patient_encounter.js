@@ -344,11 +344,7 @@ var schedule_discharge = function(frm) {
 				reqd: 1
 			},
 			{fieldtype: 'Section Break', label:'Discharge Summary'},
-			{fieldtype: 'Small Text', label: 'Discharge Instructions', fieldname: 'discharge_instructions',reqd: 1,
-				default: frm.doc.examination_detail 
-						? $("<div>").html(frm.doc.examination_detail.replace(/<\/(p|div|li)>/g, "\n")).text()
-						: 'NA',
-			},
+			
 			{fieldtype: 'Section Break', label:'Discharge Summary Medication and Diagnosis'},
 			{fieldtype: 'Long Text', label: 'Discharge Note', fieldname: 'discharge_note',
 				default: (function() {
@@ -373,6 +369,11 @@ var schedule_discharge = function(frm) {
 						return diagnosisText ? diagnosisText : "NA";
 					})()
 				
+			},
+			{fieldtype: 'Small Text', label: 'Discharge Instructions', fieldname: 'discharge_instructions',reqd: 1,
+				default: frm.doc.examination_detail 
+						? $("<div>").html(frm.doc.examination_detail.replace(/<\/(p|div|li)>/g, "\n")).text()
+						: 'NA',
 			},
 			{fieldtype: 'Small Text', label: 'Discharge Medications', fieldname: 'medication',reqd: 1,
 				 default: (function() {

@@ -67,59 +67,133 @@ class PatientHistory {
 		this.show_patient_vital_charts('bp', 'mmHg', 'Blood Pressure');
 	}
 
-	setup_filters () {
-		$('.doctype-filter').empty();
-		let me = this;
+	setup_filters() {
+	$('.date-filter').empty();
+    $('.doctype-filter').empty();
+    $('.practitioner').empty();
+	$('.reset_filters_btn').addClass('btn btn-default btn-xs');
 
-		frappe.xcall(
-			'hms_tz.hms_tz.page.tz_patient_history.tz_patient_history.get_patient_history_doctypes'
-		).then(document_types => {
-			let doctype_filter = frappe.ui.form.make_control({
-				parent: $('.doctype-filter'),
-				df: {
-					fieldtype: 'MultiSelectList',
-					fieldname: 'document_type',
-					placeholder: __('Select Document Type'),
-					change: () => {
-						me.start = 0;
-						me.page.main.find('.patient_documents_list').html('');
-						this.setup_documents(doctype_filter.get_value(), date_range_field.get_value());
-					},
-					get_data: () => {
-						return document_types.map(document_type => {
-							return {
-								description: document_type,
-								value: document_type
-							};
-						});
-					},
-				}
-			});
+    
+    let me = this;
+
+    let date_range_field;
+	let doctype_filter;
+	let practitioner_filter;
+	let reset_filters_btn;
+	
+
+    // Create Date Range filter first so it's available in all callbacks
+    date_range_field = frappe.ui.form.make_control({
+        df: {
+            fieldtype: 'DateRange',
+            fieldname: 'date_range',
+            placeholder: __('Date Range'),
+            input_class: 'input-xs',
+            change: () => {
+                let selected_date_range = date_range_field.get_value();
+                if (selected_date_range && selected_date_range.length === 2) {
+                    me.start = 0;
+                    me.page.main.find('.patient_documents_list').html('');
+                    me.setup_documents(doctype_filter.get_value(), date_range_field.get_value());
+                }
+            }
+        },
+        parent: $('.date-filter')
+    });
+	
+    date_range_field.refresh();
+	
+
+    // Fetch document types
+    frappe.xcall('hms_tz.hms_tz.page.tz_patient_history.tz_patient_history.get_patient_history_doctypes')
+        .then(document_types => {
+            doctype_filter = frappe.ui.form.make_control({
+                parent: $('.doctype-filter'),
+                df: {
+                    fieldtype: 'MultiSelectList',
+                    fieldname: 'document_type',
+                    placeholder: __('Select Document Type'),
+                    change: () => {
+                        me.start = 0;
+                        me.page.main.find('.patient_documents_list').html('');
+                        me.setup_documents(doctype_filter.get_value(), date_range_field.get_value());
+                    },
+                    get_data: () => {
+                        return document_types.map(type => ({
+                            description: type,
+                            value: type
+                        }));
+                    }
+                }
+            });
+            
 			doctype_filter.refresh();
+			
 
-			$('.date-filter').empty();
-			let date_range_field = frappe.ui.form.make_control({
-				df: {
-					fieldtype: 'DateRange',
-					fieldname: 'date_range',
-					placeholder: __('Date Range'),
-					input_class: 'input-xs',
-					change: () => {
-						let selected_date_range = date_range_field.get_value();
-						if (selected_date_range && selected_date_range.length === 2) {
-							me.start = 0;
-							me.page.main.find('.patient_documents_list').html('');
-							this.setup_documents(doctype_filter.get_value(), date_range_field.get_value());
+            // Fetch practitioner list
+            frappe.xcall('hms_tz.hms_tz.page.tz_patient_history.tz_patient_history.get_practitioner')
+                .then(practitioners => {
+                    practitioner_filter = frappe.ui.form.make_control({
+                        parent: $('.practitioner'),
+                        df: {
+                            fieldtype: 'MultiSelectList',
+                            fieldname: 'practitioner',
+                            placeholder: __('Select Practitioner'),
+                            change: () => {
+                                me.start = 0;
+                                me.page.main.find('.patient_documents_list').html('');
+                                me.setup_documents(doctype_filter.get_value(), date_range_field.get_value(),practitioner_filter.get_value());
+                            },
+                            get_data: () => {
+                                return practitioners.map(p => ({
+                                    description: p,
+                                    value: p
+                                }));
+                            }
+                        }
+                    });
+                    practitioner_filter.refresh();
+					
+					// Add "Reset" Button
+					$('<button>', {
+						class: 'btn btn-default btn-sm ml-2',
+						text: __('Reset Filters'),
+						click: function () {
+							me.reset_filters();
 						}
-					}
-				},
-				parent: $('.date-filter')
-			});
-			date_range_field.refresh();
-		});
-	}
+					}).appendTo('.filter-button-wrapper');
+					
+            });
 
-	setup_documents (document_types = "", selected_date_range = "") {
+					}); 
+}
+reset_filters(doctype_filter="", date_range_field="" , practitioner_filter="") {
+    // Reset all filter values
+    this.page.main.find('.patient_documents_list').html('');  // Clear the displayed documents
+
+    // Clear each filter control value
+    if (date_range_field) {
+		date_range_field.set_value([]);
+		date_range_field.refresh();
+	}
+	
+    if (doctype_filter) {
+		doctype_filter.set_value([]);
+		doctype_filter.refresh();
+	}
+    if (practitioner_filter) {
+		practitioner_filter.set_value([]);
+		practitioner_filter.refresh();
+	}
+	this.start = 0;  // Reset the start index for document fetching
+
+    // Optionally refresh or re-setup filters after reset
+    this.setup_documents();  // Refresh or re-query documents after reset
+    this.show_selected_filters();  // Optionally update UI to reflect the reset state
+	this.reload();  // Optionally reload patient info if needed
+}
+
+	setup_documents (document_types = "", selected_date_range = "", practitioner="") {
 		let filters = {
 			name: this.patient_id,
 			start: this.start,
@@ -129,7 +203,8 @@ class PatientHistory {
 			filters['document_types'] = document_types;
 		if (selected_date_range)
 			filters['date_range'] = selected_date_range;
-
+		if (practitioner)
+			filters['practitioner'] = practitioner;
 		let me = this;
 		frappe.call({
 			'method': 'hms_tz.hms_tz.page.tz_patient_history.tz_patient_history.get_feed',

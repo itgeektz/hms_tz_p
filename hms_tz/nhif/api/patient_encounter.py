@@ -218,18 +218,18 @@ def on_submit_validation(doc, method):
                     method,
                 )
             company_option = None
-            if child.get("doctype") == "Lab Test Template":
-                company_option = doc.company
-            else:
-                for option in healthcare_doc.company_options:
-                    if doc.company == option.company:
-                        company_option = option.company
+            #if child.get("doctype") == "Lab Test Template":
+            #    company_option = doc.company
+            #else:
+            for option in healthcare_doc.company_options:
+                if doc.company == option.company:
+                    company_option = option.company
 
-                        if (
-                            child.get("doctype") != "Medication"
-                            and row.doctype != "Drug Prescription"
-                        ):
-                            row.department_hsu = option.service_unit
+                    if (
+                        child.get("doctype") != "Medication"
+                        and row.doctype != "Drug Prescription"
+                    ):
+                        row.department_hsu = option.service_unit
 
             if not company_option:
                 msgThrow(
