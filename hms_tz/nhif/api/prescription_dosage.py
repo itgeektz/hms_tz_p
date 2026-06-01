@@ -9,6 +9,7 @@ from frappe.utils import nowtime
 
 
 def before_insert(doc, method):
+    default_strength = getattr(doc, "default_strength", None)
     if doc.default_strength:
         doc.append(
             "dosage_strength",

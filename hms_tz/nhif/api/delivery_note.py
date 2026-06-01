@@ -22,6 +22,7 @@ def validate(doc, method):
 
 def after_insert(doc, method):
     set_original_item(doc)
+    return
 
 
 def set_original_item(doc):
@@ -47,7 +48,14 @@ def set_original_item(doc):
             }
         )
         doc.append("hms_tz_original_items", new_row)
-    doc.save(ignore_permissions=True)
+    #doc.save(ignore_permissions=True)
+    frappe.errprint("===== ITEMS =====")
+    for d in doc.items:
+        frappe.errprint(d.as_dict())
+
+    frappe.errprint("===== ORIGINAL ITEMS =====")
+    for d in doc.hms_tz_original_items:
+        frappe.errprint(d.as_dict())
 
 
 def update_dosage_details(item):

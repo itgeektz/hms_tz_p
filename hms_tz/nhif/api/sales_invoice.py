@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 import frappe
+import json
 from frappe import _
 from hms_tz.nhif.api.healthcare_utils import (
     update_dimensions,
@@ -26,9 +27,11 @@ def validate(doc, method):
 
 
 def validate_create_delivery_note(doc):
-    if not doc.patient:
+    if not getattr(doc, "patient", None):
         return
-    if doc.enabled_auto_create_delivery_notes == 0:
+
+    # SAFE ACCESS
+    if not getattr(doc, "enabled_auto_create_delivery_notes", 0):
         return
 
     inpatient_record = frappe.get_cached_value(
@@ -107,10 +110,13 @@ def create_healthcare_docs(doc, method):
                     create_individual_procedure_prescription(
                         patient_encounter_doc, child
                     )
-                child.invoiced = 1
-                child.sales_invoice_number = doc.name
-                child.save(ignore_permissions=True)
-
+                frappe.db.set_value(
+                    child.doctype,
+                    child.name,
+                    "sales_invoice_number",
+                    doc.name,
+                )
+                
                 item.hms_tz_is_lrp_item_created = 1
                 item.db_update()
             elif item.reference_dt and item.reference_dt in [

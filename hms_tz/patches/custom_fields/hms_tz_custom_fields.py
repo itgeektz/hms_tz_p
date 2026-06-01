@@ -549,6 +549,12 @@ def execute():
                 insert_after='column_break_34',
                 
             ),
+            dict(
+            fieldname="quantity",
+            label="Quantity",
+            fieldtype="Float",
+            insert_after="period"
+            ),
         ],
         "Healthcare Insurance Company": [
             dict(
@@ -792,11 +798,11 @@ def execute():
         ],
         "Healthcare Service Unit Type": [
             # dict(
-            #     fieldtype='Check',
-            #     label='Disabled',
-            #     fieldname='disabled',
-            #     insert_after='is_group',
-            #     
+             #    fieldtype='Check',
+             #    label='Disabled',
+             #    fieldname='disabled',
+             #    insert_after='is_group',
+                 
             # ),
             dict(
                 fieldtype='Check',
@@ -1447,6 +1453,7 @@ def execute():
                 'label': 'Workflow State',
                 'fieldname': 'workflow_state',
                 'insert_after': 'ref_docname',
+                'options': 'Workflow State'
                 
             },
             {
@@ -1841,6 +1848,7 @@ def execute():
                 'fieldtype': 'Link',
                 'label': 'System',
                 'fieldname': 'system',
+                'options': 'System Settings',
                 
             }
         ],

@@ -35,7 +35,7 @@ app_license = "MIT"
 
 # include js in doctype views
 doctype_js = {
-    "Patient Appointment": "nhif/api/patient_appointment.js",
+   # "Patient Appointment": "nhif/api/patient_appointment.js",
     "Patient": "nhif/api/patient.js",
     "Sales Order": "nhif/api/sales_order.js",
     "Sales Invoice": "nhif/api/sales_invoice.js",
@@ -89,6 +89,8 @@ doctype_list_js = {
 # before_install = "hms_tz.install.before_install"
 # after_install = "hms_tz.install.after_install"
 
+after_install = "hms_tz.custom_fields.healthcare_insurance_subscription.create_healthcare_insurance_subscription_custom_fields"
+
 # Desk Notifications
 # ------------------
 # See frappe.core.notifications.get_notification_config
@@ -121,9 +123,9 @@ doctype_list_js = {
 
 doc_events = {
     "Patient Appointment": {
-        "before_insert": "hms_tz.nhif.api.patient_appointment.before_insert",
-        "validate": "hms_tz.nhif.api.patient_appointment.make_next_doc",
-        "after_insert":"hms_tz.nhif.api.patient_appointment.set_follow_up"
+        # "before_insert": "hms_tz.nhif.api.patient_appointment.before_insert",
+        #"validate": "hms_tz.nhif.api.patient_appointment.make_next_doc",
+        #"after_insert":"hms_tz.nhif.api.patient_appointment.set_follow_up"
     },
     "Vital Signs": {
         "on_submit": "hms_tz.nhif.api.patient_appointment.make_encounter",
@@ -283,3 +285,4 @@ jinja = {
 # exempt linked doctypes from being automatically cancelled
 #
 # auto_cancel_exempted_doctypes = ["Auto Repeat"]
+

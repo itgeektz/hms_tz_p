@@ -16,7 +16,7 @@ frappe.ui.form.on('Patient Encounter', {
         add_btn_final(frm);
         // duplicate(frm);
         set_btn_properties(frm);
-        set_empty_row_on_all_child_tables(frm);
+        //set_empty_row_on_all_child_tables(frm);
         validate_healthcare_package_order_items(frm);
     },
     refresh: function (frm) {
@@ -26,7 +26,7 @@ frappe.ui.form.on('Patient Encounter', {
                 filters:
                 {
                     'company': doc.company,
-                    'service_unit_type': 'Pharmacy',
+                    //'service_unit_type': 'Pharmacy',
                 }
 
             };
@@ -554,12 +554,16 @@ const medical_code_mapping = {
         'diet_recommendation'
     ]
 };
-
 function set_medical_code(frm, reset_columns) {
     function set_options_for_fields(fields, from_table) {
         const options = get_diagnosis_list(frm, from_table);
 
         for (const fieldname of fields) {
+            if (!frm.fields_dict[fieldname] || !frm.fields_dict[fieldname].grid) {
+                console.warn("hms_tz: field not found, skipping:", fieldname);
+                continue;
+            }
+
             const grid = frm.fields_dict[fieldname].grid;
 
             if (reset_columns) {

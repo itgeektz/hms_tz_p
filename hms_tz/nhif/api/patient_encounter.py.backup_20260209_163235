@@ -140,6 +140,7 @@ def after_insert(doc, method):
     set_price_list(doc)
     doc.save()
 
+
 def set_price_list(doc):
     price_list = None
     if doc.insurance_subscription:
@@ -275,7 +276,7 @@ def on_submit_validation(doc, method):
     prescribed_list = ""
     for key, value in child_tables.items():
         table = doc.get(key)
-        for row in (table or []):
+        for row in table:
             quantity = 0
             row_item = row.get("drug_code") or row.get("therapy_type")
             if row_item:
@@ -372,7 +373,7 @@ def on_submit_validation(doc, method):
     today = nowdate()
     healthcare_service_templates = {}
     for key, value in child_tables.items():
-        for row in (doc.get(key) or []):
+        for row in doc.get(key):
             if row.override_subscription or row.prescribe:
                 continue
 
@@ -694,11 +695,8 @@ def on_submit(doc, method):
         inpatient_billing(doc, method)
     else:  # insurance patient
         on_submit_validation(doc, method)
-        frappe.msgprint(_("Creating validation documents..."), alert=True)
         create_healthcare_docs(doc, method)
-        frappe.msgprint(_("Creating healthcare documents..."), alert=True)
         create_delivery_note(doc, method)
-        frappe.msgprint(_("Creating delivery note documents..."), alert=True)
 
     if (
         doc.healthcare_package_order
@@ -1180,7 +1178,7 @@ def validate_totals(doc, method):
         discount_percent = get_discount_percent(doc.insurance_company)
 
         for child in get_field_map():
-            for row in (doc.get(child.get("table")) or []):
+            for row in doc.get(child.get("table")):
                 if (
                     row.prescribe
                     or row.is_not_available_inhouse
@@ -1208,7 +1206,7 @@ def validate_totals(doc, method):
 
     def mark_limit_exceeded(doc):
         for child in get_field_map():
-            for row in (doc.get(child.get("table")) or []):
+            for row in doc.get(child.get("table")):
                 if row.prescribe and row.hms_tz_is_limit_exceeded:
                     row.hms_tz_is_limit_exceeded = 0
                     row.is_cancelled = 0
@@ -1226,7 +1224,7 @@ def validate_totals(doc, method):
 
     def unmark_limit_exceeded(doc):
         for child in get_field_map():
-            for row in (doc.get(child.get("table")) or []):
+            for row in doc.get(child.get("table")):
                 if row.hms_tz_is_limit_exceeded == 1:
                     row.hms_tz_is_limit_exceeded = 0
                     row.is_cancelled = 0
@@ -1452,13 +1450,13 @@ def enqueue_on_update_after_submit(doc_name):
 
 
 def before_submit(doc, method):
-    #if doc.insurance_company:
-    #    if len(doc.examination_detail) < 150 and doc.insurance_company in ["NHIF","NHIF Town", "NHIF Upanga - RSPDC"] :
-    #        frappe.throw("History of the Symptoms and Examination Details must have at least 150 characters minimum.")
-    #if doc.insurance_company and "NHIF" in doc.insurance_company:
-    #    validate_nhif_patient_claim_status(
-    #        "Patient Encounter", doc.company, doc.appointment, doc.insurance_company
-    #    )
+    if doc.insurance_company:
+        if len(doc.examination_detail) < 150 and doc.insurance_company in ["NHIF","NHIF Town", "NHIF Upanga - RSPDC"] :
+            frappe.throw("History of the Symptoms and Examination Details must have at least 150 characters minimum.")
+    if doc.insurance_company and "NHIF" in doc.insurance_company:
+        validate_nhif_patient_claim_status(
+            "Patient Encounter", doc.company, doc.appointment, doc.insurance_company
+        )
     if not doc.healthcare_package_order:
         set_amounts(doc)
 
@@ -1471,7 +1469,6 @@ def before_submit(doc, method):
     encounter_create_sales_invoice = frappe.get_cached_value(
         "Encounter Category", doc.encounter_category, "create_sales_invoice"
     )
-    """
     if encounter_create_sales_invoice:
         if not doc.sales_invoice:
             frappe.throw(
@@ -1491,7 +1488,7 @@ def before_submit(doc, method):
                     "Cannot Submit Encounter",
                 )
             )
-    """
+
 
 @frappe.whitelist()
 def undo_finalized_encounter(cur_encounter, ref_encounter=None):
@@ -1542,7 +1539,7 @@ def set_amounts(doc):
         discount_percent = get_discount_percent(doc.insurance_company)
 
     for child in childs_map:
-        for row in (doc.get(child.get("table")) or []):
+        for row in doc.get(child.get("table")):
             if row.amount:
                 continue
 
@@ -1692,7 +1689,8 @@ def show_last_prescribed(doc, method):
             item_code = frappe.get_cached_value("Medication", row.drug_code, "item")
 
             medication_list = frappe.db.sql(
-            """select dn.posting_date, dni.item_code, dni.stock_qty, dni.uom from `tabDelivery Note` dn
+                """
+            select dn.posting_date, dni.item_code, dni.stock_qty, dni.uom from `tabDelivery Note` dn
             inner join `tabDelivery Note Item` dni on dni.parent = dn.name
                             where dni.item_code = %s
                             and dn.patient = %s
@@ -2371,7 +2369,7 @@ def validate_medication_class(company, encounter, patient, drug_item, caller="Ba
 def set_practitioner_name(doc, method):
     submitting_healthcare_practitioner = frappe.db.get_value(
         "Healthcare Practitioner",
-        {"user_id": frappe.session.user, "company": doc.company},
+        {"user_id": frappe.session.user, "hms_tz_company": doc.company},
         ["name", "practitioner_name"],
         as_dict=1,
     )

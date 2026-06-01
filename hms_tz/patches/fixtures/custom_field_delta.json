@@ -1,0 +1,139 @@
+[
+  {
+    "doctype": "Custom Field",
+    "dt": "Patient Encounter",
+    "fieldname": "encounter_time",
+    "fieldtype": "Time",
+    "label": "Encounter Time",
+    "insert_after": "encounter_date"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Patient Encounter",
+    "fieldname": "duplicated",
+    "fieldtype": "Check",
+    "label": "Duplicated",
+    "default": "0",
+    "hidden": 1
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Patient Encounter",
+    "fieldname": "from_encounter",
+    "fieldtype": "Link",
+    "options": "Patient Encounter",
+    "label": "From Encounter",
+    "hidden": 1
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Patient Encounter",
+    "fieldname": "reference_encounter",
+    "fieldtype": "Link",
+    "options": "Patient Encounter",
+    "label": "Reference Encounter"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Patient Encounter",
+    "fieldname": "previous_total",
+    "fieldtype": "Currency",
+    "label": "Previous Total",
+    "read_only": 1
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Patient Encounter",
+    "fieldname": "current_total",
+    "fieldtype": "Currency",
+    "label": "Current Total",
+    "read_only": 1
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Patient Encounter",
+    "fieldname": "price_list",
+    "fieldtype": "Link",
+    "options": "Price List",
+    "label": "Price List"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Patient Encounter",
+    "fieldname": "is_not_billable",
+    "fieldtype": "Check",
+    "label": "Not Billable",
+    "default": "0"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Patient Encounter",
+    "fieldname": "authorization_number",
+    "fieldtype": "Data",
+    "label": "Authorization Number"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Patient Encounter",
+    "fieldname": "coverage_plan_name",
+    "fieldtype": "Data",
+    "label": "Coverage Plan Name",
+    "read_only": 1
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Patient Encounter",
+    "fieldname": "hms_tz_is_discount_applied",
+    "fieldtype": "Check",
+    "label": "Insurance Discount Applied",
+    "hidden": 1
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Patient Encounter",
+    "fieldname": "default_healthcare_service_unit",
+    "fieldtype": "Link",
+    "options": "Healthcare Service Unit",
+    "label": "Default Healthcare Service Unit"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Patient Encounter",
+    "fieldname": "patient_age",
+    "fieldtype": "Data",
+    "label": "Patient Age",
+    "read_only": 1
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Patient Encounter",
+    "fieldname": "practitioner_name",
+    "fieldtype": "Data",
+    "label": "Practitioner Name",
+    "read_only": 1
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Company",
+    "fieldname": "auto_set_pharmacy_on_patient_encounter",
+    "fieldtype": "Check",
+    "label": "Auto Set Pharmacy on Encounter",
+    "default": "1"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Company",
+    "fieldname": "opd_cash_pharmacy",
+    "fieldtype": "Link",
+    "options": "Healthcare Service Unit",
+    "label": "OPD Cash Pharmacy"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Company",
+    "fieldname": "ipd_cash_pharmacy",
+    "fieldtype": "Link",
+    "options": "Healthcare Service Unit",
+    "label": "IPD Cash Pharmacy"
+  }
+]

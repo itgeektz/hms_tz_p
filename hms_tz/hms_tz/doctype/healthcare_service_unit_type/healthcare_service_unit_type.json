@@ -8,7 +8,6 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "disabled",
   "service_unit_type",
   "allow_appointments",
   "overlap_appointments",
@@ -145,15 +144,6 @@
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Rate / UOM"
-  },
-  {
-   "default": "0",
-   "fieldname": "disabled",
-   "fieldtype": "Check",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Disabled",
-   "no_copy": 1
   },
   {
    "fieldname": "description",
