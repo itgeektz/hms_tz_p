@@ -1445,7 +1445,7 @@ def execute():
                 'label': 'Title',
                 'fieldname': 'title',
                 'insert_after': 'naming_series',
-                'default': '{patient_name} - {template}',
+                
                 
             },
             {

@@ -13,6 +13,7 @@ class LabTest(Document):
     def validate(self):
         if not self.is_new():
             self.set_secondary_uom_result()
+        self.set_title()
 
     def on_submit(self):
         self.validate_result_values()
@@ -48,6 +49,7 @@ class LabTest(Document):
         if not self.lab_test_name and self.template:
             self.load_test_from_template()
             self.reload()
+        
 
     def load_test_from_template(self):
         lab_test = self
@@ -101,6 +103,15 @@ class LabTest(Document):
                         title=_("Mandatory Results"),
                     )
 
+    def set_title(self):
+            if self.practitioner:
+                self.title = _("{0} with {1}").format(
+                    self.patient_name or self.patient, self.lab_test_name or self.template
+                )
+            else:
+                self.title = _("{0} at {1}").format(
+                    self.patient_name or self.patient, self.get(frappe.scrub(self.lab_test_name))
+                )
 
 def create_test_from_template(lab_test):
     template = frappe.get_doc("Lab Test Template", lab_test.template)
